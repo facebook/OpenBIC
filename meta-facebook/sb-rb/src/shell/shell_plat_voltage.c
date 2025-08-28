@@ -39,6 +39,8 @@ static int cmd_voltage_get_all(const struct shell *shell, size_t argc, char **ar
 	shell_print(shell, "  id|              sensor_name               |vout(mV) ");
 	/* list all vr sensor value */
 	for (int i = 0; i < VR_RAIL_E_MAX; i++) {
+		if (((get_asic_board_id() != ASIC_BOARD_ID_EVB)) && (i == VR_RAIL_E_P3V3_OSFP_VOLT_V))
+			continue; // skip osfp p3v3 on AEGIS BD
 
 		uint16_t vout = 0;
 		uint8_t *rail_name = NULL;
@@ -58,14 +60,10 @@ static int cmd_voltage_get_all(const struct shell *shell, size_t argc, char **ar
 	return 0;
 }
 
-vr_vout_range_user_settings_struct vout_settings_data = { 0 };
 static int cmd_voltage_set(const struct shell *shell, size_t argc, char **argv)
 {
 	bool is_default = false;
 	bool is_perm = false;
-	
-	LOG_WRN("cmd_voltage_set not use now");
-	return 0;
 
 	/* is_ubc_enabled_delayed_enabled() is to wait for all VR to be enabled  */
 	/* (gpio_get(FM_PLD_UBC_EN_R) == GPIO_HIGH) is to shut down polling immediately when UBC is disabled */
@@ -96,8 +94,8 @@ static int cmd_voltage_set(const struct shell *shell, size_t argc, char **argv)
 		shell_info(shell, "Set %s(%d) to default, %svolatile\n", argv[1], rail,
 			   (argc == 4) ? "non-" : "");
 	} else {
-		uint16_t vout_max_millivolt = vout_settings_data.change_vout_max[rail];
-		uint16_t vout_min_millivolt = vout_settings_data.change_vout_min[rail];
+		uint16_t vout_max_millivolt = vout_range_user_settings.change_vout_max[rail];
+		uint16_t vout_min_millivolt = vout_range_user_settings.change_vout_min[rail];
 		if (millivolt < vout_min_millivolt || millivolt > vout_max_millivolt) {
 			shell_error(shell, "vout[%d] cannot be less than %dmV or greater than %dmV",
 				    rail, vout_min_millivolt, vout_max_millivolt);
@@ -108,6 +106,10 @@ static int cmd_voltage_set(const struct shell *shell, size_t argc, char **argv)
 	}
 
 	/* set the vout */
+	if ((get_asic_board_id() != ASIC_BOARD_ID_EVB) && (rail == VR_RAIL_E_P3V3_OSFP_VOLT_V)) {
+		shell_print(shell, "There is no osfp p3v3");
+		return 0;
+	}
 	if (!plat_set_vout_command(rail, &millivolt, is_default, is_perm)) {
 		shell_error(shell, "Can't set vout by rail index: %d", rail);
 		return -1;
@@ -120,7 +122,8 @@ static void voltage_rname_get(size_t idx, struct shell_static_entry *entry)
 {
 	uint8_t *name = NULL;
 	vr_rail_name_get((uint8_t)idx, &name);
-
+	if ((get_asic_board_id() == ASIC_BOARD_ID_EVB))
+		idx++;
 	entry->syntax = (name) ? (const char *)name : NULL;
 	entry->handler = NULL;
 	entry->help = NULL;

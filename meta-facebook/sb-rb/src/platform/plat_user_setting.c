@@ -425,10 +425,142 @@ bool plat_clear_temp_status(uint8_t rail)
 err:
 	return ret;
 }
+bool plat_set_temp_threshold(uint8_t temp_index_threshold_type, uint32_t *millidegree_celsius,
+			     bool is_default, bool is_perm)
+{
+	CHECK_NULL_ARG_WITH_RETURN(millidegree_celsius, false);
 
+	if (temp_index_threshold_type >= PLAT_TEMP_INDEX_THRESHOLD_TYPE_MAX) {
+		LOG_ERR("Invalid temp threshold type(%x)", temp_index_threshold_type);
+		return false;
+	}
+
+	uint8_t temp_threshold_type_tmp =
+		temp_index_threshold_type_table[temp_index_threshold_type].temp_threshold_type;
+
+	uint8_t sensor_id = temp_index_threshold_type_table[temp_index_threshold_type].sensor_id;
+	sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
+	uint32_t setting_millidegree_celsius = *millidegree_celsius;
+
+	if (cfg == NULL) {
+		LOG_ERR("Failed to get sensor config for sensor 0x%x", sensor_id);
+		return false;
+	}
+
+	if (is_default) {
+		*millidegree_celsius = temp_threshold_default_settings
+					       .temperature_reg_val[temp_index_threshold_type];
+		setting_millidegree_celsius =
+			temp_threshold_default_settings
+				.temperature_reg_val[temp_index_threshold_type];
+	}
+
+	switch (cfg->type) {
+	case sensor_dev_tmp431:
+		if (!tmp432_set_temp_threshold(cfg, temp_threshold_type_tmp, millidegree_celsius)) {
+			LOG_ERR("The TMP431 temp threshold setting failed");
+			return false;
+		}
+		break;
+	case sensor_dev_tmp75:
+		if (!tmp75_set_temp_threshold(cfg, temp_threshold_type_tmp, millidegree_celsius)) {
+			LOG_ERR("The TMP75 temp threshold setting failed");
+			return false;
+		}
+		break;
+	default:
+		LOG_ERR("Unsupport temp type(%x)", cfg->type);
+		return false;
+	}
+
+	if (is_perm) {
+		temp_threshold_user_settings.temperature_reg_val[temp_index_threshold_type] =
+			setting_millidegree_celsius;
+		set_temp_threshold_user_settings(&temp_threshold_user_settings);
+	}
+
+	return true;
+}
+bool temp_threshold_default_settings_init(void)
+{
+	for (int i = 0; i < PLAT_TEMP_INDEX_THRESHOLD_TYPE_MAX; i++) {
+		uint32_t temp_threshold = 0;
+		if (!plat_get_temp_threshold(i, &temp_threshold)) {
+			LOG_ERR("Can't find temp_threshold default by type index: %x", i);
+			return false;
+		}
+		temp_threshold_default_settings.temperature_reg_val[i] = temp_threshold;
+	}
+
+	return true;
+}
+bool temp_threshold_user_settings_init(void)
+{
+	if (temp_threshold_user_settings_get(&temp_threshold_user_settings) == false) {
+		LOG_ERR("get temp_threshold user settings fail");
+		return false;
+	}
+
+	for (int i = 0; i < PLAT_TEMP_INDEX_THRESHOLD_TYPE_MAX; i++) {
+		if (temp_threshold_user_settings.temperature_reg_val[i] != 0xffffffff) {
+			/* TODO: write temp_threshold */
+			uint32_t temp_threshold =
+				temp_threshold_user_settings.temperature_reg_val[i];
+			if (!plat_set_temp_threshold(i, &temp_threshold, false, false)) {
+				LOG_ERR("Can't set temp_threshold[%x]=%x by temp_threshold user settings",
+					i, temp_threshold);
+				return false;
+			}
+			LOG_INF("set [%x]%s: %d", i,
+				temp_index_threshold_type_table[i].temp_threshold_name,
+				temp_threshold_user_settings.temperature_reg_val[i]);
+		}
+	}
+
+	return true;
+}
+bool plat_get_temp_threshold(uint8_t temp_index_threshold_type, uint32_t *millidegree_celsius)
+{
+	CHECK_NULL_ARG_WITH_RETURN(millidegree_celsius, false);
+
+	if (temp_index_threshold_type >= PLAT_TEMP_INDEX_THRESHOLD_TYPE_MAX) {
+		LOG_ERR("Invalid temp threshold type(%x)", temp_index_threshold_type);
+		return false;
+	}
+
+	uint8_t temp_threshold_type_tmp =
+		temp_index_threshold_type_table[temp_index_threshold_type].temp_threshold_type;
+
+	uint8_t sensor_id = temp_index_threshold_type_table[temp_index_threshold_type].sensor_id;
+	sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
+
+	if (cfg == NULL) {
+		LOG_ERR("Failed to get sensor config for sensor 0x%x", sensor_id);
+		return false;
+	}
+
+	switch (cfg->type) {
+	case sensor_dev_tmp431:
+		if (!tmp432_get_temp_threshold(cfg, temp_threshold_type_tmp, millidegree_celsius)) {
+			LOG_ERR("The TMP431 temp threshold reading failed");
+			return false;
+		}
+		break;
+	case sensor_dev_tmp75:
+		if (!tmp75_get_temp_threshold(cfg, temp_threshold_type_tmp, millidegree_celsius)) {
+			LOG_ERR("The TMP75 temp threshold reading failed");
+			return false;
+		}
+		break;
+	default:
+		LOG_ERR("Unsupport temp type(%x)", cfg->type);
+		return false;
+	}
+
+	return true;
+}
 void user_settings_init(void)
 {
-	//alert_level_user_settings_init();
 	vr_vout_default_settings_init();
 	vr_vout_user_settings_init();
 	//soc_pcie_perst_user_settings_init();

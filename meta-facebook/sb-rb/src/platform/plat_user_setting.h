@@ -106,9 +106,7 @@ typedef struct temp_threshold_user_settings_struct {
 	uint32_t temperature_reg_val[PLAT_TEMP_INDEX_THRESHOLD_TYPE_MAX];
 } temp_threshold_user_settings_struct;
 
-typedef struct vr_vout_user_settings {
-	uint16_t vout[VR_RAIL_E_MAX];
-} vr_vout_user_settings;
+extern temp_threshold_user_settings_struct temp_threshold_user_settings;
 
 bool set_thermaltrip_user_settings(bool thermaltrip_enable, bool is_perm);
 bool get_temp_sensor_rail_name(uint8_t rail, uint8_t **name);
@@ -122,4 +120,6 @@ bool set_plat_temp_threshold(uint8_t temp_index_threshold_type, uint32_t *millid
 			     bool is_default, bool is_perm);
 bool plat_clear_temp_status(uint8_t rail);
 void user_settings_init(void);
+bool temp_threshold_user_settings_init(void);
+bool temp_threshold_default_settings_init(void);
 #endif

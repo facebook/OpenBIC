@@ -42,29 +42,29 @@ enum VR_INDEX_E {
 };
 
 enum VR_RAIL_E {
-	ASIC_P0V4_VDDQL_HBM0246_VOLT_V = 0,
-	ASIC_P0V4_VDDQL_HBM1357_VOLT_V,
-	ASIC_P0V75_MAX_M_VDD_VOLT_V,
-	ASIC_P0V75_MAX_N_VDD_VOLT_V,
-	ASIC_P0V75_MAX_S_VDD_VOLT_V,
-	ASIC_P0V75_OWL_E_TRVDD_VOLT_V,
-	ASIC_P0V75_OWL_E_VDD_VOLT_V,
-	ASIC_P0V75_OWL_W_TRVDD_VOLT_V,
-	ASIC_P0V75_OWL_W_VDD_VOLT_V,
-	ASIC_P0V75_VDDPHY_HBM0246_VOLT_V,
-	ASIC_P0V75_VDDPHY_HBM1357_VOLT_V,
-	ASIC_P0V85_HAMSA_VDD_VOLT_V,
-	ASIC_P0V85_MEDHA0_VDD_VOLT_V,
-	ASIC_P0V85_MEDHA1_VDD_VOLT_V,
-	ASIC_P0V8_HAMSA_AVDD_PCIE_VOLT_V,
-	ASIC_P0V9_OWL_E_TRVDD_VOLT_V,
-	ASIC_P0V9_OWL_W_TRVDD_VOLT_V,
-	ASIC_P1V1_VDDQC_HBM0246_VOLT_V,
-	ASIC_P1V1_VDDQC_HBM1357_VOLT_V,
-	ASIC_P1V2_HAMSA_VDDHRXTX_PCIE_VOLT_V,
-	ASIC_P1V8_VPP_HBM0246_VOLT_V,
-	ASIC_P1V8_VPP_HBM1357_VOLT_V,
-	P3V3_OSFP_VOLT_V,
+	VR_RAIL_E_ASIC_P0V85_MEDHA0_VDD = 0,
+	VR_RAIL_E_ASIC_P0V85_MEDHA1_VDD,
+	VR_RAIL_E_ASIC_P0V9_OWL_E_TRVDD,
+	VR_RAIL_E_ASIC_P0V75_OWL_E_TRVDD,
+	VR_RAIL_E_ASIC_P0V75_MAX_M_VDD,
+	VR_RAIL_E_ASIC_P0V75_VDDPHY_HBM1357,
+	VR_RAIL_E_ASIC_P0V75_OWL_E_VDD,
+	VR_RAIL_E_ASIC_P0V4_VDDQL_HBM1357,
+	VR_RAIL_E_ASIC_P1V1_VDDQC_HBM1357,
+	VR_RAIL_E_ASIC_P1V8_VPP_HBM1357,
+	VR_RAIL_E_ASIC_P0V75_MAX_N_VDD,
+	VR_RAIL_E_ASIC_P0V8_HAMSA_AVDD_PCIE,
+	VR_RAIL_E_ASIC_P1V2_HAMSA_VDDHRXTX_PCIE,
+	VR_RAIL_E_ASIC_P0V85_HAMSA_VDD,
+	VR_RAIL_E_ASIC_P1V1_VDDQC_HBM0246,
+	VR_RAIL_E_ASIC_P1V8_VPP_HBM0246,
+	VR_RAIL_E_ASIC_P0V4_VDDQL_HBM0246,
+	VR_RAIL_EASIC_P0V75_VDDPHY_HBM0246,
+	VR_RAIL_E_ASIC_P0V75_OWL_W_VDD,
+	VR_RAIL_E_ASIC_P0V75_MAX_S_VDD,
+	VR_RAIL_E_ASIC_P0V9_OWL_W_TRVDD,
+	VR_RAIL_E_ASIC_P0V75_OWL_W_TRVDD,
+	VR_RAIL_E_P3V3_OSFP_VOLT_V,
 	VR_RAIL_E_MAX,
 };
 
@@ -129,9 +129,14 @@ typedef struct vr_vout_range_user_settings_struct {
 	uint16_t change_vout_max[STRAP_INDEX_MAX];
 	uint16_t change_vout_min[STRAP_INDEX_MAX];
 } vr_vout_range_user_settings_struct;
+typedef struct vr_vout_user_settings {
+	uint16_t vout[VR_RAIL_E_MAX];
+} vr_vout_user_settings;
 
+extern vr_vout_user_settings user_settings;
 extern vr_vout_range_user_settings_struct vout_range_user_settings;
 extern vr_mapping_sensor vr_rail_table[];
+
 bool pre_vr_read(sensor_cfg *cfg, void *args);
 bool post_vr_read(sensor_cfg *cfg, void *args, int *const reading);
 bool is_mb_dc_on();
@@ -154,4 +159,6 @@ void user_settings_init(void);
 bool vr_vout_range_user_settings_init(void);
 bool vr_vout_default_settings_init(void);
 bool vr_vout_user_settings_init(void);
+bool temp_threshold_user_settings_get(void *temp_threshold_user_settings);
+bool plat_get_temp_threshold(uint8_t temp_index_threshold_type, uint32_t *millidegree_celsius);
 #endif

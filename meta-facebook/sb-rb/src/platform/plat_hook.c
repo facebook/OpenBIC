@@ -153,79 +153,75 @@ void vr_mutex_init(void)
 /* the order is following enum VR_RAIL_E */
 vr_mapping_sensor vr_rail_table[] = {
 	/*
-	ASIC_P0V4_VDDQL_HBM0246_VOLT_V
-	ASIC_P0V4_VDDQL_HBM1357_VOLT_V
-	ASIC_P0V75_MAX_M_VDD_VOLT_V
-	ASIC_P0V75_MAX_N_VDD_VOLT_V
-	ASIC_P0V75_MAX_S_VDD_VOLT_V
-	ASIC_P0V75_OWL_E_TRVDD_VOLT_V
-	ASIC_P0V75_OWL_E_VDD_VOLT_V
-	ASIC_P0V75_OWL_W_TRVDD_VOLT_V
-	ASIC_P0V75_OWL_W_VDD_VOLT_V
-	ASIC_P0V75_VDDPHY_HBM0246_VOLT_V
-	ASIC_P0V75_VDDPHY_HBM1357_VOLT_V
-	ASIC_P0V85_HAMSA_VDD_VOLT_V
-	ASIC_P0V85_MEDHA0_VDD_VOLT_V
-	ASIC_P0V85_MEDHA1_VDD_VOLT_V
-	ASIC_P0V8_HAMSA_AVDD_PCIE_VOLT_V
-	ASIC_P0V9_OWL_E_TRVDD_VOLT_V
-	ASIC_P0V9_OWL_W_TRVDD_VOLT_V
-	ASIC_P1V1_VDDQC_HBM0246_VOLT_V
-	ASIC_P1V1_VDDQC_HBM1357_VOLT_V
-	ASIC_P1V2_HAMSA_VDDHRXTX_PCIE_VOLT_V
-	ASIC_P1V8_VPP_HBM0246_VOLT_V
-	ASIC_P1V8_VPP_HBM1357_VOLT_V
-	P3V3_OSFP_VOLT_V
-	UBC1_P12V_VOLT_V
-	UBC1_P52V_INPUT_VOLT_V
-	UBC2_P12V_VOLT_V
-	UBC2_P52V_INPUT_VOLT_V
+	VR_RAIL_E_ASIC_P0V85_MEDHA0_VDD = 0,
+	VR_RAIL_E_ASIC_P0V85_MEDHA1_VDD,
+	VR_RAIL_E_ASIC_P0V9_OWL_E_TRVDD,
+	VR_RAIL_E_ASIC_P0V75_OWL_E_TRVDD,
+	VR_RAIL_E_ASIC_P0V75_MAX_M_VDD,
+	VR_RAIL_E_ASIC_P0V75_VDDPHY_HBM1357,
+	VR_RAIL_E_ASIC_P0V75_OWL_E_VDD,
+	VR_RAIL_E_ASIC_P0V4_VDDQL_HBM1357,
+	VR_RAIL_E_ASIC_P1V1_VDDQC_HBM1357,
+	VR_RAIL_E_ASIC_P1V8_VPP_HBM1357,
+	VR_RAIL_E_ASIC_P0V75_MAX_N_VDD,
+	VR_RAIL_E_ASIC_P0V8_HAMSA_AVDD_PCIE,
+	VR_RAIL_E_ASIC_P1V2_HAMSA_VDDHRXTX_PCIE,
+	VR_RAIL_E_ASIC_P0V85_HAMSA_VDD,
+	VR_RAIL_E_ASIC_P1V1_VDDQC_HBM0246,
+	VR_RAIL_E_ASIC_P1V8_VPP_HBM0246,
+	VR_RAIL_E_ASIC_P0V4_VDDQL_HBM0246,
+	VR_RAIL_EASIC_P0V75_VDDPHY_HBM0246,
+	VR_RAIL_E_ASIC_P0V75_OWL_W_VDD,
+	VR_RAIL_E_ASIC_P0V75_MAX_S_VDD,
+	VR_RAIL_E_ASIC_P0V9_OWL_W_TRVDD,
+	VR_RAIL_E_ASIC_P0V75_OWL_W_TRVDD,
+	VR_RAIL_E_P3V3_OSFP_VOLT_V,
 	*/
-	{ ASIC_P0V4_VDDQL_HBM0246_VOLT_V, SENSOR_NUM_ASIC_P0V75_VDDPHY_HBM0246_VOLT_V,
-	  "ASIC_P0V75_VDDPHY_HBM0246_VOLT_V", 0xffffffff },
-	{ ASIC_P0V4_VDDQL_HBM1357_VOLT_V, SENSOR_NUM_ASIC_P0V75_VDDPHY_HBM1357_VOLT_V,
-	  "ASIC_P0V75_VDDPHY_HBM1357_VOLT_V", 0xffffffff },
-	{ ASIC_P0V75_MAX_M_VDD_VOLT_V, SENSOR_NUM_ASIC_P0V75_MAX_M_VDD_VOLT_V,
-	  "ASIC_P0V75_MAX_M_VDD_VOLT_V", 0xffffffff },
-	{ ASIC_P0V75_MAX_N_VDD_VOLT_V, SENSOR_NUM_ASIC_P0V75_MAX_N_VDD_VOLT_V,
-	  "ASIC_P0V75_MAX_N_VDD_VOLT_V", 0xffffffff },
-	{ ASIC_P0V75_MAX_S_VDD_VOLT_V, SENSOR_NUM_ASIC_P0V75_MAX_S_VDD_VOLT_V,
-	  "ASIC_P0V75_MAX_S_VDD_VOLT_V", 0xffffffff },
-	{ ASIC_P0V75_OWL_E_TRVDD_VOLT_V, SENSOR_NUM_ASIC_P0V75_OWL_E_TRVDD_VOLT_V,
-	  "ASIC_P0V75_OWL_E_TRVDD_VOLT_V", 0xffffffff },
-	{ ASIC_P0V75_OWL_E_VDD_VOLT_V, SENSOR_NUM_ASIC_P0V75_OWL_E_VDD_VOLT_V,
-	  "ASIC_P0V75_OWL_E_VDD_VOLT_V", 0xffffffff },	
-	{ ASIC_P0V75_OWL_W_TRVDD_VOLT_V, SENSOR_NUM_ASIC_P0V75_OWL_W_TRVDD_VOLT_V,
-	  "ASIC_P0V75_OWL_W_TRVDD_VOLT_V", 0xffffffff },
-	{ ASIC_P0V75_OWL_W_VDD_VOLT_V, SENSOR_NUM_ASIC_P0V75_OWL_W_VDD_VOLT_V,
-	  "ASIC_P0V75_OWL_W_VDD_VOLT_V", 0xffffffff },
-	{ ASIC_P0V75_VDDPHY_HBM0246_VOLT_V, SENSOR_NUM_ASIC_P0V75_VDDPHY_HBM0246_VOLT_V,
-	  "ASIC_P0V75_VDDPHY_HBM0246_VOLT_V", 0xffffffff },
-	{ ASIC_P0V75_VDDPHY_HBM1357_VOLT_V, SENSOR_NUM_ASIC_P0V75_VDDPHY_HBM1357_VOLT_V,
-	  "ASIC_P0V75_VDDPHY_HBM1357_VOLT_V", 0xffffffff },
-	{ ASIC_P0V85_HAMSA_VDD_VOLT_V, SENSOR_NUM_ASIC_P0V85_HAMSA_VDD_VOLT_V,
-	  "ASIC_P0V85_HAMSA_VDD_VOLT_V", 0xffffffff },
-	{ ASIC_P0V85_MEDHA0_VDD_VOLT_V, SENSOR_NUM_ASIC_P0V85_MEDHA0_VDD_VOLT_V,
-	  "ASIC_P0V85_MEDHA0_VDD_VOLT_V", 0xffffffff },
-	{ ASIC_P0V85_MEDHA1_VDD_VOLT_V, SENSOR_NUM_ASIC_P0V85_MEDHA1_VDD_VOLT_V,
-	  "ASIC_P0V85_MEDHA1_VDD_VOLT_V", 0xffffffff },
-	{ ASIC_P0V8_HAMSA_AVDD_PCIE_VOLT_V, SENSOR_NUM_ASIC_P0V8_HAMSA_AVDD_PCIE_VOLT_V,
-	  "ASIC_P0V8_HAMSA_AVDD_PCIE_VOLT_V", 0xffffffff },
-	{ ASIC_P0V9_OWL_E_TRVDD_VOLT_V, SENSOR_NUM_ASIC_P0V9_OWL_E_TRVDD_VOLT_V,
-	  "ASIC_P0V9_OWL_E_TRVDD_VOLT_V", 0xffffffff },
-	{ ASIC_P0V9_OWL_W_TRVDD_VOLT_V, SENSOR_NUM_ASIC_P0V9_OWL_W_TRVDD_VOLT_V,
-	  "ASIC_P0V9_OWL_W_TRVDD_VOLT_V", 0xffffffff },
-	{ ASIC_P1V1_VDDQC_HBM0246_VOLT_V, SENSOR_NUM_ASIC_P1V1_VDDQC_HBM0246_VOLT_V,
-	  "ASIC_P1V1_VDDQC_HBM0246_VOLT_V", 0xffffffff },
-	{ ASIC_P1V1_VDDQC_HBM1357_VOLT_V, SENSOR_NUM_ASIC_P1V1_VDDQC_HBM1357_VOLT_V,
-	  "ASIC_P1V1_VDDQC_HBM1357_VOLT_V", 0xffffffff },
-	{ ASIC_P1V2_HAMSA_VDDHRXTX_PCIE_VOLT_V, SENSOR_NUM_ASIC_P1V2_HAMSA_VDDHRXTX_PCIE_VOLT_V,
-	  "ASIC_P1V2_HAMSA_VDDHRXTX_PCIE_VOLT_V", 0xffffffff },
-	{ ASIC_P1V8_VPP_HBM0246_VOLT_V, SENSOR_NUM_ASIC_P1V8_VPP_HBM0246_VOLT_V,
-	  "ASIC_P1V8_VPP_HBM0246_VOLT_V", 0xffffffff },
-	{ ASIC_P1V8_VPP_HBM1357_VOLT_V, SENSOR_NUM_ASIC_P1V8_VPP_HBM1357_VOLT_V,
-	  "ASIC_P1V8_VPP_HBM1357_VOLT_V", 0xffffffff },
-	{ P3V3_OSFP_VOLT_V, SENSOR_NUM_P3V3_OSFP_VOLT_V,
+	{ VR_RAIL_E_ASIC_P0V85_MEDHA0_VDD, SENSOR_NUM_ASIC_P0V85_MEDHA0_VDD_VOLT_V,
+	  "ASIC_P0V85_MEDHA0_VDD", 0xffffffff },
+	{ VR_RAIL_E_ASIC_P0V85_MEDHA1_VDD, SENSOR_NUM_ASIC_P0V85_MEDHA1_VDD_VOLT_V,
+	  "ASIC_P0V85_MEDHA1_VDD", 0xffffffff },
+	{ VR_RAIL_E_ASIC_P0V9_OWL_E_TRVDD, SENSOR_NUM_ASIC_P0V9_OWL_E_TRVDD_VOLT_V,
+	  "ASIC_P0V9_OWL_E_TRVDD", 0xffffffff },
+	{ VR_RAIL_E_ASIC_P0V75_OWL_E_TRVDD, SENSOR_NUM_ASIC_P0V75_OWL_E_TRVDD_VOLT_V,
+	  "ASIC_P0V75_OWL_E_TRVDD", 0xffffffff },
+	{ VR_RAIL_E_ASIC_P0V75_MAX_M_VDD, SENSOR_NUM_ASIC_P0V75_MAX_M_VDD_VOLT_V,
+	  "ASIC_P0V75_MAX_M_VDD", 0xffffffff },
+	{ VR_RAIL_E_ASIC_P0V75_VDDPHY_HBM1357, SENSOR_NUM_ASIC_P0V75_VDDPHY_HBM1357_VOLT_V,
+	  "ASIC_P0V75_VDDPHY_HBM1357", 0xffffffff },
+	{ VR_RAIL_E_ASIC_P0V75_OWL_E_VDD, SENSOR_NUM_ASIC_P0V75_OWL_E_VDD_VOLT_V,
+	  "ASIC_P0V75_OWL_E_VDD", 0xffffffff },
+	{ VR_RAIL_E_ASIC_P0V4_VDDQL_HBM1357, SENSOR_NUM_ASIC_P0V4_VDDQL_HBM1357_VOLT_V,
+	  "ASIC_P0V4_VDDQL_HBM1357", 0xffffffff },
+	{ VR_RAIL_E_ASIC_P1V1_VDDQC_HBM1357, SENSOR_NUM_ASIC_P1V1_VDDQC_HBM1357_VOLT_V,
+	  "ASIC_P1V1_VDDQC_HBM1357", 0xffffffff },
+	{ VR_RAIL_E_ASIC_P1V8_VPP_HBM1357, SENSOR_NUM_ASIC_P1V8_VPP_HBM1357_VOLT_V,	
+	  "ASIC_P1V8_VPP_HBM1357", 0xffffffff },
+	{ VR_RAIL_E_ASIC_P0V75_MAX_N_VDD, SENSOR_NUM_ASIC_P0V75_MAX_N_VDD_VOLT_V,
+	  "ASIC_P0V75_MAX_N_VDD", 0xffffffff },
+	{ VR_RAIL_E_ASIC_P0V8_HAMSA_AVDD_PCIE, SENSOR_NUM_ASIC_P0V8_HAMSA_AVDD_PCIE_VOLT_V,
+	  "ASIC_P0V8_HAMSA_AVDD_PCIE", 0xffffffff },
+	{ VR_RAIL_E_ASIC_P1V2_HAMSA_VDDHRXTX_PCIE, SENSOR_NUM_ASIC_P1V2_HAMSA_VDDHRXTX_PCIE_VOLT_V,
+	  "ASIC_P1V2_HAMSA_VDDHRXTX_PCIE", 0xffffffff },
+	{ VR_RAIL_E_ASIC_P0V85_HAMSA_VDD, SENSOR_NUM_ASIC_P0V85_HAMSA_VDD_VOLT_V,
+	  "ASIC_P0V85_HAMSA_VDD", 0xffffffff },
+	{ VR_RAIL_E_ASIC_P1V1_VDDQC_HBM0246, SENSOR_NUM_ASIC_P1V1_VDDQC_HBM0246_VOLT_V,
+	  "ASIC_P1V1_VDDQC_HBM0246", 0xffffffff },
+	{ VR_RAIL_E_ASIC_P1V8_VPP_HBM0246, SENSOR_NUM_ASIC_P1V8_VPP_HBM0246_VOLT_V,
+	  "ASIC_P1V8_VPP_HBM0246", 0xffffffff },
+	{ VR_RAIL_E_ASIC_P0V4_VDDQL_HBM0246, SENSOR_NUM_ASIC_P0V4_VDDQL_HBM0246_VOLT_V,
+	  "ASIC_P0V4_VDDQL_HBM0246", 0xffffffff },
+	{ VR_RAIL_EASIC_P0V75_VDDPHY_HBM0246, SENSOR_NUM_ASIC_P0V75_VDDPHY_HBM0246_VOLT_V,
+	  "ASIC_P0V75_VDDPHY_HBM0246", 0xffffffff },
+	{ VR_RAIL_E_ASIC_P0V75_OWL_W_VDD, SENSOR_NUM_ASIC_P0V75_OWL_W_VDD_VOLT_V,
+	  "ASIC_P0V75_OWL_W_VDD", 0xffffffff },
+	{ VR_RAIL_E_ASIC_P0V75_MAX_S_VDD, SENSOR_NUM_ASIC_P0V75_MAX_S_VDD_VOLT_V,
+	  "ASIC_P0V75_MAX_S_VDD", 0xffffffff },
+	{ VR_RAIL_E_ASIC_P0V9_OWL_W_TRVDD, SENSOR_NUM_ASIC_P0V9_OWL_W_TRVDD_VOLT_V,
+	  "ASIC_P0V9_OWL_W_TRVDD", 0xffffffff },
+	{ VR_RAIL_E_ASIC_P0V75_OWL_W_TRVDD, SENSOR_NUM_ASIC_P0V75_OWL_W_TRVDD_VOLT_V,
+	  "ASIC_P0V75_OWL_W_TRVDD", 0xffffffff },
+	{ VR_RAIL_E_P3V3_OSFP_VOLT_V, SENSOR_NUM_P3V3_OSFP_VOLT_V,
 	  "P3V3_OSFP_VOLT_V", 0xffffffff },
 };
 
@@ -488,14 +484,14 @@ bool plat_set_vout_command(uint8_t rail, uint16_t *millivolt, bool is_default, b
 	bool ret = false;
 	uint8_t sensor_id = vr_rail_table[rail].sensor_id;
 	sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
+	vr_pre_proc_arg *pre_sensor_read_args = cfg->pre_sensor_read_args;
 	uint16_t setting_millivolt = *millivolt;
-
+	// get page from sensor_cfg
+	uint8_t page = pre_sensor_read_args->vr_page;
 	if (cfg == NULL) {
 		LOG_ERR("Failed to get sensor config for sensor 0x%x", sensor_id);
 		return false;
 	}
-
-	vr_pre_proc_arg *pre_proc_args = vr_pre_read_args + rail;
 
 	if (cfg->pre_sensor_read_hook) {
 		if (!cfg->pre_sensor_read_hook(cfg, cfg->pre_sensor_read_args)) {
@@ -508,22 +504,22 @@ bool plat_set_vout_command(uint8_t rail, uint16_t *millivolt, bool is_default, b
 		*millivolt = default_settings.vout[rail];
 		setting_millivolt = default_settings.vout[rail];
 	}
-
+	LOG_DBG("sensor num 0x%x,page 0x%x, vout 0x%x", sensor_id, page, setting_millivolt);
 	switch (cfg->type) {
 	case sensor_dev_mp2971:
-		if (!mp2971_set_vout_command(cfg, pre_proc_args->vr_page, millivolt)) {
+		if (!mp2971_set_vout_command(cfg, page, millivolt)) {
 			LOG_ERR("The VR MPS2971 vout setting failed");
 			goto err;
 		}
 		break;
 	case sensor_dev_mp29816a:
-		if (!mp29816a_set_vout_command(cfg, pre_proc_args->vr_page, millivolt)) {
+		if (!mp29816a_set_vout_command(cfg, page, millivolt)) {
 			LOG_ERR("The VR MPS29816a vout setting failed");
 			goto err;
 		}
 		break;
 	case sensor_dev_raa228249:
-		if (!raa228249_set_vout_command(cfg, pre_proc_args->vr_page, millivolt)) {
+		if (!raa228249_set_vout_command(cfg, page, millivolt)) {
 			LOG_ERR("The VR RAA228249 vout setting failed");
 			goto err;
 		}
@@ -611,7 +607,7 @@ bool plat_set_vout_range_max(uint8_t rail, uint16_t *millivolt)
 bool vr_vout_default_settings_init(void)
 {
 	for (int i = 0; i < VR_RAIL_E_MAX; i++) {
-		if ((get_asic_board_id() == ASIC_BOARD_ID_EVB) && (i == 0)) {
+		if ((get_asic_board_id() != ASIC_BOARD_ID_EVB) && (i == VR_RAIL_E_P3V3_OSFP_VOLT_V)) {
 			default_settings.vout[i] = 0xffff;
 			continue; // skip osfp p3v3 on AEGIS BD
 		}
@@ -697,7 +693,7 @@ bool vr_vout_user_settings_get(void *user_settings)
 bool vr_vout_range_user_settings_init(void)
 {
 	for (int i = 0; i < VR_RAIL_E_MAX; i++) {
-		if ((get_asic_board_id() == ASIC_BOARD_ID_EVB) && (i == 0)) {
+		if ((get_asic_board_id() != ASIC_BOARD_ID_EVB) && (i == VR_RAIL_E_P3V3_OSFP_VOLT_V)) {
 			vout_range_user_settings.default_vout_max[i] = 0xffff;
 			vout_range_user_settings.default_vout_min[i] = 0xffff;
 			vout_range_user_settings.change_vout_max[i] = 0xffff;
@@ -717,4 +713,27 @@ bool vr_vout_range_user_settings_init(void)
 	}
 
 	return true;
+}
+bool temp_threshold_user_settings_get(void *temp_threshold_user_settings)
+{
+	CHECK_NULL_ARG_WITH_RETURN(temp_threshold_user_settings, false);
+
+	/* TODO: read the temp_threshold_user_settings from eeprom */
+	if (!plat_eeprom_read(TEMP_THRESHOLD_USER_SETTINGS_OFFSET, temp_threshold_user_settings,
+			      sizeof(struct temp_threshold_user_settings_struct))) {
+		LOG_ERR("Failed to read eeprom when get temp_threshold_user_settings");
+		return false;
+	}
+
+	return true;
+}
+
+
+void plat_pldm_sensor_post_load_init(int thread_id)
+{
+	if (thread_id == TEMP_SENSOR_THREAD_ID) {
+		temp_threshold_default_settings_init();
+		temp_threshold_user_settings_init();
+	}
+	LOG_INF("plat_pldm_sensor_post_load init done");
 }
