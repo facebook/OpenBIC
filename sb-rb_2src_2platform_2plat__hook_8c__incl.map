@@ -1,0 +1,42 @@
+<map id="meta&#45;facebook/sb&#45;rb/src/platform/plat_hook.c" name="meta&#45;facebook/sb&#45;rb/src/platform/plat_hook.c">
+<area shape="rect" id="node1" title=" " alt="" coords="576,5,741,47"/>
+<area shape="rect" id="node2" title=" " alt="" coords="518,632,578,659"/>
+<area shape="rect" id="node3" title=" " alt="" coords="856,95,920,121"/>
+<area shape="rect" id="node4" href="$libutil_8h.html" title=" " alt="" coords="145,483,207,509"/>
+<area shape="rect" id="node11" title=" " alt="" coords="945,95,1039,121"/>
+<area shape="rect" id="node12" href="$sb-rb_2src_2platform_2plat__hook_8h.html" title=" " alt="" coords="483,95,571,121"/>
+<area shape="rect" id="node32" href="$sb-rb_2src_2platform_2plat__pldm__sensor_8h.html" title=" " alt="" coords="357,177,491,203"/>
+<area shape="rect" id="node33" href="$pmbus_8h.html" title=" " alt="" coords="1387,95,1458,121"/>
+<area shape="rect" id="node35" href="$sb-rb_2src_2platform_2plat__gpio_8h.html" title=" " alt="" coords="747,95,831,121"/>
+<area shape="rect" id="node38" href="$mp2971_8h.html" title=" " alt="" coords="567,177,646,203"/>
+<area shape="rect" id="node39" href="$mp29816a_8h.html" title=" " alt="" coords="670,177,762,203"/>
+<area shape="rect" id="node40" href="$raa228249_8h.html" title=" " alt="" coords="786,177,878,203"/>
+<area shape="rect" id="node5" title=" " alt="" coords="1067,557,1131,584"/>
+<area shape="rect" id="node6" href="$ipmb_8h.html" title=" " alt="" coords="650,557,710,584"/>
+<area shape="rect" id="node8" href="$hal__i2c_8h.html" title=" " alt="" coords="415,557,489,584"/>
+<area shape="rect" id="node7" title=" " alt="" coords="1073,632,1165,659"/>
+<area shape="rect" id="node9" title=" " alt="" coords="402,632,494,659"/>
+<area shape="rect" id="node10" title=" " alt="" coords="602,632,761,659"/>
+<area shape="rect" id="node13" href="$sensor_8h.html" title=" " alt="" coords="494,259,565,285"/>
+<area shape="rect" id="node14" title=" " alt="" coords="365,483,440,509"/>
+<area shape="rect" id="node15" title=" " alt="" coords="461,333,528,360"/>
+<area shape="rect" id="node16" title=" " alt="" coords="67,557,146,584"/>
+<area shape="rect" id="node17" href="$sdr_8h.html" title=" " alt="" coords="503,408,553,435"/>
+<area shape="rect" id="node18" href="$pldm__monitor_8h.html" title=" " alt="" coords="742,333,853,360"/>
+<area shape="rect" id="node30" href="$sensor__shell_8h.html" title=" " alt="" coords="331,333,437,360"/>
+<area shape="rect" id="node19" href="$pldm_8h.html" title=" " alt="" coords="870,408,930,435"/>
+<area shape="rect" id="node28" href="$pdr_8h.html" title=" " alt="" coords="280,408,331,435"/>
+<area shape="rect" id="node20" href="$mctp_8h.html" title=" " alt="" coords="1521,483,1583,509"/>
+<area shape="rect" id="node23" href="$pldm__base_8h.html" title=" " alt="" coords="1250,483,1345,509"/>
+<area shape="rect" id="node24" href="$pldm__oem_8h.html" title=" " alt="" coords="854,483,946,509"/>
+<area shape="rect" id="node25" href="$pldm__firmware__update_8h.html" title=" " alt="" coords="616,483,779,509"/>
+<area shape="rect" id="node26" href="$pldm__state__set_8h.html" title=" " alt="" coords="970,483,1091,509"/>
+<area shape="rect" id="node27" href="$pldm__smbios_8h.html" title=" " alt="" coords="1116,483,1225,509"/>
+<area shape="rect" id="node21" title=" " alt="" coords="1421,557,1509,584"/>
+<area shape="rect" id="node22" title=" " alt="" coords="1533,557,1603,584"/>
+<area shape="rect" id="node29" title=" " alt="" coords="232,483,341,509"/>
+<area shape="rect" id="node31" title=" " alt="" coords="355,408,445,435"/>
+<area shape="rect" id="node34" title=" " alt="" coords="1471,169,1595,211"/>
+<area shape="rect" id="node36" href="$hal__gpio_8h.html" title=" " alt="" coords="1368,177,1448,203"/>
+<area shape="rect" id="node37" title=" " alt="" coords="1521,259,1620,285"/>
+</map>

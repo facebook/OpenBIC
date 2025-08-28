@@ -1,0 +1,25 @@
+var sb_rb_2src_2platform_2plat__log_8c =
+[
+    [ "_vr_ubc_device_table_", "struct__vr__ubc__device__table__.html", "struct__vr__ubc__device__table__" ],
+    [ "_vr_error_callback_info_", "struct__vr__error__callback__info__.html", "struct__vr__error__callback__info__" ],
+    [ "CPLD_VR_VENDOR_TYPE_REG", "sb-rb_2src_2platform_2plat__log_8c.html#adaffead1a5df5370282760fb5ae2f70b", null ],
+    [ "EEPROM_MAX_WRITE_TIME", "sb-rb_2src_2platform_2plat__log_8c.html#a25d371e0758954bbe1cfbe9c67d55741", null ],
+    [ "ERROR_CODE_TYPE_SHIFT", "sb-rb_2src_2platform_2plat__log_8c.html#af7b470fae3120d35a85ac22f6fba744a", null ],
+    [ "FRU_LOG_START", "sb-rb_2src_2platform_2plat__log_8c.html#ae880a08489edad54b4e3e4154b6680b0", null ],
+    [ "LOG_MAX_INDEX", "sb-rb_2src_2platform_2plat__log_8c.html#afd3fe1866cad1d8e5a242ee4249a6780", null ],
+    [ "LOG_MAX_NUM", "sb-rb_2src_2platform_2plat__log_8c.html#acb49373aab7ae2b0d3d4cc0cfb296fe1", null ],
+    [ "vr_error_callback_info", "sb-rb_2src_2platform_2plat__log_8c.html#a0be3a6a58bdcde11c8d92798b1229027", null ],
+    [ "vr_ubc_device_table", "sb-rb_2src_2platform_2plat__log_8c.html#a74fc0e5b95cc5e8ef4cdae457754c003", null ],
+    [ "error_log_event", "sb-rb_2src_2platform_2plat__log_8c.html#af4883060245d9c5101ff83feb7e40a43", null ],
+    [ "find_last_log_position", "sb-rb_2src_2platform_2plat__log_8c.html#a2dea19e5a118f21bb86a682d5021c552", null ],
+    [ "get_error_data", "sb-rb_2src_2platform_2plat__log_8c.html#a801991befce46e32f46909a749a57143", null ],
+    [ "init_load_eeprom_log", "sb-rb_2src_2platform_2plat__log_8c.html#a2453aa56476ef2a698940c4774b6b268", null ],
+    [ "LOG_MODULE_REGISTER", "sb-rb_2src_2platform_2plat__log_8c.html#a84f6fdd1e141f879b4334e122681efc0", null ],
+    [ "plat_clear_log", "sb-rb_2src_2platform_2plat__log_8c.html#a9c8ecdf578564e4b093d3cfe8c0fe61e", null ],
+    [ "plat_log_get_num", "sb-rb_2src_2platform_2plat__log_8c.html#abc7efe8e6ec1e0f353fe32c747389862", null ],
+    [ "plat_log_read", "sb-rb_2src_2platform_2plat__log_8c.html#ad41592ddbfab5427f24fe366ab5e52d0", null ],
+    [ "reset_error_log_event", "sb-rb_2src_2platform_2plat__log_8c.html#acfadcc5aa2d8d414259f6928a0271d61", null ],
+    [ "vr_fault_get_error_data", "sb-rb_2src_2platform_2plat__log_8c.html#a51d42f35fec5c70abbb09b619833abbb", null ],
+    [ "vr_device_table", "sb-rb_2src_2platform_2plat__log_8c.html#a34469a2d76b8c478a1871ad96a92392f", null ],
+    [ "vr_error_callback_info_table", "sb-rb_2src_2platform_2plat__log_8c.html#a7838b6bcfa12db03e71a3aa2f9a4894b", null ]
+];

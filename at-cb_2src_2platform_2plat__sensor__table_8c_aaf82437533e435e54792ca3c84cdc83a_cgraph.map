@@ -1,0 +1,9 @@
+<map id="is_acb_power_good" name="is_acb_power_good">
+<area shape="rect" id="node1" title=" " alt="" coords="5,56,143,83"/>
+<area shape="rect" id="node2" href="$at-cb_2src_2platform_2plat__class_8c.html#ab792e5ab34dd1dbfd3988dbe68b3716e" title=" " alt="" coords="191,5,363,32"/>
+<area shape="rect" id="node3" href="$at-cb_2src_2platform_2plat__class_8c.html#a2f2cd33d9b8735a424a77494156450d4" title=" " alt="" coords="200,56,353,83"/>
+<area shape="rect" id="node7" href="$at-cb_2src_2platform_2plat__class_8c.html#a177b22525ca1657da5ced816317de219" title=" " alt="" coords="211,107,342,133"/>
+<area shape="rect" id="node4" href="$at-cb_2src_2platform_2plat__class_8c.html#a6a54497033563f8d0666943817d1e92a" title=" " alt="" coords="411,56,532,83"/>
+<area shape="rect" id="node5" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="580,56,699,83"/>
+<area shape="rect" id="node6" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="747,56,889,83"/>
+</map>
