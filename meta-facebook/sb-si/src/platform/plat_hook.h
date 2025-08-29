@@ -97,6 +97,7 @@ typedef struct temp_threshold_mapping_sensor {
 } temp_threshold_mapping_sensor;
 
 extern temp_threshold_mapping_sensor temp_threshold_table[];
+extern pex90144_init_arg pex_sensor_init_args[];
 
 bool temp_sensor_rail_name_get(uint8_t rail, uint8_t **name);
 bool temp_sensor_rail_enum_get(uint8_t *name, uint8_t *num);

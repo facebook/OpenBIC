@@ -35,8 +35,13 @@
 #include "plat_pldm_sensor.h"
 #include "plat_class.h"
 #include "pmbus.h"
+#include "sensor.h"
 
 LOG_MODULE_REGISTER(plat_hook);
+
+pex90144_init_arg pex_sensor_init_args[] = {
+	[0] = { .idx = 0, .is_init = false },
+};
 
 static struct k_mutex vr_mutex[VR_MAX_NUM];
 
