@@ -98,29 +98,52 @@ typedef struct vr_mapping_sensor {
 } vr_mapping_sensor;
 
 enum PLAT_STRAP_INDEX_E {
-	STRAP_INDEX_SOC_JTAG_MUX_SEL_0_3,
-	STRAP_INDEX_SOC_DFT_TAP_EN_L,
-	STRAP_INDEX_SOC_ATPG_MODE_L,
-	STRAP_INDEX_SOC_PAD_TRI_N,
-	STRAP_INDEX_SOC_CORE_TAP_CTRL_L,
-	STRAP_INDEX_SOC_BOOT_SOURCE_0_4,
-	STRAP_INDEX_SOC_BOOT_SOURCE_5_6,
-	STRAP_INDEX_SOC_BOOT_SOURCE_7,
-	STRAP_INDEX_SOC_GPIO2,
-	STRAP_INDEX_S_OWL_BOOT_SOURCE_0_7,
-	STRAP_INDEX_N_OWL_BOOT_SOURCE_0_7,
-	STRAP_INDEX_S_OWL_PAD_TRI_N,
-	STRAP_INDEX_S_OWL_ATPG_MODE_L,
-	STRAP_INDEX_S_OWL_DFT_TAP_EN_L,
-	STRAP_INDEX_S_OWL_CORE_TAP_CTRL_L,
-	STRAP_INDEX_N_OWL_PAD_TRI_N,
-	STRAP_INDEX_N_OWL_ATPG_MODE_L,
-	STRAP_INDEX_N_OWL_DFT_TAP_EN_L,
-	STRAP_INDEX_N_OWL_CORE_TAP_CTRL_L,
-	STRAP_INDEX_S_OWL_JTAG_MUX_SEL_0_3,
-	STRAP_INDEX_N_OWL_JTAG_MUX_SEL_0_3,
-	STRAP_INDEX_S_OWL_UART_MUX_SEL_0_2,
-	STRAP_INDEX_N_OWL_UART_MUX_SEL_0_2,
+	STRAP_INDEX_HAMSA_TEST_STRAP_R = 0,
+	STRAP_INDEX_HAMSA_LS_STRAP_0_1,
+	STRAP_INDEX_HAMSA_CRM_STRAP_0_1,
+	STRAP_INDEX_HAMSA_MFIO12,
+	STRAP_INDEX_HAMSA_MFIO13,
+	STRAP_INDEX_HAMSA_MFIO14,
+	STRAP_INDEX_HAMSA_MFIO7,
+	STRAP_INDEX_HAMSA_MFIO9,
+	STRAP_INDEX_HAMSA_MFIO11,
+	STRAP_INDEX_HAMSA_MFIO17,
+	STRAP_INDEX_HAMSA_MFIO18,
+	STRAP_INDEX_HAMSA_CORE_TAP_CTRL_L,
+	STRAP_INDEX_HAMSA_TRI_L,
+	STRAP_INDEX_HAMSA_ATPG_MODE_L,
+	STRAP_INDEX_HAMSA_DFT_TAP_EN_L,
+	STRAP_INDEX_FM_JTAG_HAMSA_JTCE_0_3,
+	STRAP_INDEX_MEDHA0_TEST_STRAP,
+	STRAP_INDEX_MEDHA0_CRM_STRAP_0_1,
+	STRAP_INDEX_MEDHA0_CHIP_STRAP_0_1,
+	STRAP_INDEX_MEDHA0_CORE_TAP_CTRL_PLD_L,
+	STRAP_INDEX_MEDHA0_TRI_L,
+	STRAP_INDEX_MEDHA0_ATPG_MODE_L,
+	STRAP_INDEX_MEDHA0_DFT_TAP_EN_PLD_L,
+	STRAP_INDEX_MEDHA1_TEST_STRAP,
+	STRAP_INDEX_MEDHA1_CRM_STRAP_0_1,
+	STRAP_INDEX_MEDHA1_CHIP_STRAP_0_1,
+	STRAP_INDEX_MEDHA1_CORE_TAP_CTRL_PLD_L,
+	STRAP_INDEX_MEDHA1_TRI_L,
+	STRAP_INDEX_MEDHA1_ATPG_MODE_L,
+	STRAP_INDEX_MEDHA1_DFT_TAP_EN_PLD_L,
+	STRAP_INDEX_MEDHA0_MFIO_12_14,
+	STRAP_INDEX_MEDHA1_MFIO_12_14,
+	STRAP_INDEX_FM_JTAG_MEDHA0_JTCE_0_2,
+	STRAP_INDEX_FM_JTAG_MEDHA1_JTCE_0_2,
+	STRAP_INDEX_PLD_OWL_E_DFT_TAP_EN_L,
+	STRAP_INDEX_PLD_OWL_E_CORE_TAP_CTRL_L,
+	STRAP_INDEX_PLD_OWL_E_PAD_TRI_L,
+	STRAP_INDEX_PLD_OWL_E_ATPG_MODE_L,
+	STRAP_INDEX_PLD_OWL_W_DFT_TAP_EN_L,
+	STRAP_INDEX_PLD_OWL_W_CORE_TAP_CTRL_L,
+	STRAP_INDEX_PLD_OWL_W_PAD_TRI_L,
+	STRAP_INDEX_PLD_OWL_W_ATPG_MODE_L,
+	STRAP_INDEX_OWL_E_JTAG_MUX_PLD_SEL_0_3,
+	STRAP_INDEX_OWL_W_JTAG_MUX_PLD_SEL_0_3,
+	STRAP_INDEX_OWL_E_UART_MUX_PLD_SEL_0_2,
+	STRAP_INDEX_OWL_W_UART_MUX_PLD_SEL_0_2,
 	STRAP_INDEX_MAX,
 };
 typedef struct vr_vout_range_user_settings_struct {
@@ -132,10 +155,24 @@ typedef struct vr_vout_range_user_settings_struct {
 typedef struct vr_vout_user_settings {
 	uint16_t vout[VR_RAIL_E_MAX];
 } vr_vout_user_settings;
+typedef struct bootstrap_mapping_register {
+	uint8_t index;
+	uint8_t cpld_offsets;
+	uint8_t *strap_name;
+	uint8_t bit_offset;
+	uint8_t bit_count;
+	uint8_t default_setting_value;
+	uint8_t change_setting_value;
+	bool reverse;
+} bootstrap_mapping_register;
+typedef struct bootstrap_user_settings_struct {
+	uint16_t user_setting_value[STRAP_INDEX_MAX];
+} bootstrap_user_settings_struct;
 
 extern vr_vout_user_settings user_settings;
 extern vr_vout_range_user_settings_struct vout_range_user_settings;
 extern vr_mapping_sensor vr_rail_table[];
+extern bootstrap_mapping_register bootstrap_table[];
 
 bool pre_vr_read(sensor_cfg *cfg, void *args);
 bool post_vr_read(sensor_cfg *cfg, void *args, int *const reading);
@@ -161,4 +198,13 @@ bool vr_vout_default_settings_init(void);
 bool vr_vout_user_settings_init(void);
 bool temp_threshold_user_settings_get(void *temp_threshold_user_settings);
 bool plat_get_temp_threshold(uint8_t temp_index_threshold_type, uint32_t *millidegree_celsius);
+bool bootstrap_default_settings_init(void);
+bool bootstrap_user_settings_init(void);
+bool set_bootstrap_table_and_user_settings(uint8_t rail, uint8_t *change_setting_value,
+					   uint8_t drive_index_level, bool is_perm,
+					   bool is_default);
+bool strap_name_get(uint8_t rail, uint8_t **name);
+bool strap_enum_get(uint8_t *name, uint8_t *num);
+bool get_bootstrap_change_drive_level(int rail, int *drive_level);
+bool find_bootstrap_by_rail(uint8_t rail, bootstrap_mapping_register *result);
 #endif

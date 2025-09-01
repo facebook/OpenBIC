@@ -55,7 +55,7 @@ bool get_user_settings_thermaltrip_from_eeprom(void *thermaltrip_user_settings, 
 	CHECK_NULL_ARG_WITH_RETURN(thermaltrip_user_settings, false);
 
 	if (!plat_eeprom_read(THERMALTRIP_USER_SETTINGS_OFFSET, thermaltrip_user_settings,
-			       data_length)) {
+			      data_length)) {
 		LOG_ERR("Failed to write thermaltrip to eeprom");
 		return false;
 	}
@@ -94,13 +94,12 @@ static bool thermaltrip_user_settings_init(void)
 	}
 
 	if (setting_data != 0xFF) {
-		if (!plat_write_cpld(CPLD_THERMALTRIP_SWITCH_ADDR, &setting_data)) 
-		{
+		if (!plat_write_cpld(CPLD_THERMALTRIP_SWITCH_ADDR, &setting_data)) {
 			LOG_ERR("Can't set thermaltrip=%d by user settings", setting_data);
 			return false;
 		}
 	}
-	
+
 	return true;
 }
 temp_mapping_sensor temp_index_table[] = {
@@ -563,10 +562,8 @@ void user_settings_init(void)
 {
 	vr_vout_default_settings_init();
 	vr_vout_user_settings_init();
-	//soc_pcie_perst_user_settings_init();
-	//bootstrap_default_settings_init();
-	//bootstrap_user_settings_init();
+	bootstrap_default_settings_init();
+	bootstrap_user_settings_init();
 	vr_vout_range_user_settings_init();
 	thermaltrip_user_settings_init();
-	//throttle_user_settings_init();
 }
