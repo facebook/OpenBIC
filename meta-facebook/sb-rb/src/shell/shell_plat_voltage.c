@@ -39,7 +39,8 @@ static int cmd_voltage_get_all(const struct shell *shell, size_t argc, char **ar
 	shell_print(shell, "  id|              sensor_name               |vout(mV) ");
 	/* list all vr sensor value */
 	for (int i = 0; i < VR_RAIL_E_MAX; i++) {
-		if (((get_asic_board_id() != ASIC_BOARD_ID_EVB)) && (i == VR_RAIL_E_P3V3_OSFP_VOLT_V))
+		if (((get_asic_board_id() != ASIC_BOARD_ID_EVB)) &&
+		    (i == VR_RAIL_E_P3V3_OSFP_VOLT_V))
 			continue; // skip osfp p3v3 on AEGIS BD
 
 		uint16_t vout = 0;
@@ -120,10 +121,12 @@ static int cmd_voltage_set(const struct shell *shell, size_t argc, char **argv)
 
 static void voltage_rname_get(size_t idx, struct shell_static_entry *entry)
 {
-	uint8_t *name = NULL;
-	vr_rail_name_get((uint8_t)idx, &name);
 	if ((get_asic_board_id() == ASIC_BOARD_ID_EVB))
 		idx++;
+
+	uint8_t *name = NULL;
+	vr_rail_name_get((uint8_t)idx, &name);
+
 	entry->syntax = (name) ? (const char *)name : NULL;
 	entry->handler = NULL;
 	entry->help = NULL;

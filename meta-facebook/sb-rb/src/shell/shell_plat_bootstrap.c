@@ -52,8 +52,7 @@ uint8_t read_bits(uint8_t data, uint8_t start_bit, uint8_t end_bit, bool reverse
 }
 static int cmd_bootstrap_get_all(const struct shell *shell, size_t argc, char **argv)
 {
-	shell_print(shell, "%-4s|%-40s|%-25s|%-25s", "id", "strap name", "hex-value(user setting)",
-		    "hex-value(cpld read)");
+	shell_print(shell, "%-4s|%-40s|%-25s", "id", "strap name", "hex-value");
 	for (int i = 0; i < STRAP_INDEX_MAX; i++) {
 		uint8_t *rail_name = NULL;
 		if (!strap_name_get((uint8_t)i, &rail_name)) {
@@ -67,17 +66,7 @@ static int cmd_bootstrap_get_all(const struct shell *shell, size_t argc, char **
 			continue;
 		}
 
-		uint8_t cpld_value = 0;
-		if (!plat_read_cpld(bootstrap_table[i].cpld_offsets, &cpld_value, 1)) {
-			LOG_ERR("Can't read bootstrap[%2d] from cpld", i);
-		}
-		cpld_value =
-			read_bits(cpld_value, bootstrap_table[i].bit_offset,
-				  bootstrap_table[i].bit_offset + bootstrap_table[i].bit_count - 1,
-				  bootstrap_table[i].reverse);
-
-		shell_print(shell, "%-4d|%-40s|0x%-23.2x|0x%-23.2x", i, rail_name, drive_level,
-			    cpld_value);
+		shell_print(shell, "%-4d|%-40s|0x%-23.2x", i, rail_name, drive_level);
 	}
 
 	return 0;

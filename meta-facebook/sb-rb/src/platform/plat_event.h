@@ -17,5 +17,4 @@
 #define PLAT_EVENT_H
 #include <stdbool.h>
 
-
- #endif
+#endif

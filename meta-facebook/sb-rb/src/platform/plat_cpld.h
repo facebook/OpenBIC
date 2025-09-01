@@ -53,7 +53,6 @@ typedef struct _cpld_info_ {
 
 } cpld_info;
 
-
 void check_ubc_delayed(struct k_work *work);
 bool is_ubc_enabled_delayed_enabled(void);
 bool plat_read_cpld(uint8_t offset, uint8_t *data, uint8_t len);

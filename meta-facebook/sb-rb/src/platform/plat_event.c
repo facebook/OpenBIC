@@ -25,6 +25,5 @@
 
 LOG_MODULE_REGISTER(plat_event);
 
-
 void get_vr_vout_handler(struct k_work *work);
 K_WORK_DEFINE(vr_vout_work, get_vr_vout_handler);

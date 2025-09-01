@@ -35,7 +35,8 @@ static int cmd_voltage_range_get(const struct shell *shell, size_t argc, char **
 		if (!strcmp(argv[1], "all")) {
 			/* print all range */
 			for (int i = 0; i < VR_RAIL_E_MAX; i++) {
-				if ((get_asic_board_id() != ASIC_BOARD_ID_EVB) && (i == VR_RAIL_E_P3V3_OSFP_VOLT_V))
+				if ((get_asic_board_id() != ASIC_BOARD_ID_EVB) &&
+				    (i == VR_RAIL_E_P3V3_OSFP_VOLT_V))
 					continue;
 
 				uint8_t *rail_name = NULL;

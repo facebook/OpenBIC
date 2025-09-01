@@ -545,14 +545,15 @@ bool plat_set_vout_command(uint8_t rail, uint16_t *millivolt, bool is_default, b
 	bool ret = false;
 	uint8_t sensor_id = vr_rail_table[rail].sensor_id;
 	sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
-	vr_pre_proc_arg *pre_sensor_read_args = cfg->pre_sensor_read_args;
-	uint16_t setting_millivolt = *millivolt;
-	// get page from sensor_cfg
-	uint8_t page = pre_sensor_read_args->vr_page;
 	if (cfg == NULL) {
 		LOG_ERR("Failed to get sensor config for sensor 0x%x", sensor_id);
 		return false;
 	}
+
+	const vr_pre_proc_arg *pre_sensor_read_args = cfg->pre_sensor_read_args;
+	uint16_t setting_millivolt = *millivolt;
+	// get page from sensor_cfg
+	uint8_t page = pre_sensor_read_args->vr_page;
 
 	if (cfg->pre_sensor_read_hook) {
 		if (!cfg->pre_sensor_read_hook(cfg, cfg->pre_sensor_read_args)) {

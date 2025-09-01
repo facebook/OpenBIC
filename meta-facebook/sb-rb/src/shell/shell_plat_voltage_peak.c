@@ -35,7 +35,8 @@ static int cmd_get_voltage_peak(const struct shell *shell, size_t argc, char **a
 
 	if (!strcmp(argv[1], "all")) {
 		for (int i = 0; i < VR_RAIL_E_MAX; i++) {
-			if ((get_asic_board_id() != ASIC_BOARD_ID_EVB) && (i == VR_RAIL_E_P3V3_OSFP_VOLT_V))
+			if ((get_asic_board_id() != ASIC_BOARD_ID_EVB) &&
+			    (i == VR_RAIL_E_P3V3_OSFP_VOLT_V))
 				continue;
 
 			uint8_t *rail_name = NULL;
@@ -77,7 +78,8 @@ static int cmd_get_voltage_peak(const struct shell *shell, size_t argc, char **a
 			return -1;
 		}
 
-		if ((get_asic_board_id() != ASIC_BOARD_ID_EVB) && (rail == VR_RAIL_E_P3V3_OSFP_VOLT_V)) {
+		if ((get_asic_board_id() != ASIC_BOARD_ID_EVB) &&
+		    (rail == VR_RAIL_E_P3V3_OSFP_VOLT_V)) {
 			shell_print(shell, "There is no osfp p3v3");
 			return 0;
 		}
@@ -120,7 +122,8 @@ static int cmd_clear_voltage_peak(const struct shell *shell, size_t argc, char *
 	if (!strcmp(argv[1], "all")) {
 		bool result = true;
 		for (int i = 0; i < VR_RAIL_E_MAX; i++) {
-			if ((get_asic_board_id() != ASIC_BOARD_ID_EVB) && (i == VR_RAIL_E_P3V3_OSFP_VOLT_V))
+			if ((get_asic_board_id() != ASIC_BOARD_ID_EVB) &&
+			    (i == VR_RAIL_E_P3V3_OSFP_VOLT_V))
 				continue;
 
 			result = vr_rail_voltage_peak_clear(i);
