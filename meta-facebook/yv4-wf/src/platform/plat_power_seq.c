@@ -399,7 +399,7 @@ int check_powers_enabled(int cxl_id, int pwr_stage)
 
 bool is_power_controlled(int cxl_id, int power_pin, uint8_t check_power_status, char *power_name)
 {
-	int retry_times = 5, i = 0;
+	int retry_times = 50, i = 0;
 	for (i = 0; i < retry_times; i++) {
 		k_msleep(CHK_PWR_DELAY_MSEC);
 		// Get power good pin to check power
