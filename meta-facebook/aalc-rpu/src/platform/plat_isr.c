@@ -197,6 +197,8 @@ void aalc_leak_recovery_behavior(uint8_t sensor_num)
 				   AALC_STATUS_RACK_LEAKAGE :
 				   AALC_STATUS_LEAK_E_MAX;
 	set_status_flag(STATUS_FLAG_LEAK, led_leak, 0);
+	if (get_led_status(LED_IDX_E_LEAK) == LED_START_BLINK)
+		led_ctrl(LED_IDX_E_LEAK, LED_STOP_BLINK);
 	fault_led_control();
 }
 void shutdown_save_uptime_action()
