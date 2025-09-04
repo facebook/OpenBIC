@@ -86,6 +86,7 @@ void reset_redundant_transform_status();
 uint8_t ctl_all_pwm_dev(uint8_t duty);
 uint8_t set_pwm_group(uint8_t group, uint8_t duty);
 uint8_t get_pwm_group_cache(uint8_t group);
+void set_pwm_group_cache(uint8_t group, uint8_t duty);
 uint8_t get_pwm_cache(uint8_t idx);
 uint8_t manual_pwm_idx_to_pwm_idx(uint8_t idx);
 uint8_t get_manual_pwm_flag(uint8_t idx);
