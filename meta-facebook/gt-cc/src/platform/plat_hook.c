@@ -28,6 +28,7 @@
 #include "pmbus.h"
 #include "nvme.h"
 #include "plat_pldm_monitor.h"
+#include "plat_mctp.h"
 
 #include <logging/log.h>
 
@@ -932,14 +933,38 @@ nct7718w_init_arg nct7718w_init_args[] = {
 };
 
 cx7_init_arg cx7_init_args[] = {
-	[0] = { .is_init = false, .endpoint = 0x10, .sensor_id = 0x0008 },
-	[1] = { .is_init = false, .endpoint = 0x11, .sensor_id = 0x0008 },
-	[2] = { .is_init = false, .endpoint = 0x12, .sensor_id = 0x0008 },
-	[3] = { .is_init = false, .endpoint = 0x13, .sensor_id = 0x0008 },
-	[4] = { .is_init = false, .endpoint = 0x14, .sensor_id = 0x0008 },
-	[5] = { .is_init = false, .endpoint = 0x15, .sensor_id = 0x0008 },
-	[6] = { .is_init = false, .endpoint = 0x16, .sensor_id = 0x0008 },
-	[7] = { .is_init = false, .endpoint = 0x17, .sensor_id = 0x0008 },
+	[0] = { .is_init = false,
+		.endpoint = 0x10,
+		.sensor_id = 0x0008,
+		.re_init_eid_fn = plat_set_dev_endpoint },
+	[1] = { .is_init = false,
+		.endpoint = 0x11,
+		.sensor_id = 0x0008,
+		.re_init_eid_fn = plat_set_dev_endpoint },
+	[2] = { .is_init = false,
+		.endpoint = 0x12,
+		.sensor_id = 0x0008,
+		.re_init_eid_fn = plat_set_dev_endpoint },
+	[3] = { .is_init = false,
+		.endpoint = 0x13,
+		.sensor_id = 0x0008,
+		.re_init_eid_fn = plat_set_dev_endpoint },
+	[4] = { .is_init = false,
+		.endpoint = 0x14,
+		.sensor_id = 0x0008,
+		.re_init_eid_fn = plat_set_dev_endpoint },
+	[5] = { .is_init = false,
+		.endpoint = 0x15,
+		.sensor_id = 0x0008,
+		.re_init_eid_fn = plat_set_dev_endpoint },
+	[6] = { .is_init = false,
+		.endpoint = 0x16,
+		.sensor_id = 0x0008,
+		.re_init_eid_fn = plat_set_dev_endpoint },
+	[7] = { .is_init = false,
+		.endpoint = 0x17,
+		.sensor_id = 0x0008,
+		.re_init_eid_fn = plat_set_dev_endpoint },
 };
 
 /**************************************************************************************************

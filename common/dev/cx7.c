@@ -60,7 +60,25 @@ uint8_t cx7_read(sensor_cfg *cfg, int *reading)
 
 	if (resp_len == 0) {
 		LOG_ERR("Failed to get CX7 sensor #%d reading", init_arg->sensor_id);
-		return SENSOR_FAIL_TO_ACCESS;
+
+		LOG_INF("Attempting to re-initialize EID 0x%x for CX7 device due to sensor read failure",
+			mctp_dest_eid);
+
+		if (init_arg->re_init_eid_fn) {
+			init_arg->re_init_eid_fn();
+		}
+
+		k_msleep(50); // Wait for EID re-initialization to complete
+		resp_len = pldm_platform_monitor_read(mctp_inst, ext_params,
+						      PLDM_MONITOR_CMD_CODE_GET_SENSOR_READING,
+						      (uint8_t *)&req, req_len, resp_buf,
+						      sizeof(resp_buf));
+
+		if (resp_len == 0) {
+			LOG_ERR("Failed to get CX7 sensor #%d reading after EID re-initialization",
+				init_arg->sensor_id);
+			return SENSOR_FAIL_TO_ACCESS;
+		}
 	}
 
 	struct pldm_get_sensor_reading_resp *res = (struct pldm_get_sensor_reading_resp *)resp_buf;
