@@ -235,3 +235,146 @@ void pal_load_fru_config(void)
 {
 	memcpy(&fru_config, &plat_fru_config, sizeof(plat_fru_config));
 }
+
+static void decode_field(uint8_t *data, int len, char *buffer, int buffer_size)
+{
+	CHECK_NULL_ARG(data);
+
+	if (len <= 0 || len >= buffer_size) {
+		buffer[0] = '\0';
+		return;
+	}
+
+	memcpy(buffer, data, len);
+	buffer[len] = '\0';
+}
+
+static bool get_nic_product_manufacturer(uint8_t fru_id, char *manufacturer,
+					 uint8_t manufacturer_size)
+{
+	CHECK_NULL_ARG_WITH_RETURN(manufacturer, false);
+
+	if (manufacturer_size == 0) {
+		LOG_ERR("Invalid manufacturer size: %d", manufacturer_size);
+		return false;
+	}
+
+	EEPROM_ENTRY fru_entry;
+	memset(&fru_entry, 0, sizeof(fru_entry));
+
+	fru_entry.config = fru_config[fru_id];
+	fru_entry.offset = 0;
+	fru_entry.data_len = 8;
+
+	if (FRU_read(&fru_entry) != FRU_READ_SUCCESS) {
+		LOG_ERR("Failed to read FRU header for FRU ID %d", fru_id);
+		return false;
+	}
+
+	// Check FRU common header format identifier
+	if (fru_entry.data[0] != 0x01) {
+		LOG_ERR("Invalid FRU format for FRU ID %d", fru_id);
+		return false;
+	}
+
+	// Get product area offset (5th byte * 8)
+	uint16_t product_area_offset = fru_entry.data[4] * 8;
+	if (product_area_offset == 0) {
+		LOG_ERR("No product area found for FRU ID %d", fru_id);
+		return false;
+	}
+
+	// Read product area header
+	fru_entry.offset = product_area_offset;
+	fru_entry.data_len = 3;
+
+	if (FRU_read(&fru_entry) != FRU_READ_SUCCESS) {
+		LOG_ERR("Failed to read product area header for FRU ID %d", fru_id);
+		return false;
+	}
+
+	// Check product area format version
+	if (fru_entry.data[0] != 0x01) {
+		LOG_ERR("Invalid product area format for FRU ID %d", fru_id);
+		return false;
+	}
+
+	uint16_t area_len = fru_entry.data[1] * 8;
+	if (area_len < 4) {
+		LOG_ERR("Invalid product area length for FRU ID %d", fru_id);
+		return false;
+	}
+
+	// Read the first field (product manufacturer) type/length
+	fru_entry.offset = product_area_offset + 3;
+	fru_entry.data_len = 1;
+
+	if (FRU_read(&fru_entry) != FRU_READ_SUCCESS) {
+		LOG_ERR("Failed to read product manufacturer field for FRU ID %d", fru_id);
+		return false;
+	}
+
+	uint8_t type_length = fru_entry.data[0];
+	if (type_length == 0xC1) {
+		// End of fields marker
+		LOG_WRN("No product manufacturer field found for FRU ID %d", fru_id);
+		return false;
+	}
+
+	int field_len = type_length & 0x3F;
+	if (field_len <= 0 || field_len >= manufacturer_size) {
+		LOG_ERR("Invalid product manufacturer field length for FRU ID %d", fru_id);
+		return false;
+	}
+
+	// Read the product manufacturer field data
+	fru_entry.offset = product_area_offset + 4;
+	fru_entry.data_len = field_len;
+
+	if (FRU_read(&fru_entry) != FRU_READ_SUCCESS) {
+		LOG_ERR("Failed to read product manufacturer data for FRU ID %d", fru_id);
+		return false;
+	}
+
+	decode_field(fru_entry.data, field_len, manufacturer, manufacturer_size);
+
+	LOG_DBG("NIC FRU ID %d product manufacturer: %s", fru_id, manufacturer);
+	return true;
+}
+
+bool get_first_nic_manufacturer(char *manufacturer, uint8_t manufacturer_size)
+{
+	CHECK_NULL_ARG_WITH_RETURN(manufacturer, false);
+
+	if (manufacturer_size == 0) {
+		LOG_ERR("Invalid manufacturer size: %d", manufacturer_size);
+		return false;
+	}
+
+	bool found_manufacturer = false;
+	char temp_manufacturer[32];
+
+	for (uint8_t i = 0; i < NIC_MAX_NUMBER; i++) {
+		// Check if NIC is present (presence pin is active low)
+		if (gpio_get(nic_prsnt_pin[i])) {
+			LOG_INF("NIC%d: Not present", i);
+			continue;
+		}
+
+		if (get_nic_product_manufacturer(NIC0_FRU_ID + i, temp_manufacturer,
+						 sizeof(temp_manufacturer))) {
+			LOG_INF("NIC%d: Product Manufacturer = %s", i, temp_manufacturer);
+
+			// If this is the first manufacturer found, save it
+			if (!found_manufacturer) {
+				strncpy(manufacturer, temp_manufacturer, manufacturer_size - 1);
+				manufacturer[manufacturer_size - 1] = '\0';
+				found_manufacturer = true;
+			}
+		} else {
+			LOG_INF("NIC%d: Failed to read product manufacturer", i);
+		}
+	}
+
+	return found_manufacturer;
+}
