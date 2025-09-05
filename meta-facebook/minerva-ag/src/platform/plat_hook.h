@@ -160,6 +160,24 @@ enum UBC_VR_RAIL_E {
 	UBC_VR_RAIL_E_MAX,
 };
 
+enum POWER_CAPPING_INDEX_E {
+	POWER_CAPPING_INDEX_HC = 0,
+	POWER_CAPPING_INDEX_LC,
+	POWER_CAPPING_INDEX_INTERVAL,
+	POWER_CAPPING_INDEX_MAX,
+};
+
+typedef struct power_capping_mapping_sensor {
+	uint8_t index;
+	uint8_t *sensor_name;
+} power_capping_mapping_sensor;
+
+typedef struct power_capping_user_settings_struct {
+	uint16_t user_setting_value[POWER_CAPPING_INDEX_MAX];
+} power_capping_user_settings_struct;
+
+extern power_capping_user_settings_struct power_capping_user_settings;
+
 typedef struct vr_vout_range_user_settings_struct {
 	uint16_t default_vout_max[STRAP_INDEX_MAX];
 	uint16_t default_vout_min[STRAP_INDEX_MAX];
@@ -329,5 +347,8 @@ bool ubc_vr_rail_name_get(uint8_t rail, uint8_t **name);
 bool ubc_vr_rail_enum_get(uint8_t *name, uint8_t *num);
 bool get_average_power(uint8_t rail, uint32_t *milliwatt);
 bool voltage_command_setting_get(uint8_t rail, uint16_t *vout);
+bool power_capping_rail_name_get(uint8_t rail, uint8_t **name);
+bool power_capping_rail_enum_get(uint8_t *name, uint8_t *num);
+bool plat_set_power_capping_command(uint8_t rail, uint16_t *set_value);
 
 #endif

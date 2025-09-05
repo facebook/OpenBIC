@@ -126,6 +126,19 @@ static int cmd_perm_config_get(const struct shell *shell, size_t argc, char **ar
 		}
 	}
 
+	for (int i = 0; i < POWER_CAPPING_INDEX_MAX; i++) {
+		if (power_capping_user_settings.user_setting_value[i] != 0xffff) {
+			uint8_t *rail_name = NULL;
+			if (!power_capping_rail_name_get((uint8_t)i, &rail_name)) {
+				LOG_ERR("Can't find power_capping_rail_name by rail index: %x", i);
+				continue;
+			}
+			shell_print(shell, "[%2d]%-50s val=%d", i, rail_name,
+				    power_capping_user_settings.user_setting_value[i]);
+			config_count++;
+		}
+	}
+
 	if (!config_count) {
 		shell_print(shell, "no perm parameter exist");
 	}
