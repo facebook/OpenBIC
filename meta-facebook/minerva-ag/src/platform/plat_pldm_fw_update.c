@@ -372,6 +372,7 @@ static uint8_t pldm_pre_vr_update(void *fw_update_param)
 
 	/* Stop sensor polling */
 	set_plat_sensor_polling_enable_flag(false);
+	k_msleep(2000);
 
 	uint8_t bus = 0;
 	uint8_t addr = 0;
@@ -412,6 +413,7 @@ static uint8_t pldm_post_vr_update(void *fw_update_param)
 	ARG_UNUSED(fw_update_param);
 
 	/* Start sensor polling */
+	k_msleep(2000);
 	set_plat_sensor_polling_enable_flag(true);
 
 	return 0;
