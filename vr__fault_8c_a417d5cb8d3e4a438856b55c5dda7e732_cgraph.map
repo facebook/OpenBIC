@@ -1,0 +1,11 @@
+<map id="vr_pwr_fault_handler" name="vr_pwr_fault_handler">
+<area shape="rect" id="node1" title=" " alt="" coords="5,157,148,184"/>
+<area shape="rect" id="node2" href="$sensor_8c.html#a254481b5d30d7b182e368c57ff208184" title=" " alt="" coords="219,5,355,32"/>
+<area shape="rect" id="node3" href="$sensor_8c.html#a943433215e208bf552a04105d8d7b320" title=" " alt="" coords="221,56,354,83"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="228,107,347,133"/>
+<area shape="rect" id="node6" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="227,157,348,184"/>
+<area shape="rect" id="node7" href="$vr__fault_8c.html#a1e1bf101214f4516360feb510a025512" title=" " alt="" coords="208,208,367,235"/>
+<area shape="rect" id="node8" href="$vr__fault_8c.html#aea1ce3db389a5eacc3104aa626888816" title=" " alt="" coords="216,259,359,301"/>
+<area shape="rect" id="node9" href="$vr__fault_8c.html#a6060eb7982d993894e80ee7503e6d295" title=" " alt="" coords="196,325,379,352"/>
+<area shape="rect" id="node5" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="427,132,569,159"/>
+</map>

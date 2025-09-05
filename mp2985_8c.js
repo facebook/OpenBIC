@@ -1,0 +1,56 @@
+var mp2985_8c =
+[
+    [ "mp2985_data", "structmp2985__data.html", "structmp2985__data" ],
+    [ "mp2985_config", "structmp2985__config.html", "structmp2985__config" ],
+    [ "CR_ASCII", "mp2985_8c.html#a4fc6d1b1f2370f61c21b3d01274bf070", null ],
+    [ "ENABLE_LOW_POWER_MODE_BIT", "mp2985_8c.html#a62bc151df551f2109cf79cdaacbddb66", null ],
+    [ "ENABLE_PROGRAM_MODE_BIT", "mp2985_8c.html#ac4006289c84b791d5b7c3a5391574759", null ],
+    [ "MFR_TEST_MODE_EN_BIT", "mp2985_8c.html#a3f2649be910c442a23e5ab10937df598", null ],
+    [ "MP2985_4_DIGITAL_TAG", "mp2985_8c.html#a66ded45c88f2a8ae06495f242b613ecb", null ],
+    [ "MP2985_CRC_CHECK_START_TAG", "mp2985_8c.html#a7a6c0330517b6ef62e9f549428ed2770", null ],
+    [ "MP2985_DATA_END_TAG", "mp2985_8c.html#ab4bd7857cc92b8831bc266525b4cb91a", null ],
+    [ "MP2985_MODULE_ID", "mp2985_8c.html#a094b6a596149055bc5bd02beef96e5e4", null ],
+    [ "MP2985_PRODUCT_ID", "mp2985_8c.html#a3bab3742a208b8f6ba892418cafec06b", null ],
+    [ "MP2985_PRODUCT_ID_TAG", "mp2985_8c.html#ab9b7639fc16a3fc08ef9b6a38c0288c6", null ],
+    [ "MP2985_VENDOR_ID", "mp2985_8c.html#a7a948e35cabf4bf5544a374def4f6d20", null ],
+    [ "NEW_LINE_ASCII", "mp2985_8c.html#aef184745b7c97515294073a10996bfc1", null ],
+    [ "PASSWORD_MATCH_BIT", "mp2985_8c.html#ae157e2c157f9af55ae1a477fc361099c", null ],
+    [ "TAB_ASCII", "mp2985_8c.html#a7d3ef696d662721dee2f4c61a7920ba7", null ],
+    [ "ENTER_PAGE3_CONTROL_OPTION", "mp2985_8c.html#a3cedcce95d346b6ad8e27187ee4bab73", [
+      [ "DISABLE_ENTER_PAGE3", "mp2985_8c.html#a3cedcce95d346b6ad8e27187ee4bab73a502051e56a9b8d04a1059fc1a36d9ae9", null ],
+      [ "ENABLE_ENTER_PAGE", "mp2985_8c.html#a3cedcce95d346b6ad8e27187ee4bab73a5b15382042fafd59ba84534414a21c66", null ]
+    ] ],
+    [ "MP2985_CONFIG_FILE_COLUMN", "mp2985_8c.html#a912870995805b1bbe77f753a135b46f0", [
+      [ "ATE_CONF_ID", "mp2985_8c.html#a912870995805b1bbe77f753a135b46f0a6279b42f89c93718c756f0d48e966e2b", null ],
+      [ "ATE_PAGE_NUM", "mp2985_8c.html#a912870995805b1bbe77f753a135b46f0a747b7fc5de3b0db1da91bcae0501e65d", null ],
+      [ "ATE_REG_ADDR_HEX", "mp2985_8c.html#a912870995805b1bbe77f753a135b46f0a17395cdb5e0cc5c2d38f267ca63a0a75", null ],
+      [ "ATE_REG_ADDR_DEC", "mp2985_8c.html#a912870995805b1bbe77f753a135b46f0a9f53921265b89cec276271aa0e99140b", null ],
+      [ "ATE_REG_NAME", "mp2985_8c.html#a912870995805b1bbe77f753a135b46f0a25a06ef048ad39f853f5c733ff33d1d1", null ],
+      [ "ATE_REG_DATA_HEX", "mp2985_8c.html#a912870995805b1bbe77f753a135b46f0af0d47015f79327202b965466de71eb4b", null ],
+      [ "ATE_REG_DATA_DEC", "mp2985_8c.html#a912870995805b1bbe77f753a135b46f0a5fcd1f058af3079eb385de04b6506f28", null ],
+      [ "ATE_WRITE_TYPE", "mp2985_8c.html#a912870995805b1bbe77f753a135b46f0a55f1016a80934247477308555f7ce654", null ],
+      [ "ATE_COLUMN_MAX", "mp2985_8c.html#a912870995805b1bbe77f753a135b46f0a07eabe8f3e1181e414a703e78f12965b", null ]
+    ] ],
+    [ "MP2985_REG", "mp2985_8c.html#a1c64cfed33231da8beba7cc925c69e2f", [
+      [ "MP2985_MFR_DEBUG", "mp2985_8c.html#a1c64cfed33231da8beba7cc925c69e2fa0952275353047d0bce716f21f684e51f", null ],
+      [ "MP2985_PAGE_PLUS_WRITE", "mp2985_8c.html#a1c64cfed33231da8beba7cc925c69e2fa99c93c7f6ea26217cb2d8e7448f41baa", null ],
+      [ "MP2985_STORE_USER_CODE", "mp2985_8c.html#a1c64cfed33231da8beba7cc925c69e2fa776e33d4a03f34ade09c686100fa0ce8", null ],
+      [ "MP2985_MFR_VR_CONFIG2", "mp2985_8c.html#a1c64cfed33231da8beba7cc925c69e2fa031de3c8b0b0e469d1104cf0b9c34b3b", null ],
+      [ "MP2985_PAGE3_DISABLE_STORE_FAULT", "mp2985_8c.html#a1c64cfed33231da8beba7cc925c69e2fa67aac169ff2af881509dc3719364525e", null ],
+      [ "MP2985_MFR_ID", "mp2985_8c.html#a1c64cfed33231da8beba7cc925c69e2fab487c25c44498c18795729565bfc4103", null ],
+      [ "MP2985_MFR_MODULE", "mp2985_8c.html#a1c64cfed33231da8beba7cc925c69e2fad8c71b3dfa5826438323a8e29080b6c3", null ],
+      [ "MP2985_MFR_REVISION", "mp2985_8c.html#a1c64cfed33231da8beba7cc925c69e2fa94526b83276bbd6ecaebbddfb9dab695", null ],
+      [ "MP2985_GET_USER_DATA", "mp2985_8c.html#a1c64cfed33231da8beba7cc925c69e2fa045702b54c0c2154a638b6e9be7ecc49", null ],
+      [ "MP2985_USER_PWD_CHECK_CMD", "mp2985_8c.html#a1c64cfed33231da8beba7cc925c69e2fa340a434f99e97dabfbc825bcee817870", null ],
+      [ "MP2985_MFR_USER_PWD", "mp2985_8c.html#a1c64cfed33231da8beba7cc925c69e2fa356d3e980357d9458f5f9b4041b0ceaa", null ]
+    ] ],
+    [ "LOG_MODULE_REGISTER", "mp2985_8c.html#aa5d13305e04c644f0fec853bba3b2988", null ],
+    [ "mp2985_fwupdate", "mp2985_8c.html#ade7d097deada6cbb45c9a66aa10584fb", null ],
+    [ "mp2985_get_checksum", "mp2985_8c.html#af6932ff9a70f379075b3991a8788ffda", null ],
+    [ "mp2985_init", "mp2985_8c.html#ab994e2a7a65ae78e9a9c54f9b27e4805", null ],
+    [ "mp2985_line_split", "mp2985_8c.html#ac653f04c8ca042bc43c3f2c9555b66e5", null ],
+    [ "mp2985_parse_file", "mp2985_8c.html#ab6461e5870b43d8a835cb62f308e851a", null ],
+    [ "mp2985_read", "mp2985_8c.html#a169f85c5ee21cbf41537756521ddb288", null ],
+    [ "mp2985_set_power_regular_mode", "mp2985_8c.html#a7a862cabbe1f0264947ad783d2a2fe92", null ],
+    [ "program_mp2985", "mp2985_8c.html#a152c5fc2e0153fa005482cdfbc57cb0f", null ]
+];
