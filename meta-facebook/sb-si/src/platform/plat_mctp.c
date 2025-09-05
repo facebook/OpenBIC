@@ -42,7 +42,7 @@
 LOG_MODULE_REGISTER(plat_mctp);
 
 /* i2c 8 bit address */
-#define I2C_ADDR_BIC 0x40
+#define I2C_ADDR_BIC 0x42
 #define I2C_ADDR_BMC 0x20
 
 /* i2c dev bus */
