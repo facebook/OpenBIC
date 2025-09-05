@@ -61,7 +61,7 @@ si_compnt_mapping_sensor si_vr_compnt_mapping_sensor_table[] = {
 };
 
 si_compnt_mapping_sensor si_pcie_switch_compnt_mapping_sensor_table[] = {
-	{ SI_COMPNT_PCIE_SWITCH, SENSOR_NUM_PCIE_SWITCH_TEMP_C, "SI_PCIE_SWITCH" },
+	{ SI_COMPNT_PEX90144, SENSOR_NUM_PCIE_SWITCH_PEX90144_TEMP_C, "SI_PEX90144" },
 };
 
 /* PLDM FW update table */
@@ -114,7 +114,7 @@ pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
 	{
 		.enable = true,
 		.comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,
-		.comp_identifier = SI_COMPNT_PCIE_SWITCH,
+		.comp_identifier = SI_COMPNT_PEX90144,
 		.comp_classification_index = 0x00,
 		.pre_update_func = plat_pldm_pre_pcie_switch_update,
 		.update_func = pldm_pcie_switch_update,

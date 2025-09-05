@@ -234,7 +234,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
-			SENSOR_NUM_PCIE_SWITCH_TEMP_C, //uint16_t sensor_id;
+			SENSOR_NUM_PCIE_SWITCH_PEX90144_TEMP_C, //uint16_t sensor_id;
 			0x0000, //uint16_t entity_type;
 			0x0002, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
@@ -277,7 +277,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 		},
 		.update_time = 0,
 		{
-			.num = SENSOR_NUM_PCIE_SWITCH_TEMP_C,
+			.num = SENSOR_NUM_PCIE_SWITCH_PEX90144_TEMP_C,
 			.type = sensor_dev_pex90144,
 			.port = I2C_BUS4,
 			.target_addr = PCIE_SWITCH_ADDR,
@@ -1908,7 +1908,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 	},
 	{
 
-		// SENSOR_NUM_PCIE_SWITCH_TEMP_C
+		// SENSOR_NUM_PCIE_SWITCH_PEX90144_TEMP_C
 		/*** PDR common header***/
 		{
 			.record_handle = 0x00000000,
@@ -1918,7 +1918,7 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = SENSOR_NUM_PCIE_SWITCH_TEMP_C,
+		.sensor_id = SENSOR_NUM_PCIE_SWITCH_PEX90144_TEMP_C,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
@@ -2652,7 +2652,7 @@ bool get_sensor_info_by_sensor_id(uint8_t sensor_id, uint8_t *vr_bus, uint8_t *v
 	int pldm_sensor_count = 0;
 
 	if (sensor_id >= SENSOR_NUM_THERMAL_SENSOR_1_TEMP_C &&
-	    sensor_id <= SENSOR_NUM_PCIE_SWITCH_TEMP_C) {
+	    sensor_id <= SENSOR_NUM_PCIE_SWITCH_PEX90144_TEMP_C) {
 		pldm_sensor_count = plat_pldm_sensor_get_sensor_count(TEMP_SENSOR_THREAD_ID);
 		for (int index = 0; index < pldm_sensor_count; index++) {
 			if (plat_pldm_sensor_temp_table[index].pldm_sensor_cfg.num == sensor_id) {
@@ -2699,7 +2699,7 @@ sensor_cfg *get_sensor_cfg_by_sensor_id(uint8_t sensor_id)
 	int pldm_sensor_count = 0;
 
 	if (sensor_id >= SENSOR_NUM_THERMAL_SENSOR_1_TEMP_C &&
-	    sensor_id <= SENSOR_NUM_PCIE_SWITCH_TEMP_C) {
+	    sensor_id <= SENSOR_NUM_PCIE_SWITCH_PEX90144_TEMP_C) {
 		pldm_sensor_count = plat_pldm_sensor_get_sensor_count(TEMP_SENSOR_THREAD_ID);
 		for (int index = 0; index < pldm_sensor_count; index++) {
 			if (plat_pldm_sensor_temp_table[index].pldm_sensor_cfg.num == sensor_id) {

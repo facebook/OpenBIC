@@ -20,10 +20,12 @@
 #include <shell/shell.h>
 
 void cmd_get_fw_version_vr(const struct shell *shell, size_t argc, char **argv);
-void cmd_get_fw_version_cpld(const struct shell *shell, size_t argc, char **argv);
+void cmd_get_fw_version_pcie_switch(const struct shell *shell, size_t argc, char **argv);
 
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_get_fw_version_cmd,
 			       SHELL_CMD(vr, NULL, "get fw version vr", cmd_get_fw_version_vr),
+			       SHELL_CMD(pcie_switch, NULL, "get fw version pcie_switch",
+					 cmd_get_fw_version_pcie_switch),
 			       SHELL_SUBCMD_SET_END);
 
 SHELL_CMD_REGISTER(get_fw_version, &sub_get_fw_version_cmd, "Get fw version command", NULL);
