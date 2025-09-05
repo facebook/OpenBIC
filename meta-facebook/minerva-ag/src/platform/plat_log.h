@@ -39,6 +39,7 @@ void error_log_event(uint16_t error_code, bool log_status);
 void plat_clear_log();
 uint8_t plat_log_get_num(void);
 void reset_error_log_event(uint8_t err_type);
+bool vr_fault_get_error_data(uint8_t sensor_id, uint8_t device_id, uint8_t *data);
 
 typedef struct __attribute__((packed)) _plat_err_log_mapping {
 	uint16_t index;
@@ -54,6 +55,23 @@ enum LOG_ERROR_TRIGGER_CAUSE {
 	AC_ON_TRIGGER_CAUSE = 0b010,
 	DC_ON_TRIGGER_CAUSE = 0b011,
 	MAX_TRIGGER_CAUSE = 0b1000, //trigger cause maxium 3 bit
+};
+
+enum VR_UBC_INDEX_E {
+	UBC_1 = 1,
+	UBC_2,
+	VR_1,
+	VR_2,
+	VR_3,
+	VR_4,
+	VR_5,
+	VR_6,
+	VR_7,
+	VR_8,
+	VR_9,
+	VR_10,
+	VR_11,
+	VR_MAX,
 };
 
 #endif

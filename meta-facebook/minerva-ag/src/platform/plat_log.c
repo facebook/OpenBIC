@@ -26,6 +26,7 @@
 #include "plat_event.h"
 #include "plat_hook.h"
 #include "plat_class.h"
+#include <pmbus.h>
 
 LOG_MODULE_REGISTER(plat_log);
 
@@ -43,23 +44,6 @@ static uint16_t err_code_caches[200]; //extend if error code types > 200
 static uint16_t next_log_position = 0; // Next position to write in the eeprom, 1-based, defaut 0
 static uint16_t next_index = 0; // Next global index to use for logs, 1-based, defaut 0
 static uint8_t log_num; // Number of logs in EEPROM
-
-enum VR_UBC_INDEX_E {
-	UBC_1 = 1,
-	UBC_2,
-	VR_1,
-	VR_2,
-	VR_3,
-	VR_4,
-	VR_5,
-	VR_6,
-	VR_7,
-	VR_8,
-	VR_9,
-	VR_10,
-	VR_11,
-	VR_MAX,
-};
 
 typedef struct _vr_ubc_device_table_ {
 	uint8_t index;
@@ -185,24 +169,25 @@ bool plat_dump_cpld(uint8_t offset, uint8_t length, uint8_t *data)
 	return true;
 }
 
-bool get_vr_status_word(uint8_t bus, uint8_t addr, uint8_t *vr_status_word)
+bool get_vr_status_common(uint8_t bus, uint8_t addr, uint8_t reg, uint8_t *vr_status_buf,
+			  uint8_t rx_len, const char *log_desc)
 {
-	CHECK_NULL_ARG_WITH_RETURN(vr_status_word, false);
+	CHECK_NULL_ARG_WITH_RETURN(vr_status_buf, false);
 
 	I2C_MSG i2c_msg = { 0 };
 	uint8_t retry = 5;
 	i2c_msg.bus = bus;
 	i2c_msg.target_addr = addr;
 	i2c_msg.tx_len = 1;
-	i2c_msg.rx_len = 2;
-	i2c_msg.data[0] = 0x79;
+	i2c_msg.rx_len = rx_len;
+	i2c_msg.data[0] = reg;
 
 	if (i2c_master_read(&i2c_msg, retry)) {
-		LOG_ERR("Failed to read VR status word");
+		LOG_ERR("Failed to read VR %s (reg=0x%02x)", log_desc, reg);
 		return false;
 	}
 
-	memcpy(vr_status_word, i2c_msg.data, 2);
+	memcpy(vr_status_buf, i2c_msg.data, rx_len);
 	return true;
 }
 
@@ -215,7 +200,7 @@ bool vr_fault_get_error_data(uint8_t sensor_id, uint8_t device_id, uint8_t *data
 	uint8_t bus;
 	uint8_t addr;
 	uint8_t sensor_dev;
-	uint8_t vr_status_word[2] = { 0 };
+	uint8_t vr_status_buf[7] = { 0 };
 
 	if (!get_sensor_info_by_sensor_id(sensor_id, &bus, &addr, &sensor_dev)) {
 		LOG_ERR("Failed to find VR address and bus");
@@ -239,15 +224,49 @@ bool vr_fault_get_error_data(uint8_t sensor_id, uint8_t device_id, uint8_t *data
 		}
 	}
 
-	if (!get_vr_status_word(bus, addr, vr_status_word)) {
-		LOG_ERR("Failed to get VR status word, sensor_id: 0x%x , bus: 0x%x, addr: 0x%x",
+	if (!get_vr_status_common(bus, addr, PMBUS_STATUS_WORD, &vr_status_buf[0], 2,
+				  "status word")) {
+		LOG_ERR("Failed to get VR status, sensor_id: 0x%x , bus: 0x%x, addr: 0x%x",
 			sensor_id, bus, addr);
 		goto err;
 	}
 
-	LOG_DBG("vr_fault_get_error_data VR status word: 0x%x 0x%x", vr_status_word[0],
-		vr_status_word[1]);
-	memcpy(data, vr_status_word, sizeof(vr_status_word));
+	if (!get_vr_status_common(bus, addr, PMBUS_STATUS_VOUT, &vr_status_buf[2], 1,
+				  "status vout")) {
+		LOG_ERR("Failed to get VR status, sensor_id: 0x%x , bus: 0x%x, addr: 0x%x",
+			sensor_id, bus, addr);
+		goto err;
+	}
+
+	if (!get_vr_status_common(bus, addr, PMBUS_STATUS_IOUT, &vr_status_buf[3], 1,
+				  "status iout")) {
+		LOG_ERR("Failed to get VR status, sensor_id: 0x%x , bus: 0x%x, addr: 0x%x",
+			sensor_id, bus, addr);
+		goto err;
+	}
+
+	if (!get_vr_status_common(bus, addr, PMBUS_STATUS_INPUT, &vr_status_buf[4], 1,
+				  "status input")) {
+		LOG_ERR("Failed to get VR status, sensor_id: 0x%x , bus: 0x%x, addr: 0x%x",
+			sensor_id, bus, addr);
+		goto err;
+	}
+
+	if (!get_vr_status_common(bus, addr, PMBUS_STATUS_TEMPERATURE, &vr_status_buf[5], 1,
+				  "status temperature")) {
+		LOG_ERR("Failed to get VR status, sensor_id: 0x%x , bus: 0x%x, addr: 0x%x",
+			sensor_id, bus, addr);
+		goto err;
+	}
+	if (!get_vr_status_common(bus, addr, PMBUS_STATUS_CML, &vr_status_buf[6], 1,
+				  "status cml")) {
+		LOG_ERR("Failed to get VR status, sensor_id: 0x%x , bus: 0x%x, addr: 0x%x",
+			sensor_id, bus, addr);
+		goto err;
+	}
+
+	LOG_HEXDUMP_DBG(vr_status_buf, sizeof(vr_status_buf), "vr_fault_get_error_data");
+	memcpy(data, vr_status_buf, sizeof(vr_status_buf));
 	ret = true;
 
 err:
