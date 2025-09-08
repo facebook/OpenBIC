@@ -29,8 +29,8 @@ void gpio_int_default();
 #define name_gpio0	\
 	gpio_name_to_num(FM_ASIC_0_THERMTRIP_R_N) \
 	gpio_name_to_num(RST_ATH_PWR_ON_PLD_R1_N) \
-	gpio_name_to_num(ATH_CURRENT_SENSE_0_NPCM_R) \
-	gpio_name_to_num(ATH_CURRENT_SENSE_1_NPCM_R) \
+	gpio_name_to_num(ATH_CURRENT_SENSE_0_LC) \
+	gpio_name_to_num(ATH_CURRENT_SENSE_1_HC) \
 	gpio_name_to_num(FM_ATH_HBM3_CATTRIP_ALARM_LV33_R) \
 	gpio_name_to_num(ALL_VR_PM_ALERT_R_N) \
 	gpio_name_to_num(ATH_SMB_ALERT_NPCM_LVC33_R_N) \
