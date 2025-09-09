@@ -69,7 +69,7 @@ static bool command_reply_data_handle(void *arg)
 	struct i2c_target_data *data = (struct i2c_target_data *)arg;
 
 	if (data->wr_buffer_idx < 1) {
-		LOG_ERR("No register offset received before read");
+		LOG_DBG("No register offset received before read");
 		data->target_rd_msg.msg_length = 1;
 		data->target_rd_msg.msg[0] = 0xFF;
 		return false;
@@ -97,7 +97,7 @@ static bool command_reply_data_handle(void *arg)
 	}
 
 	default:
-		LOG_WRN("Unsupported read register: 0x%02x", reg_offset);
+		LOG_DBG("Unsupported read register: 0x%02x", reg_offset);
 		data->target_rd_msg.msg_length = 1;
 		data->target_rd_msg.msg[0] = 0xFF;
 		break;
@@ -121,7 +121,7 @@ static void command_set_slot_handle(void *arg)
 	if (data->wr_buffer_idx == 1) {
 		uint8_t reg_offset = data->target_wr_msg.msg[0];
 		const mmc_info_t *cfg = &mmc_info_table[0];
-		LOG_INF("Received reg_offset: 0x%02x", reg_offset);
+		LOG_DBG("Received reg_offset: 0x%02x", reg_offset);
 
 		switch (reg_offset) {
 		case SLOT_0_I2C_SET_SLOT_REG:
@@ -141,7 +141,7 @@ static void command_set_slot_handle(void *arg)
 			plat_set_slot_init(cfg->slot);
 			break;
 		default:
-			LOG_ERR("Unknown reg offset: 0x%02x", reg_offset);
+			LOG_DBG("Unknown reg offset: 0x%02x", reg_offset);
 			data->target_rd_msg.msg_length = 1;
 			data->target_rd_msg.msg[0] = 0xFF;
 			break;
