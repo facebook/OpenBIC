@@ -72,11 +72,21 @@ void fault_leak_action()
 	gpio_set(RPU_LEAK_ALERT_N, 0);
 }
 
-void leak_recovery_action()
+void leak_recovery_check()
 {
+	if(get_status_flag(STATUS_FLAG_LEAK))
+		return;
+
 	set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_LEAK, 0);
-	set_all_rpu_ready_pin_normal();
 	gpio_set(RPU_LEAK_ALERT_N, 1);
+	// check all status flag
+	for (uint8_t i = PUMP_FAIL_EMERGENCY_BUTTON; i <= PUMP_FAIL_CLOSE_PUMP; i++) {
+		if ((get_status_flag(STATUS_FLAG_FAILURE) >> i) & 0x01) {
+			return;
+		}
+	}
+	// recovery all ready pin
+	set_all_rpu_ready_pin_normal();
 }
 
 void it_leak_handler(uint8_t idx)
@@ -115,7 +125,7 @@ void it_leak_handler(uint8_t idx)
 			set_status_flag(STATUS_FLAG_LEAK, AALC_STATUS_IT_LEAK_3, 0);
 			break;
 		}
-		leak_recovery_action();
+		leak_recovery_check();
 		fault_led_control();
 		LOG_INF("IT_LEAK_ALERT%d_R recovered", idx);
 		return;
@@ -188,17 +198,22 @@ void aalc_leak_behavior(uint8_t sensor_num)
 	fault_led_control();
 	gpio_set(RPU_LEAK_ALERT_N, 0);
 }
-void aalc_leak_recovery_behavior(uint8_t sensor_num)
+void aalc_leak_recovery_behavior_check(uint8_t sensor_num)
 {
-	leak_recovery_action();
 	uint8_t led_leak = (sensor_num == SENSOR_NUM_BPB_CDU_COOLANT_LEAKAGE_VOLT_V) ?
 				   AALC_STATUS_CDU_LEAKAGE :
 			   (sensor_num == SENSOR_NUM_BPB_RACK_COOLANT_LEAKAGE_VOLT_V) ?
 				   AALC_STATUS_RACK_LEAKAGE :
 				   AALC_STATUS_LEAK_E_MAX;
 	set_status_flag(STATUS_FLAG_LEAK, led_leak, 0);
-	if (get_led_status(LED_IDX_E_LEAK) == LED_START_BLINK)
-		led_ctrl(LED_IDX_E_LEAK, LED_STOP_BLINK);
+	uint8_t cdu_leak_status = (get_status_flag(STATUS_FLAG_LEAK) >> AALC_STATUS_CDU_LEAKAGE) & 0x01;
+	uint8_t rack_leak_status = (get_status_flag(STATUS_FLAG_LEAK) >> AALC_STATUS_RACK_LEAKAGE) & 0x01;
+	if (cdu_leak_status == 0 && rack_leak_status == 0)
+	{
+		if (get_led_status(LED_IDX_E_LEAK) != LED_STOP_BLINK)
+			led_ctrl(LED_IDX_E_LEAK, LED_STOP_BLINK);
+		leak_recovery_check();
+	}	
 	fault_led_control();
 }
 void shutdown_save_uptime_action()

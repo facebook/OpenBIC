@@ -860,7 +860,7 @@ void pump_failure_do(uint32_t thres_tbl_idx, uint32_t status)
 	case THRESHOLD_STATUS_NORMAL:
 		reset_flow_rate_ready();
 		set_status_flag(STATUS_FLAG_FAILURE, pump_ucr, 0);
-		LOG_INF("threshold 0x%02x pump ucr recovered", sensor_num);
+		LOG_INF("threshold 0x%02x pump recovered", sensor_num);
 		error_log_event(sensor_num, IS_NORMAL_VAL);
 		if (!pump_fail_check())
 		{
@@ -1223,7 +1223,6 @@ void check_bpb_hsc_status(void)
 	else
 	{
 		set_status_flag(STATUS_FLAG_FAILURE, GPIO_FAIL_BPB_HSC, 0);
-		LOG_INF("bpb hsc recovered");
 	}
 }
 
