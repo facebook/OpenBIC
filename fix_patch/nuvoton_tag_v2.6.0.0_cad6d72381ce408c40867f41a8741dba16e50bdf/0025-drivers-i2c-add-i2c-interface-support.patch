@@ -1,7 +1,7 @@
-From b9be44f6ca6c26d4a9b82508c772223df9ad2b1f Mon Sep 17 00:00:00 2001
+From 2499d7f7ce587397d85a572167f8132f7c76979c Mon Sep 17 00:00:00 2001
 From: Tyrone Ting <kfting@nuvoton.com>
 Date: Thu, 24 Jul 2025 15:26:42 +0800
-Subject: [PATCH] drivers: i2c: add i2c interface support
+Subject: [PATCH 1/3] drivers: i2c: add i2c interface support
 
 Signed-off-by: Tyrone Ting <kfting@nuvoton.com>
 ---
@@ -11,7 +11,7 @@ Signed-off-by: Tyrone Ting <kfting@nuvoton.com>
  create mode 100644 include/drivers/i2c_npcm4xx.h
 
 diff --git a/drivers/i2c/i2c_npcm4xx.c b/drivers/i2c/i2c_npcm4xx.c
-index b2e71c102dbb..7ce5967d599c 100755
+index 0552c7821b62..575dee1d0b55 100755
 --- a/drivers/i2c/i2c_npcm4xx.c
 +++ b/drivers/i2c/i2c_npcm4xx.c
 @@ -9,6 +9,7 @@
@@ -22,11 +22,11 @@ index b2e71c102dbb..7ce5967d599c 100755
  #include <soc.h>
  
  #include <logging/log.h>
-@@ -109,6 +110,47 @@ struct i2c_npcm4xx_data {
+@@ -107,6 +108,47 @@ struct i2c_npcm4xx_data {
  
- int i2c_npcm4xx_recover_bus(const struct device *dev);
+ #define I2C_INSTANCE(dev) (struct i2c_reg *)(I2C_DRV_CONFIG(dev)->base)
  
-+bool is_i2c_device_master_status_idle(const struct device *dev)
++bool is_i2c_npcm_device_master_status_idle(const struct device *dev)
 +{
 +	if (dev == NULL) {
 +		LOG_ERR("%s dev null", __func__);
@@ -38,7 +38,7 @@ index b2e71c102dbb..7ce5967d599c 100755
 +	return (data->master_oper_state == I2C_NPCM4XX_OPER_STA_IDLE);
 +}
 +
-+int i2c_device_disable(const struct device *dev)
++int i2c_npcm_device_disable(const struct device *dev)
 +{
 +	int loop, loop_limit = 30;
 +
@@ -67,12 +67,12 @@ index b2e71c102dbb..7ce5967d599c 100755
 +	return 0;
 +}
 +
+ 
  /* This macro should be set only when in Master mode or when requesting Master mode.
   * Set START bit to CTL1 register of I2C module, but exclude STOP bit, ACK bit.
-  */
 diff --git a/include/drivers/i2c_npcm4xx.h b/include/drivers/i2c_npcm4xx.h
 new file mode 100644
-index 000000000000..5d495374644a
+index 000000000000..e3265993b66e
 --- /dev/null
 +++ b/include/drivers/i2c_npcm4xx.h
 @@ -0,0 +1,14 @@
@@ -86,8 +86,8 @@ index 000000000000..5d495374644a
 +#define ZEPHYR_INCLUDE_DRIVERS_I2C_NPCM4XX_H_
 +
 +
-+bool is_i2c_device_master_status_idle(const struct device *dev);
-+int i2c_device_disable(const struct device *dev);
++bool is_i2c_npcm_device_master_status_idle(const struct device *dev);
++int i2c_npcm_device_disable(const struct device *dev);
 +
 +#endif
 -- 
