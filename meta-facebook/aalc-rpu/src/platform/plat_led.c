@@ -197,26 +197,27 @@ uint8_t fault_led_threshold_sensor[] = {
 
 //	return fault or not
 bool fault_led_control(void)
-{
+{	
+	uint8_t fault_led_status = 0;
 	if (get_status_flag(STATUS_FLAG_LEAK)) {
 		led_ctrl(LED_IDX_E_FAULT, LED_TURN_ON);
-		return true;
+		fault_led_status += 1;
 	}
 
 	if (hsc_communicate_check()) {
 		led_ctrl(LED_IDX_E_FAULT, LED_TURN_ON);
-		return true;
+		fault_led_status += 1;
 	}
 
 	if (hsc_fail_check()) {
 		led_ctrl(LED_IDX_E_FAULT, LED_TURN_ON);
-		return true;
+		fault_led_status += 1;
 	}
 
 	for (uint8_t i = 0; i < ARRAY_SIZE(fault_led_threshold_sensor); i++) {
 		if (get_threshold_status(fault_led_threshold_sensor[i])) {
 			led_ctrl(LED_IDX_E_FAULT, LED_TURN_ON);
-			return true;
+			fault_led_status += 1;
 		}
 	}
 
@@ -224,10 +225,14 @@ bool fault_led_control(void)
 	for (uint8_t i = PUMP_FAIL_EMERGENCY_BUTTON; i <= PUMP_FAIL_TWO_PUMP_X; i++) {
 		if ((get_status_flag(STATUS_FLAG_FAILURE) >> i) & 0x01) {
 			led_ctrl(LED_IDX_E_FAULT, LED_TURN_ON);
-			return true;
+			fault_led_status += 1;
 		}
 	}
 
-	led_ctrl(LED_IDX_E_FAULT, LED_TURN_OFF);
-	return false;
+	if (!fault_led_status) {
+		led_ctrl(LED_IDX_E_FAULT, LED_TURN_OFF);
+		return false;
+	}
+
+	return true;
 }

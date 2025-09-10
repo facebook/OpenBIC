@@ -72,6 +72,13 @@ void fault_leak_action()
 	gpio_set(RPU_LEAK_ALERT_N, 0);
 }
 
+void leak_recovery_action()
+{
+	set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_LEAK, 0);
+	set_all_rpu_ready_pin_normal();
+	gpio_set(RPU_LEAK_ALERT_N, 1);
+}
+
 void it_leak_handler(uint8_t idx)
 {
 	uint8_t sen_num = (idx == IT_LEAK_E_0) ? SENSOR_NUM_IT_LEAK_0_GPIO :
@@ -85,10 +92,32 @@ void it_leak_handler(uint8_t idx)
 		       (idx == IT_LEAK_E_2) ? IT_LEAK_ALERT2_R :
 		       (idx == IT_LEAK_E_3) ? IT_LEAK_ALERT3_R :
 					      0xFF;
+	// check gpio is it_leak0~4
+	if (gpio == 0xFF) {
+		LOG_ERR("Wronrg it_leak index %d", idx);
+		return;
+	}
 
 	if (!gpio_get(gpio)) {
 		LOG_WRN("IT_LEAK_ALERT%d_R is low, the high level time is less than 1s, ignore it",
 			idx);
+		switch (idx) {
+		case IT_LEAK_E_0:
+			set_status_flag(STATUS_FLAG_LEAK, AALC_STATUS_IT_LEAK_0, 0);
+			break;
+		case IT_LEAK_E_1:
+			set_status_flag(STATUS_FLAG_LEAK, AALC_STATUS_IT_LEAK_1, 0);
+			break;
+		case IT_LEAK_E_2:
+			set_status_flag(STATUS_FLAG_LEAK, AALC_STATUS_IT_LEAK_2, 0);
+			break;
+		case IT_LEAK_E_3:
+			set_status_flag(STATUS_FLAG_LEAK, AALC_STATUS_IT_LEAK_3, 0);
+			break;
+		}
+		leak_recovery_action();
+		fault_led_control();
+		LOG_INF("IT_LEAK_ALERT%d_R recovered", idx);
 		return;
 	}
 
@@ -159,7 +188,17 @@ void aalc_leak_behavior(uint8_t sensor_num)
 	fault_led_control();
 	gpio_set(RPU_LEAK_ALERT_N, 0);
 }
-
+void aalc_leak_recovery_behavior(uint8_t sensor_num)
+{
+	leak_recovery_action();
+	uint8_t led_leak = (sensor_num == SENSOR_NUM_BPB_CDU_COOLANT_LEAKAGE_VOLT_V) ?
+				   AALC_STATUS_CDU_LEAKAGE :
+			   (sensor_num == SENSOR_NUM_BPB_RACK_COOLANT_LEAKAGE_VOLT_V) ?
+				   AALC_STATUS_RACK_LEAKAGE :
+				   AALC_STATUS_LEAK_E_MAX;
+	set_status_flag(STATUS_FLAG_LEAK, led_leak, 0);
+	fault_led_control();
+}
 void shutdown_save_uptime_action()
 {
 	// get total uptime

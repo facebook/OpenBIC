@@ -582,6 +582,8 @@ void level_sensor_do(uint32_t unused, uint32_t status)
 		} else {
 			led_ctrl(LED_IDX_E_COOLANT, LED_TURN_ON);
 		}
+		set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_LOW_LEVEL, 0);
+		LOG_INF("level sensor ok");
 	}
 }
 
@@ -599,6 +601,13 @@ void rpu_level_sensor_do(uint32_t unused, uint32_t status)
 			error_log_event(SENSOR_NUM_BPB_RACK_LEVEL_2, IS_ABNORMAL_VAL);
 		}
 	}
+	else 
+	{
+		set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_LOW_RPU_LEVEL, 0);
+		LOG_INF("RPU level sensor ok");
+	}
+		
+
 }
 
 void sensor_log(uint32_t sensor_num, uint32_t status)
@@ -762,8 +771,20 @@ void abnormal_press_do(uint32_t thres_tbl_idx, uint32_t status)
 				error_log_event(SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_P_KPA,
 						IS_ABNORMAL_VAL);
 			}
-		} else
+		} 
+		else
+		{
 			thres_p->last_status = THRESHOLD_STATUS_NORMAL;
+			set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_ABNORMAL_PRESS, 0);
+			LOG_INF("pressure sensor %x is recovered", thres_p->sensor_num);
+		}		
+	}
+	else if (status == THRESHOLD_STATUS_NORMAL) {
+		is_abnormal = false;
+		set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_ABNORMAL_PRESS, 0);
+	}
+	else {
+		LOG_ERR("Unexpected pressure sensor threshold warning");
 	}
 }
 
@@ -839,7 +860,14 @@ void pump_failure_do(uint32_t thres_tbl_idx, uint32_t status)
 	case THRESHOLD_STATUS_NORMAL:
 		reset_flow_rate_ready();
 		set_status_flag(STATUS_FLAG_FAILURE, pump_ucr, 0);
+		LOG_INF("threshold 0x%02x pump ucr recovered", sensor_num);
 		error_log_event(sensor_num, IS_NORMAL_VAL);
+		if (!pump_fail_check())
+		{
+			set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_TWO_PUMP_X, 0);
+			LOG_INF("two pump fail recovered");
+		}
+			
 		break;
 	default:
 		LOG_DBG("Unexpected threshold warning");
@@ -898,6 +926,8 @@ void abnormal_flow_do(uint32_t thres_tbl_idx, uint32_t status)
 		set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_FLOW_RATE_NOT_ACCESS, 1);
 	} else if (status == THRESHOLD_STATUS_NORMAL) {
 		set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_FLOW_RATE_NOT_ACCESS, 0);
+		set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_ABNORMAL_FLOW_RATE, 0);
+		LOG_INF("flow rate sensor recovered");
 	} else {
 		LOG_DBG("Unexpected threshold warning");
 	}
@@ -1189,6 +1219,11 @@ void check_bpb_hsc_status(void)
 			error_log_event(SENSOR_NUM_BPB_HSC_FAIL, IS_ABNORMAL_VAL);
 			hsc_fail = true;
 		}
+	}
+	else
+	{
+		set_status_flag(STATUS_FLAG_FAILURE, GPIO_FAIL_BPB_HSC, 0);
+		LOG_INF("bpb hsc recovered");
 	}
 }
 

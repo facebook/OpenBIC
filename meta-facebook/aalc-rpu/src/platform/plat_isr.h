@@ -31,4 +31,5 @@ void fault_leak_action();
 void deassert_all_rpu_ready_pin();
 void set_all_rpu_ready_pin_normal(void);
 void aalc_leak_behavior(uint8_t sensor_num);
+void aalc_leak_recovery_behavior(uint8_t sensor_num);
 void shutdown_save_uptime_action();
