@@ -813,7 +813,7 @@ pldm_sensor_info plat_pldm_sensor_ubc_table[] = {
 			0, //uint32_t warning_high;
 			0, //uint32_t warning_low;
 			13770, //uint32_t critical_high;
-			11370, //uint32_t critical_low;
+			11730, //uint32_t critical_low;
 			0, //uint32_t fatal_high;
 			0, //uint32_t fatal_low;
 		},
