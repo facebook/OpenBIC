@@ -49,7 +49,8 @@ void cmd_log_dump(const struct shell *shell, size_t argc, char **argv)
 	shell_print(
 		shell,
 		"=============================      LOG DUMP START      =============================");
-	for (int i = 0; i < plat_log_get_num(); i++) {
+	// Print logs from oldest to newest
+	for (int i = plat_log_get_num() - 1; i >= 0; i--) {
 		plat_err_log_mapping log = { 0 };
 		plat_log_read((uint8_t *)&log, AEGIS_FRU_LOG_SIZE, i + 1);
 
