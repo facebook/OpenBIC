@@ -267,8 +267,8 @@ void set_power_capping_handler(struct k_work *work_item)
 
 	uint16_t set_value_HC = sensor_data->set_value_HC;
 	uint16_t set_value_LC = sensor_data->set_value_LC;
-	plat_set_power_capping_command(POWER_CAPPING_INDEX_HC, &set_value_HC);
-	plat_set_power_capping_command(POWER_CAPPING_INDEX_LC, &set_value_LC);
+	plat_set_power_capping_command(POWER_CAPPING_INDEX_HC, &set_value_HC, false);
+	plat_set_power_capping_command(POWER_CAPPING_INDEX_LC, &set_value_LC, false);
 	// LOG_DBG("Power capping set HC: %d, LC: %d", set_value_HC, set_value_LC);
 }
 

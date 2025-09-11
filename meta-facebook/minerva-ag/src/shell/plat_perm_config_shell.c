@@ -133,8 +133,16 @@ static int cmd_perm_config_get(const struct shell *shell, size_t argc, char **ar
 				LOG_ERR("Can't find power_capping_rail_name by rail index: %x", i);
 				continue;
 			}
-			shell_print(shell, "[%2d]%-50s val=%d", i, rail_name,
-				    power_capping_user_settings.user_setting_value[i]);
+			if (i == POWER_CAPPING_INDEX_SWITCH) {
+				shell_print(shell, "[%2d]%-50s val=%s", i, rail_name,
+					    power_capping_user_settings.user_setting_value[i] ?
+						    "enable" :
+						    "disable");
+				config_count++;
+			} else {
+				shell_print(shell, "[%2d]%-50s val=%d", i, rail_name,
+					    power_capping_user_settings.user_setting_value[i]);
+			}
 			config_count++;
 		}
 	}

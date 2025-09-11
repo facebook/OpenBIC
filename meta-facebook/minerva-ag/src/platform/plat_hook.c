@@ -2454,13 +2454,14 @@ void plat_pldm_sensor_post_load_init(int thread_id)
 #define CPLD_MTIA_HC_LC_SETTING_ADDR 0x26
 #define MTIA_HC_LC_ENABLE 1
 #define MTIA_HC_LC_DISENABLE 0
-bool power_capping_enable_flag = true;
+bool power_capping_enable_flag = false;
 bool power_capping_user_setting_flag = false;
 
 power_capping_mapping_sensor power_capping_rail_table[] = {
-	{ POWER_CAPPING_INDEX_HC, "HC" },
-	{ POWER_CAPPING_INDEX_LC, "LC" },
-	{ POWER_CAPPING_INDEX_INTERVAL, "interval_ms" },
+	{ POWER_CAPPING_INDEX_HC, "HC", 0x00 },
+	{ POWER_CAPPING_INDEX_LC, "LC", 0x00 },
+	{ POWER_CAPPING_INDEX_INTERVAL, "interval_ms", 0x00 },
+	{ POWER_CAPPING_INDEX_SWITCH, "switch", 0x00 },
 };
 
 power_capping_user_settings_struct power_capping_user_settings = { 0 };
@@ -2497,12 +2498,7 @@ bool power_capping_rail_enum_get(uint8_t *name, uint8_t *num)
 void update_comparator_counter_max(void)
 {
 	uint16_t power_capping_interval_ms =
-		power_capping_user_settings.user_setting_value[POWER_CAPPING_INDEX_INTERVAL];
-
-	if (power_capping_interval_ms == 0xFFFF) {
-		power_capping_interval_ms = ATH_VDD_INTERVAL_MS;
-		LOG_ERR("Invalid interval_ms, set to default: %d ms", ATH_VDD_INTERVAL_MS);
-	}
+		power_capping_rail_table[POWER_CAPPING_INDEX_INTERVAL].change_setting_value;
 
 	comparator_counter_max = power_capping_interval_ms / ATH_VDD_INTERVAL_MS;
 	if (comparator_counter_max == 0) {
@@ -2537,6 +2533,33 @@ bool get_user_settings_power_capping_from_eeprom(void *user_settings)
 	return true;
 }
 
+bool set_HC_LC_enable_flag(bool hc_status, bool lc_status)
+{
+	uint8_t data = 0xC0;
+
+	if (hc_status == MTIA_HC_LC_ENABLE)
+		data |= BIT(0);
+	else
+		data &= ~BIT(0);
+
+	if (!plat_i2c_write(I2C_BUS5, AEGIS_CPLD_ADDR, CPLD_MTIA_HC_LC_SETTING_ADDR, &data, 1)) {
+		LOG_ERR("Failed to set MTIA HC setting (0x%02X)", data);
+		return false;
+	}
+
+	if (lc_status == MTIA_HC_LC_ENABLE)
+		data |= BIT(1);
+	else
+		data &= ~BIT(1);
+
+	if (!plat_i2c_write(I2C_BUS5, AEGIS_CPLD_ADDR, CPLD_MTIA_HC_LC_SETTING_ADDR, &data, 1)) {
+		LOG_ERR("Failed to set MTIA LC setting (0x%02X)", data);
+		return false;
+	}
+
+	return true;
+}
+
 bool set_user_settings_power_capping_to_eeprom(void *power_capping_user_settings)
 {
 	CHECK_NULL_ARG_WITH_RETURN(power_capping_user_settings, false);
@@ -2565,20 +2588,87 @@ bool set_user_settings_power_capping_to_eeprom(void *power_capping_user_settings
 	return true;
 }
 
-bool plat_set_power_capping_command(uint8_t rail, uint16_t *set_value)
+bool plat_set_power_capping_command(uint8_t rail, uint16_t *set_value, bool is_perm)
 {
 	CHECK_NULL_ARG_WITH_RETURN(set_value, false);
 
-	power_capping_user_settings.user_setting_value[rail] = *set_value;
-
-	if (!set_user_settings_power_capping_to_eeprom(&power_capping_user_settings)) {
-		LOG_ERR("Failed to write power capping to eeprom error");
+	if (rail >= POWER_CAPPING_INDEX_MAX) {
+		LOG_ERR("Invalid power capping rail: %x", rail);
 		return false;
+	}
+
+	power_capping_rail_table[rail].change_setting_value = *set_value;
+
+	if (is_perm) {
+		power_capping_user_settings.user_setting_value[rail] = *set_value;
+		if (!set_user_settings_power_capping_to_eeprom(&power_capping_user_settings)) {
+			LOG_ERR("Failed to write power capping user settings to eeprom");
+			return false;
+		}
 	}
 
 	if (rail == POWER_CAPPING_INDEX_INTERVAL) {
 		update_comparator_counter_max();
 	}
+
+	if (rail == POWER_CAPPING_INDEX_SWITCH) {
+		if (!set_HC_LC_enable_flag(MTIA_HC_LC_DISENABLE, MTIA_HC_LC_DISENABLE)) {
+			LOG_ERR("Failed to reset MTIA HC/LC disable");
+			return false;
+		}
+	}
+
+	return true;
+}
+
+bool plat_get_power_capping_command(uint8_t rail, uint16_t *set_value)
+{
+	CHECK_NULL_ARG_WITH_RETURN(set_value, false);
+
+	if (rail >= POWER_CAPPING_INDEX_MAX) {
+		LOG_ERR("invalid power capping rail: %x", rail);
+		return false;
+	}
+
+	*set_value = power_capping_rail_table[rail].change_setting_value;
+
+	return true;
+}
+
+bool power_capping_default_settings_init(void)
+{
+	for (int i = 0; i < POWER_CAPPING_INDEX_MAX; i++) {
+		uint16_t set_value = 0;
+		switch (i) {
+		case POWER_CAPPING_INDEX_HC:
+			set_value = POWER_CAPPING_HC_DEFAULT;
+			break;
+		case POWER_CAPPING_INDEX_LC:
+			set_value = POWER_CAPPING_LC_DEFAULT;
+			break;
+		case POWER_CAPPING_INDEX_INTERVAL:
+			set_value = ATH_VDD_INTERVAL_MS;
+			break;
+		case POWER_CAPPING_INDEX_SWITCH:
+			set_value = MTIA_HC_LC_DISENABLE;
+			break;
+		default:
+			break;
+		}
+		power_capping_rail_table[i].change_setting_value = set_value;
+		if (!plat_set_power_capping_command(i, &set_value, false)) {
+			LOG_ERR("Can't set value[%d]=%x by default settings", i, set_value);
+			return false;
+		}
+		LOG_DBG("set power capping[%x]%s: %d", i, power_capping_rail_table[i].sensor_name,
+			set_value);
+	}
+
+	if (!set_HC_LC_enable_flag(MTIA_HC_LC_DISENABLE, MTIA_HC_LC_DISENABLE)) {
+		LOG_ERR("Failed to reset MTIA HC/LC disable");
+		return false;
+	}
+	update_comparator_counter_max();
 
 	return true;
 }
@@ -2590,67 +2680,32 @@ bool power_capping_user_settings_init(void)
 		return false;
 	}
 
-	if (power_capping_user_settings.user_setting_value[POWER_CAPPING_INDEX_INTERVAL] ==
-	    0xFFFF) {
-		power_capping_user_settings.user_setting_value[POWER_CAPPING_INDEX_INTERVAL] =
-			ATH_VDD_INTERVAL_MS;
-	}
-
 	for (int i = 0; i < POWER_CAPPING_INDEX_MAX; i++) {
 		if (power_capping_user_settings.user_setting_value[i] != 0xffff) {
 			/* write value */
 			uint16_t set_value = power_capping_user_settings.user_setting_value[i];
-			if (!plat_set_power_capping_command(i, &set_value)) {
+			if (!plat_set_power_capping_command(i, &set_value, false)) {
 				LOG_ERR("Can't set value[%d]=%x by user settings", i, set_value);
 				return false;
 			}
-			LOG_INF("set [%x]%s: %d", i, power_capping_rail_table[i].sensor_name,
+			LOG_INF("set power capping[%x]%s: %d", i,
+				power_capping_rail_table[i].sensor_name,
 				power_capping_user_settings.user_setting_value[i]);
 		}
 	}
-
-	return true;
-}
-
-bool set_HC_LC_enable_flag(uint8_t rail, bool status)
-{
-	uint8_t data = 0;
-	if (!plat_i2c_read(I2C_BUS5, AEGIS_CPLD_ADDR, CPLD_MTIA_HC_LC_SETTING_ADDR, &data, 1)) {
-		LOG_ERR("Can't find MTIA HC/LC setting by cpld");
+	if (!set_HC_LC_enable_flag(MTIA_HC_LC_DISENABLE, MTIA_HC_LC_DISENABLE)) {
+		LOG_ERR("Failed to reset MTIA HC/LC disable");
 		return false;
 	}
-
-	if (rail == POWER_CAPPING_INDEX_HC) {
-		if (status == MTIA_HC_LC_ENABLE)
-			data |= BIT(0);
-		else
-			data &= ~BIT(0);
-	} else if (rail == POWER_CAPPING_INDEX_LC) {
-		if (status == MTIA_HC_LC_ENABLE)
-			data |= BIT(1);
-		else
-			data &= ~BIT(1);
-	} else {
-		LOG_ERR("Invalid rail index: %d", rail);
-		return false;
-	}
-
-	if (!plat_i2c_write(I2C_BUS5, AEGIS_CPLD_ADDR, CPLD_MTIA_HC_LC_SETTING_ADDR, &data, 1)) {
-		LOG_ERR("Can't set MTIA HC/LC setting = 0x%02x to cpld", data);
-		return false;
-	}
+	update_comparator_counter_max();
 
 	return true;
 }
 
 void check_power_capping_status(void)
 {
-	uint8_t data = 0;
-	if (!plat_i2c_read(I2C_BUS5, AEGIS_CPLD_ADDR, CPLD_MTIA_HC_LC_SETTING_ADDR, &data, 1)) {
-		LOG_ERR("Can't find MTIA HC/LC enable/disable by cpld");
-		power_capping_enable_flag = false;
-	}
-	if ((data & (BIT(7) | BIT(6))) == (BIT(7) | BIT(6))) {
+	if (power_capping_rail_table[POWER_CAPPING_INDEX_SWITCH].change_setting_value ==
+	    POWER_CAPPING_ENABLE) {
 		power_capping_enable_flag = true;
 	} else {
 		power_capping_enable_flag = false;
@@ -2659,10 +2714,9 @@ void check_power_capping_status(void)
 
 void check_power_capping_user_setting_status(void)
 {
-	if (power_capping_user_settings.user_setting_value[POWER_CAPPING_INDEX_HC] == 0xffff ||
-	    power_capping_user_settings.user_setting_value[POWER_CAPPING_INDEX_LC] == 0xffff ||
-	    power_capping_user_settings.user_setting_value[POWER_CAPPING_INDEX_INTERVAL] ==
-		    0xffff) {
+	if (power_capping_rail_table[POWER_CAPPING_INDEX_HC].change_setting_value == 0 ||
+	    power_capping_rail_table[POWER_CAPPING_INDEX_LC].change_setting_value == 0 ||
+	    power_capping_rail_table[POWER_CAPPING_INDEX_INTERVAL].change_setting_value == 0) {
 		power_capping_user_setting_flag = false;
 	} else {
 		power_capping_user_setting_flag = true;
@@ -2684,38 +2738,25 @@ void power_capping_comparator_handler()
 		return;
 	}
 
-	uint16_t hc = power_capping_user_settings.user_setting_value[POWER_CAPPING_INDEX_HC];
-	uint16_t lc = power_capping_user_settings.user_setting_value[POWER_CAPPING_INDEX_LC];
+	uint16_t hc = power_capping_rail_table[POWER_CAPPING_INDEX_HC].change_setting_value;
+	uint16_t lc = power_capping_rail_table[POWER_CAPPING_INDEX_LC].change_setting_value;
 
 	if (ath_vdd_power > hc) {
-		if (!set_HC_LC_enable_flag(POWER_CAPPING_INDEX_HC, MTIA_HC_LC_ENABLE)) {
-			LOG_ERR("Failed to set MTIA HC enable");
-			return;
-		}
-		if (!set_HC_LC_enable_flag(POWER_CAPPING_INDEX_LC, MTIA_HC_LC_ENABLE)) {
-			LOG_ERR("Failed to set MTIA LC enable");
+		if (!set_HC_LC_enable_flag(MTIA_HC_LC_ENABLE, MTIA_HC_LC_ENABLE)) {
+			LOG_ERR("Failed to set MTIA HC enable, LC enable");
 			return;
 		}
 		// LOG_INF("power>HC");
 	} else {
 		if (ath_vdd_power > lc) {
-			if (!set_HC_LC_enable_flag(POWER_CAPPING_INDEX_HC, MTIA_HC_LC_DISENABLE)) {
-				LOG_ERR("Failed to set MTIA HC disable");
+			if (!set_HC_LC_enable_flag(MTIA_HC_LC_DISENABLE, MTIA_HC_LC_ENABLE)) {
+				LOG_ERR("Failed to set MTIA HC disable, LC enable");
 				return;
 			}
-			if (!set_HC_LC_enable_flag(POWER_CAPPING_INDEX_LC, MTIA_HC_LC_ENABLE)) {
-				LOG_ERR("Failed to set MTIA LC enable");
-				return;
-			}
-
 			// LOG_INF("HC>power>LC");
 		} else {
-			if (!set_HC_LC_enable_flag(POWER_CAPPING_INDEX_HC, MTIA_HC_LC_DISENABLE)) {
-				LOG_ERR("Failed to set MTIA HC disable");
-				return;
-			}
-			if (!set_HC_LC_enable_flag(POWER_CAPPING_INDEX_LC, MTIA_HC_LC_DISENABLE)) {
-				LOG_ERR("Failed to set MTIA LC disable");
+			if (!set_HC_LC_enable_flag(MTIA_HC_LC_DISENABLE, MTIA_HC_LC_DISENABLE)) {
+				LOG_ERR("Failed to set MTIA HC disable, LC disable");
 				return;
 			}
 			// LOG_INF("LC>power");
@@ -2782,24 +2823,13 @@ bool perm_config_clear(void)
 		return false;
 	}
 
-	/* clear power capping perm parameter and reset power capping interval_ms */
+	/* clear power capping perm parameter */
 	memset(power_capping_user_settings.user_setting_value, 0xFF,
 	       sizeof(power_capping_user_settings.user_setting_value));
 	if (!set_user_settings_power_capping_to_eeprom(&power_capping_user_settings)) {
 		LOG_ERR("The perm_config clear failed");
 		return false;
 	}
-	if (power_capping_user_settings.user_setting_value[POWER_CAPPING_INDEX_INTERVAL] ==
-	    0xffff) {
-		power_capping_user_settings.user_setting_value[POWER_CAPPING_INDEX_INTERVAL] =
-			ATH_VDD_INTERVAL_MS;
-		if (!set_user_settings_power_capping_to_eeprom(&power_capping_user_settings)) {
-			LOG_ERR("After perm_config clear reset power capping interval_ms failed");
-			return false;
-		}
-		update_comparator_counter_max();
-	}
-
 	return true;
 }
 
@@ -2815,5 +2845,6 @@ void user_settings_init(void)
 	vr_vout_range_user_settings_init();
 	thermaltrip_user_settings_init();
 	throttle_user_settings_init();
+	power_capping_default_settings_init();
 	power_capping_user_settings_init();
 }

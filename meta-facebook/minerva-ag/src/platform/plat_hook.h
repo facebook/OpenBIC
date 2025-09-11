@@ -22,6 +22,10 @@
 #define VR_MAX_NUM 11
 #define VR_MUTEX_LOCK_TIMEOUT_MS 1000
 #define POWER_HISTORY_SIZE 10
+#define POWER_CAPPING_HC_DEFAULT 1000
+#define POWER_CAPPING_LC_DEFAULT 800
+#define POWER_CAPPING_ENABLE 1
+#define POWER_CAPPING_DISABLE 0
 
 #include "plat_pldm_sensor.h"
 
@@ -164,12 +168,14 @@ enum POWER_CAPPING_INDEX_E {
 	POWER_CAPPING_INDEX_HC = 0,
 	POWER_CAPPING_INDEX_LC,
 	POWER_CAPPING_INDEX_INTERVAL,
+	POWER_CAPPING_INDEX_SWITCH,
 	POWER_CAPPING_INDEX_MAX,
 };
 
 typedef struct power_capping_mapping_sensor {
 	uint8_t index;
 	uint8_t *sensor_name;
+	uint16_t change_setting_value;
 } power_capping_mapping_sensor;
 
 typedef struct power_capping_user_settings_struct {
@@ -349,6 +355,7 @@ bool get_average_power(uint8_t rail, uint32_t *milliwatt);
 bool voltage_command_setting_get(uint8_t rail, uint16_t *vout);
 bool power_capping_rail_name_get(uint8_t rail, uint8_t **name);
 bool power_capping_rail_enum_get(uint8_t *name, uint8_t *num);
-bool plat_set_power_capping_command(uint8_t rail, uint16_t *set_value);
+bool plat_set_power_capping_command(uint8_t rail, uint16_t *set_value, bool is_perm);
+bool plat_get_power_capping_command(uint8_t rail, uint16_t *set_value);
 
 #endif
