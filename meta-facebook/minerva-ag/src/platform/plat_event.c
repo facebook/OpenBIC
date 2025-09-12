@@ -481,6 +481,10 @@ void poll_cpld_registers()
 		/* Sleep for the polling interval */
 		k_msleep(CPLD_POLLING_INTERVAL_MS);
 
+		if (is_update_state_idle() == false) {
+			continue;
+		}
+
 		LOG_DBG("cpld_polling_alert_status = %d, cpld_polling_enable_flag = %d",
 			cpld_polling_alert_status, cpld_polling_enable_flag);
 
