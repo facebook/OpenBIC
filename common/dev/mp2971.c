@@ -719,7 +719,7 @@ bool mp2971_get_checksum(uint8_t bus, uint8_t addr, uint32_t *checksum)
 	return true;
 }
 
-bool get_vout_scale(sensor_cfg *cfg, float *vout_scale)
+bool get_vout_scale(const sensor_cfg *cfg, float *vout_scale)
 {
 	CHECK_NULL_ARG_WITH_RETURN(vout_scale, false);
 	uint8_t i2c_max_retry = 5;
@@ -750,7 +750,7 @@ float get_resolution(sensor_cfg *cfg)
 
 	bool vout_scale_enable = false;
 	if (cfg->init_args != NULL) {
-		mp2971_init_arg *init_arg = (mp2971_init_arg *)cfg->init_args;
+		const mp2971_init_arg *init_arg = (mp2971_init_arg *)cfg->init_args;
 		vout_scale_enable = init_arg->vout_scale_enable;
 	}
 
@@ -926,7 +926,7 @@ bool mp2971_vid_to_direct(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt)
 	float vout_scale = 1.0;
 
 	if (cfg->init_args != NULL) {
-		mp2971_init_arg *init_arg = (mp2971_init_arg *)cfg->init_args;
+		const mp2971_init_arg *init_arg = (mp2971_init_arg *)cfg->init_args;
 		if (init_arg->vout_scale_enable) {
 			if (get_vout_scale(cfg, &vout_scale) == false)
 				LOG_WRN("get vout scale failed");
@@ -1015,7 +1015,7 @@ bool mp2971_direct_to_vid(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt)
 	float vout_scale = 1.0;
 
 	if (cfg->init_args != NULL) {
-		mp2971_init_arg *init_arg = (mp2971_init_arg *)cfg->init_args;
+		const mp2971_init_arg *init_arg = (mp2971_init_arg *)cfg->init_args;
 		if (init_arg->vout_scale_enable) {
 			if (get_vout_scale(cfg, &vout_scale) == false)
 				LOG_WRN("get vout scale failed");

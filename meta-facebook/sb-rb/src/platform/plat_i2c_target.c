@@ -91,7 +91,7 @@ bool initialize_sensor_data(telemetry_info *telemetry_info, uint8_t *buffer_size
 	CHECK_NULL_ARG_WITH_RETURN(telemetry_info, false);
 	int table_index = telemetry_info->telemetry_offset - SENSOR_INIT_DATA_0_REG;
 
-	if (table_index < 0 || table_index >= DATA_TABLE_LENGTH_2) {
+	if (table_index >= DATA_TABLE_LENGTH_2) {
 		LOG_ERR("Invalid table index: %d", table_index);
 		return false;
 	}
@@ -196,7 +196,6 @@ bool initialize_inventory_ids(telemetry_info *telemetry_info, uint8_t *buffer_si
 	uint32_t bic_version = 0;
 	uint32_t cpld_version = 0;
 	uint8_t board_id = get_asic_board_id();
-	bic_version = get_asic_board_id();
 
 	if (!plat_read_cpld(CPLD_VERSION_GET_REG, data, CPLD_VERSION_GET_REG_LEN))
 		LOG_ERR("Failed to read cpld version from cpld");
