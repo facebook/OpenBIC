@@ -22,6 +22,7 @@
 #include "hal_i2c.h"
 #include "pmbus.h"
 #include "mp2971.h"
+#include "util_pmbus.h"
 
 LOG_MODULE_REGISTER(mp2971);
 
@@ -906,6 +907,9 @@ float get_resolution(sensor_cfg *cfg)
 		pout_reso = pout_reso / vout_scale;
 		return pout_reso;
 		break;
+	case PMBUS_READ_VIN:
+		return 0.03125; // 1/32V per LSB
+		break;
 	default:
 		LOG_WRN("offset not supported: 0x%x", offset);
 		break;
@@ -1277,6 +1281,7 @@ uint8_t mp2971_read(sensor_cfg *cfg, int *reading)
 
 	uint8_t i2c_max_retry = 5;
 	int val = 0;
+	float f_val = 0.0;
 	sensor_val *sval = (sensor_val *)reading;
 	I2C_MSG msg;
 	memset(sval, 0, sizeof(sensor_val));
@@ -1311,6 +1316,9 @@ uint8_t mp2971_read(sensor_cfg *cfg, int *reading)
 		break;
 	case PMBUS_READ_POUT:
 		val = val & BIT_MASK(11);
+		break;
+	case PMBUS_READ_VIN:
+		f_val = slinear11_to_float((uint16_t)val);
 		break;
 	default:
 		LOG_WRN("offset not supported: 0x%x", offset);

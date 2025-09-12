@@ -278,12 +278,6 @@ void error_log_event(uint16_t error_code, bool log_status)
 		LOG_ERR("Failed to dump 1st part CPLD data");
 	}
 
-	if (!plat_read_cpld(CPLD_REGISTER_2ND_PART_START_OFFSET,
-			    err_log_data[fru_count].cpld_dump + CPLD_REGISTER_1ST_PART_NUM,
-			    CPLD_REGISTER_2ND_PART_NUM)) {
-		LOG_ERR("Failed to dump 2nd part CPLD data");
-	}
-
 	//dump err_log_data for debug
 	LOG_HEXDUMP_DBG(&err_log_data[fru_count], sizeof(plat_err_log_mapping), "err_log_data");
 

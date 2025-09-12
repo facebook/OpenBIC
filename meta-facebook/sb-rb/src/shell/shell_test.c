@@ -78,6 +78,23 @@ void cmd_cpld_dump(const struct shell *shell, size_t argc, char **argv)
 	shell_hexdump(shell, data, len);
 	shell_print(shell, "");
 }
+void cmd_cpld_write(const struct shell *shell, size_t argc, char **argv)
+{
+	if (argc != 3) {
+		shell_warn(shell, "Help: test cpld write <offset> <data>");
+		return;
+	}
+
+	uint8_t offset = strtoul(argv[1], NULL, 16);
+	uint8_t data = strtoul(argv[2], NULL, 16);
+
+	if (!plat_write_cpld(offset, &data)) {
+		shell_warn(shell, "cpld write 0x%02x fail", offset);
+		return;
+	}
+
+	shell_warn(shell, "cpld write %02x to offset %02x", data, offset);
+}
 
 void cmd_info(const struct shell *shell, size_t argc, char **argv)
 {
@@ -114,6 +131,7 @@ void cmd_info(const struct shell *shell, size_t argc, char **argv)
 }
 
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_cpld_cmds, SHELL_CMD(dump, NULL, "cpld dump", cmd_cpld_dump),
+			       SHELL_CMD(write, NULL, "write cpld register", cmd_cpld_write),
 			       SHELL_SUBCMD_SET_END);
 
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_test_cmds, SHELL_CMD(test, NULL, "test command", cmd_test),
