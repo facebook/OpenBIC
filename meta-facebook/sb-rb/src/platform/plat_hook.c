@@ -28,6 +28,7 @@
 #include "plat_user_setting.h"
 #include "plat_fru.h"
 #include "plat_class.h"
+#include "plat_i2c_target.h"
 
 LOG_MODULE_REGISTER(plat_hook);
 
@@ -56,6 +57,11 @@ mp2971_init_arg mp2971_init_args[] = {
 mpc12109_init_arg mpc12109_init_args[] = {
 	[0] = { .iout_lsb = 0.5, .pout_lsb = 2 },
 };
+bool post_sensor_reading_hook_func(uint8_t sensor_number)
+{
+	update_sensor_reading_by_sensor_number(sensor_number);
+	return true;
+}
 
 void *vr_mutex_get(enum VR_INDEX_E vr_index)
 {
@@ -129,7 +135,18 @@ bool post_vr_read(sensor_cfg *cfg, void *args, int *const reading)
 		*reading = 0;
 		LOG_DBG("Negative sensor reading detected. Set reading to 0x%x", *reading);
 	}
+	post_sensor_reading_hook_func(cfg->num);
+	return true;
+}
 
+bool post_common_sensor_read(sensor_cfg *cfg, void *args, int *const reading)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	ARG_UNUSED(args);
+
+	uint8_t sensor_number = cfg->num;
+	if (!post_sensor_reading_hook_func(sensor_number))
+		return false;
 	return true;
 }
 

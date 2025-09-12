@@ -269,4 +269,5 @@ char16_t *char16_strcat_char(char16_t *dest, char16_t ch);
 bool get_raw_data_from_sensor_id(uint8_t sensor_id, uint8_t offset, uint8_t *val, uint8_t len);
 void change_sensor_cfg(uint8_t vr_module, uint8_t ubc_module);
 uint8_t convert_addr_to_rns(uint8_t addr);
+uint32_t plat_get_pdr_size(uint8_t pdr_type);
 #endif
