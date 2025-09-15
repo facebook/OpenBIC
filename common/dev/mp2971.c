@@ -1318,7 +1318,9 @@ uint8_t mp2971_read(sensor_cfg *cfg, int *reading)
 		val = val & BIT_MASK(11);
 		break;
 	case PMBUS_READ_VIN:
+		val = val & BIT_MASK(9);
 		f_val = slinear11_to_float((uint16_t)val);
+		val = (uint16_t)f_val;
 		break;
 	default:
 		LOG_WRN("offset not supported: 0x%x", offset);
