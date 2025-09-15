@@ -396,7 +396,7 @@ uint8_t pex90144_read(sensor_cfg *cfg, int *reading)
 
 	uint8_t rc = SENSOR_UNSPECIFIED_ERROR;
 
-	pex90144_unit *const p = (pex90144_unit *)cfg->priv_data;
+	const pex90144_unit *p = (pex90144_unit *)cfg->priv_data;
 
 	switch (cfg->offset) {
 	case PEX_TEMP:
