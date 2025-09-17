@@ -31,6 +31,7 @@
 #include "rg3mxxb12.h"
 #include "p3h284x.h"
 #include "util_worker.h"
+#include "plat_isr.h"
 
 /*
  * The operating voltage of GPIO input pins are lower than actual voltage because the chip
@@ -117,6 +118,7 @@ void pal_pre_init()
 	}
 
 	init_plat_worker(CONFIG_MAIN_THREAD_PRIORITY + 1); // work queue for low priority jobs
+	init_vr_pwr_fault_work();
 }
 
 void pal_post_init()

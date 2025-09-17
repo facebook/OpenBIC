@@ -33,6 +33,8 @@
 
 LOG_MODULE_REGISTER(plat_sensor_table);
 
+uint8_t vr_vender_type = VR_TYPE_UNKNOWN;
+
 dimm_pmic_mapping_cfg dimm_pmic_map_table[] = {
 	// dimm_sensor_num, mapping_pmic_sensor_num
 	{ SENSOR_NUM_MB_DIMMA0_TEMP_C, SENSOR_NUM_MB_VR_DIMMA0_PMIC_PWR_W },
@@ -374,14 +376,23 @@ static void check_vr_type(uint8_t index)
 	if ((msg.data[0] == 0x01) && (msg.data[1] == 0x85)) {
 		sensor_config[index].type = sensor_dev_mp2985;
 		sensor_config[index].init_args = &mp2985_init_args[0];
+		vr_vender_type = VR_TYPE_MP2985;
 	} else if ((msg.data[0] == 0x02) && (msg.data[2] == 0x8A)) {
 		sensor_config[index].type = sensor_dev_xdpe15284;
+		vr_vender_type = VR_TYPE_XDPE15284;
 	} else if ((msg.data[0] == 0x04) && (msg.data[1] == 0x00) && (msg.data[2] == 0x81) &&
 		   (msg.data[3] == 0xD2) && (msg.data[4] == 0x49)) {
 		sensor_config[index].type = sensor_dev_isl69259;
+		vr_vender_type = VR_TYPE_ISL69259;
 	} else {
 		LOG_ERR("Unknown VR type");
+		vr_vender_type = VR_TYPE_UNKNOWN;
 	}
+}
+
+uint8_t pal_get_vr_vender_type()
+{
+	return vr_vender_type;
 }
 
 void pal_extend_sensor_config()
