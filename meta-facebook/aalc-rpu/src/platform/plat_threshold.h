@@ -48,6 +48,7 @@ bool get_threshold_poll_enable_flag();
 void threshold_poll_init();
 void fan_pump_pwrgd();
 sensor_threshold *find_threshold_tbl_entry(uint8_t sensor_num);
+bool check_pump_tach_too_low();
 uint8_t fb_hsc_status(uint8_t idx);
 uint32_t get_threshold_status(uint8_t sensor_num);
 bool pump_fail_check();

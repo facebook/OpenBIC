@@ -852,7 +852,7 @@ void pump_failure_do(uint32_t thres_tbl_idx, uint32_t status)
 }
 
 /* return true means pump 1/2/3 not access or tach too low */
-static bool check_pump_tach_too_low()
+bool check_pump_tach_too_low()
 {
 	for (uint8_t i = 0; i < ARRAY_SIZE(pump_sensor_array); i++) {
 		float tmp = 0;
