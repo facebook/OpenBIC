@@ -361,14 +361,25 @@ void pal_show_board_types(const struct shell *shell)
 		    (board_type == MINERVA_EVB_BD)   ? "EVB" :
 						       "not supported");
 
-	shell_print(shell, "* BOARD_STAGE:   (0x%02X)%s", board_stage,
-		    (board_stage == FAB1_EVT)  ? "FAB1_EVT" :
-		    (board_stage == FAB2_DVT)  ? "FAB2_DVT" :
-		    (board_stage == FAB3_DVT2) ? "FAB3_DVT2" :
-		    (board_stage == FAB4_DVT2) ? "FAB4_DVT2" :
-		    (board_stage == FAB4_PVT)  ? "FAB4_PVT" :
-		    (board_stage == TBD_MP)    ? "TBD_MP" :
-						 "not supported");
+	if (board_type == MINERVA_EVB_BD) {
+		shell_print(shell, "* BOARD_STAGE:   (0x%02X)%s", board_stage,
+			    (board_stage == FAB1_EVT)  ? "FAB1_EVT" :
+			    (board_stage == FAB2_DVT)  ? "FAB2_DVT" :
+			    (board_stage == FAB3_DVT2) ? "FAB3_DVT2" :
+			    (board_stage == FAB4_DVT2) ? "FAB3_DVT2" :
+			    (board_stage == FAB4_PVT)  ? "FAB3_PVT" :
+			    (board_stage == TBD_MP)    ? "TBD_MP" :
+							 "not supported");
+	} else {
+		shell_print(shell, "* BOARD_STAGE:   (0x%02X)%s", board_stage,
+			    (board_stage == FAB1_EVT)  ? "FAB1_EVT" :
+			    (board_stage == FAB2_DVT)  ? "FAB2_DVT" :
+			    (board_stage == FAB3_DVT2) ? "FAB3_DVT2" :
+			    (board_stage == FAB4_DVT2) ? "FAB4_DVT2" :
+			    (board_stage == FAB4_PVT)  ? "FAB4_PVT" :
+			    (board_stage == TBD_MP)    ? "TBD_MP" :
+							 "not supported");
+	}
 
 	shell_print(
 		shell, "* VR_VENDOR_TYPE:(0x%02X)%s", vr_vender_type,
