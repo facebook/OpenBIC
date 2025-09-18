@@ -50,12 +50,11 @@ void cmd_set_sensor_threshold(const struct shell *shell, size_t argc, char **arg
 
 	char threshold_type[4] = { 0 };
 	int value = 0;
-	float threshold_value = 0;
+	uint32_t threshold_value = 0;
 
 	snprintf(threshold_type, sizeof(threshold_type), "%s", argv[2]);
 	value = strtol(argv[3], NULL, 10);
-	threshold_value = (float)value *
-			  MINERVA_THRESHOLD_UNIT; // If user want to send 3.3V, "value" will be 3300
+	threshold_value = (uint32_t)value; // Direct integer value
 
 	if (strcmp(threshold_type, "UCT") == 0) {
 		result = change_pdr_table_critical_high_with_sensor_id(sensorID, threshold_value);
