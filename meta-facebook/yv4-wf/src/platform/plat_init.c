@@ -72,8 +72,48 @@ void pal_set_sys_status()
 	set_sys_ready_pin(BIC_READY_R);
 }
 
+static const gpio_debounce_cfg_t debounce_cfg[] = {
+	//{ port, pinOffset, netName }
+	//GPIO0_A_D
+	{ "GPIO0_A_D", 25, "PWRGD_PVPP_AB_ASIC1" },
+	{ "GPIO0_A_D", 27, "PWRGD_PVPP_CD_ASIC1" },
+	{ "GPIO0_A_D", 29, "PWRGD_PVTT_AB_ASIC1" },
+	{ "GPIO0_A_D", 31, "PWRGD_PVTT_CD_ASIC1" },
+	//GPIO0_E_H
+	{ "GPIO0_E_H", 5, "PWRGD_PVPP_AB_ASIC2" },
+	{ "GPIO0_E_H", 7, "PWRGD_PVPP_CD_ASIC2" },
+	{ "GPIO0_E_H", 11, "PWRGD_P3V3_E1S_0_R" },
+	{ "GPIO0_E_H", 13, "PWRGD_PVTT_AB_ASIC2" },
+	{ "GPIO0_E_H", 15, "PWRGD_PVTT_CD_ASIC2" },
+	{ "GPIO0_E_H", 19, "PWRGD_P12V_E1S_0_R" },
+};
+
+void enable_gpio_debounce(void)
+{
+	const struct device *gpio_dev;
+
+	for (int gpio = 0; gpio < ARRAY_SIZE(debounce_cfg); gpio++) {
+		gpio_dev = device_get_binding(debounce_cfg[gpio].port);
+		if (!gpio_dev) {
+			LOG_INF("Failed to bind %s\n", debounce_cfg[gpio].port);
+			continue;
+		}
+
+		int ret = gpio_pin_configure(gpio_dev, debounce_cfg[gpio].pinOffset,
+					     GPIO_INPUT | GPIO_INT_DEBOUNCE);
+
+		if (ret) {
+			LOG_INF("Failed to config %s pin offset %d (err %d)\n",
+				debounce_cfg[gpio].port, debounce_cfg[gpio].pinOffset, ret);
+		}
+	}
+}
+
 void pal_pre_init()
 {
+	/* add debounce config */
+	enable_gpio_debounce();
+
 	/* init i2c target */
 	for (int index = 0; index < MAX_TARGET_NUM; index++) {
 		if (I2C_TARGET_ENABLE_TABLE[index])
