@@ -65,6 +65,9 @@ LOG_MODULE_REGISTER(plat_mctp);
 #define MCTP_EID_NIC_6 0x16
 #define MCTP_EID_NIC_7 0x17
 
+#define NVIDIA_NIC_MANUFACTURER "Nvidia"
+#define BROADCOM_NIC_MANUFACTURER "Broadcom"
+
 static uint8_t nic_config = NIC_CONFIG_UNKNOWN;
 
 K_TIMER_DEFINE(send_cmd_timer, send_cmd_to_dev, NULL);
@@ -501,25 +504,31 @@ bool is_broadcom_thor2_nic_type()
 	return is_broadcom_thor2_nic;
 }
 
-void check_nic_config_by_ncsi(void)
+void check_nic_config(void)
 {
+	char nic_manufacturer[32];
+
+	bool found = get_first_nic_manufacturer(nic_manufacturer, sizeof(nic_manufacturer));
+
+	if (found) {
+		LOG_INF("First NIC manufacturer found: %s", nic_manufacturer);
+	} else {
+		LOG_INF("No NIC manufacturer found");
+	}
+
 	uint8_t config = NIC_CONFIG_UNKNOWN;
-	if (is_broadcom_thor2_nic_type() == true) {
+	if (strncmp(nic_manufacturer, NVIDIA_NIC_MANUFACTURER,
+		    sizeof(NVIDIA_NIC_MANUFACTURER) - 1) == 0) {
+		LOG_INF("NVIDIA NIC detected");
+		config = mellanox_cx7_ncsi_get_link_type();
+	} else if (strncmp(nic_manufacturer, BROADCOM_NIC_MANUFACTURER,
+			   sizeof(BROADCOM_NIC_MANUFACTURER) - 1) == 0) {
+		LOG_INF("Broadcom NIC detected");
 		set_cx7_init_arg_to_thor2();
 		config = NIC_CONFIG_THOR2;
 	} else {
-		// set_cx7_init_arg_to_cx7();
-		config = mellanox_cx7_ncsi_get_link_type();
+		LOG_INF("Unknown NIC manufacturer: %s", nic_manufacturer);
 	}
-
-	// config = mellanox_cx7_ncsi_get_link_type();
-
-	/* Remove this process for short term fix, will add back to support BMC get thor 2 type in the future */
-	/* Double check by fru if config is not IB_CX7 */
-	// if (config == NIC_CONFIG_CX7 || config == NIC_CONFIG_UNKNOWN) {
-	// 	LOG_INF("Double check nic type by fru");
-	// 	config = check_nic_type_by_fru();
-	// }
 
 	nic_config = config;
 	LOG_INF("NIC config is %d, 0: UNKNOWN, 1: CX7, 2: IB_CX7, 3: THOR2", nic_config);
@@ -536,7 +545,7 @@ void send_cmd_to_dev_handler(struct k_work *work)
 	set_dev_endpoint();
 
 	/* check nic config by ncsi */
-	check_nic_config_by_ncsi();
+	check_nic_config();
 
 	/* init mellanox cx7 ncsi */
 	if ((nic_config == NIC_CONFIG_IB_CX7) || (nic_config == NIC_CONFIG_CX7))
