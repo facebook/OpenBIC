@@ -2633,6 +2633,30 @@ bool is_temp_access(uint8_t cfg_idx)
 
 bool is_pcie_switch_access(uint8_t cfg_idx)
 {
+	I2C_MSG msg = { 0 };
+	uint8_t retry = 3;
+
+	uint8_t sensor_id = cfg_idx;
+	uint8_t bus = 0, addr = 0;
+	uint8_t sensor_dev = 0;
+
+	if (!get_sensor_info_by_sensor_id(sensor_id, &bus, &addr, &sensor_dev)) {
+		LOG_ERR("Can't find PCIe switch addr and bus by sensor id: %d", sensor_id);
+		return false;
+	}
+
+	msg.bus = bus;
+	msg.target_addr = addr;
+	msg.tx_len = 0;
+	msg.rx_len = 1;
+
+	if (i2c_master_read(&msg, retry) != 0) {
+		LOG_ERR("PEX90144 not found at bus %d addr 0x%X", msg.bus, msg.target_addr);
+		return false;
+	}
+
+	LOG_DBG("PEX90144 is present at bus %d addr 0x%X", msg.bus, msg.target_addr);
+
 	return (get_plat_sensor_temp_polling_enable_flag() &&
 		get_plat_sensor_polling_enable_flag());
 }

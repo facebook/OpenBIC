@@ -39,6 +39,7 @@
 #define VR_ASIC_P0V825_A2_ISL69260_ADDR (0xC2 >> 1)
 
 #define ADS7830_I2C_ADDR (0x90 >> 1)
+#define PEX90144_I2C_ADDR (0xD4 >> 1)
 
 /* Define the sensor numbers used in this platform */
 enum SENSOR_NUM_LIST {
