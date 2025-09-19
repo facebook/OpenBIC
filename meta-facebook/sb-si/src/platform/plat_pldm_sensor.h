@@ -24,6 +24,7 @@
 /* Define sensors address(7 bit) */
 #define THERMAL_SENSOR_1_ADDR (0x6A >> 1)
 #define THERMAL_SENSOR_2_ADDR (0x98 >> 1)
+#define PCIE_SWITCH_ADDR (0xD4 >> 1)
 
 #define VR_ASIC_P0V895_PEX_MP2971_ADDR (0x84 >> 1)
 #define VR_ASIC_P0V895_PEX_ISL69260_ADDR (0xC0 >> 1)
@@ -43,6 +44,7 @@
 enum SENSOR_NUM_LIST {
 	SENSOR_NUM_THERMAL_SENSOR_1_TEMP_C = 0x01,
 	SENSOR_NUM_THERMAL_SENSOR_2_TEMP_C,
+	SENSOR_NUM_PCIE_SWITCH_TEMP_C,
 	SENSOR_NUM_VR_ASIC_P0V895_PEX_TEMP_C,
 	SENSOR_NUM_VR_ASIC_P0V895_PEX_VOLT_V,
 	SENSOR_NUM_VR_ASIC_P0V895_PEX_CURR_A,
@@ -100,6 +102,7 @@ bool get_plat_sensor_temp_polling_enable_flag();
 bool get_plat_sensor_vr_polling_enable_flag();
 bool get_plat_sensor_adc_polling_enable_flag();
 bool is_temp_access(uint8_t cfg_idx);
+bool is_pcie_switch_access(uint8_t cfg_idx);
 bool is_vr_access(uint8_t sensor_num);
 bool is_adc_access(uint8_t sensor_num);
 bool get_sensor_info_by_sensor_id(uint8_t sensor_id, uint8_t *vr_bus, uint8_t *vr_addr,
