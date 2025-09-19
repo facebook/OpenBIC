@@ -202,6 +202,10 @@
 	reg = <0 DT_SIZE_K(708)>, <DT_SIZE_K(708) DT_SIZE_K(60)>;
 };
 
+&gpio0 {
+  aspeed,deb-interval-us = <1>;
+};
+
 &gpio0_a_d {
 	aspeed,persist-maps = <0x555554CF>;
 };
