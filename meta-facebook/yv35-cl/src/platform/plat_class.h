@@ -56,6 +56,7 @@ enum BIC_BOARD_REVISION {
 typedef struct _CARD_STATUS_ {
 	bool present;
 	uint8_t card_type;
+	uint8_t dpv2_type;
 } CARD_STATUS;
 
 enum _1OU_CARD_TYPE_ {
@@ -72,10 +73,16 @@ enum _1OU_CARD_TYPE_ {
 };
 
 enum _2OU_CARD_TYPE_ {
-	TYPE_2OU_DPV2_8 = 0x07, // DPV2x8
-	TYPE_2OU_DPV2_16 = 0x70, // DPV2x16
-	TYPE_2OU_ABSENT = 0xFE,
+	TYPE_2OU_MARVELL_HSM = 0,
+	TYPE_2OU_ENTRUST_HSM = 1,
 	TYPE_2OU_UNKNOWN = 0xFF,
+};
+
+enum _2OU_DPV2_TYPE_ {
+	TYPE_2OU_DPV2_8 = 0x07,
+	TYPE_2OU_DPV2_16 = 0x70,
+	TYPE_2OU_DPV2_ABSENT = 0xFE,
+	TYPE_2OU_DPV2_UNKNOWN = 0xFF,
 };
 
 /* ADC channel number */
@@ -105,6 +112,8 @@ uint8_t get_system_class();
 uint8_t get_system_sku();
 CARD_STATUS get_1ou_status();
 CARD_STATUS get_2ou_status();
+uint8_t get_2ou_card_type();
+void set_2ou_card_type(uint8_t card_type);
 uint8_t get_board_revision();
 uint8_t get_hsc_module();
 bool get_adc_voltage(int channel, float *voltage);
