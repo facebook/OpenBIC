@@ -62,5 +62,6 @@ bool plat_read_cpld(uint8_t offset, uint8_t *data, uint8_t len);
 bool plat_write_cpld(uint8_t offset, uint8_t *data);
 void init_cpld_polling(void);
 void check_cpld_polling_alert_status(void);
+void check_ubc_delayed_timer_handler(struct k_timer *timer);
 
 #endif

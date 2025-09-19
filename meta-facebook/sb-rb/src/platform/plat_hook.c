@@ -109,6 +109,26 @@ bool post_vr_read(sensor_cfg *cfg, void *args, int *const reading)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	CHECK_NULL_ARG_WITH_RETURN(args, false);
+	for (int i = 0; i < VR_RAIL_E_MAX; i++) {
+		if (reading == NULL) {
+			break;
+		}
+
+		if (((get_asic_board_id() != ASIC_BOARD_ID_EVB)) &&
+		    (i == VR_RAIL_E_P3V3_OSFP_VOLT_V))
+			continue; // skip osfp p3v3 on AEGIS BD
+
+		if (cfg->num == vr_rail_table[i].sensor_id) {
+			if (vr_rail_table[i].peak_value == 0xffffffff) {
+				vr_rail_table[i].peak_value = *reading;
+			} else {
+				if (vr_rail_table[i].peak_value < *reading) {
+					vr_rail_table[i].peak_value = *reading;
+				}
+			}
+			break;
+		}
+	}
 
 	vr_pre_proc_arg *pre_proc_args = (vr_pre_proc_arg *)args;
 
@@ -228,7 +248,7 @@ vr_mapping_sensor vr_rail_table[] = {
 	  "ASIC_P1V8_VPP_HBM0246", 0xffffffff },
 	{ VR_RAIL_E_ASIC_P0V4_VDDQL_HBM0246, SENSOR_NUM_ASIC_P0V4_VDDQL_HBM0246_VOLT_V,
 	  "ASIC_P0V4_VDDQL_HBM0246", 0xffffffff },
-	{ VR_RAIL_EASIC_P0V75_VDDPHY_HBM0246, SENSOR_NUM_ASIC_P0V75_VDDPHY_HBM0246_VOLT_V,
+	{ VR_RAIL_E_ASIC_P0V75_VDDPHY_HBM0246, SENSOR_NUM_ASIC_P0V75_VDDPHY_HBM0246_VOLT_V,
 	  "ASIC_P0V75_VDDPHY_HBM0246", 0xffffffff },
 	{ VR_RAIL_E_ASIC_P0V75_OWL_W_VDD, SENSOR_NUM_ASIC_P0V75_OWL_W_VDD_VOLT_V,
 	  "ASIC_P0V75_OWL_W_VDD", 0xffffffff },
@@ -1042,4 +1062,17 @@ void plat_pldm_sensor_post_load_init(int thread_id)
 		temp_threshold_user_settings_init();
 	}
 	LOG_INF("plat_pldm_sensor_post_load init done");
+}
+
+bool voltage_command_setting_get(uint8_t rail, uint16_t *vout)
+{
+	CHECK_NULL_ARG_WITH_RETURN(vout, false);
+
+	if (rail >= VR_RAIL_E_MAX) {
+		LOG_ERR("invalid rail %d", rail);
+		return false;
+	}
+
+	*vout = voltage_command_get.vout[rail];
+	return true;
 }

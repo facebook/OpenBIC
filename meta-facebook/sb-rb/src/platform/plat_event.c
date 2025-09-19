@@ -138,7 +138,7 @@ void process_mtia_vr_power_fault_sel(cpld_info *cpld_info, uint8_t *current_cpld
 		// Determine event type: ASSERT / DEASSERT
 		bool is_assert = (bit_val != expected_bit_val) && (bit_val == 1);
 
-		LOG_DBG("VR[0x%02X] reg[0x%02X] bit[0x%02X] is %s ", vr->mtia_event_source,
+		LOG_INF("VR[0x%02X] reg[0x%02X] bit[0x%02X] is %s ", vr->mtia_event_source,
 			vr->cpld_reg_offset, vr->cpld_reg_bit, is_assert ? "ASSERT" : "DEASSERT");
 
 		if (vr_fault_table[i].is_pmbus_vr == false) {
@@ -176,7 +176,7 @@ void process_mtia_vr_power_fault_sel(cpld_info *cpld_info, uint8_t *current_cpld
 						vr->mtia_event_source,
 						vr_status_rail_list[j].pmbus_reg);
 				}
-				LOG_DBG("VR[0x%02X] status: reg[0x%02X] 0x%04X",
+				LOG_INF("VR[0x%02X] status: reg[0x%02X] 0x%04X",
 					vr->mtia_event_source, vr_status_rail_list[j].pmbus_reg,
 					vr_status);
 
@@ -205,5 +205,17 @@ void process_mtia_vr_power_fault_sel(cpld_info *cpld_info, uint8_t *current_cpld
 				}
 			}
 		}
+	}
+}
+
+void plat_set_dc_on_log(bool is_assert)
+{
+	uint16_t error_code = (DC_ON_TRIGGER_CAUSE << 13);
+	error_log_event(error_code, (is_assert ? LOG_ASSERT : LOG_DEASSERT));
+
+	if (is_assert == LOG_ASSERT) {
+		LOG_INF("Generated DC on error code: 0x%x", error_code);
+	} else if (is_assert == LOG_DEASSERT) {
+		LOG_INF("DC on error code deasserted");
 	}
 }

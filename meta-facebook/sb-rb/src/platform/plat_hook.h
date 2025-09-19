@@ -59,7 +59,7 @@ enum VR_RAIL_E {
 	VR_RAIL_E_ASIC_P1V1_VDDQC_HBM0246,
 	VR_RAIL_E_ASIC_P1V8_VPP_HBM0246,
 	VR_RAIL_E_ASIC_P0V4_VDDQL_HBM0246,
-	VR_RAIL_EASIC_P0V75_VDDPHY_HBM0246,
+	VR_RAIL_E_ASIC_P0V75_VDDPHY_HBM0246,
 	VR_RAIL_E_ASIC_P0V75_OWL_W_VDD,
 	VR_RAIL_E_ASIC_P0V75_MAX_S_VDD,
 	VR_RAIL_E_ASIC_P0V9_OWL_W_TRVDD,
@@ -207,4 +207,5 @@ bool strap_enum_get(uint8_t *name, uint8_t *num);
 bool get_bootstrap_change_drive_level(int rail, int *drive_level);
 bool find_bootstrap_by_rail(uint8_t rail, bootstrap_mapping_register *result);
 bool post_common_sensor_read(sensor_cfg *cfg, void *args, int *const reading);
+bool voltage_command_setting_get(uint8_t rail, uint16_t *vout);
 #endif

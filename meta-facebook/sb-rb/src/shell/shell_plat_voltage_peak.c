@@ -51,8 +51,9 @@ static int cmd_get_voltage_peak(const struct shell *shell, size_t argc, char **a
 			}
 
 			if (peak_value == 0xffffffff) {
-				shell_print(shell, "%-50s peak value: This is default peak value",
-					    rail_name);
+				shell_print(shell,
+					    "%-50s peak value: This is default peak value: 0x%x",
+					    rail_name, peak_value);
 			} else {
 				float sensor_reading = 0, decimal = 0;
 				int16_t integer = 0;
@@ -90,7 +91,8 @@ static int cmd_get_voltage_peak(const struct shell *shell, size_t argc, char **a
 		}
 
 		if (peak_value == 0xffffffff) {
-			shell_print(shell, "%-50s peak value: This is default peak value", argv[1]);
+			shell_print(shell, "%-50s peak value: This is default peak value: 0x%x",
+				    argv[1], peak_value);
 		} else {
 			float sensor_reading = 0, decimal = 0;
 			int16_t integer = 0;

@@ -30,5 +30,6 @@ typedef struct _vr_fault_info {
 enum event_type { VR_POWER_FAULT = 0x01 };
 
 void process_mtia_vr_power_fault_sel(cpld_info *cpld_info, uint8_t *current_cpld_value);
+void plat_set_dc_on_log(bool is_assert);
 
 #endif
