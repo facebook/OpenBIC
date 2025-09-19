@@ -1,0 +1,9 @@
+<map id="is_vr_access" name="is_vr_access">
+<area shape="rect" id="node1" title=" " alt="" coords="5,137,104,163"/>
+<area shape="rect" id="node2" href="$minerva-ag_2src_2platform_2plat__pldm__sensor_8c.html#af612fa91659722bb5ba98e3752572ced" title=" " alt="" coords="154,5,313,47"/>
+<area shape="rect" id="node3" href="$minerva-ag_2src_2platform_2plat__pldm__sensor_8c.html#a0710df5cdccb6b9db2eaf11cf0b6a389" title=" " alt="" coords="164,71,303,112"/>
+<area shape="rect" id="node4" href="$hal__gpio_8c.html#af700ee50de3d113e223c2b011c41f966" title=" " alt="" coords="509,162,580,189"/>
+<area shape="rect" id="node5" href="$minerva-ag_2src_2platform_2plat__pldm__sensor_8c.html#a76b882458684c230a1873193f64982e8" title=" " alt="" coords="182,187,285,214"/>
+<area shape="rect" id="node7" href="$minerva-ag_2src_2platform_2plat__event_8c.html#a5f14a427cfb5a3eef2a27f9429659fed" title=" " alt="" coords="152,239,315,280"/>
+<area shape="rect" id="node6" href="$gt-cc_2src_2platform_2plat__hook_8c.html#abda0c3d7a63cc6f68d1ed88e1d36729d" title=" " alt="" coords="363,187,461,214"/>
+</map>

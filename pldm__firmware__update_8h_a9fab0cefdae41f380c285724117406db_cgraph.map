@@ -1,0 +1,6 @@
+<map id="pldm_retimer_recovery" name="pldm_retimer_recovery">
+<area shape="rect" id="node1" title=" " alt="" coords="5,5,159,32"/>
+<area shape="rect" id="node2" href="$pldm__firmware__update_8c.html#acda5a1ea08fb4a710d6fac95d2a4781b" title=" " alt="" coords="207,5,349,32"/>
+<area shape="rect" id="node3" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="397,5,519,32"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="567,5,709,32"/>
+</map>
