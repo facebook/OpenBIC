@@ -89,6 +89,14 @@ static uint8_t cmd_echo(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t ins
 		return PLDM_SUCCESS;
 	}
 
+	if ((sizeof(pldm_hdr) + sizeof(resp_p->completion_code) + len) > PLDM_MAX_DATA_SIZE) {
+		LOG_WRN("echo size %d over buffer size %d",
+			(sizeof(pldm_hdr) + sizeof(resp_p->completion_code) + len),
+			PLDM_MAX_DATA_SIZE);
+		resp_p->completion_code = PLDM_ERROR_INVALID_LENGTH;
+		return PLDM_SUCCESS;
+	}
+
 	set_iana(resp_p->iana, sizeof(resp_p->iana));
 	resp_p->completion_code = PLDM_SUCCESS;
 	memcpy(&resp_p->first_data, &req_p->first_data, len);

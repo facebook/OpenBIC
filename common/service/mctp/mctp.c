@@ -198,10 +198,14 @@ static uint8_t mctp_pkt_assembling(mctp *mctp_inst, uint8_t *buf, uint16_t len)
 		return MCTP_ERROR;
 	}
 
+	uint16_t offset_new = *offset_p + len - sizeof(mctp_hdr);
+	if (offset_new > MSG_ASSEMBLY_BUF_SIZE) {
+		LOG_WRN("assembly size %d over buffer size %d", offset_new, MSG_ASSEMBLY_BUF_SIZE);
+		return MCTP_ERROR;
+	}
 	/* Appending other packet after the first packet */
-	memcpy(*buf_p + *offset_p, buf + sizeof(hdr), len - sizeof(hdr));
-	*offset_p += len - sizeof(hdr);
-
+	memcpy(*buf_p + *offset_p, buf + sizeof(mctp_hdr), len - sizeof(mctp_hdr));
+	*offset_p = offset_new;
 	return MCTP_SUCCESS;
 }
 
@@ -259,8 +263,10 @@ static void mctp_rx_task(void *arg, void *dummy0, void *dummy1)
 		/* handle this packet by self */
 
 		/* assembling the mctp message */
-		if (mctp_pkt_assembling(mctp_inst, read_buf, read_len) == MCTP_ERROR)
+		if (mctp_pkt_assembling(mctp_inst, read_buf, read_len) == MCTP_ERROR) {
 			LOG_WRN("Packet assemble failed ");
+			goto error;
+		}
 
 		/* if it is not last packet, waiting for the remain data */
 		if (!hdr->eom)
@@ -268,8 +274,8 @@ static void mctp_rx_task(void *arg, void *dummy0, void *dummy1)
 
 		if (mctp_inst->rx_cb) {
 			/* default process read data buffer directly */
-			uint8_t *p = read_buf + sizeof(hdr);
-			uint16_t len = read_len - sizeof(hdr);
+			uint8_t *p = read_buf + sizeof(mctp_hdr);
+			uint16_t len = read_len - sizeof(mctp_hdr);
 			/* this is assembly message */
 			if (mctp_inst->temp_msg_buf[hdr->msg_tag][hdr->to].buf) {
 				p = mctp_inst->temp_msg_buf[hdr->msg_tag][hdr->to].buf;
@@ -282,6 +288,7 @@ static void mctp_rx_task(void *arg, void *dummy0, void *dummy1)
 			mctp_inst->rx_cb(mctp_inst, p, len, ext_params);
 		}
 
+	error:
 		if (mctp_inst->temp_msg_buf[hdr->msg_tag][hdr->to].buf) {
 			free(mctp_inst->temp_msg_buf[hdr->msg_tag][hdr->to].buf);
 			mctp_inst->temp_msg_buf[hdr->msg_tag][hdr->to].buf = NULL;
