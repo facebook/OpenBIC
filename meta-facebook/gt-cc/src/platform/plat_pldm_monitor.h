@@ -23,6 +23,8 @@ extern uint8_t e1s_prsnt_pin[4][4];
 extern uint8_t nic_prsnt_pin[];
 extern uint8_t pex_sensor_num_table[];
 extern uint8_t e1s_sensor_table[SSD_MAX_NUMBER];
+extern uint8_t nic_temp_sensor_table[NIC_MAX_NUMBER];
+extern uint8_t nic_optics_sensor_table[NIC_MAX_NUMBER];
 
 #define MAX_STATE_EFFECTER_IDX 187
 
@@ -104,6 +106,7 @@ enum plat_effecter_states_nic_type_value {
 	EFFECTER_STATE_NIC_TYPE_CX7 = 0x01,
 	EFFECTER_STATE_NIC_TYPE_CX7_IB = 0x02,
 	EFFECTER_STATE_NIC_TYPE_THOR2 = 0x03,
+	EFFECTER_STATE_NIC_TYPE_POLLARA = 0x04,
 	EFFECTER_STATE_NIC_TYPE_MAX,
 };
 

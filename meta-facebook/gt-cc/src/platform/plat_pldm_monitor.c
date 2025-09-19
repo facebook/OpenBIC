@@ -165,6 +165,17 @@ uint8_t e1s_sensor_table[SSD_MAX_NUMBER] = {
 	SENSOR_NUM_TEMP_E1S_15,
 };
 
+uint8_t nic_temp_sensor_table[NIC_MAX_NUMBER] = {
+	SENSOR_NUM_TEMP_NIC_0, SENSOR_NUM_TEMP_NIC_1, SENSOR_NUM_TEMP_NIC_2, SENSOR_NUM_TEMP_NIC_3,
+	SENSOR_NUM_TEMP_NIC_4, SENSOR_NUM_TEMP_NIC_5, SENSOR_NUM_TEMP_NIC_6, SENSOR_NUM_TEMP_NIC_7,
+};
+
+uint8_t nic_optics_sensor_table[NIC_MAX_NUMBER] = {
+	SENSOR_NUM_TEMP_NIC_OPTICS_0, SENSOR_NUM_TEMP_NIC_OPTICS_1, SENSOR_NUM_TEMP_NIC_OPTICS_2,
+	SENSOR_NUM_TEMP_NIC_OPTICS_3, SENSOR_NUM_TEMP_NIC_OPTICS_4, SENSOR_NUM_TEMP_NIC_OPTICS_5,
+	SENSOR_NUM_TEMP_NIC_OPTICS_6, SENSOR_NUM_TEMP_NIC_OPTICS_7,
+};
+
 static struct ssd_event_check {
 	struct k_work_delayable work;
 	bool init;
@@ -862,6 +873,10 @@ static void plat_get_effecter_nic_type_handler(const uint8_t *buf, uint16_t len,
 	case NIC_CONFIG_THOR2:
 		state->effecter_op_state = PLDM_EFFECTER_ENABLED_NOUPDATEPENDING;
 		state->present_state = state->pending_state = EFFECTER_STATE_NIC_TYPE_THOR2;
+		break;
+	case NIC_CONFIG_POLLARA:
+		state->effecter_op_state = PLDM_EFFECTER_ENABLED_NOUPDATEPENDING;
+		state->present_state = state->pending_state = EFFECTER_STATE_NIC_TYPE_POLLARA;
 		break;
 	default:
 		state->effecter_op_state = PLDM_EFFECTER_STATUSUNKNOWN;
