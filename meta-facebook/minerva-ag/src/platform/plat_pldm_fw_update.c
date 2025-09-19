@@ -682,7 +682,7 @@ void plat_reset_prepare()
 			continue;
 		}
 
-		int ret = i2c_device_disable(i2c_dev);
+		int ret = i2c_npcm_device_disable(i2c_dev);
 		if (ret) {
 			LOG_ERR("Failed to disable %s (ret=%d)", i2c_labels[i], ret);
 		} else {
