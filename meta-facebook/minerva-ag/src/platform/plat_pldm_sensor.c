@@ -9589,7 +9589,7 @@ void plat_pldm_sensor_change_vr_addr()
 	}
 
 	uint8_t board_stage = get_board_stage();
-	if (board_stage == VR_UNKNOWN) {
+	if (board_stage == BOARD_STAGE_UNKNOWN) {
 		LOG_ERR("Unable to change the VR device due to its unknown status.");
 		return;
 	}
