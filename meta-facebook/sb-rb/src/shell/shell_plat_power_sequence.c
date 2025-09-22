@@ -24,7 +24,7 @@
 #include "plat_cpld.h"
 #include "shell_plat_power_sequence.h"
 
-LOG_MODULE_REGISTER(shell_plat_power_sequence, LOG_LEVEL_DBG);
+LOG_MODULE_REGISTER(shell_plat_power_sequence, LOG_LEVEL_INF);
 
 power_sequence power_sequence_on_table[] = {
 	{ 0, P12V_ON_REG, "P12V_ON_REG", 0x00 },
