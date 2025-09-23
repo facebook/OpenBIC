@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include <zephyr.h>
 #include <sys/printk.h>
 #include <logging/log.h>
@@ -318,7 +334,7 @@ uint8_t plat_pldm_set_boot_order(uint8_t *bootOrderData)
 	translated_msg.hdr.rq = PLDM_REQUEST;
 	translated_msg.hdr.pldm_type = PLDM_TYPE_OEM;
 	translated_msg.hdr.cmd = PLDM_OEM_WRITE_FILE_IO;
-	
+
 	struct pldm_oem_write_file_io_req *ptr = (struct pldm_oem_write_file_io_req *)malloc(
 		sizeof(struct pldm_oem_write_file_io_req) + BOOT_ORDER_LENGTH);
 
