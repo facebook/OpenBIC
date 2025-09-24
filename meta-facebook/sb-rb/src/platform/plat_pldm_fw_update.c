@@ -27,6 +27,7 @@
 #include "mp2971.h"
 #include "mp29816a.h"
 #include "raa228249.h"
+#include "drivers/i2c_npcm4xx.h"
 
 LOG_MODULE_REGISTER(plat_fwupdate);
 
@@ -378,4 +379,31 @@ bool find_sensor_id_and_name_by_firmware_comp_id(uint8_t comp_identifier, uint8_
 	}
 
 	return false;
+}
+
+void plat_reset_prepare()
+{
+	const char *i2c_labels[] = { "I2C_0", "I2C_1", "I2C_2", "I2C_3",
+				     "I2C_4", "I2C_5", "I2C_6", "I2C_11" };
+
+	for (int i = 0; i < ARRAY_SIZE(i2c_labels); i++) {
+		const struct device *i2c_dev = device_get_binding(i2c_labels[i]);
+		if (!i2c_dev) {
+			LOG_ERR("Failed to get binding for %s", i2c_labels[i]);
+			continue;
+		}
+
+		int ret = i2c_npcm_device_disable(i2c_dev);
+		if (ret) {
+			LOG_ERR("Failed to disable %s (ret=%d)", i2c_labels[i], ret);
+		} else {
+			LOG_INF("%s disabled", i2c_labels[i]);
+		}
+	}
+}
+
+void pal_warm_reset_prepare()
+{
+	LOG_INF("cmd platform warm reset prepare");
+	plat_reset_prepare();
 }

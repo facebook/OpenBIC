@@ -23,11 +23,18 @@
 #include <stdbool.h>
 #include <zephyr.h>
 
+#define RESET 0x00
 #define CPLD_OFFSET_VR_VENDER_TYPE 0x15
 #define CPLD_OFFSET_POWER_CLAMP 0x25
 #define CPLD_OFFSET_USERCODE 0x32
 #define CPLD_OFFSET_MMC_PWR_EN 0x38
 #define CPLD_OFFSET_ASIC_BOARD_ID 0x3C
+#define VR_AND_CLK_EN 0x3E
+#define VR_1_EN 0x3F
+#define VR_2_EN 0x40
+#define VR_3_EN 0x41
+#define VR_4_EN 0x42
+
 #define CPLD_ADDR (0x4C >> 1)
 #define I2C_BUS_CPLD I2C_BUS11
 typedef struct _cpld_info_ cpld_info;
