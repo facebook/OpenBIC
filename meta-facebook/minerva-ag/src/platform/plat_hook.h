@@ -284,6 +284,7 @@ typedef struct bootstrap_mapping_register {
 	uint8_t default_setting_value;
 	uint8_t change_setting_value;
 	bool reverse;
+	uint8_t *strap_name_comment;
 } bootstrap_mapping_register;
 
 typedef struct ubc_vr_power_mapping_sensor {

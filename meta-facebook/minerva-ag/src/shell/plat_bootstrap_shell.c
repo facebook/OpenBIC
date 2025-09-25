@@ -29,9 +29,9 @@ static int cmd_bootstrap_get_all(const struct shell *shell, size_t argc, char **
 {
 	shell_print(shell, "  id|            strap name                  |hex-value");
 	for (int i = 0; i < STRAP_INDEX_MAX; i++) {
-		uint8_t *rail_name = NULL;
-		if (!strap_name_get((uint8_t)i, &rail_name)) {
-			LOG_ERR("Can't find strap_rail_name by rail index: %x", i);
+		bootstrap_mapping_register bootstrap_item;
+		if (!find_bootstrap_by_rail((uint8_t)i, &bootstrap_item)) {
+			LOG_ERR("Can't find bootstrap_item by rail index: %d", i);
 			continue;
 		}
 		int drive_level = -1;
@@ -41,7 +41,16 @@ static int cmd_bootstrap_get_all(const struct shell *shell, size_t argc, char **
 			continue;
 		}
 
-		shell_print(shell, "%4d|%-40s|0x%02x", i, rail_name, drive_level);
+		char strap_name_display[40] = { 0 };
+		if (bootstrap_item.strap_name_comment) {
+			snprintf(strap_name_display, sizeof(strap_name_display), "%s(%s)",
+				 bootstrap_item.strap_name, bootstrap_item.strap_name_comment);
+		} else {
+			snprintf(strap_name_display, sizeof(strap_name_display), "%s",
+				 bootstrap_item.strap_name);
+		}
+
+		shell_print(shell, "%4d|%-40s|0x%02x", i, strap_name_display, drive_level);
 	}
 
 	return 0;
