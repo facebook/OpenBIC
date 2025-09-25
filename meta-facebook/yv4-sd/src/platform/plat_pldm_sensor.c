@@ -40,6 +40,25 @@ K_THREAD_STACK_DEFINE(monitor_prochot_sensor_stack, MONITOR_PROCHOT_SENSOR_STACK
 struct k_thread monitor_prochot_sensor_thread;
 k_tid_t monitor_prochot_sensor_tid;
 
+#ifdef ENABLE_PLATFORM_PROVIDES_PLDM_SENSOR_STACKS
+K_THREAD_STACK_DEFINE(plat_adc_sensor_stack, ADC_SENSOR_STACK_SIZE);
+K_THREAD_STACK_DEFINE(plat_vr_sensor_stack, VR_SENSOR_STACK_SIZE);
+K_THREAD_STACK_DEFINE(plat_mb_temp_sensor_stack, MB_TEMP_SENSOR_STACK_SIZE);
+K_THREAD_STACK_DEFINE(plat_cpu_sensor_stack, CPU_SENSOR_STACK_SIZE);
+K_THREAD_STACK_DEFINE(plat_ina233_sensor_stack, INA233_SENSOR_STACK_SIZE);
+K_THREAD_STACK_DEFINE(plat_dimm_sensor_stack, DIMM_SENSOR_STACK_SIZE);
+
+static k_thread_stack_t *pldm_sensor_poll_stacks[MAX_SENSOR_THREAD_ID] = {
+	plat_adc_sensor_stack, plat_vr_sensor_stack,	 plat_mb_temp_sensor_stack,
+	plat_cpu_sensor_stack, plat_ina233_sensor_stack, plat_dimm_sensor_stack
+};
+
+static const size_t pldm_sensor_stack_sizes[MAX_SENSOR_THREAD_ID] = {
+	ADC_SENSOR_STACK_SIZE, VR_SENSOR_STACK_SIZE,	 MB_TEMP_SENSOR_STACK_SIZE,
+	CPU_SENSOR_STACK_SIZE, INA233_SENSOR_STACK_SIZE, DIMM_SENSOR_STACK_SIZE
+};
+#endif
+
 static struct pldm_sensor_thread pal_pldm_sensor_thread[MAX_SENSOR_THREAD_ID] = {
 	// thread id, thread name
 	{ ADC_SENSOR_THREAD_ID, "ADC_PLDM_SENSOR_THREAD" },
@@ -6588,6 +6607,24 @@ void plat_load_aux_sensor_names_pdr_table(PDR_sensor_auxiliary_names *aux_sensor
 		}
 	}
 }
+
+#ifdef ENABLE_PLATFORM_PROVIDES_PLDM_SENSOR_STACKS
+k_thread_stack_t *plat_get_pldm_sensor_stack(int thread_id)
+{
+	if (thread_id >= 0 && thread_id < MAX_SENSOR_THREAD_ID) {
+		return pldm_sensor_poll_stacks[thread_id];
+	}
+	return NULL;
+}
+
+size_t plat_get_pldm_sensor_stack_size(int thread_id)
+{
+	if (thread_id >= 0 && thread_id < MAX_SENSOR_THREAD_ID) {
+		return pldm_sensor_stack_sizes[thread_id];
+	}
+	return PLDM_SENSOR_POLL_STACK_SIZE;
+}
+#endif
 
 uint16_t plat_pdr_entity_aux_names_table_size = 0;
 

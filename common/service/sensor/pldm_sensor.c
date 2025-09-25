@@ -30,8 +30,10 @@ LOG_MODULE_REGISTER(pldm_sensor);
 static struct k_thread pldm_sensor_polling_thread[MAX_SENSOR_THREAD_ID];
 static k_tid_t pldm_sensor_polling_tid[MAX_SENSOR_THREAD_ID];
 K_THREAD_STACK_EXTERN(pldm_sensor_poll_stack);
+#ifndef ENABLE_PLATFORM_PROVIDES_PLDM_SENSOR_STACKS
 K_THREAD_STACK_ARRAY_DEFINE(pldm_sensor_poll_stacks, MAX_SENSOR_THREAD_ID,
 			    PLDM_SENSOR_POLL_STACK_SIZE);
+#endif
 
 pldm_sensor_thread *pldm_sensor_thread_list;
 pldm_sensor_info *pldm_sensor_list[MAX_SENSOR_THREAD_ID];
@@ -456,6 +458,16 @@ void pldm_sensor_polling_handler(void *arug0, void *arug1, void *arug2)
 	}
 }
 
+__weak k_thread_stack_t *plat_get_pldm_sensor_stack(int thread_id)
+{
+	return NULL;
+}
+
+__weak size_t plat_get_pldm_sensor_stack_size(int thread_id)
+{
+	return PLDM_SENSOR_POLL_STACK_SIZE;
+}
+
 void pldm_sensor_poll_thread_init()
 {
 	int i = 0;
@@ -463,9 +475,24 @@ void pldm_sensor_poll_thread_init()
 	LOG_INF("Init PLDM sensor monitor thread");
 
 	for (i = 0; i < MAX_SENSOR_THREAD_ID; i++) {
+		k_thread_stack_t *stack = plat_get_pldm_sensor_stack(i);
+		size_t stack_size = plat_get_pldm_sensor_stack_size(i);
+
+#ifdef ENABLE_PLATFORM_PROVIDES_PLDM_SENSOR_STACKS
+		if (stack == NULL || stack_size == 0) {
+			LOG_WRN("Invalid stack for thread %d, skipping", i);
+			continue;
+		}
+#else
+		stack = pldm_sensor_poll_stacks[i];
+		stack_size = K_THREAD_STACK_SIZEOF(pldm_sensor_poll_stacks[i]);
+#endif
+
+		LOG_INF("Creating thread %d (%s) with stack size %zu", i,
+			pldm_sensor_thread_list[i].thread_name, stack_size);
+
 		pldm_sensor_polling_tid[i] =
-			k_thread_create(&pldm_sensor_polling_thread[i], pldm_sensor_poll_stacks[i],
-					K_THREAD_STACK_SIZEOF(pldm_sensor_poll_stacks[i]),
+			k_thread_create(&pldm_sensor_polling_thread[i], stack, stack_size,
 					pldm_sensor_polling_handler, (void *)i, NULL, NULL,
 					K_PRIO_PREEMPT(1), 0, K_NO_WAIT);
 		k_thread_name_set(&pldm_sensor_polling_thread[i],
