@@ -415,7 +415,9 @@ void pal_show_board_types(const struct shell *shell)
 
 	shell_print(shell, "* VR_TYPE:       (0x%02X)%s", vr_type,
 		    (vr_type == VR_MPS_MP2971_MP2891)	   ? "MPS_MP2971_MP2891" :
-		    (vr_type == VR_MPS_MP2971_MP29816A)	   ? "MPS_MP2971_MP29816A" :
+		    (vr_type == VR_MPS_MP2971_MP29816A)	   ? ((board_stage >= FAB4_DVT2) ?
+								      "MPS_MP2971_MP29816C" :
+								      "MPS_MP2971_MP29816A") :
 		    (vr_type == VR_RNS_ISL69260_RAA228238) ? "RNS_ISL69260_RAA228238" :
 		    (vr_type == VR_RNS_ISL69260_RAA228249) ? "RNS_ISL69260_RAA228249" :
 							     "not supported");
