@@ -27,6 +27,7 @@
 #include "plat_hook.h"
 #include "plat_class.h"
 #include <pmbus.h>
+#include "plat_datetime.h"
 
 LOG_MODULE_REGISTER(plat_log);
 
@@ -383,7 +384,15 @@ void error_log_event(uint16_t error_code, bool log_status)
 
 	// Update log error code and timestamp
 	err_log_data[fru_count].err_code = error_code;
-	err_log_data[fru_count].sys_time = k_uptime_get();
+	struct tm tm_now;
+	rtc_get_tm(&tm_now);
+
+	err_log_data[fru_count].sys_datetime.year = tm_now.tm_year + 1900;
+	err_log_data[fru_count].sys_datetime.month = tm_now.tm_mon + 1;
+	err_log_data[fru_count].sys_datetime.day = tm_now.tm_mday;
+	err_log_data[fru_count].sys_datetime.hour = tm_now.tm_hour;
+	err_log_data[fru_count].sys_datetime.min = tm_now.tm_min;
+	err_log_data[fru_count].sys_datetime.sec = tm_now.tm_sec;
 
 	if (!get_error_data(error_code, err_log_data[fru_count].error_data)) {
 		// Clear error data if no valid data is found
