@@ -14,20 +14,31 @@
  * limitations under the License.
  */
 
-#ifndef PLAT_PLDM_FW_VERSION_SHELL_H
-#define PLAT_PLDM_FW_VERSION_SHELL_H
-
 #include <shell/shell.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <drivers/flash.h>
+#include <sys/reboot.h>
 
-void cmd_get_fw_version_vr(const struct shell *shell, size_t argc, char **argv);
-void cmd_get_fw_version_pcie_switch(const struct shell *shell, size_t argc, char **argv);
+void plat_cmd_erase(const struct shell *shell, size_t argc, char **argv)
+{
+	off_t offset = (off_t)0x00;
+	size_t size = (size_t)0x1000;
 
-SHELL_STATIC_SUBCMD_SET_CREATE(sub_get_fw_version_cmd,
-			       SHELL_CMD(vr, NULL, "get fw version vr", cmd_get_fw_version_vr),
-			       SHELL_CMD(pcie_switch, NULL, "get fw version pcie_switch",
-					 cmd_get_fw_version_pcie_switch),
-			       SHELL_SUBCMD_SET_END);
+	const struct device *dev;
+	dev = device_get_binding("spi_spim0_cs0");
+	if (!dev) {
+		shell_warn(shell, "Fail to bind device spi_spim0_cs0.\n");
+		return;
+	}
 
-SHELL_CMD_REGISTER(get_fw_version, &sub_get_fw_version_cmd, "Get fw version command", NULL);
+	int ret;
+	ret = flash_erase(dev, offset, size);
+	if (ret) {
+		shell_warn(shell, "flash_erase failed (err:%d).\n", ret);
+		return;
+	}
+	sys_reboot(0);
+}
 
-#endif
+SHELL_CMD_REGISTER(erase, NULL, "erase flash and reboot", plat_cmd_erase);

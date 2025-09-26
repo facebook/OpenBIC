@@ -39,6 +39,7 @@
 #include "plat_hook.h"
 #include "sensor.h"
 #include "pex90144.h"
+#include "drivers/i2c_npcm4xx.h"
 
 LOG_MODULE_REGISTER(plat_fwupdate);
 
@@ -61,7 +62,7 @@ si_compnt_mapping_sensor si_vr_compnt_mapping_sensor_table[] = {
 };
 
 si_compnt_mapping_sensor si_pcie_switch_compnt_mapping_sensor_table[] = {
-	{ SI_COMPNT_PCIE_SWITCH, SENSOR_NUM_PCIE_SWITCH_TEMP_C, "SI_PCIE_SWITCH" },
+	{ SI_COMPNT_PEX90144, SENSOR_NUM_PCIE_SWITCH_PEX90144_TEMP_C, "SI_PEX90144" },
 };
 
 /* PLDM FW update table */
@@ -114,7 +115,7 @@ pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
 	{
 		.enable = true,
 		.comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,
-		.comp_identifier = SI_COMPNT_PCIE_SWITCH,
+		.comp_identifier = SI_COMPNT_PEX90144,
 		.comp_classification_index = 0x00,
 		.pre_update_func = plat_pldm_pre_pcie_switch_update,
 		.update_func = pldm_pcie_switch_update,
@@ -558,4 +559,30 @@ int get_si_vr_compnt_mapping_sensor_table_count(void)
 	int count = 0;
 	count = ARRAY_SIZE(si_vr_compnt_mapping_sensor_table);
 	return count;
+}
+
+void plat_reset_prepare()
+{
+	const char *i2c_labels[] = { "I2C_0", "I2C_3", "I2C_6" };
+
+	for (int i = 0; i < ARRAY_SIZE(i2c_labels); i++) {
+		const struct device *i2c_dev = device_get_binding(i2c_labels[i]);
+		if (!i2c_dev) {
+			LOG_ERR("Failed to get binding for %s", i2c_labels[i]);
+			continue;
+		}
+
+		int ret = i2c_npcm_device_disable(i2c_dev);
+		if (ret) {
+			LOG_ERR("Failed to disable %s (ret=%d)", i2c_labels[i], ret);
+		} else {
+			LOG_INF("%s disabled", i2c_labels[i]);
+		}
+	}
+}
+
+void pal_warm_reset_prepare()
+{
+	LOG_INF("cmd platform warm reset prepare");
+	plat_reset_prepare();
 }

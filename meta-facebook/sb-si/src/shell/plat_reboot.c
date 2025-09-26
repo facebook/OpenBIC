@@ -14,20 +14,20 @@
  * limitations under the License.
  */
 
-#ifndef PLAT_PLDM_FW_VERSION_SHELL_H
-#define PLAT_PLDM_FW_VERSION_SHELL_H
-
 #include <shell/shell.h>
+#include <zephyr.h>
+#include <stdio.h>
+#include <zephyr.h>
+#include "util_sys.h"
+#include "plat_pldm_sensor.h"
 
-void cmd_get_fw_version_vr(const struct shell *shell, size_t argc, char **argv);
-void cmd_get_fw_version_pcie_switch(const struct shell *shell, size_t argc, char **argv);
+#define PLAT_WAIT_SENSOR_POLLING_END_DELAY_MS 1000
 
-SHELL_STATIC_SUBCMD_SET_CREATE(sub_get_fw_version_cmd,
-			       SHELL_CMD(vr, NULL, "get fw version vr", cmd_get_fw_version_vr),
-			       SHELL_CMD(pcie_switch, NULL, "get fw version pcie_switch",
-					 cmd_get_fw_version_pcie_switch),
-			       SHELL_SUBCMD_SET_END);
+void cmd_plat_reboot(struct shell *shell, size_t argc, char **argv)
+{
+	set_plat_sensor_polling_enable_flag(false);
+	k_msleep(PLAT_WAIT_SENSOR_POLLING_END_DELAY_MS);
+	submit_bic_warm_reset();
+}
 
-SHELL_CMD_REGISTER(get_fw_version, &sub_get_fw_version_cmd, "Get fw version command", NULL);
-
-#endif
+SHELL_CMD_REGISTER(reboot, NULL, "reboot command", cmd_plat_reboot);
