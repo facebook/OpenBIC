@@ -186,6 +186,11 @@ void OEM_1S_SET_CARD_TYPE(ipmi_msg *msg)
 		msg->completion_code = CC_SUCCESS;
 		set_2ou_card_type(msg->data[1]);
 		LOG_INF("Set HSM type to %u", msg->data[1]);
+		if (msg->data[1] == TYPE_2OU_MARVELL_HSM) {
+			if (common_tbl_sen_reinit(SENSOR_NUM_TEMP_DPV2_HSM)) {
+				LOG_ERR("Fail to reinit HSM sensor");
+			}
+		}
 		break;
 	default:
 		msg->completion_code = CC_INVALID_DATA_FIELD;
