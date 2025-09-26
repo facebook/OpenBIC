@@ -392,8 +392,8 @@ bool find_sensor_id_and_name_by_firmware_comp_id(uint8_t comp_identifier, uint8_
 
 void plat_reset_prepare()
 {
-	const char *i2c_labels[] = { "I2C_0", "I2C_1", "I2C_2", "I2C_3",
-				     "I2C_4", "I2C_5", "I2C_6","I2C_7", "I2C_8", "I2C_9", "I2C_10", "I2C_11" };
+	const char *i2c_labels[] = { "I2C_0", "I2C_1", "I2C_2", "I2C_3", "I2C_4",  "I2C_5",
+				     "I2C_6", "I2C_7", "I2C_8", "I2C_9", "I2C_10", "I2C_11" };
 
 	for (int i = 0; i < ARRAY_SIZE(i2c_labels); i++) {
 		const struct device *i2c_dev = device_get_binding(i2c_labels[i]);

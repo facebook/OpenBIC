@@ -93,5 +93,4 @@
 
 #define PLDM_MSG_TIMEOUT_MS 5000
 
-
 #endif
