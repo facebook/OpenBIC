@@ -17,11 +17,8 @@
 #include <shell/shell.h>
 #include <stdlib.h>
 #include <stdio.h>
-
 #include <drivers/flash.h>
 #include <sys/reboot.h>
-
-
 
 void plat_cmd_erase(const struct shell *shell, size_t argc, char **argv)
 {
@@ -32,14 +29,14 @@ void plat_cmd_erase(const struct shell *shell, size_t argc, char **argv)
 	dev = device_get_binding("spi_spim0_cs0");
 	if (!dev) {
 		shell_warn(shell, "Fail to bind device spi_spim0_cs0.\n");
-		return ;
+		return;
 	}
 
 	int ret;
 	ret = flash_erase(dev, offset, size);
 	if (ret) {
 		shell_warn(shell, "flash_erase failed (err:%d).\n", ret);
-		return ;
+		return;
 	}
 	sys_reboot(0);
 }
