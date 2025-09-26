@@ -84,7 +84,9 @@ void cmd_log_dump(const struct shell *shell, size_t argc, char **argv)
 			break;
 		}
 
-		shell_print(shell, "sys_time: %lld ms", log.sys_time);
+		shell_print(shell, "sys_datetime: %04d-%02d-%02d %02d:%02d:%02d",
+			    log.sys_datetime.year, log.sys_datetime.month, log.sys_datetime.day,
+			    log.sys_datetime.hour, log.sys_datetime.min, log.sys_datetime.sec);
 		shell_print(shell, "error_data:");
 		shell_hexdump(shell, log.error_data, sizeof(log.error_data));
 		shell_print(shell, "cpld register: start offset 0x%02x",

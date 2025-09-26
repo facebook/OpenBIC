@@ -41,10 +41,20 @@ uint8_t plat_log_get_num(void);
 void reset_error_log_event(uint8_t err_type);
 bool vr_fault_get_error_data(uint8_t sensor_id, uint8_t device_id, uint8_t *data);
 
+struct rtc_datetime {
+	uint16_t year;
+	uint8_t month;
+	uint8_t day;
+	uint8_t hour;
+	uint8_t min;
+	uint8_t sec;
+	uint8_t _padding;
+};
+
 typedef struct __attribute__((packed)) _plat_err_log_mapping {
 	uint16_t index;
 	uint16_t err_code;
-	uint64_t sys_time;
+	struct rtc_datetime sys_datetime;
 	uint8_t error_data[20];
 	uint8_t cpld_dump[AEGIS_CPLD_REGISTER_MAX_NUM];
 } plat_err_log_mapping;
