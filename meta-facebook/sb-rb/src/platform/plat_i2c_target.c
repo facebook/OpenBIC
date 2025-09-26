@@ -69,7 +69,7 @@ struct i2c_target_data *test_for_reading = NULL;
 /* I2C target init-enable table */
 const bool I2C_TARGET_ENABLE_TABLE[MAX_TARGET_NUM] = {
 	TARGET_DISABLE, TARGET_DISABLE, TARGET_DISABLE, TARGET_DISABLE,
-	TARGET_DISABLE, TARGET_ENABLE,	TARGET_DISABLE, TARGET_DISABLE,
+	TARGET_DISABLE, TARGET_ENABLE,	TARGET_ENABLE, TARGET_DISABLE,
 	TARGET_DISABLE, TARGET_DISABLE, TARGET_DISABLE, TARGET_DISABLE,
 };
 
@@ -752,8 +752,8 @@ static bool command_reply_data_handle(void *arg)
 /* I2C target init-config table */
 const struct _i2c_target_config I2C_TARGET_CONFIG_TABLE[MAX_TARGET_NUM] = {
 	{ 0xFF, 0xA }, { 0xFF, 0xA }, { 0xFF, 0xA },
-	{ 0xFF, 0xA }, { 0xFF, 0xA }, { 0x42, 0xA, command_reply_data_handle },
-	{ 0xFF, 0xA }, { 0xFF, 0xA }, { 0xFF, 0xA },
+	{ 0xFF, 0xA }, { 0xFF, 0xA }, { 0x42, 0xA },
+	{ 0x40, 0xA, command_reply_data_handle }, { 0xFF, 0xA }, { 0xFF, 0xA },
 	{ 0xFF, 0xA }, { 0xFF, 0xA }, { 0xFF, 0xA },
 };
 
@@ -872,7 +872,7 @@ void plat_master_write_thread_handler()
 		rc = i2c_target_read(I2C_TARGET_BUS_ASIC, rdata, sizeof(rdata), &rlen);
 		if (rc) {
 			LOG_ERR("i2c_target_read fail, ret %d", rc);
-			break;
+			continue;
 		}
 		// LOG_DBG("rlen = %d", rlen);
 		// LOG_HEXDUMP_DBG(rdata, rlen, "");

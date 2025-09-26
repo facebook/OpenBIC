@@ -33,6 +33,7 @@ LOG_MODULE_REGISTER(plat_fwupdate);
 
 static uint8_t pldm_pre_vr_update(void *fw_update_param);
 static uint8_t pldm_post_vr_update(void *fw_update_param);
+static uint8_t pldm_pre_bic_update(void *fw_update_param);
 static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len);
 
 typedef struct {
@@ -56,7 +57,15 @@ compnt_mapping_sensor vr_compnt_mapping_sensor_table[] = {
 	{ COMPNT_VR_11, SENSOR_NUM_ASIC_P0V75_OWL_W_VDD_TEMP_C, "ASIC_P0V75_OWL_W_VDD" },
 	{ COMPNT_VR_12, SENSOR_NUM_ASIC_P0V9_OWL_W_TRVDD_TEMP_C, "ASIC_P0V9_OWL_W_TRVDD" },
 };
+static uint8_t pldm_pre_bic_update(void *fw_update_param)
+{
+	ARG_UNUSED(fw_update_param);
 
+	/* Stop sensor polling */
+	set_plat_sensor_polling_enable_flag(false);
+	LOG_INF("Stop pldm sensor polling");
+	return 0;
+}
 // clang-format off
 #define VR_COMPONENT_DEF(comp_id)                                                                  \
 	{                                                                                          \
@@ -83,7 +92,7 @@ pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
 		.comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,
 		.comp_identifier = COMPNT_BIC,
 		.comp_classification_index = 0x00,
-		.pre_update_func = NULL,
+		.pre_update_func = pldm_pre_bic_update,
 		.update_func = pldm_bic_update,
 		.pos_update_func = NULL,
 		.inf = COMP_UPDATE_VIA_SPI,
@@ -384,7 +393,7 @@ bool find_sensor_id_and_name_by_firmware_comp_id(uint8_t comp_identifier, uint8_
 void plat_reset_prepare()
 {
 	const char *i2c_labels[] = { "I2C_0", "I2C_1", "I2C_2", "I2C_3",
-				     "I2C_4", "I2C_5", "I2C_6", "I2C_11" };
+				     "I2C_4", "I2C_5", "I2C_6","I2C_7", "I2C_8", "I2C_9", "I2C_10", "I2C_11" };
 
 	for (int i = 0; i < ARRAY_SIZE(i2c_labels); i++) {
 		const struct device *i2c_dev = device_get_binding(i2c_labels[i]);
