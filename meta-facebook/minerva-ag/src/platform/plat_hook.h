@@ -294,6 +294,8 @@ typedef struct ubc_vr_power_mapping_sensor {
 	uint32_t power_history[POWER_HISTORY_SIZE];
 } ubc_vr_power_mapping_sensor;
 
+bool get_temp_index_threshold_type(uint8_t temp_threshold_type, uint8_t sensor_id,
+				   uint8_t *temp_index_threshold_type);
 bool plat_get_vout_range(uint8_t rail, uint16_t *vout_max_millivolt, uint16_t *vout_min_millivolt);
 bool plat_set_vout_range_min(uint8_t rail, uint16_t *millivolt);
 bool plat_set_vout_range_max(uint8_t rail, uint16_t *millivolt);

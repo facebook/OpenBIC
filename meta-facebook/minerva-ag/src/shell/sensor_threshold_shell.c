@@ -20,6 +20,8 @@
 #include <zephyr.h>
 #include "sensor_threshold_shell.h"
 #include "plat_pldm_sensor.h"
+#include "sensor.h"
+#include "plat_hook.h"
 
 #define MINERVA_THRESHOLD_UNIT 0.001
 
@@ -48,6 +50,7 @@ void cmd_set_sensor_threshold(const struct shell *shell, size_t argc, char **arg
 	char threshold_type[4] = { 0 };
 	int value = 0;
 	uint32_t threshold_value = 0;
+	int temp_threshold_type = 0;
 
 	snprintf(threshold_type, sizeof(threshold_type), "%s", argv[2]);
 	value = strtol(argv[3], NULL, 10);
@@ -59,15 +62,68 @@ void cmd_set_sensor_threshold(const struct shell *shell, size_t argc, char **arg
 			shell_error(shell, "Change critical high to pdr table failed");
 			return;
 		}
+
+		switch (sensorID) {
+		case TOP_INLET_TEMP_C:
+		case TOP_OUTLET_TEMP_C:
+		case BOT_INLET_TEMP_C:
+		case BOT_OUTLET_TEMP_C:
+			temp_threshold_type = LOCAL_HIGH_LIMIT;
+			break;
+		case ASIC_DIE_ATH_SENSOR_0_TEMP_C:
+		case ASIC_DIE_ATH_SENSOR_1_TEMP_C:
+			temp_threshold_type = REMOTE_1_HIGH_LIMIT;
+			break;
+		case ASIC_DIE_N_OWL_TEMP_C:
+		case ASIC_DIE_S_OWL_TEMP_C:
+			temp_threshold_type = REMOTE_2_HIGH_LIMIT;
+			break;
+		default:
+			break;
+		}
 	} else if (strcmp(threshold_type, "LCT") == 0) {
 		result = change_pdr_table_critical_low_with_sensor_id(sensorID, threshold_value);
 		if (result != 0) {
 			shell_error(shell, "Change critical low to pdr table failed");
 			return;
 		}
+
+		switch (sensorID) {
+		case TOP_INLET_TEMP_C:
+		case TOP_OUTLET_TEMP_C:
+		case BOT_INLET_TEMP_C:
+		case BOT_OUTLET_TEMP_C:
+			temp_threshold_type = LOCAL_LOW_LIMIT;
+			break;
+		case ASIC_DIE_ATH_SENSOR_0_TEMP_C:
+		case ASIC_DIE_ATH_SENSOR_1_TEMP_C:
+			temp_threshold_type = REMOTE_1_LOW_LIMIT;
+			break;
+		case ASIC_DIE_N_OWL_TEMP_C:
+		case ASIC_DIE_S_OWL_TEMP_C:
+			temp_threshold_type = REMOTE_2_LOW_LIMIT;
+			break;
+		default:
+			break;
+		}
 	} else {
 		shell_error(shell, "Help: Need to send <UCT/LCT>");
 		return;
+	}
+
+	uint8_t temp_index_threshold_type = 0;
+	if (sensorID >= TOP_INLET_TEMP_C && sensorID <= ASIC_DIE_S_OWL_TEMP_C) {
+		if (get_temp_index_threshold_type(temp_threshold_type, sensorID,
+						  &temp_index_threshold_type)) {
+			if (!plat_set_temp_threshold(temp_index_threshold_type, &value, false,
+						     false)) {
+				shell_error(shell, "Can't set temp_threshold by temp index: %d",
+					    temp_index_threshold_type);
+				return;
+			}
+		} else {
+			shell_error(shell, "Not found mapping temp_index_threshold_type!");
+		}
 	}
 
 	shell_print(shell, "sensor_threshold set 0x%x %s %d success!", sensorID, threshold_type,

@@ -2440,6 +2440,24 @@ void init_temp_limit(void)
 	LOG_INF("temp limit init done");
 }
 
+bool get_temp_index_threshold_type(uint8_t temp_threshold_type, uint8_t sensor_id,
+				   uint8_t *temp_index_threshold_type)
+{
+	CHECK_NULL_ARG_WITH_RETURN(temp_index_threshold_type, false);
+
+	for (int i = 0; i < ARRAY_SIZE(temp_index_threshold_type_table); i++) {
+		if ((temp_index_threshold_type_table[i].temp_threshold_type ==
+		     temp_threshold_type) &&
+		    (temp_index_threshold_type_table[i].sensor_id == sensor_id)) {
+			*temp_index_threshold_type =
+				temp_index_threshold_type_table[i].temp_index_threshold_type;
+			return true;
+		}
+	}
+
+	return false;
+}
+
 void plat_pldm_sensor_post_load_init(int thread_id)
 {
 	if (thread_id == TEMP_SENSOR_THREAD_ID) {
