@@ -307,6 +307,11 @@ void pldm_sensor_get_reading(sensor_cfg *pldm_sensor_cfg, uint32_t *update_time,
 		}
 	}
 
+	if (pldm_sensor_cfg->access_checker(sensor_num) != true) {
+		pldm_sensor_cfg->cache_status = PLDM_SENSOR_UNAVAILABLE;
+		return;
+	}
+
 	*update_time_ms = k_uptime_get_32();
 	*update_time = (*update_time_ms / 1000);
 	pldm_sensor_cfg->cache = reading;

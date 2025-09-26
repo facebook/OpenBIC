@@ -62,6 +62,12 @@ void ISR_GPIO_RST_ATH_PWR_ON_PLD_R1_N()
    * 0 -> power off
    */
 	LOG_INF("RST_ATH_PWR_ON_PLD_R1_N = %d", gpio_get(RST_ATH_PWR_ON_PLD_R1_N));
+
+	if (gpio_get(RST_ATH_PWR_ON_PLD_R1_N) == GPIO_LOW) {
+		k_timer_stop(&check_ubc_delayed_timer);
+		cancel_ubc_delayed_timer_handler();
+		set_ubc_enabled_delayed_enabled(false);
+	}
 }
 
 void ISR_GPIO_ATH_CURRENT_SENSE_0_NPCM_R()
