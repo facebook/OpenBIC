@@ -1,0 +1,9 @@
+<map id="is_pcie_switch_access" name="is_pcie_switch_access">
+<area shape="rect" id="node1" title=" " alt="" coords="5,111,163,138"/>
+<area shape="rect" id="node2" href="$minerva-ag_2src_2platform_2plat__pldm__sensor_8c.html#af612fa91659722bb5ba98e3752572ced" title=" " alt="" coords="211,5,369,47"/>
+<area shape="rect" id="node3" href="$minerva-ag_2src_2platform_2plat__pldm__sensor_8c.html#ab9563efddd6de9d2ccf6ad3ff5b44125" title=" " alt="" coords="215,71,365,112"/>
+<area shape="rect" id="node4" href="$minerva-ag_2src_2platform_2plat__pldm__sensor_8c.html#aaf3c9d1d12d6776c9ce1ec2c153e1a3e" title=" " alt="" coords="223,136,357,177"/>
+<area shape="rect" id="node6" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="231,202,349,229"/>
+<area shape="rect" id="node5" href="$minerva-ag_2src_2platform_2plat__pldm__sensor_8c.html#a18272dc8dce4f373b85555817c2cc6f3" title=" " alt="" coords="417,136,567,177"/>
+<area shape="rect" id="node7" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="421,202,563,229"/>
+</map>

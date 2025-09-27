@@ -1,0 +1,11 @@
+<map id="OEM_1S_WRITE_READ_DIMM" name="OEM_1S_WRITE_READ_DIMM">
+<area shape="rect" id="node1" title=" " alt="" coords="5,132,212,159"/>
+<area shape="rect" id="node2" href="$power__status_8c.html#a647e7f9c1247d6a1785d9b9502e7fd29" title=" " alt="" coords="283,5,391,32"/>
+<area shape="rect" id="node3" href="$power__status_8c.html#abeff55e3cd2e8563760154b81f37f286" title=" " alt="" coords="280,56,395,83"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="464,132,583,159"/>
+<area shape="rect" id="node6" href="$hal__i2c_8c.html#a74e65bd2151f60f65d8d64e0ea5330d3" title=" " alt="" coords="275,157,399,184"/>
+<area shape="rect" id="node7" href="$yv4-sd_2src_2platform_2plat__dimm_8c.html#af8af2995d0a1bf58a5e46176528cae05" title=" " alt="" coords="275,208,399,235"/>
+<area shape="rect" id="node8" href="$yv35-cl_2src_2platform_2plat__dimm_8c.html#af33feea8a08ae270156e7128f4b3f04f" title=" " alt="" coords="260,259,415,285"/>
+<area shape="rect" id="node5" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="632,183,775,209"/>
+<area shape="rect" id="node9" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="463,245,584,272"/>
+</map>

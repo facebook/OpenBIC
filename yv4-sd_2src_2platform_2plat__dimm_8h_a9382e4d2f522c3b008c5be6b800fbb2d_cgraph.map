@@ -1,0 +1,8 @@
+<map id="init_dimm_prsnt_status" name="init_dimm_prsnt_status">
+<area shape="rect" id="node1" title=" " alt="" coords="5,71,163,98"/>
+<area shape="rect" id="node2" href="$yv35-cl_2src_2platform_2plat__dimm_8c.html#a556085cf5be96ff22fe2b89fa98c80bc" title=" " alt="" coords="221,5,355,47"/>
+<area shape="rect" id="node3" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="415,71,533,98"/>
+<area shape="rect" id="node5" href="$yv35-cl_2src_2platform_2plat__dimm_8c.html#af33feea8a08ae270156e7128f4b3f04f" title=" " alt="" coords="211,122,365,149"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="583,97,725,123"/>
+<area shape="rect" id="node6" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="413,122,535,149"/>
+</map>
