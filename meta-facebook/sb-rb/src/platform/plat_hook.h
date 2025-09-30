@@ -67,6 +67,34 @@ enum VR_RAIL_E {
 	VR_RAIL_E_P3V3_OSFP_VOLT_V,
 	VR_RAIL_E_MAX,
 };
+enum UBC_VR_RAIL_E {
+	UBC_VR_RAIL_E_UBC1,
+	UBC_VR_RAIL_E_UBC2,
+	UBC_VR_RAIL_E_ASIC_P0V85_MEDHA0_VDD,
+	UBC_VR_RAIL_E_ASIC_P0V85_MEDHA1_VDD,
+	UBC_VR_RAIL_E_ASIC_P0V9_OWL_E_TRVDD,
+	UBC_VR_RAIL_E_ASIC_P0V75_OWL_E_TRVDD,
+	UBC_VR_RAIL_E_ASIC_P0V75_MAX_M_VDD,
+	UBC_VR_RAIL_E_ASIC_P0V75_VDDPHY_HBM1357,
+	UBC_VR_RAIL_E_ASIC_P0V75_OWL_E_VDD,
+	UBC_VR_RAIL_E_ASIC_P0V4_VDDQL_HBM1357,
+	UBC_VR_RAIL_E_ASIC_P1V1_VDDQC_HBM1357,
+	UBC_VR_RAIL_E_ASIC_P1V8_VPP_HBM1357,
+	UBC_VR_RAIL_E_ASIC_P0V75_MAX_N_VDD,
+	UBC_VR_RAIL_E_ASIC_P0V8_HAMSA_AVDD_PCIE,
+	UBC_VR_RAIL_E_ASIC_P1V2_HAMSA_VDDHRXTX_PCIE,
+	UBC_VR_RAIL_E_ASIC_P0V85_HAMSA_VDD,
+	UBC_VR_RAIL_E_ASIC_P1V1_VDDQC_HBM0246,
+	UBC_VR_RAIL_E_ASIC_P1V8_VPP_HBM0246,
+	UBC_VR_RAIL_E_ASIC_P0V4_VDDQL_HBM0246,
+	UBC_VR_RAIL_E_ASIC_P0V75_VDDPHY_HBM0246,
+	UBC_VR_RAIL_E_ASIC_P0V75_OWL_W_VDD,
+	UBC_VR_RAIL_E_ASIC_P0V75_MAX_S_VDD,
+	UBC_VR_RAIL_E_ASIC_P0V9_OWL_W_TRVDD,
+	UBC_VR_RAIL_E_ASIC_P0V75_OWL_W_TRVDD,
+	UBC_VR_RAIL_E_P3V3_OSFP,
+	UBC_VR_RAIL_E_MAX,
+};
 
 enum VR_STAUS_E {
 	VR_STAUS_E_STATUS_BYTE = 0,
@@ -169,6 +197,7 @@ typedef struct bootstrap_user_settings_struct {
 	uint16_t user_setting_value[STRAP_INDEX_MAX];
 } bootstrap_user_settings_struct;
 
+extern bootstrap_user_settings_struct bootstrap_user_settings;
 extern vr_vout_user_settings user_settings;
 extern vr_vout_range_user_settings_struct vout_range_user_settings;
 extern vr_mapping_sensor vr_rail_table[];
@@ -208,4 +237,8 @@ bool get_bootstrap_change_drive_level(int rail, int *drive_level);
 bool find_bootstrap_by_rail(uint8_t rail, bootstrap_mapping_register *result);
 bool post_common_sensor_read(sensor_cfg *cfg, void *args, int *const reading);
 bool voltage_command_setting_get(uint8_t rail, uint16_t *vout);
+bool post_sensor_reading_hook_func(uint8_t sensor_number);
+bool post_ubc_read(sensor_cfg *cfg, void *args, int *reading);
+bool bootstrap_user_settings_set(void *bootstrap_user_settings);
+bool vr_vout_user_settings_set(void *user_settings_value);
 #endif

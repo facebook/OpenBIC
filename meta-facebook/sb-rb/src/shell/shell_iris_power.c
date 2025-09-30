@@ -66,46 +66,6 @@ static steps_on_struct steps_on[] = {
 	{ RESET, 0, "MEDHA1_SYS_RST_PLD_L" }, //MEDHA1_SYS_RST_PLD_L
 };
 
-bool set_cpld_bit(uint8_t cpld_offset, uint8_t bit, uint8_t value)
-{
-	uint8_t original_value = 0;
-	if (!plat_read_cpld(cpld_offset, &original_value, 1)) {
-		shell_warn(NULL, "offset = 0x%x, bit = %d, value = %d, read cpld fail", cpld_offset,
-			   bit, value);
-		return false;
-	}
-
-	if (value) {
-		original_value |= BIT(bit);
-	} else {
-		original_value &= ~BIT(bit);
-	}
-
-	if (!plat_write_cpld(cpld_offset, &original_value)) {
-		shell_warn(NULL, "offset = 0x%x, bit = %d, value = %d, write cpld fail",
-			   cpld_offset, bit, value);
-		return false;
-	}
-
-	// check if write success
-	uint8_t check_value = 0;
-	if (!plat_read_cpld(cpld_offset, &check_value, 1)) {
-		shell_warn(NULL, "offset = 0x%x, bit = %d, value = %d, read cpld fail", cpld_offset,
-			   bit, value);
-		return false;
-	}
-
-	LOG_DBG("original_value = 0x%x, check_value = 0x%x", original_value, check_value);
-
-	if (check_value != original_value) {
-		shell_warn(NULL, "offset = 0x%x, bit = %d, value = %d, set_cpld_bit fail",
-			   cpld_offset, bit, value);
-		return false;
-	}
-
-	return true;
-}
-
 static bool iris_power_control(uint8_t onoff)
 {
 	uint8_t tmp = onoff ? 0x80 : 0x00;

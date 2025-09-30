@@ -22,6 +22,7 @@
 #include "plat_i2c.h"
 #include "plat_util.h"
 #include "plat_class.h"
+#include "shell_plat_average_power.h"
 
 LOG_MODULE_REGISTER(plat_pldm_sensor);
 
@@ -9013,7 +9014,7 @@ pldm_sensor_info plat_pldm_sensor_ubc_table[] = {
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
-			.post_sensor_read_hook = post_common_sensor_read,
+			.post_sensor_read_hook = post_ubc_read,
 		},
 	},
 	{
@@ -9082,7 +9083,7 @@ pldm_sensor_info plat_pldm_sensor_ubc_table[] = {
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
-			.post_sensor_read_hook = post_common_sensor_read,
+			.post_sensor_read_hook = post_ubc_read,
 		},
 	},
 	{
@@ -9358,7 +9359,7 @@ pldm_sensor_info plat_pldm_sensor_ubc_table[] = {
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
-			.post_sensor_read_hook = post_common_sensor_read,
+			.post_sensor_read_hook = post_ubc_read,
 		},
 	},
 	{
@@ -9427,7 +9428,7 @@ pldm_sensor_info plat_pldm_sensor_ubc_table[] = {
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
-			.post_sensor_read_hook = post_common_sensor_read,
+			.post_sensor_read_hook = post_ubc_read,
 		},
 	},
 	{

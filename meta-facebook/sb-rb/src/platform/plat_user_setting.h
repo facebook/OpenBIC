@@ -24,11 +24,13 @@
 #define VR_MUTEX_LOCK_TIMEOUT_MS 1000
 #define TEMP_THRESHOLD_USER_SETTINGS_OFFSET 0x8100
 #define VR_VOUT_USER_SETTINGS_OFFSET 0x8000
+#define ALERT_LEVEL_USER_SETTINGS_OFFSET 0x8200
 #define SOC_PCIE_PERST_USER_SETTINGS_OFFSET 0x8300
 #define BOOTSTRAP_USER_SETTINGS_OFFSET 0x8400
 #define THERMALTRIP_USER_SETTINGS_OFFSET 0x8500
 #define THROTTLE_USER_SETTINGS_OFFSET 0x8600
 
+#define CPLD_THROTTLE_SWITCH_ADDR 0x25
 #define CPLD_THERMALTRIP_SWITCH_ADDR 0x3A
 enum USER_SETTING_OFFSET_E {
 	THERMALTRIP,
@@ -122,4 +124,20 @@ bool plat_clear_temp_status(uint8_t rail);
 void user_settings_init(void);
 bool temp_threshold_user_settings_init(void);
 bool temp_threshold_default_settings_init(void);
+void set_uart_power_event_is_enable(bool is_enable);
+int power_level_send_event(bool is_assert, int ubc1_current, int ubc2_current);
+void set_alert_level_to_default_or_user_setting(bool is_default, int32_t user_setting);
+int set_user_settings_alert_level_to_eeprom(void *user_settings, uint8_t data_length);
+int get_alert_level_info(bool *is_assert, int32_t *default_value, int32_t *setting_value);
+int get_user_settings_alert_level_from_eeprom(void *user_settings, uint8_t data_length);
+bool get_user_settings_soc_pcie_perst_from_eeprom(void *user_settings, uint8_t data_length);
+bool get_user_settings_thermaltrip_from_eeprom(void *user_settings, uint8_t data_length);
+bool get_user_settings_throttle_from_eeprom(void *user_settings, uint8_t data_length);
+bool perm_config_clear();
+bool get_average_power(uint8_t rail, uint32_t *milliwatt);
+bool post_vr_read(sensor_cfg *cfg, void *args, int *const reading);
+bool ubc_vr_rail_name_get(uint8_t rail, uint8_t **name);
+bool ubc_vr_rail_enum_get(uint8_t *name, uint8_t *num);
+void pwr_level_mutex_init(void);
+bool set_user_settings_soc_pcie_perst_to_eeprom(void *user_settings, uint8_t data_length);
 #endif

@@ -22,6 +22,7 @@
 #include "plat_i2c.h"
 #include "plat_user_setting.h"
 #include "plat_fru.h"
+#include "shell_plat_throttle_switch.h"
 
 LOG_MODULE_REGISTER(plat_throttle_switch_shell, LOG_LEVEL_DBG);
 

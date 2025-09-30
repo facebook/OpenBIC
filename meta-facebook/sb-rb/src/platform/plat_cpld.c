@@ -270,6 +270,46 @@ void poll_cpld_registers()
 	}
 }
 
+bool set_cpld_bit(uint8_t cpld_offset, uint8_t bit, uint8_t value)
+{
+	uint8_t original_value = 0;
+	if (!plat_read_cpld(cpld_offset, &original_value, 1)) {
+		shell_warn(NULL, "offset = 0x%x, bit = %d, value = %d, read cpld fail", cpld_offset,
+			   bit, value);
+		return false;
+	}
+
+	if (value) {
+		original_value |= BIT(bit);
+	} else {
+		original_value &= ~BIT(bit);
+	}
+
+	if (!plat_write_cpld(cpld_offset, &original_value)) {
+		shell_warn(NULL, "offset = 0x%x, bit = %d, value = %d, write cpld fail",
+			   cpld_offset, bit, value);
+		return false;
+	}
+
+	// check if write success
+	uint8_t check_value = 0;
+	if (!plat_read_cpld(cpld_offset, &check_value, 1)) {
+		shell_warn(NULL, "offset = 0x%x, bit = %d, value = %d, read cpld fail", cpld_offset,
+			   bit, value);
+		return false;
+	}
+
+	LOG_DBG("original_value = 0x%x, check_value = 0x%x", original_value, check_value);
+
+	if (check_value != original_value) {
+		shell_warn(NULL, "offset = 0x%x, bit = %d, value = %d, set_cpld_bit fail",
+			   cpld_offset, bit, value);
+		return false;
+	}
+
+	return true;
+}
+
 void check_cpld_handler()
 {
 	uint8_t data[4] = { 0 };

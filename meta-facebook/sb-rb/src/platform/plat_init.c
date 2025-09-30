@@ -45,6 +45,7 @@ void pal_pre_init()
 	init_plat_config();
 	plat_led_init();
 	vr_mutex_init();
+	pwr_level_mutex_init();
 }
 
 void pal_set_sys_status()
