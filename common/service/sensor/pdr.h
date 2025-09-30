@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #ifndef PDR_H
 #define PDR_H
 
@@ -160,8 +176,8 @@ void plat_init_entity_aux_names_pdr_table();
 uint16_t plat_get_pdr_entity_aux_names_size();
 uint16_t plat_get_disabled_sensor_count();
 PDR_entity_auxiliary_names *get_entity_auxiliary_names_table();
-int change_pdr_table_critical_high_with_sensor_id(uint32_t sensorID, float critical_high);
-int change_pdr_table_critical_low_with_sensor_id(uint32_t sensorID, float critical_low);
+int change_pdr_table_critical_high_with_sensor_id(uint32_t sensorID, uint32_t critical_high);
+int change_pdr_table_critical_low_with_sensor_id(uint32_t sensorID, uint32_t critical_low);
 int get_pdr_table_critical_high_and_low_with_sensor_id(uint32_t sensorID, float *critical_high,
 						       float *critical_low);
 int check_supported_threshold_with_sensor_id(uint32_t sensorID);

@@ -270,6 +270,12 @@ enum IOE_PIN_NUM {
 	IOE_P17 = 7,
 };
 
+typedef struct {
+	const char *port;
+	uint32_t pinOffset;
+	const char *netName;
+} gpio_debounce_cfg_t;
+
 int get_ioe_value(uint8_t ioe_addr, uint8_t ioe_reg, uint8_t *value);
 int set_ioe_value(uint8_t ioe_addr, uint8_t ioe_reg, uint8_t value);
 void init_ioe_config();

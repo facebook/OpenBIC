@@ -1,7 +1,8 @@
-From dba7751300759ec46a4569019154f0a5f363cb09 Mon Sep 17 00:00:00 2001
+From 86bfb093a92b050b323ea790934944874e978396 Mon Sep 17 00:00:00 2001
 From: Tyrone Ting <kfting@nuvoton.com>
 Date: Tue, 19 Aug 2025 14:41:17 +0800
-Subject: [PATCH] drivers: i2c: auto recover when i2c single-master bus is busy
+Subject: [PATCH 2/3] drivers: i2c: auto recover when i2c single-master bus is
+ busy
 
 To enable multi-master mode, add "multi-master = <1>;" in the i2c node(s)
 of the dts or overlay file.

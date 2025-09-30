@@ -37,6 +37,7 @@
 #include "plat_event.h"
 #include "plat_log.h"
 #include "plat_fru.h"
+#include "plat_datetime.h"
 
 LOG_MODULE_REGISTER(plat_init);
 
@@ -72,6 +73,7 @@ void pal_post_init()
 	pldm_load_state_effecter_table(MAX_STATE_EFFECTER_IDX);
 	pldm_assign_gpio_effecter_id(PLAT_EFFECTER_ID_GPIO_HIGH_BYTE);
 	init_fru_info();
+	rtc_init_once();
 	init_load_eeprom_log();
 	plat_set_ac_on_log();
 	init_cpld_polling();

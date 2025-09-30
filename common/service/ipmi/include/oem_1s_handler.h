@@ -106,6 +106,7 @@ void OEM_1S_INFORM_PEER_SLED_CYCLE(ipmi_msg *msg);
 void OEM_1S_PEX_FLASH_READ(ipmi_msg *msg);
 void OEM_1S_GET_FPGA_USER_CODE(ipmi_msg *msg);
 void OEM_1S_GET_CARD_TYPE(ipmi_msg *msg);
+void OEM_1S_SET_CARD_TYPE(ipmi_msg *msg);
 void OEM_1S_CLEAR_CMOS(ipmi_msg *msg);
 void OEM_1S_NOTIFY_PMIC_ERROR(ipmi_msg *msg);
 void OEM_1S_GET_SDR(ipmi_msg *msg);

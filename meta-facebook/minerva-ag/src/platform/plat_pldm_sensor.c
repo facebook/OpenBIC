@@ -813,7 +813,7 @@ pldm_sensor_info plat_pldm_sensor_ubc_table[] = {
 			0, //uint32_t warning_high;
 			0, //uint32_t warning_low;
 			13770, //uint32_t critical_high;
-			11370, //uint32_t critical_low;
+			11730, //uint32_t critical_low;
 			0, //uint32_t fatal_high;
 			0, //uint32_t fatal_low;
 		},
@@ -9589,7 +9589,7 @@ void plat_pldm_sensor_change_vr_addr()
 	}
 
 	uint8_t board_stage = get_board_stage();
-	if (board_stage == VR_UNKNOWN) {
+	if (board_stage == BOARD_STAGE_UNKNOWN) {
 		LOG_ERR("Unable to change the VR device due to its unknown status.");
 		return;
 	}

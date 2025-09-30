@@ -49,7 +49,8 @@ void cmd_log_dump(const struct shell *shell, size_t argc, char **argv)
 	shell_print(
 		shell,
 		"=============================      LOG DUMP START      =============================");
-	for (int i = 0; i < plat_log_get_num(); i++) {
+	// Print logs from oldest to newest
+	for (int i = plat_log_get_num() - 1; i >= 0; i--) {
 		plat_err_log_mapping log = { 0 };
 		plat_log_read((uint8_t *)&log, AEGIS_FRU_LOG_SIZE, i + 1);
 
@@ -83,7 +84,9 @@ void cmd_log_dump(const struct shell *shell, size_t argc, char **argv)
 			break;
 		}
 
-		shell_print(shell, "sys_time: %lld ms", log.sys_time);
+		shell_print(shell, "sys_datetime: %04d-%02d-%02d %02d:%02d:%02d",
+			    log.sys_datetime.year, log.sys_datetime.month, log.sys_datetime.day,
+			    log.sys_datetime.hour, log.sys_datetime.min, log.sys_datetime.sec);
 		shell_print(shell, "error_data:");
 		shell_hexdump(shell, log.error_data, sizeof(log.error_data));
 		shell_print(shell, "cpld register: start offset 0x%02x",

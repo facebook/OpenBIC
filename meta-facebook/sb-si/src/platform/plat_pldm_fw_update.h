@@ -25,7 +25,7 @@ enum FIRMWARE_COMPONENT {
 	SI_COMPNT_BIC,
 	SI_COMPNT_P0V895_PEX,
 	SI_COMPNT_P0V825_A1,
-	SI_COMPNT_PCIE_SWITCH,
+	SI_COMPNT_PEX90144,
 };
 
 void load_pldmupdate_comp_config(void);

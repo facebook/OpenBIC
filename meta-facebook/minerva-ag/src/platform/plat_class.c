@@ -361,14 +361,25 @@ void pal_show_board_types(const struct shell *shell)
 		    (board_type == MINERVA_EVB_BD)   ? "EVB" :
 						       "not supported");
 
-	shell_print(shell, "* BOARD_STAGE:   (0x%02X)%s", board_stage,
-		    (board_stage == FAB1_EVT)  ? "FAB1_EVT" :
-		    (board_stage == FAB2_DVT)  ? "FAB2_DVT" :
-		    (board_stage == FAB3_DVT2) ? "FAB3_DVT2" :
-		    (board_stage == FAB4_DVT2) ? "FAB4_DVT2" :
-		    (board_stage == FAB4_PVT)  ? "FAB4_PVT" :
-		    (board_stage == TBD_MP)    ? "TBD_MP" :
-						 "not supported");
+	if (board_type == MINERVA_EVB_BD) {
+		shell_print(shell, "* BOARD_STAGE:   (0x%02X)%s", board_stage,
+			    (board_stage == FAB1_EVT)  ? "FAB1_EVT" :
+			    (board_stage == FAB2_DVT)  ? "FAB2_DVT" :
+			    (board_stage == FAB3_DVT2) ? "FAB3_DVT2" :
+			    (board_stage == FAB4_DVT2) ? "FAB3_DVT2" :
+			    (board_stage == FAB4_PVT)  ? "FAB3_PVT" :
+			    (board_stage == TBD_MP)    ? "TBD_MP" :
+							 "not supported");
+	} else {
+		shell_print(shell, "* BOARD_STAGE:   (0x%02X)%s", board_stage,
+			    (board_stage == FAB1_EVT)  ? "FAB1_EVT" :
+			    (board_stage == FAB2_DVT)  ? "FAB2_DVT" :
+			    (board_stage == FAB3_DVT2) ? "FAB3_DVT2" :
+			    (board_stage == FAB4_DVT2) ? "FAB4_DVT2" :
+			    (board_stage == FAB4_PVT)  ? "FAB4_PVT" :
+			    (board_stage == TBD_MP)    ? "TBD_MP" :
+							 "not supported");
+	}
 
 	shell_print(
 		shell, "* VR_VENDOR_TYPE:(0x%02X)%s", vr_vender_type,
@@ -404,7 +415,9 @@ void pal_show_board_types(const struct shell *shell)
 
 	shell_print(shell, "* VR_TYPE:       (0x%02X)%s", vr_type,
 		    (vr_type == VR_MPS_MP2971_MP2891)	   ? "MPS_MP2971_MP2891" :
-		    (vr_type == VR_MPS_MP2971_MP29816A)	   ? "MPS_MP2971_MP29816A" :
+		    (vr_type == VR_MPS_MP2971_MP29816A)	   ? ((board_stage >= FAB4_DVT2) ?
+								      "MPS_MP2971_MP29816C" :
+								      "MPS_MP2971_MP29816A") :
 		    (vr_type == VR_RNS_ISL69260_RAA228238) ? "RNS_ISL69260_RAA228238" :
 		    (vr_type == VR_RNS_ISL69260_RAA228249) ? "RNS_ISL69260_RAA228249" :
 							     "not supported");

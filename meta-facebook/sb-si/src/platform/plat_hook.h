@@ -97,6 +97,7 @@ typedef struct temp_threshold_mapping_sensor {
 } temp_threshold_mapping_sensor;
 
 extern temp_threshold_mapping_sensor temp_threshold_table[];
+extern pex90144_init_arg pex_sensor_init_args[];
 
 bool temp_sensor_rail_name_get(uint8_t rail, uint8_t **name);
 bool temp_sensor_rail_enum_get(uint8_t *name, uint8_t *num);
@@ -105,6 +106,10 @@ bool post_vr_read(sensor_cfg *cfg, void *args, int *const reading);
 void *vr_mutex_get(enum VR_INDEX_E vr_index);
 void vr_mutex_init(void);
 bool vr_rail_name_get(uint8_t rail, uint8_t **name);
+bool vr_status_name_get(uint8_t rail, uint8_t **name);
 bool vr_rail_enum_get(uint8_t *name, uint8_t *num);
+bool vr_status_enum_get(uint8_t *name, uint8_t *num);
+bool plat_get_vr_status(uint8_t rail, uint8_t vr_status_rail, uint16_t *vr_status);
+bool plat_clear_vr_status(uint8_t rail);
 
 #endif
