@@ -28,6 +28,8 @@
 #include "mp29816a.h"
 #include "raa228249.h"
 #include "drivers/i2c_npcm4xx.h"
+#include "util_spi.h"
+#include "plat_gpio.h"
 
 LOG_MODULE_REGISTER(plat_fwupdate);
 
@@ -64,6 +66,90 @@ static uint8_t pldm_pre_bic_update(void *fw_update_param)
 	/* Stop sensor polling */
 	set_plat_sensor_polling_enable_flag(false);
 	LOG_INF("Stop pldm sensor polling");
+	return 0;
+}
+void spi_node_disable()
+{
+	gpio_set(SPI_HAMSA_MUX_IN1, 0);
+	gpio_set(SPI_MEDHA0_MUX_IN1, 0);
+	gpio_set(SPI_MEDHA1_MUX_IN1, 0);
+	gpio_set(QSPI_CPLD_SEL_0, 0);
+	gpio_set(QSPI_CPLD_SEL_1, 0);
+}
+
+void change_spi_node_to_hamsa()
+{
+	gpio_set(SPI_HAMSA_MUX_IN1, 1);
+	gpio_set(QSPI_CPLD_SEL_0, 0);
+	gpio_set(QSPI_CPLD_SEL_1, 0);
+}
+
+void change_spi_node_to_medha0()
+{
+	gpio_set(SPI_MEDHA0_MUX_IN1, 1);
+	gpio_set(QSPI_CPLD_SEL_0, 1);
+	gpio_set(QSPI_CPLD_SEL_1, 0);
+}
+
+void change_spi_node_to_medha1()
+{
+	gpio_set(SPI_MEDHA1_MUX_IN1, 1);
+	gpio_set(QSPI_CPLD_SEL_0, 0);
+	gpio_set(QSPI_CPLD_SEL_1, 1);
+}
+
+static uint8_t pldm_pre_mtia_flash_update(void *fw_update_param)
+{
+	CHECK_NULL_ARG_WITH_RETURN(fw_update_param, 1);
+
+	pldm_fw_update_param_t *p = (pldm_fw_update_param_t *)fw_update_param;
+
+	uint16_t spi_node = p->comp_id;
+	LOG_INF("MTIA flash comp id: 0x%x", p->comp_id);
+	switch (spi_node) {
+	case COMPNT_HAMSA:
+		change_spi_node_to_hamsa();
+		LOG_INF("change spi node to hamsa");
+		break;
+	case COMPNT_MEDHA0:
+		change_spi_node_to_medha0();
+		LOG_INF("change spi node to medha0");
+		break;
+	case COMPNT_MEDHA1:
+		change_spi_node_to_medha1();
+		LOG_INF("change spi node to medha1");
+		break;
+	default:
+		LOG_ERR("Unsupported MTIA flash comp id: 0x%x", p->comp_id);
+		return 1;
+	}
+
+	// re-init flash
+	const struct device *flash_dev;
+	flash_dev = device_get_binding("spi_fiu0_cs1");
+	int rc = 0;
+	rc = spi_nor_re_init(flash_dev);
+	if (rc != 0) {
+		LOG_ERR("spi_nor_re_init fail");
+		return 1;
+	}
+
+	return 0;
+}
+
+uint8_t pldm_mtia_flash_update(void *fw_update_param)
+{
+	CHECK_NULL_ARG_WITH_RETURN(fw_update_param, 1);
+
+	return pldm_fw_update(fw_update_param, DEVSPI_SPI1_CS1);
+}
+
+static uint8_t pldm_post_mtia_flash_update(void *fw_update_param)
+{
+	ARG_UNUSED(fw_update_param);
+	// disable spi node
+	spi_node_disable();
+	LOG_INF("Disable spi node");
 	return 0;
 }
 // clang-format off
@@ -114,6 +200,51 @@ pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
 	VR_COMPONENT_DEF(COMPNT_VR_10),
 	VR_COMPONENT_DEF(COMPNT_VR_11),
 	VR_COMPONENT_DEF(COMPNT_VR_12),
+	{
+		.enable = true,
+		.comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,
+		.comp_identifier = COMPNT_HAMSA,
+		.comp_classification_index = 0x00,
+		.pre_update_func = pldm_pre_mtia_flash_update,
+		.update_func = pldm_mtia_flash_update,
+		.pos_update_func = pldm_post_mtia_flash_update,
+		.inf = COMP_UPDATE_VIA_SPI,
+		.activate_method = COMP_ACT_SELF,
+		.self_act_func = NULL,
+		.get_fw_version_fn = NULL,
+		.self_apply_work_func = NULL,
+		.comp_version_str = NULL,
+	},
+	{
+		.enable = true,
+		.comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,
+		.comp_identifier = COMPNT_MEDHA0,
+		.comp_classification_index = 0x00,
+		.pre_update_func = pldm_pre_mtia_flash_update,
+		.update_func = pldm_mtia_flash_update,
+		.pos_update_func = pldm_post_mtia_flash_update,
+		.inf = COMP_UPDATE_VIA_SPI,
+		.activate_method = COMP_ACT_SELF,
+		.self_act_func = NULL,
+		.get_fw_version_fn = NULL,
+		.self_apply_work_func = NULL,
+		.comp_version_str = NULL,
+	},
+	{
+		.enable = true,
+		.comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,
+		.comp_identifier = COMPNT_MEDHA1,
+		.comp_classification_index = 0x00,
+		.pre_update_func = pldm_pre_mtia_flash_update,
+		.update_func = pldm_mtia_flash_update,
+		.pos_update_func = pldm_post_mtia_flash_update,
+		.inf = COMP_UPDATE_VIA_SPI,
+		.activate_method = COMP_ACT_SELF,
+		.self_act_func = NULL,
+		.get_fw_version_fn = NULL,
+		.self_apply_work_func = NULL,
+		.comp_version_str = NULL,
+	},
 };
 
 uint8_t plat_pldm_query_device_identifiers(const uint8_t *buf, uint16_t len, uint8_t *resp,
