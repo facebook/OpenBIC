@@ -58,18 +58,18 @@ static bool plat_slot_read(uint8_t *data)
 void init_plat_config()
 {
 	uint8_t module = 0;
+	uint8_t board_rev_id = 0;
 	plat_read_cpld(CPLD_OFFSET_VR_VENDER_TYPE, &module, 1);
-
+	plat_read_cpld(CPLD_OFFSET_BOARD_REV_ID, &board_rev_id, 1);
+	// rev id only support 0, 1, 2 bit
+	board_rev_id = board_rev_id & 0x07;
 	vr_module = (module & 0x01);
 	ubc_module = (module >> 1) & 0x03;
-
-	change_sensor_cfg(vr_module, ubc_module);
-
 	uint8_t board_id = 0;
 	plat_read_cpld(CPLD_OFFSET_ASIC_BOARD_ID, &board_id, 1);
-
 	asic_board_id = board_id & 0x03;
 
+	change_sensor_cfg(asic_board_id, vr_module, ubc_module, board_rev_id);
 	// cpld fru offset 0: slot
 	plat_slot_read(&mmc_slot);
 }

@@ -61,40 +61,94 @@ static bool is_quick_vr_sensor(uint8_t sensor_num)
 }
 
 typedef struct {
-	uint8_t orig_addr;
-	uint8_t rns_addr;
+	uint8_t orig_addr; // old MPS
+	uint8_t rns_addr; // old rns
+	uint8_t rb_FAB2_evb_FAB3_mps_addr; // new mps
+	uint8_t rb_FAB2_evb_FAB3_rns_addr; // new rns
 } addr_map_t;
 
 static const addr_map_t addr_map_table[] = {
-	{ ASIC_P0V85_MEDHA0_VDD_ADDR, ASIC_P0V85_MEDHA0_VDD_RNS_ADDR },
-	{ ASIC_P0V85_MEDHA1_VDD_ADDR, ASIC_P0V85_MEDHA1_VDD_RNS_ADDR },
-	{ ASIC_P0V9_OWL_E_TRVDD_ADDR, ASIC_P0V9_OWL_E_TRVDD_RNS_ADDR },
-	{ ASIC_P0V75_OWL_E_TRVDD_ADDR, ASIC_P0V75_OWL_E_TRVDD_RNS_ADDR },
-	{ ASIC_P0V75_MAX_M_VDD_ADDR, ASIC_P0V75_MAX_M_VDD_RNS_ADDR },
-	{ ASIC_P0V75_VDDPHY_HBM1357_ADDR, ASIC_P0V75_VDDPHY_HBM1357_RNS_ADDR },
-	{ ASIC_P0V75_OWL_E_VDD_ADDR, ASIC_P0V75_OWL_E_VDD_RNS_ADDR },
-	{ ASIC_P0V4_VDDQL_HBM1357_ADDR, ASIC_P0V4_VDDQL_HBM1357_RNS_ADDR },
-	{ ASIC_P1V1_VDDQC_HBM1357_ADDR, ASIC_P1V1_VDDQC_HBM1357_RNS_ADDR },
-	{ ASIC_P1V8_VPP_HBM1357_ADDR, ASIC_P1V8_VPP_HBM1357_RNS_ADDR },
-	{ ASIC_P0V75_MAX_N_VDD_ADDR, ASIC_P0V75_MAX_N_VDD_RNS_ADDR },
-	{ ASIC_P0V8_HAMSA_AVDD_PCIE_ADDR, ASIC_P0V8_HAMSA_AVDD_PCIE_RNS_ADDR },
-	{ ASIC_P1V2_HAMSA_VDDHRXTX_PCIE_ADDR, ASIC_P1V2_HAMSA_VDDHRXTX_PCIE_RNS_ADDR },
-	{ ASIC_P0V85_HAMSA_VDD_ADDR, ASIC_P0V85_HAMSA_VDD_RNS_ADDR },
-	{ ASIC_P1V1_VDDQC_HBM0246_ADDR, ASIC_P1V1_VDDQC_HBM0246_RNS_ADDR },
-	{ ASIC_P1V8_VPP_HBM0246_ADDR, ASIC_P1V8_VPP_HBM0246_RNS_ADDR },
-	{ ASIC_P0V4_VDDQL_HBM0246_ADDR, ASIC_P0V4_VDDQL_HBM0246_RNS_ADDR },
-	{ ASIC_P0V75_VDDPHY_HBM0246_ADDR, ASIC_P0V75_VDDPHY_HBM0246_RNS_ADDR },
-	{ ASIC_P0V75_OWL_W_VDD_ADDR, ASIC_P0V75_OWL_W_VDD_RNS_ADDR },
-	{ ASIC_P0V75_MAX_S_VDD_ADDR, ASIC_P0V75_MAX_S_VDD_RNS_ADDR },
-	{ ASIC_P0V9_OWL_W_TRVDD_ADDR, ASIC_P0V9_OWL_W_TRVDD_RNS_ADDR },
-	{ ASIC_P0V75_OWL_W_TRVDD_ADDR, ASIC_P0V75_OWL_W_TRVDD_RNS_ADDR },
+	{ ASIC_P0V85_MEDHA0_VDD_ADDR, ASIC_P0V85_MEDHA0_VDD_RNS_ADDR, NEW_MPS_P0V85_MEDHA0_VDD_ADDR,
+	  NEW_RNS_P0V85_MEDHA0_VDD_ADDR },
+
+	{ ASIC_P0V85_MEDHA1_VDD_ADDR, ASIC_P0V85_MEDHA1_VDD_RNS_ADDR, NEW_MPS_P0V85_MEDHA1_VDD_ADDR,
+	  NEW_RNS_P0V85_MEDHA1_VDD_ADDR },
+
+	{ ASIC_P0V9_OWL_E_TRVDD_ADDR, ASIC_P0V9_OWL_E_TRVDD_RNS_ADDR, NEW_MPS_P0V9_OWL_E_TRVDD_ADDR,
+	  NEW_RNS_P0V9_OWL_E_TRVDD_ADDR },
+
+	{ ASIC_P0V75_OWL_E_TRVDD_ADDR, ASIC_P0V75_OWL_E_TRVDD_RNS_ADDR,
+	  NEW_MPS_P0V75_OWL_E_TRVDD_ADDR, NEW_RNS_P0V75_OWL_E_TRVDD_ADDR },
+
+	{ ASIC_P0V75_MAX_M_VDD_ADDR, ASIC_P0V75_MAX_M_VDD_RNS_ADDR, NEW_MPS_P0V75_MAX_M_VDD_ADDR,
+	  NEW_RNS_P0V75_MAX_M_VDD_ADDR },
+
+	{ ASIC_P0V75_VDDPHY_HBM1357_ADDR, ASIC_P0V75_VDDPHY_HBM1357_RNS_ADDR,
+	  NEW_MPS_P0V75_VDDPHY_HBM1357_ADDR, NEW_RNS_P0V75_VDDPHY_HBM1357_ADDR },
+
+	{ ASIC_P0V75_OWL_E_VDD_ADDR, ASIC_P0V75_OWL_E_VDD_RNS_ADDR, NEW_MPS_P0V75_OWL_E_VDD_ADDR,
+	  NEW_RNS_P0V75_OWL_E_VDD_ADDR },
+
+	{ ASIC_P0V4_VDDQL_HBM1357_ADDR, ASIC_P0V4_VDDQL_HBM1357_RNS_ADDR,
+	  NEW_MPS_P0V4_VDDQL_HBM1357_ADDR, NEW_RNS_P0V4_VDDQL_HBM1357_ADDR },
+
+	{ ASIC_P1V1_VDDQC_HBM1357_ADDR, ASIC_P1V1_VDDQC_HBM1357_RNS_ADDR,
+	  NEW_MPS_P1V1_VDDQC_HBM1357_ADDR, NEW_RNS_P1V1_VDDQC_HBM1357_ADDR },
+
+	{ ASIC_P1V8_VPP_HBM1357_ADDR, ASIC_P1V8_VPP_HBM1357_RNS_ADDR, NEW_MPS_P1V8_VPP_HBM1357_ADDR,
+	  NEW_RNS_P1V8_VPP_HBM1357_ADDR },
+
+	{ ASIC_P0V75_MAX_N_VDD_ADDR, ASIC_P0V75_MAX_N_VDD_RNS_ADDR, NEW_MPS_P0V75_MAX_N_VDD_ADDR,
+	  NEW_RNS_P0V75_MAX_N_VDD_ADDR },
+
+	{ ASIC_P0V8_HAMSA_AVDD_PCIE_ADDR, ASIC_P0V8_HAMSA_AVDD_PCIE_RNS_ADDR,
+	  NEW_MPS_P0V8_HAMSA_AVDD_PCIE_ADDR, NEW_RNS_P0V8_HAMSA_AVDD_PCIE_ADDR },
+
+	{ ASIC_P1V2_HAMSA_VDDHRXTX_PCIE_ADDR, ASIC_P1V2_HAMSA_VDDHRXTX_PCIE_RNS_ADDR,
+	  NEW_MPS_P1V2_HAMSA_VDDHRXTX_PCIE_ADDR, NEW_RNS_P1V2_HAMSA_VDDHRXTX_PCIE_ADDR },
+
+	{ ASIC_P0V85_HAMSA_VDD_ADDR, ASIC_P0V85_HAMSA_VDD_RNS_ADDR, NEW_MPS_P0V85_HAMSA_VDD_ADDR,
+	  NEW_RNS_P0V85_HAMSA_VDD_ADDR },
+
+	{ ASIC_P1V1_VDDQC_HBM0246_ADDR, ASIC_P1V1_VDDQC_HBM0246_RNS_ADDR,
+	  NEW_MPS_P1V1_VDDQC_HBM0246_ADDR, NEW_RNS_P1V1_VDDQC_HBM0246_ADDR },
+
+	{ ASIC_P1V8_VPP_HBM0246_ADDR, ASIC_P1V8_VPP_HBM0246_RNS_ADDR, NEW_MPS_P1V8_VPP_HBM0246_ADDR,
+	  NEW_RNS_P1V8_VPP_HBM0246_ADDR },
+
+	{ ASIC_P0V4_VDDQL_HBM0246_ADDR, ASIC_P0V4_VDDQL_HBM0246_RNS_ADDR,
+	  NEW_MPS_P0V4_VDDQL_HBM0246_ADDR, NEW_RNS_P0V4_VDDQL_HBM0246_ADDR },
+
+	{ ASIC_P0V75_VDDPHY_HBM0246_ADDR, ASIC_P0V75_VDDPHY_HBM0246_RNS_ADDR,
+	  NEW_MPS_P0V75_VDDPHY_HBM0246_ADDR, NEW_RNS_P0V75_VDDPHY_HBM0246_ADDR },
+
+	{ ASIC_P0V75_OWL_W_VDD_ADDR, ASIC_P0V75_OWL_W_VDD_RNS_ADDR, NEW_MPS_P0V75_OWL_W_VDD_ADDR,
+	  NEW_RNS_P0V75_OWL_W_VDD_ADDR },
+
+	{ ASIC_P0V75_MAX_S_VDD_ADDR, ASIC_P0V75_MAX_S_VDD_RNS_ADDR, NEW_MPS_P0V75_MAX_S_VDD_ADDR,
+	  NEW_RNS_P0V75_MAX_S_VDD_ADDR },
+
+	{ ASIC_P0V9_OWL_W_TRVDD_ADDR, ASIC_P0V9_OWL_W_TRVDD_RNS_ADDR, NEW_MPS_P0V9_OWL_W_TRVDD_ADDR,
+	  NEW_RNS_P0V9_OWL_W_TRVDD_ADDR },
+
+	{ ASIC_P0V75_OWL_W_TRVDD_ADDR, ASIC_P0V75_OWL_W_TRVDD_RNS_ADDR,
+	  NEW_MPS_P0V75_OWL_W_TRVDD_ADDR, NEW_RNS_P0V75_OWL_W_TRVDD_ADDR },
 };
 
-uint8_t convert_addr_to_rns(uint8_t addr)
+uint8_t convert_vr_addr(uint8_t addr, uint8_t vr_change_mode)
 {
 	for (int i = 0; i < ARRAY_SIZE(addr_map_table); i++) {
 		if (addr_map_table[i].orig_addr == addr) {
-			return addr_map_table[i].rns_addr;
+			if (vr_change_mode == OLD_RNS)
+				return addr_map_table[i].rns_addr;
+			else if (vr_change_mode == NEW_RNS)
+				return addr_map_table[i].rb_FAB2_evb_FAB3_rns_addr;
+			else if (vr_change_mode == NEW_MPS)
+				return addr_map_table[i].rb_FAB2_evb_FAB3_mps_addr;
+			else if (vr_change_mode == OLD_MPS)
+				LOG_DBG("don't need to change VR address");
+			else
+				LOG_ERR("vr_change_mode: 0x%x error", vr_change_mode);
 		}
 	}
 	return addr;
@@ -12202,7 +12256,7 @@ err:
 
 #define SENSOR_CFG_NO_CHANGE 0xFF
 static void change_sensor_cfg_from_thread(uint8_t thread, uint8_t type, uint8_t addr,
-					  void *init_args)
+					  void *init_args, uint8_t change_flag)
 {
 	pldm_sensor_info *table = plat_pldm_sensor_load(thread);
 	if (table == NULL)
@@ -12219,14 +12273,88 @@ static void change_sensor_cfg_from_thread(uint8_t thread, uint8_t type, uint8_t 
 			table[j].pldm_sensor_cfg.target_addr = addr;
 		if (init_args != NULL)
 			table[j].pldm_sensor_cfg.init_args = init_args;
+
+		// if change_flag is true, change UBC1 address
+		if (change_flag) {
+			if (table[j].pldm_sensor_cfg.num >= SENSOR_NUM_UBC1_P12V_TEMP_C &&
+			    table[j].pldm_sensor_cfg.num <= SENSOR_NUM_UBC1_P52V_INPUT_VOLT_V) {
+				table[j].pldm_sensor_cfg.target_addr = UBC1_NEW_ADDR;
+				LOG_INF("change UBC1 sensors 0x%x address to 0x%x",
+					table[j].pldm_sensor_cfg.num,
+					table[j].pldm_sensor_cfg.target_addr);
+			}
+		}
 	}
 }
 
-void change_sensor_cfg(uint8_t vr_module, uint8_t ubc_module)
+void change_sensor_cfg(uint8_t asic_board_id, uint8_t vr_module, uint8_t ubc_module,
+		       uint8_t board_rev_id)
 {
+	uint8_t ubc1_change_flag = 0;
+	uint8_t vr_change_mode = OLD_MPS;
+	/*
+	When changing the address version, you first need to check the board type (EVB or Rainbow), and then check the board revision ID.
+	FAB2 corresponds to EVT1B
+	FAB3 corresponds to EVT2
+	There are two VR vendors, and their settings are different:
+	RNS
+	MPS
+	For the two UBC chips, both need to be changed on FAB2.
+	*/
+
+	LOG_INF("asic_board_id: %d, board_rev_id: %d, vr_module: %d", asic_board_id, board_rev_id,
+		vr_module);
+	// VR check version
+	switch (asic_board_id) {
+	case ASIC_BOARD_ID_EVB:
+		// check newer than FAB3
+		if (board_rev_id >= REV_ID_EVT2) {
+			// new RNS
+			if (vr_module == VR_MODULE_RNS) {
+				LOG_WRN("change VR address to new RNS");
+				vr_change_mode = NEW_RNS;
+			}
+			// new MPS
+			if (vr_module == VR_MODULE_MPS) {
+				LOG_WRN("change VR address to new MPS");
+				vr_change_mode = NEW_MPS;
+			}
+		} else {
+			if (vr_module == VR_MODULE_RNS) {
+				LOG_WRN("change VR address to old RNS");
+				vr_change_mode = OLD_RNS;
+			}
+			// default is old MPS so do nothing
+		}
+		break;
+	case ASIC_BOARD_ID_RAINBOW:
+		// check newer than FAB2
+		if (board_rev_id >= REV_ID_EVT1B) {
+			// new RNS
+			if (vr_module == VR_MODULE_RNS) {
+				LOG_WRN("change VR address to new RNS");
+				vr_change_mode = NEW_RNS;
+			}
+			// new MPS
+			if (vr_module == VR_MODULE_MPS) {
+				LOG_WRN("change VR address to new MPS");
+				vr_change_mode = NEW_MPS;
+			}
+		} else {
+			if (vr_module == VR_MODULE_RNS) {
+				LOG_WRN("change VR address to old RNS");
+				vr_change_mode = OLD_RNS;
+			}
+			// default is old MPS so do nothing
+		}
+		break;
+	default:
+		break;
+	}
+	LOG_INF("vr change mode: 0x%x", vr_change_mode);
 	// vr sensor
 	for (uint8_t i = VR_SENSOR_THREAD_ID; i <= QUICK_VR_SENSOR_THREAD_ID; i++) {
-		if (vr_module == VR_MODULE_MPS)
+		if (vr_change_mode == OLD_RNS)
 			continue;
 
 		pldm_sensor_info *table = plat_pldm_sensor_load(i);
@@ -12236,24 +12364,34 @@ void change_sensor_cfg(uint8_t vr_module, uint8_t ubc_module)
 		int count = plat_pldm_sensor_get_sensor_count(i);
 		if (count < 0)
 			return;
-
+		// change VR address
 		for (uint8_t j = 0; j < count; j++) {
-			table[j].pldm_sensor_cfg.type = sensor_dev_raa228249;
-			table[j].pldm_sensor_cfg.target_addr =
-				convert_addr_to_rns(table[j].pldm_sensor_cfg.target_addr);
+			if (vr_change_mode == NEW_RNS || vr_change_mode == OLD_RNS)
+				table[j].pldm_sensor_cfg.type = sensor_dev_raa228249;
+
+			table[j].pldm_sensor_cfg.target_addr = convert_vr_addr(
+				table[j].pldm_sensor_cfg.target_addr, vr_change_mode);
+			LOG_INF("change VR sensors 0x%x address to 0x%x",
+				table[j].pldm_sensor_cfg.num, table[j].pldm_sensor_cfg.target_addr);
 		}
 	}
 
+	// UBC check newer than FAB2
+	if (board_rev_id >= REV_ID_EVT1B) {
+		// PU82 0x14 -> 0x17
+		ubc1_change_flag = 1;
+	}
 	// ubc sensor, default: UBC_MODULE_DELTA
 	if (ubc_module == UBC_MODULE_MPS)
 		change_sensor_cfg_from_thread(UBC_SENSOR_THREAD_ID, sensor_dev_mpc12109,
-					      SENSOR_CFG_NO_CHANGE, &mpc12109_init_args[0]);
+					      SENSOR_CFG_NO_CHANGE, &mpc12109_init_args[0],
+					      ubc1_change_flag);
 	else if (ubc_module == UBC_MODULE_FLEX)
 		change_sensor_cfg_from_thread(UBC_SENSOR_THREAD_ID, sensor_dev_bmr316,
-					      SENSOR_CFG_NO_CHANGE, NULL);
+					      SENSOR_CFG_NO_CHANGE, NULL, ubc1_change_flag);
 	else if (ubc_module == UBC_MODULE_LUXSHARE)
 		change_sensor_cfg_from_thread(UBC_SENSOR_THREAD_ID, sensor_dev_lx6301,
-					      SENSOR_CFG_NO_CHANGE, NULL);
+					      SENSOR_CFG_NO_CHANGE, NULL, ubc1_change_flag);
 }
 
 bool is_dc_access(uint8_t sensor_num)

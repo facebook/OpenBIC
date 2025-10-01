@@ -84,6 +84,56 @@
 #define ASIC_P0V9_OWL_W_TRVDD_RNS_ADDR (0xEA >> 1)
 #define ASIC_P0V75_OWL_W_TRVDD_RNS_ADDR (0xEA >> 1)
 
+// rainbow >= FAB2 or evb >= FAB3 VR address (7-bit) and ubc
+// UBC1_NEW_ADDR
+#define UBC1_NEW_ADDR 0x17
+// VR RNS_NEW_ADDR
+#define NEW_RNS_P0V9_OWL_W_TRVDD_ADDR 0x75
+#define NEW_RNS_P0V75_OWL_W_TRVDD_ADDR 0x75
+#define NEW_RNS_P0V75_OWL_W_VDD_ADDR 0x72
+#define NEW_RNS_P0V75_MAX_S_VDD_ADDR 0x72
+#define NEW_RNS_P1V1_VDDQC_HBM0246_ADDR 0x60
+#define NEW_RNS_P1V8_VPP_HBM0246_ADDR 0x60
+#define NEW_RNS_P0V4_VDDQL_HBM0246_ADDR 0x74
+#define NEW_RNS_P0V75_VDDPHY_HBM0246_ADDR 0x74
+#define NEW_RNS_P0V75_MAX_N_VDD_ADDR 0x76
+#define NEW_RNS_P0V8_HAMSA_AVDD_PCIE_ADDR 0x76
+#define NEW_RNS_P1V2_HAMSA_VDDHRXTX_PCIE_ADDR 0x63
+#define NEW_RNS_P0V85_HAMSA_VDD_ADDR 0x63
+#define NEW_RNS_P0V9_OWL_E_TRVDD_ADDR 0x60
+#define NEW_RNS_P0V75_OWL_E_TRVDD_ADDR 0x60
+#define NEW_RNS_P0V75_OWL_E_VDD_ADDR 0x61
+#define NEW_RNS_P0V4_VDDQL_HBM1357_ADDR 0x61
+#define NEW_RNS_P0V75_MAX_M_VDD_ADDR 0x74
+#define NEW_RNS_P0V75_VDDPHY_HBM1357_ADDR 0x74
+#define NEW_RNS_P1V1_VDDQC_HBM1357_ADDR 0x63
+#define NEW_RNS_P1V8_VPP_HBM1357_ADDR 0x63
+#define NEW_RNS_P0V85_MEDHA1_VDD_ADDR 0x72
+#define NEW_RNS_P0V85_MEDHA0_VDD_ADDR 0x76
+// VR MPS_NEW_ADDR
+#define NEW_MPS_P0V9_OWL_W_TRVDD_ADDR 0x6C
+#define NEW_MPS_P0V75_OWL_W_TRVDD_ADDR 0x6C
+#define NEW_MPS_P0V75_OWL_W_VDD_ADDR 0x73
+#define NEW_MPS_P0V75_MAX_S_VDD_ADDR 0x73
+#define NEW_MPS_P1V1_VDDQC_HBM0246_ADDR 0x70
+#define NEW_MPS_P1V8_VPP_HBM0246_ADDR 0x70
+#define NEW_MPS_P0V4_VDDQL_HBM0246_ADDR 0x72
+#define NEW_MPS_P0V75_VDDPHY_HBM0246_ADDR 0x72
+#define NEW_MPS_P0V75_MAX_N_VDD_ADDR 0x6B
+#define NEW_MPS_P0V8_HAMSA_AVDD_PCIE_ADDR 0x6B
+#define NEW_MPS_P1V2_HAMSA_VDDHRXTX_PCIE_ADDR 0x69
+#define NEW_MPS_P0V85_HAMSA_VDD_ADDR 0x69
+#define NEW_MPS_P0V9_OWL_E_TRVDD_ADDR 0x77
+#define NEW_MPS_P0V75_OWL_E_TRVDD_ADDR 0x77
+#define NEW_MPS_P0V75_OWL_E_VDD_ADDR 0x71
+#define NEW_MPS_P0V4_VDDQL_HBM1357_ADDR 0x71
+#define NEW_MPS_P0V75_MAX_M_VDD_ADDR 0x75
+#define NEW_MPS_P0V75_VDDPHY_HBM1357_ADDR 0x75
+#define NEW_MPS_P1V1_VDDQC_HBM1357_ADDR 0x76
+#define NEW_MPS_P1V8_VPP_HBM1357_ADDR 0x76
+#define NEW_MPS_P0V85_MEDHA1_VDD_ADDR 0x26
+#define NEW_MPS_P0V85_MEDHA0_VDD_ADDR 0x28
+
 #define UBC1_ADDR (0x28 >> 1)
 #define UBC2_ADDR (0x34 >> 1)
 
@@ -271,6 +321,8 @@ enum SENSOR_THREAD_LIST {
 	MAX_SENSOR_THREAD_ID,
 };
 
+enum VR_ADDRESS_VIRSION { OLD_MPS = 0, OLD_RNS, NEW_MPS, NEW_RNS, MAX_VR_ADDRESS_VIRSION };
+
 int plat_pldm_sensor_get_sensor_count(int thread_id);
 sensor_cfg *get_sensor_cfg_by_sensor_id(uint8_t sensor_id);
 void plat_pldm_sensor_get_pdr_numeric_sensor(int thread_id, int sensor_num,
@@ -292,7 +344,8 @@ char16_t *char16_strcpy(char16_t *dest, const char16_t *src);
 char16_t *char16_strcat_char(char16_t *dest, char16_t ch);
 
 bool get_raw_data_from_sensor_id(uint8_t sensor_id, uint8_t offset, uint8_t *val, uint8_t len);
-void change_sensor_cfg(uint8_t vr_module, uint8_t ubc_module);
-uint8_t convert_addr_to_rns(uint8_t addr);
+void change_sensor_cfg(uint8_t asic_board_id, uint8_t vr_module, uint8_t ubc_module,
+		       uint8_t board_rev_id);
+uint8_t convert_vr_addr(uint8_t addr, uint8_t vr_change_mode);
 uint32_t plat_get_pdr_size(uint8_t pdr_type);
 #endif
