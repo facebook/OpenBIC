@@ -2635,15 +2635,8 @@ bool is_pcie_switch_access(uint8_t cfg_idx)
 {
 	I2C_MSG msg = { 0 };
 	uint8_t retry = 3;
-
-	uint8_t sensor_id = cfg_idx;
-	uint8_t bus = 0, addr = 0;
-	uint8_t sensor_dev = 0;
-
-	if (!get_sensor_info_by_sensor_id(sensor_id, &bus, &addr, &sensor_dev)) {
-		LOG_ERR("Can't find PCIe switch addr and bus by sensor id: %d", sensor_id);
-		return false;
-	}
+	uint8_t bus = plat_pldm_sensor_temp_table[cfg_idx].pldm_sensor_cfg.port;
+	uint8_t addr = plat_pldm_sensor_temp_table[cfg_idx].pldm_sensor_cfg.target_addr;
 
 	msg.bus = bus;
 	msg.target_addr = addr;
