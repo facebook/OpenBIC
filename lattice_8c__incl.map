@@ -1,0 +1,29 @@
+<map id="common/dev/lattice.c" name="common/dev/lattice.c">
+<area shape="rect" id="node1" title=" " alt="" coords="499,5,645,32"/>
+<area shape="rect" id="node2" title=" " alt="" coords="382,528,442,555"/>
+<area shape="rect" id="node3" title=" " alt="" coords="307,80,371,107"/>
+<area shape="rect" id="node4" title=" " alt="" coords="395,80,458,107"/>
+<area shape="rect" id="node5" title=" " alt="" coords="482,80,577,107"/>
+<area shape="rect" id="node6" href="$hal__i2c_8h.html" title=" " alt="" coords="1022,453,1095,480"/>
+<area shape="rect" id="node9" href="$pldm__firmware__update_8h.html" title=" " alt="" coords="652,80,815,107"/>
+<area shape="rect" id="node22" href="$libutil_8h.html" title=" " alt="" coords="958,379,1021,405"/>
+<area shape="rect" id="node27" href="$lattice_8h.html" title=" " alt="" coords="367,155,433,181"/>
+<area shape="rect" id="node7" title=" " alt="" coords="1001,528,1093,555"/>
+<area shape="rect" id="node8" title=" " alt="" coords="1117,528,1275,555"/>
+<area shape="rect" id="node10" href="$pldm_8h.html" title=" " alt="" coords="594,155,654,181"/>
+<area shape="rect" id="node21" title=" " alt="" coords="803,379,882,405"/>
+<area shape="rect" id="node11" href="$mctp_8h.html" title=" " alt="" coords="373,229,435,256"/>
+<area shape="rect" id="node15" href="$pldm__base_8h.html" title=" " alt="" coords="459,229,554,256"/>
+<area shape="rect" id="node16" href="$pldm__oem_8h.html" title=" " alt="" coords="578,229,670,256"/>
+<area shape="rect" id="node17" href="$pldm__monitor_8h.html" title=" " alt="" coords="694,229,805,256"/>
+<area shape="rect" id="node23" href="$ipmb_8h.html" title=" " alt="" coords="890,453,950,480"/>
+<area shape="rect" id="node25" href="$pldm__state__set_8h.html" title=" " alt="" coords="94,229,215,256"/>
+<area shape="rect" id="node26" href="$pldm__smbios_8h.html" title=" " alt="" coords="240,229,349,256"/>
+<area shape="rect" id="node12" title=" " alt="" coords="425,453,489,480"/>
+<area shape="rect" id="node13" title=" " alt="" coords="213,304,301,331"/>
+<area shape="rect" id="node14" title=" " alt="" coords="325,304,395,331"/>
+<area shape="rect" id="node18" href="$pdr_8h.html" title=" " alt="" coords="712,304,763,331"/>
+<area shape="rect" id="node19" title=" " alt="" coords="571,379,645,405"/>
+<area shape="rect" id="node20" title=" " alt="" coords="669,379,779,405"/>
+<area shape="rect" id="node24" title=" " alt="" coords="874,528,966,555"/>
+</map>

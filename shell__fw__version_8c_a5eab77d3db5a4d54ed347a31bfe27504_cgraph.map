@@ -1,0 +1,17 @@
+<map id="cmd_get_fw_version_vr" name="cmd_get_fw_version_vr">
+<area shape="rect" id="node1" title=" " alt="" coords="5,198,165,225"/>
+<area shape="rect" id="node2" href="$minerva-ag_2src_2platform_2plat__pldm__fw__update_8c.html#a67e42a26b005ba14811c6dc61e3886dd" title=" " alt="" coords="214,5,407,47"/>
+<area shape="rect" id="node3" href="$minerva-ag_2src_2platform_2plat__pldm__sensor_8c.html#acbdf6ec80f10c919325e5e571427cf6c" title=" " alt="" coords="213,71,408,98"/>
+<area shape="rect" id="node5" href="$gt-cc_2src_2platform_2plat__hook_8c.html#abda0c3d7a63cc6f68d1ed88e1d36729d" title=" " alt="" coords="261,122,360,149"/>
+<area shape="rect" id="node7" href="$mp2971_8c.html#a796944da880207a5a27efca286441a77" title=" " alt="" coords="231,173,391,199"/>
+<area shape="rect" id="node8" href="$mp29816a_8c.html#ab509738683c12a366c9bf503dc11b4f9" title=" " alt="" coords="222,223,399,250"/>
+<area shape="rect" id="node13" href="$raa228249_8c.html#acc19bb4dedbc32674a63175c4c81680a" title=" " alt="" coords="245,274,377,301"/>
+<area shape="rect" id="node14" href="$raa228249_8c.html#ae88e587e5a4fc2f19f5176cce98a4e48" title=" " alt="" coords="215,325,406,351"/>
+<area shape="rect" id="node15" href="$minerva-ag_2src_2platform_2plat__pldm__sensor_8c.html#a9229c6224b9029726a4240164e574765" title=" " alt="" coords="231,376,390,417"/>
+<area shape="rect" id="node4" href="$minerva-ag_2src_2platform_2plat__pldm__sensor_8c.html#a18272dc8dce4f373b85555817c2cc6f3" title=" " alt="" coords="456,60,605,101"/>
+<area shape="rect" id="node6" href="$hal__gpio_8c.html#af700ee50de3d113e223c2b011c41f966" title=" " alt="" coords="495,126,566,153"/>
+<area shape="rect" id="node9" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="655,202,773,229"/>
+<area shape="rect" id="node11" href="$mp29816a_8c.html#ae1b19256354a8abbc0d79e36678499d7" title=" " alt="" coords="459,253,602,279"/>
+<area shape="rect" id="node10" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="823,227,965,254"/>
+<area shape="rect" id="node12" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="653,253,775,279"/>
+</map>
