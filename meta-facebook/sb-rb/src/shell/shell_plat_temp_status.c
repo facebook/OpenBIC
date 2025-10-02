@@ -25,7 +25,6 @@
 
 LOG_MODULE_REGISTER(plat_temp_status_shell, LOG_LEVEL_DBG);
 
-
 static int cmd_temp_status_get(const struct shell *shell, size_t argc, char **argv)
 {
 	if (!(argc == 2)) {
@@ -46,13 +45,11 @@ static int cmd_temp_status_get(const struct shell *shell, size_t argc, char **ar
 		return -1;
 	}
 	if (rail == TEMP_INDEX_TOP_INLET || rail == TEMP_INDEX_BOT_INLET ||
-		rail == TEMP_INDEX_BOT_OUTLET) {
+	    rail == TEMP_INDEX_BOT_OUTLET) {
 		shell_print(shell, "%s: 0x%02x (ALERT_N)", "TMP75", temp_status);
-	}
-	else {
+	} else {
 		shell_print(shell, "%s: 0x%02x", "TMP432", temp_status);
 	}
-	
 
 	return 0;
 }
