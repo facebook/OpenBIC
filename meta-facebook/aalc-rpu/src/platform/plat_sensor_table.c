@@ -93,10 +93,6 @@ bool post_quick_sensor_read(sensor_cfg *cfg, void *args, int *reading)
 
 		if ((val > 0) && (val < 3.1))
 			aalc_leak_behavior(cfg->num);
-		else if (val >= 3.1)
-			aalc_leak_recovery_behavior_check(cfg->num);
-		else
-			LOG_ERR("quick sensor %x, value is not in range: %f V", cfg->num, val);
 	}
 
 	return ret;

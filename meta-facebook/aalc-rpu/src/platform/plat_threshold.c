@@ -563,11 +563,26 @@ void abnormal_temp_do(uint32_t sensor_num, uint32_t status)
 	}
 }
 
+static bool is_rack_level_abnormal = false;
+
+void set_is_rack_level_abnormal(bool flag)
+{
+	is_rack_level_abnormal = flag;
+}
+
+bool get_is_rack_level_abnormal()
+{
+	return 	is_rack_level_abnormal;
+}
+
 void level_sensor_do(uint32_t unused, uint32_t status)
 {
 	if (get_threshold_status(SENSOR_NUM_BPB_RACK_LEVEL_2)) {
 		set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_LOW_LEVEL, 1);
-		error_log_event(SENSOR_NUM_BPB_RACK_LEVEL_2, IS_ABNORMAL_VAL);
+		if (!get_is_rack_level_abnormal()) {
+			set_is_rack_level_abnormal(true);
+			error_log_event(SENSOR_NUM_BPB_RACK_LEVEL_2, IS_ABNORMAL_VAL);
+		}
 		if (get_threshold_status(SENSOR_NUM_BPB_RACK_LEVEL_1))
 			led_ctrl(LED_IDX_E_COOLANT, LED_TURN_OFF);
 		else
@@ -578,9 +593,19 @@ void level_sensor_do(uint32_t unused, uint32_t status)
 		} else {
 			led_ctrl(LED_IDX_E_COOLANT, LED_TURN_ON);
 		}
-		set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_LOW_LEVEL, 0);
-		LOG_INF("level sensor ok");
 	}
+}
+
+static bool is_rpu_level_abnormal = false;
+
+void set_is_rpu_level_abnormal(bool flag)
+{
+	is_rpu_level_abnormal = flag;
+}
+
+bool get_is_rpu_level_abnormal()
+{
+	return 	is_rpu_level_abnormal;
 }
 
 void rpu_level_sensor_do(uint32_t unused, uint32_t status)
@@ -591,11 +616,10 @@ void rpu_level_sensor_do(uint32_t unused, uint32_t status)
 
 	if (get_threshold_status(SENSOR_NUM_BPB_RPU_LEVEL)) {
 		set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_LOW_RPU_LEVEL, 1);
-		error_log_event(SENSOR_NUM_BPB_RACK_LEVEL_2, IS_ABNORMAL_VAL);
-
-	} else {
-		set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_LOW_RPU_LEVEL, 0);
-		LOG_INF("RPU level sensor ok");
+		if (!get_is_rpu_level_abnormal()) {
+			set_is_rpu_level_abnormal(true);
+			error_log_event(SENSOR_NUM_BPB_RACK_LEVEL_2, IS_ABNORMAL_VAL);
+		}
 	}
 }
 
@@ -740,11 +764,23 @@ sensor_threshold *find_threshold_tbl_entry(uint8_t sensor_num)
 	return NULL;
 }
 
+static bool is_press_abnormal = false;
+
+void set_is_press_abnormal(bool flag)
+{
+	is_press_abnormal = flag;
+}
+
+bool get_is_press_abnormal()
+{
+	return 	is_press_abnormal;
+}
+
 void abnormal_press_do(uint32_t thres_tbl_idx, uint32_t status)
 {
 	if (thres_tbl_idx >= ARRAY_SIZE(threshold_tbl))
 		return;
-
+	
 	if (status == THRESHOLD_STATUS_UCR) {
 		sensor_threshold *thres_p = &threshold_tbl[thres_tbl_idx];
 		float flow_rate_val = 0.0;
@@ -752,16 +788,14 @@ void abnormal_press_do(uint32_t thres_tbl_idx, uint32_t status)
 					       &flow_rate_val);
 		if (flow_rate_val < 10.0) {
 			set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_ABNORMAL_PRESS, 1);
-			error_log_event(SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_P_KPA, IS_ABNORMAL_VAL);
-		} else {
+			if (!get_is_press_abnormal()) {
+				set_is_press_abnormal(true);
+				error_log_event(SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_P_KPA,
+						IS_ABNORMAL_VAL);
+			}
+		} else
 			thres_p->last_status = THRESHOLD_STATUS_NORMAL;
-			set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_ABNORMAL_PRESS, 0);
-			LOG_INF("pressure sensor %x is recovered", thres_p->sensor_num);
-		}
-	} else if (status == THRESHOLD_STATUS_NORMAL)
-		set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_ABNORMAL_PRESS, 0);
-	else
-		LOG_ERR("Unexpected pressure sensor threshold warning");
+	}
 }
 
 void abnormal_press_log(uint32_t thres_tbl_idx, uint32_t status)
@@ -782,12 +816,23 @@ void abnormal_press_log(uint32_t thres_tbl_idx, uint32_t status)
 	}
 }
 
+static bool is_pump_not_access[3] = {false, false, false};;
+
+void set_is_pump_not_access(uint8_t index, bool flag)
+{
+	is_pump_not_access[index] = flag;
+}
+
+bool get_is_pump_not_access(uint8_t index)
+{
+	return is_pump_not_access[index];
+}
+
 void pump_failure_do(uint32_t thres_tbl_idx, uint32_t status)
 {
 	if (thres_tbl_idx >= ARRAY_SIZE(threshold_tbl))
 		return;
 
-	static bool is_pump_not_access[3];
 	sensor_threshold const *thres_p = &threshold_tbl[thres_tbl_idx];
 	uint32_t sensor_num = thres_p->sensor_num;
 
@@ -808,20 +853,21 @@ void pump_failure_do(uint32_t thres_tbl_idx, uint32_t status)
 		(sensor_num == SENSOR_NUM_PB_3_PUMP_TACH_RPM) ? SENSOR_NUM_PB_3_PUMP_TACH_RPM_UCR :
 								0xFF;
 
-	uint8_t pump_not_access_idx = (sensor_num == SENSOR_NUM_PB_1_PUMP_TACH_RPM) ? 0 :
-				      (sensor_num == SENSOR_NUM_PB_2_PUMP_TACH_RPM) ? 1 :
-				      (sensor_num == SENSOR_NUM_PB_3_PUMP_TACH_RPM) ? 2 :
-										      0xFF;
+	uint8_t pump_not_access_idx =
+		(sensor_num == SENSOR_NUM_PB_1_PUMP_TACH_RPM) ? 0 :
+		(sensor_num == SENSOR_NUM_PB_2_PUMP_TACH_RPM) ? 1 :
+		(sensor_num == SENSOR_NUM_PB_3_PUMP_TACH_RPM) ? 2 :
+								0xFF;
 
 	switch (status) {
 	case THRESHOLD_STATUS_NOT_ACCESS:
-		if (!is_pump_not_access[pump_not_access_idx]) {
+		if (!get_is_pump_not_access(pump_not_access_idx)) {
 			error_log_event(sensor_num_pump_not_access, IS_ABNORMAL_VAL);
-			is_pump_not_access[pump_not_access_idx] = true;
+			set_is_pump_not_access(pump_not_access_idx, true);
 		}
 		if (pump_fail_check())
 			set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_TWO_PUMP_X, 1);
-		break;
+		break;	
 	case THRESHOLD_STATUS_LCR:
 		error_log_event(sensor_num, IS_ABNORMAL_VAL);
 		if (pump_fail_check())
@@ -835,13 +881,7 @@ void pump_failure_do(uint32_t thres_tbl_idx, uint32_t status)
 	case THRESHOLD_STATUS_NORMAL:
 		reset_flow_rate_ready();
 		set_status_flag(STATUS_FLAG_FAILURE, pump_ucr, 0);
-		LOG_INF("threshold 0x%02x pump recovered", sensor_num);
 		error_log_event(sensor_num, IS_NORMAL_VAL);
-		if (!pump_fail_check()) {
-			set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_TWO_PUMP_X, 0);
-			LOG_INF("two pump fail recovered");
-		}
-
 		break;
 	default:
 		LOG_DBG("Unexpected threshold warning");
@@ -852,7 +892,7 @@ void pump_failure_do(uint32_t thres_tbl_idx, uint32_t status)
 }
 
 /* return true means pump 1/2/3 not access or tach too low */
-bool check_pump_tach_too_low()
+static bool check_pump_tach_too_low()
 {
 	for (uint8_t i = 0; i < ARRAY_SIZE(pump_sensor_array); i++) {
 		float tmp = 0;
@@ -900,8 +940,6 @@ void abnormal_flow_do(uint32_t thres_tbl_idx, uint32_t status)
 		set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_FLOW_RATE_NOT_ACCESS, 1);
 	} else if (status == THRESHOLD_STATUS_NORMAL) {
 		set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_FLOW_RATE_NOT_ACCESS, 0);
-		set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_ABNORMAL_FLOW_RATE, 0);
-		LOG_INF("flow rate sensor recovered");
 	} else {
 		LOG_DBG("Unexpected threshold warning");
 	}
@@ -1184,18 +1222,26 @@ void pump_change_threshold(uint8_t sensor_num, uint8_t duty)
 	p->ucr = (standard_val) ? (standard_val * 1.25) : 1800;
 }
 
+static bool is_hsc_hsc_fail = false;
+
+void set_is_hsc_hsc_fail(bool flag)
+{
+	is_hsc_hsc_fail = flag;
+}
+
+bool get_is_hsc_hsc_fail()
+{
+	return 	is_hsc_hsc_fail;
+}
+
 void check_bpb_hsc_status(void)
 {
-	static bool hsc_fail = false;
 	if (!gpio_get(PWRGD_P48V_HSC_LF_R)) {
-		if (!hsc_fail) {
+		if (!get_is_hsc_hsc_fail()) {
 			set_status_flag(STATUS_FLAG_FAILURE, GPIO_FAIL_BPB_HSC, 1);
 			error_log_event(SENSOR_NUM_BPB_HSC_FAIL, IS_ABNORMAL_VAL);
-			hsc_fail = true;
+			set_is_hsc_hsc_fail(true);
 		}
-	} else {
-		hsc_fail = false;
-		set_status_flag(STATUS_FLAG_FAILURE, GPIO_FAIL_BPB_HSC, 0);
 	}
 }
 

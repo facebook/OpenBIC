@@ -349,6 +349,30 @@ uint8_t modbus_pump_setting(modbus_command_mapping *cmd)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
 	uint16_t check_error_flag = 0;
+
+	if (cmd->data[0] == 9) // enable auto mode, reset p0p1 error flag
+	{
+
+		set_is_rack_level_abnormal(false);
+		set_is_rpu_level_abnormal(false);
+		set_is_press_abnormal(false);
+		set_is_hsc_hsc_fail(false);
+		set_is_pump_not_access(0, false);
+		set_is_pump_not_access(1, false);
+		set_is_pump_not_access(2, false);
+		set_status_flag(STATUS_FLAG_FAILURE, GPIO_FAIL_BPB_HSC, 0);
+		for (uint8_t i = PUMP_FAIL_EMERGENCY_BUTTON; i <= PUMP_FAIL_CLOSE_PUMP; i++) {
+			set_status_flag(STATUS_FLAG_FAILURE, i, 0);
+		}
+
+		for (uint8_t i = AALC_STATUS_IT_LEAK_0; i < AALC_STATUS_LEAK_E_MAX; i++) {
+			set_status_flag(STATUS_FLAG_LEAK, i, 0);
+		}
+		
+		for (uint8_t i = HSC_FAIL_BPB; i <= HSC_FAIL_PUMP_3; i++) {
+			set_status_flag(STATUS_FLAG_HSC_FAIL, i, 0);
+		}		
+	}
 	for (int i = 0; i < ARRAY_SIZE(modbus_pump_setting_table); i++) {
 		uint8_t func_idx = modbus_pump_setting_table[i].function_index;
 		// check bit value is 0 or 1
