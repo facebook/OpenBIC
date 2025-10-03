@@ -23,6 +23,7 @@
 #include "plat_fru.h"
 #include "plat_i2c.h"
 #include "plat_util.h"
+#include "plat_mctp.h"
 
 LOG_MODULE_REGISTER(plat_class);
 
@@ -72,6 +73,10 @@ void init_plat_config()
 	change_sensor_cfg(asic_board_id, vr_module, ubc_module, board_rev_id);
 	// cpld fru offset 0: slot
 	plat_slot_read(&mmc_slot);
+	// mmc slot 1-4 * 0x0A
+	uint8_t init_plat_eid = ((get_mmc_slot() + 1) * MCTP_DEFAULT_ENDPOINT);
+	plat_set_eid(init_plat_eid);
+	LOG_INF("init_plat_eid: 0x%x", init_plat_eid);
 }
 
 uint8_t get_vr_module()
