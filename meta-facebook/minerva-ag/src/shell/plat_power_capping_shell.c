@@ -58,6 +58,16 @@ static bool validate_power_capping_cmd(int argc, char **argv)
 		if (argc == 4 && strcmp(argv[3], "perm") != 0)
 			return false;
 		return true;
+	} else if (strcmp(argv[1], "average_time_ms") == 0) {
+		// set average_time_ms <50|100|default> [perm]
+		if (argc != 3 && argc != 4)
+			return false;
+		if (strcmp(argv[2], "50") != 0 && strcmp(argv[2], "100") != 0 &&
+		    strcmp(argv[2], "default") != 0)
+			return false;
+		if (argc == 4 && strcmp(argv[3], "perm") != 0)
+			return false;
+		return true;
 	}
 
 	return false;
@@ -94,7 +104,8 @@ int cmd_power_capping_set(const struct shell *shell, size_t argc, char **argv)
 		shell_error(shell, "Invalid command format. Allowed formats:\n"
 				   "  set HC_LC <HC_value|default> <LC_value|default> [perm]\n"
 				   "  set interval_ms <value|default> [perm]\n"
-				   "  set switch <enable|disable|default> [perm]");
+				   "  set switch <enable|disable|default> [perm]\n"
+				   "  set average_time_ms <50|100|default> [perm]");
 		return -EINVAL;
 	}
 
@@ -182,6 +193,23 @@ int cmd_power_capping_set(const struct shell *shell, size_t argc, char **argv)
 		}
 		shell_info(shell, "Set %s:%s, %svolatile\n", argv[1],
 			   (enable ? "enable" : "disable"), (argc == 4) ? "non-" : "");
+	} else if (strcmp(argv[1], "average_time_ms") == 0) {
+		uint16_t set_value = strtol(argv[2], NULL, 10);
+		if (!strcmp(argv[3], "perm")) {
+			is_perm = true;
+		}
+		if (!strcmp(argv[2], "default")) {
+			set_value = POWER_CAPPING_AVERAGE_TIME_MS_DEFAULT;
+		}
+
+		if (!plat_set_power_capping_command(POWER_CAPPING_INDEX_AVERAGE, &set_value,
+						    is_perm)) {
+			shell_error(shell, "Can't set value by rail index: %d",
+				    POWER_CAPPING_INDEX_AVERAGE);
+			return -1;
+		}
+		shell_info(shell, "Set %s:%d, %svolatile\n", argv[1], set_value,
+			   (argc == 4) ? "non-" : "");
 	}
 
 	return 0;
@@ -200,6 +228,10 @@ static const struct shell_static_entry power_capping_name_entries[] = {
 	  .handler = NULL,
 	  .subcmd = NULL,
 	  .help = "set switch <enable|disable|default> [perm]" },
+	{ .syntax = "average_time_ms",
+	  .handler = NULL,
+	  .subcmd = NULL,
+	  .help = "set average_time_ms <50|100|default> [perm]" },
 
 };
 
@@ -226,7 +258,8 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
 		  "Power capping control\n"
 		  "  set HC_LC <HC_value|default> <LC_value|default> [perm]\n"
 		  "  set interval_ms <value|default> [perm]\n"
-		  "  set switch <enable|disable|default> [perm]",
+		  "  set switch <enable|disable|default> [perm]\n"
+		  "  set average_time_ms <50|100|default> [perm]",
 		  cmd_power_capping_set),
 	SHELL_SUBCMD_SET_END);
 
