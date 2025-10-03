@@ -43,6 +43,8 @@ LOG_MODULE_REGISTER(plat_sensor_table);
 SET_GPIO_VALUE_CFG pre_bat_3v = { A_P3V_BAT_SCALED_EN_R, GPIO_HIGH };
 SET_GPIO_VALUE_CFG post_bat_3v = { A_P3V_BAT_SCALED_EN_R, GPIO_LOW };
 
+uint8_t vr_vender_type = VR_TYPE_UNKNOWN;
+
 sensor_poll_time_cfg diff_poll_time_sensor_table[] = {
 	// sensor_number, last_access_time
 	{ SENSOR_NUM_VOL_BAT3V, 0 },
@@ -63,7 +65,18 @@ bool m2_access(uint8_t sensor_num)
 	if (get_system_sku() == SYS_TYPE_EMR) {
 		return false;
 	}
+
 	return get_post_status();
+}
+
+bool hsm_access(uint8_t sensor_num)
+{
+	if (get_system_sku() != SYS_TYPE_EMR) {
+		return false;
+	}
+	bool is_marvell = (TYPE_2OU_MARVELL_HSM == get_2ou_card_type()) ? true : false;
+
+	return (get_post_status() && is_marvell);
 }
 
 sensor_cfg plat_sensor_config[] = {
@@ -83,8 +96,8 @@ sensor_cfg plat_sensor_config[] = {
 	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
 
 	// NVME
-	{ SENSOR_NUM_TEMP_SSD0, sensor_dev_nvme, I2C_BUS2, SSD0_ADDR, SSD0_OFFSET, m2_access, 0,
-	  0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
+	{ SENSOR_NUM_TEMP_SSD0, sensor_dev_nvme, I2C_BUS2, SSD0_ADDR, SSD0_OFFSET, m2_access, 0, 0,
+	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
 	  pre_nvme_read, &mux_conf_addr_0xe2[1], NULL, NULL, NULL },
 
 	// PECI
@@ -360,6 +373,10 @@ sensor_cfg DPV2_sensor_config_table[] = {
 	{ SENSOR_NUM_PWR_DPV2, sensor_dev_max16550a, I2C_BUS9, DPV2_16_ADDR, PMBUS_READ_PIN,
 	  dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
 	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &max16550a_init_args[0] },
+	{ SENSOR_NUM_TEMP_DPV2_HSM, sensor_dev_tmp431, I2C_BUS9, DPV2_HSM_TEMP_ADDR,
+	  TMP431_LOCAL_TEMPERATRUE, hsm_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_hsm_read, NULL, post_hsm_read, NULL,
+	  NULL },
 };
 
 const int SENSOR_CONFIG_SIZE = ARRAY_SIZE(plat_sensor_config);
@@ -399,7 +416,7 @@ uint8_t pal_get_extend_sensor_config()
 	CARD_STATUS _2ou_status = get_2ou_status();
 	if (_2ou_status.present) {
 		// Add DPV2 config if DPV2_16 is present
-		if ((_2ou_status.card_type & TYPE_2OU_DPV2_16) == TYPE_2OU_DPV2_16) {
+		if ((_2ou_status.dpv2_type & TYPE_2OU_DPV2_16) == TYPE_2OU_DPV2_16) {
 			extend_sensor_config_size += ARRAY_SIZE(DPV2_sensor_config_table);
 		}
 	}
@@ -470,6 +487,7 @@ void check_vr_type(uint8_t index)
 		sensor_config[index].type = sensor_dev_tps53689;
 	} else if ((msg.data[0] == 0x02) && (msg.data[2] == 0x8A)) {
 		sensor_config[index].type = sensor_dev_xdpe15284;
+		vr_vender_type = VR_TYPE_XDPE15284;
 		if (sensor_config[index].offset == VR_VOL_CMD) {
 			if (pre_ifx_vr_cache_crc(sensor_config, index) == false) {
 				LOG_ERR("XDPE15284 fails to cache the crc");
@@ -483,9 +501,16 @@ void check_vr_type(uint8_t index)
 		}
 	} else if ((msg.data[0] == 0x04) && (msg.data[1] == 0x00) && (msg.data[2] == 0x81) &&
 		   (msg.data[3] == 0xD2) && (msg.data[4] == 0x49)) {
+		vr_vender_type = VR_TYPE_ISL69259;
 	} else {
 		LOG_ERR("Unknown VR type");
+		vr_vender_type = VR_TYPE_UNKNOWN;
 	}
+}
+
+uint8_t pal_get_vr_vender_type()
+{
+	return vr_vender_type;
 }
 
 void check_outlet_temp_type(uint8_t index)
@@ -632,7 +657,7 @@ void pal_extend_sensor_config()
 	/* Fix sensor table if 2ou card is present */
 	if (_2ou_status.present) {
 		// Add DPV2 sensor config if DPV2_16 is present
-		if ((_2ou_status.card_type & TYPE_2OU_DPV2_16) == TYPE_2OU_DPV2_16) {
+		if ((_2ou_status.dpv2_type & TYPE_2OU_DPV2_16) == TYPE_2OU_DPV2_16) {
 			sensor_count = ARRAY_SIZE(DPV2_sensor_config_table);
 			for (int index = 0; index < sensor_count; index++) {
 				add_sensor_config(DPV2_sensor_config_table[index]);

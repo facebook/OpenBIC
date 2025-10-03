@@ -573,3 +573,86 @@ bool pre_ifx_vr_cache_crc(sensor_cfg *cfg, uint8_t index)
 	}
 	return true;
 }
+
+#define HSM_ARBITER_ADDR 0x40
+#define HSM_ARBITER_CONTROL_REG 0x01
+#define HSM_ARBITER_TIME_REG 0x03
+
+bool pre_hsm_read(sensor_cfg *cfg, void *args)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	ARG_UNUSED(args);
+
+	int retry = 5;
+	int tx_len = 2;
+	uint8_t read_value = 0;
+	I2C_MSG msg = { 0 };
+	uint8_t data[tx_len];
+
+	// set reserve time to arbiter
+	data[0] = HSM_ARBITER_TIME_REG;
+	data[1] = 0xFF; // timeout (ms)
+	msg = construct_i2c_message(I2C_BUS9, HSM_ARBITER_ADDR, tx_len, data, 0);
+	if (i2c_master_write(&msg, retry)) {
+		LOG_ERR("Unable to write time register of HSM arbiter");
+		return false;
+	}
+
+	// Request lock
+	data[0] = HSM_ARBITER_CONTROL_REG;
+	data[1] = 0x05;
+	msg = construct_i2c_message(I2C_BUS9, HSM_ARBITER_ADDR, tx_len, data, 0);
+	if (i2c_master_write(&msg, retry)) {
+		LOG_ERR("Unable to write control register of HSM arbiter");
+		return false;
+	}
+
+	// polling for lock status, max: 255ms
+	for (int i = 0; i < 255; i++) {
+		data[0] = HSM_ARBITER_CONTROL_REG;
+		msg = construct_i2c_message(I2C_BUS9, HSM_ARBITER_ADDR, 1, data, 1);
+		if (!i2c_master_read(&msg, 1)) {
+			read_value = msg.data[0];
+			if (read_value & BIT(1)) {
+				return true; // lock granted
+			}
+		} else {
+			LOG_ERR("Unable to read control register of HSM arbiter");
+		}
+		k_msleep(1);
+	}
+
+	LOG_ERR("Unable to grant lock of HSM arbiter");
+
+	// release lock
+	data[0] = HSM_ARBITER_CONTROL_REG;
+	data[1] = 0x0;
+	msg = construct_i2c_message(I2C_BUS9, HSM_ARBITER_ADDR, tx_len, data, 0);
+	if (i2c_master_write(&msg, retry)) {
+		LOG_ERR("Unable to release lock of HSM arbiter");
+	}
+
+	return false;
+}
+
+bool post_hsm_read(sensor_cfg *cfg, void *args, int *reading)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	ARG_UNUSED(args);
+	ARG_UNUSED(reading);
+
+	int retry = 5;
+	int tx_len = 2;
+	I2C_MSG msg = { 0 };
+	uint8_t data[tx_len];
+
+	// release lock
+	data[0] = HSM_ARBITER_CONTROL_REG;
+	data[1] = 0x0;
+	msg = construct_i2c_message(I2C_BUS9, HSM_ARBITER_ADDR, tx_len, data, 0);
+	if (i2c_master_write(&msg, retry)) {
+		LOG_ERR("Unable to release lock of HSM arbiter");
+	}
+
+	return true;
+}

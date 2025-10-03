@@ -1,0 +1,99 @@
+From 4890ac8d1ccdde1c85baed8034bd26f638d2601c Mon Sep 17 00:00:00 2001
+From: KayYCHuang-wiwynn <kay_yc_huang@wiwynn.com>
+Date: Thu, 21 Aug 2025 08:18:26 +0000
+Subject: [PATCH] i3c: Add controller reset and retry mechanism for enable
+ failures
+
+Add automatic retry mechanism when I3C controller enable fails, with up to
+3 retry attempts using controller reset. Also trigger controller reset when
+master read timeout occurs or when master reads from empty command queue
+instead of just resetting the queue, providing more robust error recovery.
+---
+ drivers/i3c/i3c_aspeed.c | 38 ++++++++++++++++++++++++++++++++++----
+ 1 file changed, 34 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/i3c/i3c_aspeed.c b/drivers/i3c/i3c_aspeed.c
+index cf395dbe6b7..7b79167ded9 100644
+--- a/drivers/i3c/i3c_aspeed.c
++++ b/drivers/i3c/i3c_aspeed.c
+@@ -577,6 +577,10 @@ struct i3c_aspeed_obj {
+ 	osEventFlagsId_t data_event;
+ 	uint16_t extra_val;
+ 	i3c_rst_cb_t rst_cb;
++
++	/* retry */
++	int enable_fail_counter;
++	bool retry_in_progress;
+ };
+ 
+ #define I3CG_REG1(x)			((x * 0x10) + 0x14)
+@@ -1178,8 +1182,10 @@ static void i3c_aspeed_isr(const struct device *dev)
+ 
+ 	status.value = i3c_register->intr_status.value;
+ 	if (config->secondary) {
+-		if (status.fields.read_q_recv)
+-			LOG_WRN("Master read when CMDQ is empty");
++		if (status.fields.read_q_recv) {
++			LOG_WRN("Master read when CMDQ is empty: reset i3c controller");
++			k_work_submit(&obj->rst_work);
++		}
+ 
+ 		if (status.fields.resp_q_ready) {
+ 			i3c_aspeed_slave_resp_handler(obj, status);
+@@ -1433,11 +1439,34 @@ static int i3c_aspeed_enable(struct i3c_aspeed_obj *obj)
+ 		if (!i3c_register->device_ctrl.fields.enable) {
+ 			LOG_WRN("Failed to enable controller");
+ 			i3c_aspeed_isolate_scl_sda(config->inst_id, false);
++
++			obj->enable_fail_counter++;
++			if (obj->enable_fail_counter < 3) {
++				LOG_ERR("i3c_aspeed_enable failed, retrying (%d)",
++					obj->enable_fail_counter);
++
++				if (!obj->retry_in_progress) {
++					obj->retry_in_progress = true;
++					LOG_WRN("i3c_rst_work submit, retrying (%d)",
++						obj->enable_fail_counter);
++					k_work_submit(&obj->rst_work);
++				} else {
++					LOG_WRN("i3c_rst_work retry_in_progress, retrying (%d)",
++						obj->enable_fail_counter);
++				}
++			} else {
++				LOG_ERR("i3c_aspeed_enable failed, max retries exceeded (%d)",
++					obj->enable_fail_counter);
++			}
++
+ 			return -EACCES;
+ 		}
+ 		i3c_aspeed_gen_stop_to_internal(config->inst_id);
+ 		i3c_aspeed_isolate_scl_sda(config->inst_id, false);
+ 	}
++
++	obj->enable_fail_counter = 0;
++	obj->retry_in_progress = false;
+ 	return 0;
+ }
+ 
+@@ -1877,8 +1906,8 @@ int i3c_aspeed_slave_put_read_data(const struct device *dev, struct i3c_slave_pa
+ 	flag_ret =
+ 		osEventFlagsWait(obj->data_event, events.value, osFlagsWaitAny, K_SECONDS(3).ticks);
+ 	if (flag_ret & osFlagsError) {
+-		LOG_WRN("Wait master read timeout: reset queue");
+-		ret = i3c_aspeed_slave_reset_queue(dev);
++		LOG_WRN("Wait master read timeout: reset i3c controller");
++		k_work_submit(&obj->rst_work);
+ 	}
+ ibi_err:
+ 	return ret;
+@@ -2129,6 +2158,7 @@ static void i3c_rst_worker(struct k_work *work)
+ {
+ 	struct i3c_aspeed_obj *obj = CONTAINER_OF(work, struct i3c_aspeed_obj, rst_work);
+ 
++	obj->retry_in_progress = false;
+ 	i3c_aspeed_init(obj->dev);
+ 	if (obj->rst_cb)
+ 		obj->rst_cb(obj->dev);
+-- 
+2.25.1
+

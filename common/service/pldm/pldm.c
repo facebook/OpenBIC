@@ -37,9 +37,15 @@ LOG_MODULE_REGISTER(pldm);
 #define PLDM_MSG_TIMEOUT_MS 30000
 #endif
 
+#ifndef PLDM_MSG_MAX_RETRY
+#define PLDM_MSG_MAX_RETRY 3
+#endif
+
+#define PLDM_FW_UPDATE_TIMEOUT_MS 30000
+#define PLDM_FW_UPDATE_MAX_RETRY 3
+
 #define PLDM_RESP_MSG_PROC_MUTEX_TIMEOUT_MS 500
 #define PLDM_TASK_NAME_MAX_SIZE 32
-#define PLDM_MSG_MAX_RETRY 3
 
 #define PLDM_READ_EVENT_SUCCESS BIT(0)
 #define PLDM_READ_EVENT_TIMEOUT BIT(1)
@@ -178,6 +184,7 @@ uint16_t mctp_pldm_read(void *mctp_p, pldm_msg *msg, uint8_t *rbuf, uint16_t rbu
 		return 0;
 	}
 	uint16_t ret_len = 0;
+	uint8_t max_retry = 0;
 
 	k_msgq_init(event_msgq_p, event_msgq_buffer, sizeof(uint8_t), 1);
 
@@ -196,9 +203,16 @@ uint16_t mctp_pldm_read(void *mctp_p, pldm_msg *msg, uint8_t *rbuf, uint16_t rbu
 	msg->recv_resp_cb_args = (void *)recv_arg_p;
 	msg->timeout_cb_fn = pldm_read_timeout_handler;
 	msg->timeout_cb_fn_args = (void *)event_msgq_p;
-	msg->timeout_ms = PLDM_MSG_TIMEOUT_MS;
+	// use pldm type to decide the timeout and max retry
+	if (msg->hdr.pldm_type == PLDM_TYPE_FW_UPDATE) {
+		msg->timeout_ms = PLDM_FW_UPDATE_TIMEOUT_MS;
+		max_retry = PLDM_FW_UPDATE_MAX_RETRY;
+	} else {
+		msg->timeout_ms = PLDM_MSG_TIMEOUT_MS;
+		max_retry = PLDM_MSG_MAX_RETRY;
+	}
 
-	for (uint8_t retry_count = 0; retry_count < PLDM_MSG_MAX_RETRY; retry_count++) {
+	for (uint8_t retry_count = 0; retry_count < max_retry; retry_count++) {
 		uint8_t event = 0;
 		if (mctp_pldm_send_msg(mctp_p, msg) == PLDM_ERROR) {
 #ifdef PLDM_SEND_FAIL_DELAY_MS
@@ -287,7 +301,7 @@ static uint8_t pldm_resp_msg_process(mctp *const mctp_inst, uint8_t *buf, uint32
 	if (!len)
 		return PLDM_ERROR;
 
-	pldm_hdr *hdr = (pldm_hdr *)buf;
+	const pldm_hdr *hdr = (pldm_hdr *)buf;
 	sys_snode_t *node;
 	sys_snode_t *s_node;
 	sys_snode_t *pre_node = NULL;
@@ -299,7 +313,7 @@ static uint8_t pldm_resp_msg_process(mctp *const mctp_inst, uint8_t *buf, uint32
 	}
 
 	SYS_SLIST_FOR_EACH_NODE_SAFE (&wait_recv_resp_list, node, s_node) {
-		wait_msg *p = (wait_msg *)node;
+		const wait_msg *p = (wait_msg *)node;
 
 		/* found the proper handler */
 		if ((p->msg.hdr.inst_id == hdr->inst_id) &&

@@ -42,7 +42,7 @@ K_TIMER_DEFINE(enable_asic1_rst_timer, enable_asic1_rst, NULL);
 K_TIMER_DEFINE(enable_asic2_rst_timer, enable_asic2_rst, NULL);
 
 #define CXL_READY_HANDLER_STACK_SIZE 1024
-
+#define VR_EVENT_WAIT_BIC_RESET_DELAY_MS (30 * 1000) // 30 seconds
 K_THREAD_STACK_DEFINE(cxl1_stack_area, CXL_READY_HANDLER_STACK_SIZE);
 struct k_thread cxl1_thread_data;
 
@@ -54,6 +54,7 @@ K_MUTEX_DEFINE(switch_ioe_mux_mutex);
 static bool is_cxl_power_on[MAX_CXL_ID] = { false, false };
 static bool is_cxl_ready[MAX_CXL_ID] = { false, false };
 static bool is_cxl_vr_accessible[MAX_CXL_ID] = { false, false };
+bool is_cxl_power_on_success = false;
 
 static k_tid_t cxl1_tid = NULL;
 static k_tid_t cxl2_tid = NULL;
@@ -160,6 +161,11 @@ void set_mb_dc_status(uint8_t gpio_num)
 	LOG_INF("MB DC (gpio num %d) status is %s", gpio_num, is_mb_dc_on ? "ON" : "OFF");
 }
 
+uint32_t get_uptime_secs(void)
+{
+	return k_uptime_get_32() / 1000U;
+}
+
 void execute_power_on_sequence()
 {
 	int ret = 0;
@@ -200,11 +206,28 @@ void execute_power_on_sequence()
 	}
 
 	if (is_cxl_power_on[CXL_ID_1] && is_cxl_power_on[CXL_ID_2]) {
+		is_cxl_power_on_success = true;
 		gpio_set(PG_CARD_OK, POWER_ON);
 		set_DC_status(PG_CARD_OK);
 		k_work_schedule(&set_dc_on_5s_work, K_SECONDS(DC_ON_DELAY5_SEC));
 
 		create_check_cxl_ready_thread();
+	} else {
+		LOG_INF("CXL power on failed, switch IOE mux to BIC");
+		switch_mux_to_bic(IOE_SWITCH_CXL1_VR_TO_BIC);
+		switch_mux_to_bic(IOE_SWITCH_CXL2_VR_TO_BIC);
+		uint32_t uptime = get_uptime_secs();
+		uint32_t delay_ms = VR_EVENT_DELAY_MS;
+
+		if (uptime < 30) { //wait longer for BIC reset
+			delay_ms = VR_EVENT_WAIT_BIC_RESET_DELAY_MS;
+			LOG_INF("pldm not ready yet, wait for %u seconds before checking VR",
+				(delay_ms / 1000U));
+		}
+
+		k_work_schedule_for_queue(&plat_work_q,
+					  &vr_event_work_items[PMBUS_VR_IOE1_INT].add_sel_work,
+					  K_MSEC(delay_ms));
 	}
 }
 
@@ -376,7 +399,7 @@ int check_powers_enabled(int cxl_id, int pwr_stage)
 
 bool is_power_controlled(int cxl_id, int power_pin, uint8_t check_power_status, char *power_name)
 {
-	int retry_times = 5, i = 0;
+	int retry_times = 50, i = 0;
 	for (i = 0; i < retry_times; i++) {
 		k_msleep(CHK_PWR_DELAY_MSEC);
 		// Get power good pin to check power
@@ -462,6 +485,7 @@ void execute_power_off_sequence()
 		LOG_INF("CXL 1 power off success");
 	} else {
 		is_cxl_power_on[CXL_ID_1] = true;
+		set_cxl_vr_access(CXL_ID_1, true);
 		LOG_ERR("CXL 1 power off fail");
 	}
 
@@ -471,6 +495,7 @@ void execute_power_off_sequence()
 		LOG_INF("CXL 2 power off success");
 	} else {
 		is_cxl_power_on[CXL_ID_2] = true;
+		set_cxl_vr_access(CXL_ID_2, true);
 		LOG_ERR("CXL 2 power off fail");
 	}
 
@@ -624,6 +649,9 @@ int check_powers_disabled(int cxl_id, int pwr_stage)
 static bool is_wf_ASIC1_vr_clear_fault_done = false;
 static bool is_wf_ASIC2_vr_clear_fault_done = false;
 
+static bool is_wf_IOE_INT_reset_done = false;
+extern uint8_t ioe_list[4];
+
 void clear_wf_ASIC1_vr_faults()
 {
 	//Clear VR_P0V85_ASIC1 fault bit
@@ -667,49 +695,119 @@ void switch_mux_to_bic(uint8_t value_to_write)
 		clear_wf_ASIC2_vr_faults();
 	}
 
+	if (!is_wf_IOE_INT_reset_done) {
+		// Reset IO Expander INT#
+		reset_IOE_INT();
+		is_wf_IOE_INT_reset_done = true;
+	}
+
 	return;
+}
+
+bool get_cxl_heartbeat(char *label)
+{
+	CHECK_NULL_ARG_WITH_RETURN(label, false);
+
+	const struct device *heartbeat = NULL;
+	struct sensor_value sensor_value;
+	int ret = 0;
+
+	heartbeat = device_get_binding(label);
+	if (heartbeat == NULL) {
+		LOG_ERR("[%s] %s device not found", __func__, label);
+		return false;
+	}
+
+	ret = sensor_sample_fetch(heartbeat);
+	if (ret < 0) {
+		LOG_ERR("[%s] Failed to read %s due to sensor_sample_fetch failed, ret: %d",
+			__func__, label, ret);
+		return false;
+	}
+
+	ret = sensor_channel_get(heartbeat, SENSOR_CHAN_RPM, &sensor_value);
+	if (ret < 0) {
+		LOG_ERR("[%s] Failed to read %s due to sensor_channel_get failed, ret: %d",
+			__func__, label, ret);
+		return false;
+	}
+
+	if (sensor_value.val1 <= 0) {
+		LOG_ERR("[%s] %s value <= 0, val: %d", __func__, label, sensor_value.val1);
+		return false;
+	}
+
+	return true;
 }
 
 void cxl1_heartbeat_monitor_handler()
 {
-	struct sensor_value hb_val;
-	struct pldm_addsel_data sel_msg = { 0 };
-	const struct device *hb = device_get_binding(CXL1_HEART_BEAT_LABEL);
-	int ret;
-
-	if (!hb) {
-		LOG_ERR("HB monitor: CXL1 device not found");
-		return;
-	}
-
 	if (!get_DC_status()) {
-		LOG_INF("CXL1 HB monitor: DC is off");
+		LOG_INF("[%s] Stop monitor CXL1 HB due to DC power off", __func__);
 		return;
 	}
 
-	ret = sensor_sample_fetch(hb);
-	if (ret == 0 && sensor_channel_get(hb, SENSOR_CHAN_RPM, &hb_val) == 0 && get_DC_status()) {
-		if (hb_val.val1 >= 10 && cxl1_hb_state != HB_STATE_OK) {
-			sel_msg.event_type = CXL1_HB;
-			sel_msg.assert_type = EVENT_ASSERTED;
-			LOG_INF("Assert: CXL1 HB recovered");
-			if (send_event_log_to_bmc(sel_msg) != PLDM_SUCCESS) {
-				LOG_ERR("Failed to send assert event log");
-			}
-			cxl1_hb_state = HB_STATE_OK;
+	bool is_cxl_perst = (gpio_get(RST_PCIE_MB_EXP_N) == GPIO_LOW) ? true : false;
 
-		} else if (hb_val.val1 < 10 && cxl1_hb_state != HB_STATE_LOW) {
-			sel_msg.event_type = CXL1_HB;
-			sel_msg.assert_type = EVENT_DEASSERTED;
+	if (is_cxl_perst == true) {
+		if (cxl1_hb_state != HB_STATE_UNKNOWN) {
+			LOG_INF("[%s] Waiting for CXL1 PERST+", __func__);
+			cxl1_hb_state = HB_STATE_UNKNOWN;
+		}
+	} else {
+		struct pldm_addsel_data sel_msg = { 0 };
+		bool is_heartbeat_blinking = get_cxl_heartbeat(CXL1_HEART_BEAT_LABEL);
 
-			LOG_INF("Deassert: CXL1 HB RPM too low");
-			if (send_event_log_to_bmc(sel_msg) != PLDM_SUCCESS) {
-				LOG_ERR("Failed to send deassert event log");
+		if (is_heartbeat_blinking == true) {
+			// Check again to avoid timing issue
+			if (!get_DC_status()) {
+				LOG_INF("[%s] Stop monitor CXL1 HB due to DC power off", __func__);
+				return;
 			}
-			cxl1_hb_state = HB_STATE_LOW;
+			is_cxl_perst = (gpio_get(RST_PCIE_MB_EXP_N) == GPIO_LOW) ? true : false;
+			if (is_cxl_perst == true) {
+				if (cxl1_hb_state != HB_STATE_UNKNOWN) {
+					LOG_INF("[%s] Waiting for CXL1 PERST+", __func__);
+					cxl1_hb_state = HB_STATE_UNKNOWN;
+				}
+			} else {
+				if (cxl1_hb_state != HB_STATE_OK) {
+					LOG_INF("[%s] Assert: CXL1 HB blinking", __func__);
+					cxl1_hb_state = HB_STATE_OK;
+					sel_msg.event_type = CXL1_HB;
+					sel_msg.assert_type = EVENT_ASSERTED;
+					if (send_event_log_to_bmc(sel_msg) != PLDM_SUCCESS) {
+						LOG_ERR("[%s] Failed to send assert event log",
+							__func__);
+					}
+				}
+			}
+		} else {
+			// Check again to avoid timing issue
+			if (!get_DC_status()) {
+				LOG_INF("[%s] Stop monitor CXL1 HB due to DC power off", __func__);
+				return;
+			}
+			is_cxl_perst = (gpio_get(RST_PCIE_MB_EXP_N) == GPIO_LOW) ? true : false;
+			if (is_cxl_perst == true) {
+				if (cxl1_hb_state != HB_STATE_UNKNOWN) {
+					LOG_INF("[%s] Waiting for CXL1 PERST+", __func__);
+					cxl1_hb_state = HB_STATE_UNKNOWN;
+				}
+			} else {
+				if (cxl1_hb_state != HB_STATE_LOW) {
+					LOG_INF("[%s] Deassert: CXL1 HB not blinking", __func__);
+					cxl1_hb_state = HB_STATE_LOW;
+					sel_msg.event_type = CXL1_HB;
+					sel_msg.assert_type = EVENT_DEASSERTED;
+					if (send_event_log_to_bmc(sel_msg) != PLDM_SUCCESS) {
+						LOG_ERR("[%s] Failed to send deassert event log",
+							__func__);
+					}
+				}
+			}
 		}
 	}
-
 	// Reschedule self
 	k_work_schedule_for_queue(&plat_work_q, &cxl1_hb_monitor_work,
 				  K_SECONDS(MONITOR_INTERVAL_SECONDS));
@@ -717,48 +815,75 @@ void cxl1_heartbeat_monitor_handler()
 
 void cxl2_heartbeat_monitor_handler()
 {
-	struct sensor_value hb_val;
-	struct pldm_addsel_data sel_msg = { 0 };
-	const struct device *hb = device_get_binding(CXL2_HEART_BEAT_LABEL);
-	int ret;
-
-	if (!hb) {
-		LOG_ERR("HB monitor: CXL2 device not found");
-		return;
-	}
-
 	if (!get_DC_status()) {
-		LOG_INF("CXL2 HB monitor: DC is off");
+		LOG_INF("[%s] Stop monitor CXL2 HB due to DC power off", __func__);
 		return;
 	}
 
-	ret = sensor_sample_fetch(hb);
-	if (ret == 0 && sensor_channel_get(hb, SENSOR_CHAN_RPM, &hb_val) == 0 && get_DC_status()) {
-		if (hb_val.val1 >= 10 && cxl2_hb_state != HB_STATE_OK) {
-			sel_msg.event_type = CXL2_HB;
-			sel_msg.assert_type = EVENT_ASSERTED;
+	bool is_cxl_perst = (gpio_get(RST_PCIE_MB_EXP_N) == GPIO_LOW) ? true : false;
 
-			LOG_INF("Assert: CXL2 HB recovered");
-			if (send_event_log_to_bmc(sel_msg) != PLDM_SUCCESS) {
-				LOG_ERR("Failed to send assert event log");
-			}
-			cxl2_hb_state = HB_STATE_OK;
-
-		} else if (hb_val.val1 < 10 && cxl2_hb_state != HB_STATE_LOW) {
-			sel_msg.event_type = CXL2_HB;
-			sel_msg.assert_type = EVENT_DEASSERTED;
-
-			LOG_INF("Deassert: CXL2 HB RPM too low");
-			if (send_event_log_to_bmc(sel_msg) != PLDM_SUCCESS) {
-				LOG_ERR("Failed to send deassert event log");
-			}
-			cxl2_hb_state = HB_STATE_LOW;
+	if (is_cxl_perst == true) {
+		if (cxl2_hb_state != HB_STATE_UNKNOWN) {
+			LOG_INF("[%s] Waiting for CXL2 PERST+", __func__);
+			cxl2_hb_state = HB_STATE_UNKNOWN;
 		}
+	} else {
+		struct pldm_addsel_data sel_msg = { 0 };
+		bool is_heartbeat_blinking = get_cxl_heartbeat(CXL2_HEART_BEAT_LABEL);
 
-		// Reschedule self
-		k_work_schedule_for_queue(&plat_work_q, &cxl2_hb_monitor_work,
-					  K_SECONDS(MONITOR_INTERVAL_SECONDS));
+		if (is_heartbeat_blinking == true) {
+			// Check again to avoid timing issue
+			if (!get_DC_status()) {
+				LOG_INF("[%s] Stop monitor CXL2 HB due to DC power off", __func__);
+				return;
+			}
+			is_cxl_perst = (gpio_get(RST_PCIE_MB_EXP_N) == GPIO_LOW) ? true : false;
+			if (is_cxl_perst == true) {
+				if (cxl2_hb_state != HB_STATE_UNKNOWN) {
+					LOG_INF("[%s] Waiting for CXL2 PERST+", __func__);
+					cxl2_hb_state = HB_STATE_UNKNOWN;
+				}
+			} else {
+				if (cxl2_hb_state != HB_STATE_OK) {
+					LOG_INF("[%s] Assert: CXL2 HB blinking", __func__);
+					cxl2_hb_state = HB_STATE_OK;
+					sel_msg.event_type = CXL2_HB;
+					sel_msg.assert_type = EVENT_ASSERTED;
+					if (send_event_log_to_bmc(sel_msg) != PLDM_SUCCESS) {
+						LOG_ERR("[%s] Failed to send assert event log",
+							__func__);
+					}
+				}
+			}
+		} else {
+			// Check again to avoid timing issue
+			if (!get_DC_status()) {
+				LOG_INF("[%s] Stop monitor CXL2 HB due to DC power off", __func__);
+				return;
+			}
+			is_cxl_perst = (gpio_get(RST_PCIE_MB_EXP_N) == GPIO_LOW) ? true : false;
+			if (is_cxl_perst == true) {
+				if (cxl2_hb_state != HB_STATE_UNKNOWN) {
+					LOG_INF("[%s] Waiting for CXL2 PERST+", __func__);
+					cxl2_hb_state = HB_STATE_UNKNOWN;
+				}
+			} else {
+				if (cxl2_hb_state != HB_STATE_LOW) {
+					LOG_INF("[%s] Deassert: CXL2 HB not blinking", __func__);
+					cxl2_hb_state = HB_STATE_LOW;
+					sel_msg.event_type = CXL2_HB;
+					sel_msg.assert_type = EVENT_DEASSERTED;
+					if (send_event_log_to_bmc(sel_msg) != PLDM_SUCCESS) {
+						LOG_ERR("[%s] Failed to send deassert event log",
+							__func__);
+					}
+				}
+			}
+		}
 	}
+	// Reschedule self
+	k_work_schedule_for_queue(&plat_work_q, &cxl2_hb_monitor_work,
+				  K_SECONDS(MONITOR_INTERVAL_SECONDS));
 }
 
 void cxl1_ready_handler()
@@ -805,17 +930,6 @@ void cxl1_ready_handler()
 	LOG_ERR("CXL1 is not ready, check %s timeout, ret: %d", CXL1_HEART_BEAT_LABEL, ret);
 	switch_mux_to_bic(IOE_SWITCH_CXL1_VR_TO_BIC);
 	set_cxl_vr_access(CXL_ID_1, true);
-	if (cxl1_hb_state != HB_STATE_LOW) {
-		struct pldm_addsel_data sel_msg = { 0 };
-		sel_msg.event_type = CXL1_HB;
-		sel_msg.assert_type = EVENT_DEASSERTED;
-		LOG_INF("Deassert: CXL1 HB not detected after DC on");
-
-		if (send_event_log_to_bmc(sel_msg) != PLDM_SUCCESS) {
-			LOG_ERR("Failed to send assert event log");
-		}
-		cxl1_hb_state = HB_STATE_LOW;
-	}
 
 exit:
 	// Start delayable heartbeat monitor
@@ -872,17 +986,6 @@ void cxl2_ready_handler()
 	LOG_ERR("CXL2 is not ready, check %s timeout, ret: %d", CXL2_HEART_BEAT_LABEL, ret);
 	switch_mux_to_bic(IOE_SWITCH_CXL2_VR_TO_BIC);
 	set_cxl_vr_access(CXL_ID_2, true);
-	if (cxl2_hb_state != HB_STATE_LOW) {
-		struct pldm_addsel_data sel_msg = { 0 };
-		sel_msg.event_type = CXL2_HB;
-		sel_msg.assert_type = EVENT_DEASSERTED;
-		LOG_INF("Deassert: CXL2 HB not detected after DC on");
-
-		if (send_event_log_to_bmc(sel_msg) != PLDM_SUCCESS) {
-			LOG_ERR("Failed to send assert event log");
-		}
-		cxl2_hb_state = HB_STATE_LOW;
-	}
 
 exit:
 	// Start delayable heartbeat monitor
@@ -925,6 +1028,11 @@ bool cxl1_vr_access(uint8_t sensor_num)
 bool cxl2_vr_access(uint8_t sensor_num)
 {
 	return is_cxl_vr_accessible[CXL_ID_2];
+}
+
+bool get_cxl_vr_access_status(uint8_t cxl_id)
+{
+	return is_cxl_vr_accessible[cxl_id];
 }
 
 void set_cxl_ready_status(uint8_t cxl_id, bool value)

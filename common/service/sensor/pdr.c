@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -316,16 +332,18 @@ PDR_entity_auxiliary_names *get_entity_auxiliary_names_table()
 	return entity_auxiliary_names_table;
 }
 
-int change_pdr_table_critical_high_with_sensor_id(uint32_t sensorID, float critical_high)
+int change_pdr_table_critical_high_with_sensor_id(uint32_t sensorID, uint32_t critical_high)
 {
 	uint32_t numeric_sensor_pdr_count = 0;
 	numeric_sensor_pdr_count = plat_get_pdr_size(PLDM_NUMERIC_SENSOR_PDR);
 
 	for (int i = 0; i < numeric_sensor_pdr_count; i++) {
 		if (numeric_sensor_table[i].sensor_id == sensorID) {
-			critical_high =
-				critical_high * power(10, -numeric_sensor_table[i].unit_modifier);
 			numeric_sensor_table[i].critical_high = (int32_t)critical_high;
+
+			LOG_DBG("SET critical_high - sensorID: 0x%x, unit_modifier: %d, critical_high stored: %d",
+				sensorID, numeric_sensor_table[i].unit_modifier,
+				numeric_sensor_table[i].critical_high);
 			return 0;
 		}
 	}
@@ -333,16 +351,18 @@ int change_pdr_table_critical_high_with_sensor_id(uint32_t sensorID, float criti
 	return -1;
 }
 
-int change_pdr_table_critical_low_with_sensor_id(uint32_t sensorID, float critical_low)
+int change_pdr_table_critical_low_with_sensor_id(uint32_t sensorID, uint32_t critical_low)
 {
 	uint32_t numeric_sensor_pdr_count = 0;
 	numeric_sensor_pdr_count = plat_get_pdr_size(PLDM_NUMERIC_SENSOR_PDR);
 
 	for (int i = 0; i < numeric_sensor_pdr_count; i++) {
 		if (numeric_sensor_table[i].sensor_id == sensorID) {
-			critical_low =
-				critical_low * power(10, -numeric_sensor_table[i].unit_modifier);
 			numeric_sensor_table[i].critical_low = (int32_t)critical_low;
+
+			LOG_DBG("SET critical_low - sensorID: 0x%x, unit_modifier: %d, critical_low stored: %d",
+				sensorID, numeric_sensor_table[i].unit_modifier,
+				numeric_sensor_table[i].critical_low);
 			return 0;
 		}
 	}
@@ -356,12 +376,21 @@ int get_pdr_table_critical_high_and_low_with_sensor_id(uint32_t sensorID, float 
 	uint32_t numeric_sensor_pdr_count = 0;
 	numeric_sensor_pdr_count = plat_get_pdr_size(PLDM_NUMERIC_SENSOR_PDR);
 
+	int32_t data_high = 0, data_low = 0;
+
 	for (int i = 0; i < numeric_sensor_pdr_count; i++) {
 		if (numeric_sensor_table[i].sensor_id == sensorID) {
 			*critical_high = numeric_sensor_table[i].critical_high *
 					 power(10, numeric_sensor_table[i].unit_modifier);
 			*critical_low = numeric_sensor_table[i].critical_low *
 					power(10, numeric_sensor_table[i].unit_modifier);
+
+			data_high = numeric_sensor_table[i].critical_high;
+			data_low = numeric_sensor_table[i].critical_low;
+
+			LOG_DBG("sensorID: 0x%x, data_high: %d, data_low: %d", sensorID, data_high,
+				data_low);
+
 			return 0;
 		}
 	}

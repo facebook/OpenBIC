@@ -1,9 +1,27 @@
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "plat_class.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include "rg3mxxb12.h"
+#include "p3h284x.h"
 #include "hal_gpio.h"
 #include "hal_i2c.h"
 #include "libutil.h"
@@ -11,12 +29,15 @@
 #include "plat_i2c.h"
 #include "plat_sensor_table.h"
 #include "hal_i3c.h"
+#include "plat_mctp.h"
 
 #include <logging/log.h>
 
 #define BOARD_REVISION_PRSNT_BITS 0x07
 
 LOG_MODULE_REGISTER(plat_class);
+
+static uint16_t i3c_hub_type = I3C_HUB_TYPE_UNKNOWN;
 
 /* ADC information for each channel
  * offset: register offset
@@ -78,6 +99,11 @@ uint8_t get_slot_eid()
 uint8_t get_slot_id()
 {
 	return slot_id;
+}
+
+uint16_t get_i3c_hub_type()
+{
+	return i3c_hub_type;
 }
 
 bool pal_get_slot_pid(uint16_t *pid)
@@ -297,4 +323,17 @@ void init_retimer_type()
 	}
 
 	return;
+}
+
+void init_i3c_hub_type(void)
+{
+	if (rg3mxxb12_get_device_info_i3c(I3C_BUS_HUB, &i3c_hub_type) &&
+	    (i3c_hub_type == RG3M87B12_DEVICE_INFO)) {
+		LOG_INF("I3C hub type: rg3mxxb12");
+	} else if (p3h284x_get_device_info_i3c(I3C_BUS_HUB, &i3c_hub_type) &&
+		   (i3c_hub_type == P3H2840_DEVICE_INFO)) {
+		LOG_INF("I3C hub type: p3h284x");
+	} else {
+		LOG_ERR("I3C hub get device type fail");
+	}
 }

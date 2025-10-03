@@ -33,6 +33,7 @@
 #include "plat_sensor_table.h"
 #include "pmbus.h"
 #include "oem_1s_handler.h"
+#include "libipmi.h"
 
 #include "pldm.h"
 #include "plat_mctp.h"
@@ -47,7 +48,8 @@ bool pal_request_msg_to_BIC_from_HOST(uint8_t netfn, uint8_t cmd)
 	if (netfn == NETFN_OEM_1S_REQ) {
 		if ((cmd == CMD_OEM_1S_FW_UPDATE) || (cmd == CMD_OEM_1S_RESET_BMC) ||
 		    (cmd == CMD_OEM_1S_GET_BIC_STATUS) || (cmd == CMD_OEM_1S_RESET_BIC) ||
-		    (cmd == CMD_OEM_1S_GET_BIC_FW_INFO))
+		    (cmd == CMD_OEM_1S_GET_BIC_FW_INFO) || (cmd == CMD_OEM_1S_SET_CARD_TYPE) ||
+		    (cmd == CMD_OEM_1S_GET_CARD_TYPE))
 			return true;
 	} else if (netfn == NETFN_APP_REQ) {
 		if (cmd == CMD_APP_GET_SYSTEM_GUID) {
@@ -140,28 +142,57 @@ void OEM_1S_GET_CARD_TYPE(ipmi_msg *msg)
 	CARD_STATUS _1ou_status = get_1ou_status();
 	CARD_STATUS _2ou_status = get_2ou_status();
 	switch (msg->data[0]) {
-	case GET_1OU_CARD_TYPE:
+	case CMD_1OU_CARD_TYPE:
 		msg->data_len = 2;
 		msg->completion_code = CC_SUCCESS;
-		msg->data[0] = GET_1OU_CARD_TYPE;
+		msg->data[0] = CMD_1OU_CARD_TYPE;
 		if (_1ou_status.present) {
 			msg->data[1] = _1ou_status.card_type;
 		} else {
 			msg->data[1] = TYPE_1OU_ABSENT;
 		}
 		break;
-	case GET_2OU_CARD_TYPE:
+	case CMD_2OU_CARD_TYPE:
 		msg->data_len = 2;
 		msg->completion_code = CC_SUCCESS;
-		msg->data[0] = GET_2OU_CARD_TYPE;
+		msg->data[0] = CMD_2OU_CARD_TYPE;
 		if (_2ou_status.present) {
 			msg->data[1] = _2ou_status.card_type;
 		} else {
-			msg->data[1] = TYPE_2OU_ABSENT;
+			msg->data[1] = TYPE_2OU_DPV2_ABSENT;
 		}
 		break;
 	default:
 		msg->data_len = 0;
+		msg->completion_code = CC_INVALID_DATA_FIELD;
+		break;
+	}
+
+	return;
+}
+
+void OEM_1S_SET_CARD_TYPE(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	if (msg->data_len != 2) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+	msg->data_len = 0;
+
+	switch (msg->data[0]) {
+	case CMD_2OU_CARD_TYPE:
+		msg->completion_code = CC_SUCCESS;
+		set_2ou_card_type(msg->data[1]);
+		LOG_INF("Set HSM type to %u", msg->data[1]);
+		if (msg->data[1] == TYPE_2OU_MARVELL_HSM) {
+			if (common_tbl_sen_reinit(SENSOR_NUM_TEMP_DPV2_HSM)) {
+				LOG_ERR("Fail to reinit HSM sensor");
+			}
+		}
+		break;
+	default:
 		msg->completion_code = CC_INVALID_DATA_FIELD;
 		break;
 	}
@@ -490,4 +521,28 @@ void OEM_1S_GET_FW_VERSION(ipmi_msg *msg)
 		break;
 	}
 	return;
+}
+
+// Record VR power fault event to BMC SEL
+// error_type: which VR power rail occur VR power fault
+// vr_data1: VR PMBus command code
+// vr_data2: VR PMBus register value
+void pal_record_vr_power_fault(uint8_t event_type, uint8_t error_type, uint8_t vr_data1,
+			       uint8_t vr_data2)
+{
+	common_addsel_msg_t sel_msg;
+
+	sel_msg.InF_target = PLDM;
+	sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
+	sel_msg.sensor_number = SENSOR_NUM_SYSTEM_STATUS;
+	sel_msg.event_type = event_type;
+	sel_msg.event_data1 = error_type;
+	sel_msg.event_data2 = vr_data1;
+	sel_msg.event_data3 = vr_data2;
+
+	if (!mctp_add_sel_to_ipmi(&sel_msg)) {
+		LOG_ERR("Failed to add SEL to BMC, type: 0x%x data: 0x%02x%02x%02x",
+			(unsigned int)sel_msg.event_type, (unsigned int)sel_msg.event_data1,
+			(unsigned int)sel_msg.event_data2, (unsigned int)sel_msg.event_data3);
+	}
 }

@@ -35,11 +35,14 @@
 #include "plat_hook.h"
 #include "plat_mctp.h"
 #include "plat_gpio.h"
+#include "plat_class.h"
+#include "plat_i2c_target.h"
+#include <drivers/flash.h>
 
 LOG_MODULE_REGISTER(plat_mctp);
 
 /* i2c 8 bit address */
-#define I2C_ADDR_BIC 0x40
+#define I2C_ADDR_BIC 0x42
 #define I2C_ADDR_BMC 0x20
 
 /* i2c dev bus */
@@ -48,17 +51,12 @@ LOG_MODULE_REGISTER(plat_mctp);
 /* mctp endpoint */
 #define MCTP_EID_BMC 0x08
 
+void plat_init_set_eid();
+
 uint8_t plat_eid = MCTP_DEFAULT_ENDPOINT;
 
 static mctp_port smbus_port[] = {
 	{ .conf.smbus_conf.addr = I2C_ADDR_BIC, .conf.smbus_conf.bus = I2C_BUS_BMC },
-};
-
-static mctp_port i3c_port[] = {
-	{
-    	.conf.i3c_conf.addr = 0x21,
-    	.conf.i3c_conf.bus = I3C_BUS6,
-	}
 };
 
 mctp_route_entry mctp_route_tbl[] = {
@@ -92,7 +90,7 @@ uint8_t get_mctp_info(uint8_t dest_endpoint, mctp **mctp_inst, mctp_ext_params *
 	uint32_t i;
 
 	for (i = 0; i < ARRAY_SIZE(mctp_route_tbl); i++) {
-		mctp_route_entry *p = mctp_route_tbl + i;
+		const mctp_route_entry *p = mctp_route_tbl + i;
 		if (!p) {
 			return MCTP_ERROR;
 		}
@@ -144,7 +142,7 @@ static uint8_t get_mctp_route_info(uint8_t dest_endpoint, void **mctp_inst,
 	uint32_t i;
 
 	for (i = 0; i < ARRAY_SIZE(mctp_route_tbl); i++) {
-		mctp_route_entry *p = mctp_route_tbl + i;
+		const mctp_route_entry *p = mctp_route_tbl + i;
 		if (p->endpoint == dest_endpoint) {
 			*mctp_inst = find_mctp_by_smbus(p->bus);
 			ext_params->type = MCTP_MEDIUM_TYPE_SMBUS;
@@ -161,11 +159,13 @@ void plat_mctp_init(void)
 {
 	LOG_INF("plat_mctp_init");
 
+	plat_init_set_eid();
+
 	/* init the mctp/pldm instance */
-	for (uint8_t i = 0; i < ARRAY_SIZE(i3c_port); i++) {
-		mctp_port *p = i3c_port + i;
-		LOG_DBG("i3c port %d", i);
-		LOG_DBG("bus = %x, addr = %x", p->conf.i3c_conf.bus, p->conf.i3c_conf.addr);
+	for (uint8_t i = 0; i < ARRAY_SIZE(smbus_port); i++) {
+		mctp_port *p = smbus_port + i;
+		LOG_DBG("smbus port %d", i);
+		LOG_DBG("bus = %x, addr = %x", p->conf.smbus_conf.bus, p->conf.smbus_conf.addr);
 
 		p->mctp_inst = mctp_init();
 		if (!p->mctp_inst) {
@@ -175,7 +175,7 @@ void plat_mctp_init(void)
 
 		LOG_DBG("mctp_inst = %p", p->mctp_inst);
 		uint8_t rc =
-			mctp_set_medium_configure(p->mctp_inst, MCTP_MEDIUM_TYPE_TARGET_I3C, p->conf);
+			mctp_set_medium_configure(p->mctp_inst, MCTP_MEDIUM_TYPE_SMBUS, p->conf);
 		LOG_DBG("mctp_set_medium_configure %s",
 			(rc == MCTP_SUCCESS) ? "success" : "failed");
 
@@ -196,15 +196,36 @@ int load_mctp_support_types(uint8_t *type_len, uint8_t *types)
 
 uint8_t plat_get_mctp_port_count()
 {
-	return ARRAY_SIZE(i3c_port);
+	return ARRAY_SIZE(smbus_port);
 }
 
 mctp_port *plat_get_mctp_port(uint8_t index)
 {
-	return i3c_port + index;
+	return smbus_port + index;
+}
+
+void plat_init_set_eid()
+{
+	uint8_t slot_id = get_slot_id();
+
+	if (slot_id >= MAX_SLOT) {
+		LOG_ERR("Invalid slot ID (%d), fallback to slot 0 EID", slot_id);
+		slot_id = 0;
+	}
+
+	const mmc_info_t *cfg = &mmc_info_table[slot_id];
+	plat_set_eid(cfg->eid);
+
+	LOG_INF("Set EID to 0x%02x for slot %d", cfg->eid, slot_id);
 }
 
 uint8_t plat_get_eid()
 {
 	return plat_eid;
+}
+
+void plat_set_eid(int slot_eid)
+{
+	plat_eid = slot_eid;
+	return;
 }

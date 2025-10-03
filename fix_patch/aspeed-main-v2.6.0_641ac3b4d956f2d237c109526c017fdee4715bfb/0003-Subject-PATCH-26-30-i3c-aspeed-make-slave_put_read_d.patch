@@ -1,7 +1,7 @@
-From 9b8e26ea2e003b2a36f97bbbf69edb22daae1302 Mon Sep 17 00:00:00 2001
+From 90858b4c7d77eead6e36088578e47a1da37325c5 Mon Sep 17 00:00:00 2001
 From: Zane Li <zane.li.wiwynn@gmail.com>
-Date: Wed, 5 Mar 2025 09:54:56 +0800
-Subject: [PATCH] Subject: [PATCH 26/30] i3c: aspeed: make slave_put_read_data
+Date: Thu, 24 Jul 2025 10:02:39 +0800
+Subject: [PATCH] Subject: [PATCH 26/30] i3c: aspeed: make slave_put_read_data 
  be a blocking  function
 
 In slave mode, the pending read data was put to the TX FIFO then
@@ -17,10 +17,10 @@ Change-Id: I39be9d4612caa463126534b91f08fdf68b790beb
  1 file changed, 12 insertions(+)
 
 diff --git a/drivers/i3c/i3c_aspeed.c b/drivers/i3c/i3c_aspeed.c
-index a6406b97496..c27f83dfcb9 100644
+index 68a3d083bfd..abb2bba73e8 100644
 --- a/drivers/i3c/i3c_aspeed.c
 +++ b/drivers/i3c/i3c_aspeed.c
-@@ -1754,6 +1754,18 @@ static int i3c_aspeed_slave_reset_queue(const struct device *dev)
+@@ -1782,6 +1782,18 @@ static int i3c_aspeed_slave_reset_queue(const struct device *dev)
  	return 0;
  }
  

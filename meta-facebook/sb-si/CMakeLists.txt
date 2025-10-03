@@ -28,6 +28,7 @@ target_include_directories(app PRIVATE ${common_path}/shell/commands)
 target_include_directories(app PRIVATE src/ipmi/include src/platform src/lib)
 
 # Platform Specific Includes
+target_include_directories(app PRIVATE src/lib)
 target_include_directories(app PRIVATE src/platform)
 target_include_directories(app PRIVATE src/shell)
 

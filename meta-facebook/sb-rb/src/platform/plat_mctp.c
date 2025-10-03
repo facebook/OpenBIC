@@ -35,6 +35,7 @@
 #include "plat_mctp.h"
 #include "plat_gpio.h"
 #include "hal_i3c.h"
+#include "plat_class.h"
 
 LOG_MODULE_REGISTER(plat_mctp);
 
@@ -43,7 +44,7 @@ LOG_MODULE_REGISTER(plat_mctp);
 #define I2C_ADDR_BMC 0x20
 
 /* i2c dev bus */
-#define I2C_BUS_BMC I2C_BUS4
+#define I2C_BUS_BMC I2C_BUS6
 
 /* i3c dev bus */
 #define I3C_BUS_BMC I2C_BUS6
@@ -62,6 +63,10 @@ static mctp_port i3c_port[] = {
 		.conf.i3c_conf.bus = I3C_BUS_BMC,
 	},
 };*/
+
+static mctp_port smbus_port[] = {
+	{ .conf.smbus_conf.addr = I2C_ADDR_BIC, .conf.smbus_conf.bus = I2C_BUS_BMC },
+};
 
 mctp_port plat_mctp_port[] = {
 	{ .channel_target = PLDM,
@@ -101,7 +106,7 @@ uint8_t get_mctp_info(uint8_t dest_endpoint, mctp **mctp_inst, mctp_ext_params *
 	uint32_t i;
 
 	for (i = 0; i < ARRAY_SIZE(mctp_route_tbl); i++) {
-		mctp_route_entry *p = mctp_route_tbl + i;
+		const mctp_route_entry *p = mctp_route_tbl + i;
 		if (!p) {
 			return MCTP_ERROR;
 		}
@@ -149,10 +154,10 @@ void plat_mctp_init(void)
 	LOG_INF("plat_mctp_i3c_init");
 
 	/* init the mctp/pldm instance */
-	for (uint8_t i = 0; i < ARRAY_SIZE(plat_mctp_port); i++) {
-		mctp_port *p = plat_mctp_port + i;
-		LOG_DBG("i3c port %d", i);
-		LOG_DBG("bus = %x, addr = %x", p->conf.i3c_conf.bus, p->conf.i3c_conf.addr);
+	for (uint8_t i = 0; i < ARRAY_SIZE(smbus_port); i++) {
+		mctp_port *p = smbus_port + i;
+		LOG_DBG("smbus port %d", i);
+		LOG_DBG("bus = %x, addr = %x", p->conf.smbus_conf.bus, p->conf.smbus_conf.addr);
 
 		p->mctp_inst = mctp_init();
 		if (!p->mctp_inst) {
@@ -165,7 +170,7 @@ void plat_mctp_init(void)
 		uint8_t rc;
 		if (p->conf.i3c_conf.bus == I3C_BUS_BMC) {
 			// Slave (i3c5)More actions
-			rc = mctp_set_medium_configure(p->mctp_inst, MCTP_MEDIUM_TYPE_TARGET_I3C,
+			rc = mctp_set_medium_configure(p->mctp_inst, MCTP_MEDIUM_TYPE_SMBUS,
 						       p->conf);
 			LOG_DBG("MCTP medium type for slave: %s",
 				(rc == MCTP_SUCCESS) ? "success" : "failed");
@@ -192,4 +197,10 @@ void plat_i3c_set_pid(void)
 	I3C_MSG i3c_msg;
 	i3c_msg.bus = I3C_BUS_BMC;
 	i3c_set_pid(&i3c_msg, DEFAULT_VENDOR_DEF_ID);
+}
+
+uint8_t plat_get_eid()
+{
+	// mmc slot 1-4 * 0x0A
+	return ((get_mmc_slot() + 1) * MCTP_DEFAULT_ENDPOINT);
 }

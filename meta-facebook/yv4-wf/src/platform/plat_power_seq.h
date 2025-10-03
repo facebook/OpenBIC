@@ -124,9 +124,11 @@ void set_cxl2_vr_access_delayed_status();
 bool cxl1_vr_access(uint8_t sensor_num);
 bool cxl2_vr_access(uint8_t sensor_num);
 void create_check_cxl_ready_thread();
+bool get_cxl_heartbeat(char *label);
 void cxl1_heartbeat_monitor_handler();
 void cxl2_heartbeat_monitor_handler();
 void init_cxl_heartbeat_monitor_work();
 void plat_pldm_sensor_clear_vr_fault(uint8_t vr_addr, uint8_t vr_bus, uint8_t page_cnt);
-
+void switch_mux_to_bic(uint8_t value_to_write);
+bool get_cxl_vr_access_status(uint8_t cxl_id);
 #endif

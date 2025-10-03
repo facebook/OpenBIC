@@ -93,10 +93,10 @@ uint8_t parsing_line(char *str, uint16_t len, struct cfg_data *cfg_data)
 			break;
 		case CFG_PARAM_IDX_REG_NAME:
 			if (!strncmp(k, "CRC", strlen("CRC"))) {
-				LOG_ERR("CRC: %s", k);
+				LOG_INF("CRC: %s", log_strdup(k));
 				return 1;
 			} else if (!strncmp(k, "TRIM", strlen("TRIM"))) {
-				LOG_INF("TRIM: %s", k);
+				LOG_INF("TRIM: %s", log_strdup(k));
 				return 1;
 			}
 			break;
@@ -366,7 +366,11 @@ static uint8_t mp29816a_do_update(struct cfg_data *cfg_data_list, uint32_t cfg_c
 				// write page1@cc with 0x1200
 				if (!mp29816a_set_page(bus, addr, 1))
 					return 1;
+#ifdef MP29816C_MTP_MUTI_CONFIG_PROGRAM_ENABLE
+				memcpy(data, (uint8_t[]){ 0x00, 0x02 }, 2);
+#else
 				memcpy(data, (uint8_t[]){ 0x00, 0x12 }, 2);
+#endif
 				mp29816a_i2c_write(bus, addr, 0xcc, data, 2);
 
 				// write page0@17\n");
@@ -419,7 +423,11 @@ static uint8_t mp29816a_do_update(struct cfg_data *cfg_data_list, uint32_t cfg_c
 	// write page1@cc with 0x1200
 	if (!mp29816a_set_page(bus, addr, 1))
 		return 1;
+#ifdef MP29816C_MTP_MUTI_CONFIG_PROGRAM_ENABLE
+	memcpy(data, (uint8_t[]){ 0x00, 0x02 }, 2);
+#else
 	memcpy(data, (uint8_t[]){ 0x00, 0x12 }, 2);
+#endif
 	mp29816a_i2c_write(bus, addr, 0xcc, data, 2);
 
 	// write page0@17
@@ -659,6 +667,7 @@ bool mp29816a_get_vr_status(sensor_cfg *cfg, uint8_t rail, uint8_t vr_status_rai
 		val = (uint16_t)data[0];
 	} break;
 	case PMBUS_STATUS_INPUT: {
+		mp29816a_set_page(cfg->port, cfg->target_addr, 0);
 		uint8_t data[1] = { 0 };
 		if (!mp29816a_i2c_read(cfg->port, cfg->target_addr, PMBUS_STATUS_INPUT, data,
 				       sizeof(data))) {
@@ -675,6 +684,7 @@ bool mp29816a_get_vr_status(sensor_cfg *cfg, uint8_t rail, uint8_t vr_status_rai
 		val = (uint16_t)data[0];
 	} break;
 	case PMBUS_STATUS_CML: {
+		mp29816a_set_page(cfg->port, cfg->target_addr, 0);
 		uint8_t data[1] = { 0 };
 		if (!mp29816a_i2c_read(cfg->port, cfg->target_addr, PMBUS_STATUS_CML, data,
 				       sizeof(data))) {

@@ -72,6 +72,9 @@ typedef struct {
 	struct pldm_addsel_data sel_data;
 } sel_work_wrapper;
 
+void add_post_timeout_sel_work_handler(struct k_work *work);
+void init_post_timeout_event_work(void);
+void post_timeout_handler(struct k_timer *timer_id);
 void ISR_DC_ON();
 void ISR_POST_COMPLETE();
 void ISR_BMC_READY();

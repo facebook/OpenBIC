@@ -35,6 +35,8 @@
 #include "util_worker.h"
 #include "plat_mctp.h"
 #include "plat_power.h"
+#include "pmbus.h"
+#include "vr_fault.h"
 
 LOG_MODULE_REGISTER(plat_isr);
 
@@ -327,6 +329,45 @@ void ISR_HSC_THROTTLE()
 				LOG_ERR("HSC Throttle addsel fail");
 			}
 		}
+	}
+}
+
+add_vr_sel_info vr_pwr_fault_work_item;
+
+const vr_pwr_fault_t vr_pwr_fault_table[] = {
+	{ BIT(0), IPMI_EVENT_VR_PWR_FAULT_PVCCD_HV, I2C_BUS5, PVCCD_ADDR, 0 },
+	{ BIT(1), IPMI_EVENT_VR_PWR_FAULT_VCCIN, I2C_BUS5, PVCCIN_FIVRA_ADDR, 0 },
+	{ BIT(2), IPMI_EVENT_VR_PWR_FAULT_PVCCINFAON, I2C_BUS5, FAON_EHV_ADDR, 0 },
+	{ BIT(3), IPMI_EVENT_VR_PWR_FAULT_PVCCFA_EHV_FIVRA, I2C_BUS5, PVCCIN_FIVRA_ADDR, 1 },
+	{ BIT(4), IPMI_EVENT_VR_PWR_FAULT_PVCCFA_EHV, I2C_BUS5, FAON_EHV_ADDR, 1 },
+};
+
+const size_t vr_pwr_fault_table_size = ARRAY_SIZE(vr_pwr_fault_table);
+
+const cpld_vr_reg_t cpld_vr_reg_table = { I2C_BUS1, CPLD_ADDR, CPLD_VR_FAULT_REG };
+
+bool pal_skip_pmbus_cmd_code(uint8_t vendor_type, uint8_t cmd, uint8_t page)
+{
+	if ((vendor_type == VR_TYPE_ISL69259) && (cmd == PMBUS_STATUS_OTHER)) {
+		return true;
+	}
+
+	return false;
+}
+
+void init_vr_pwr_fault_work()
+{
+	k_work_init_delayable(&vr_pwr_fault_work_item.add_vr_work, vr_pwr_fault_handler);
+}
+
+void ISR_VR_PWR_FAULT()
+{
+	LOG_ERR("VR power fault!");
+	// Check DC on and CPLD pull the FM_FAST_PROCHOT_EN_N_R pin high
+	if (gpio_get(FM_FAST_PROCHOT_EN_N_R) == GPIO_HIGH) {
+		LOG_ERR("Triggered VR power fault successfully !");
+		k_work_schedule_for_queue(&plat_work_q, &vr_pwr_fault_work_item.add_vr_work,
+					  K_MSEC(VR_PWR_FAULT_DELAY_MS));
 	}
 }
 

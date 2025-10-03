@@ -66,16 +66,14 @@ void ISR_GPIO_RST_ATH_PWR_ON_PLD_R1_N()
 
 void ISR_GPIO_ATH_CURRENT_SENSE_0_NPCM_R()
 {
-	LOG_DBG("gpio_%d_isr called, val=%d , dir= %d", ATH_CURRENT_SENSE_0_NPCM_R,
-		gpio_get(ATH_CURRENT_SENSE_0_NPCM_R),
-		gpio_get_direction(ATH_CURRENT_SENSE_0_NPCM_R));
+	LOG_DBG("gpio_%d_isr called, val=%d , dir= %d", ATH_CURRENT_SENSE_0_LC,
+		gpio_get(ATH_CURRENT_SENSE_0_LC), gpio_get_direction(ATH_CURRENT_SENSE_0_LC));
 }
 
 void ISR_GPIO_ATH_CURRENT_SENSE_1_NPCM_R()
 {
-	LOG_DBG("gpio_%d_isr called, val=%d , dir= %d", ATH_CURRENT_SENSE_1_NPCM_R,
-		gpio_get(ATH_CURRENT_SENSE_1_NPCM_R),
-		gpio_get_direction(ATH_CURRENT_SENSE_1_NPCM_R));
+	LOG_DBG("gpio_%d_isr called, val=%d , dir= %d", ATH_CURRENT_SENSE_1_HC,
+		gpio_get(ATH_CURRENT_SENSE_1_HC), gpio_get_direction(ATH_CURRENT_SENSE_1_HC));
 }
 
 void ISR_GPIO_FM_ATH_HBM3_CATTRIP_ALARM_LV33_R()
@@ -168,87 +166,61 @@ void check_clk_handler()
 	static uint8_t check_clk_handler_retry_count = 0;
 	uint8_t retry_max_count = 20;
 	uint8_t data[4] = { 0 };
+	const int retry_delay_ms = 10;
 
 	if (!plat_i2c_read(I2C_BUS5, AEGIS_CPLD_ADDR, 0x0B, data, 1)) {
-		LOG_ERR("Failed to read cpld");
-		check_clk_handler_retry_count++;
-		if (check_clk_handler_retry_count > retry_max_count) {
-			LOG_ERR("312M CLK GEN init failed - CPLD read failed");
-			check_clk_handler_retry_count = 0;
-		} else {
-			k_work_schedule(&check_clk_work, K_MSEC(10));
-		}
-		return;
+		LOG_INF("cpld[0x0B] read failed, wait %dms retry", retry_delay_ms);
+		goto retry;
 	}
 
 	uint8_t pwrgd_p3v3_and_p1v8 = (data[0] & GENMASK(4, 3)) >> 3;
-	if (pwrgd_p3v3_and_p1v8 == 3) {
-		memset(data, 0, sizeof(data));
-		memcpy(data, (uint8_t[]){ 0x00, 0x01, 0x00, 0x00 }, 4);
-		if (!plat_i2c_write(I2C_BUS1, AEGIS_312M_CLK_GEN_ADDR, 0xFC, data, 4)) {
-			LOG_ERR("Failed to write 312M CLK GEN reg 0xFC");
-			check_clk_handler_retry_count++;
-			if (check_clk_handler_retry_count > retry_max_count) {
-				LOG_ERR("312M CLK GEN init failed - write 0xFC failed");
-				check_clk_handler_retry_count = 0;
-			} else {
-				k_work_schedule(&check_clk_work, K_MSEC(10));
-			}
-			return;
-		}
-		memset(data, 0, sizeof(data));
-		memcpy(data, (uint8_t[]){ 0x84 }, 1);
-		if (!plat_i2c_write(I2C_BUS1, AEGIS_312M_CLK_GEN_ADDR, 0x04, data, 1)) {
-			LOG_ERR("Failed to write 312M CLK GEN reg 0x04");
-			check_clk_handler_retry_count++;
-			if (check_clk_handler_retry_count > retry_max_count) {
-				LOG_ERR("312M CLK GEN init failed - write 0x04 failed");
-				check_clk_handler_retry_count = 0;
-			} else {
-				k_work_schedule(&check_clk_work, K_MSEC(10));
-			}
-			return;
-		}
-		memset(data, 0, sizeof(data));
-		memcpy(data, (uint8_t[]){ 0x00, 0x01, 0x00, 0x00 }, 4);
-		if (!plat_i2c_write(I2C_BUS1, AEGIS_312M_CLK_GEN_ADDR, 0xFC, data, 4)) {
-			LOG_ERR("Failed to write 312M CLK GEN reg 0xFC (second time)");
-			check_clk_handler_retry_count++;
-			if (check_clk_handler_retry_count > retry_max_count) {
-				LOG_ERR("312M CLK GEN init failed - write 0xFC (second) failed");
-				check_clk_handler_retry_count = 0;
-			} else {
-				k_work_schedule(&check_clk_work, K_MSEC(10));
-			}
-			return;
-		}
-		memset(data, 0, sizeof(data));
-		memcpy(data, (uint8_t[]){ 0x74 }, 1);
-		if (!plat_i2c_write(I2C_BUS1, AEGIS_312M_CLK_GEN_ADDR, 0x14, data, 1)) {
-			LOG_ERR("Failed to write 312M CLK GEN reg 0x14");
-			check_clk_handler_retry_count++;
-			if (check_clk_handler_retry_count > retry_max_count) {
-				LOG_ERR("312M CLK GEN init failed - write 0x14 failed");
-				check_clk_handler_retry_count = 0;
-			} else {
-				k_work_schedule(&check_clk_work, K_MSEC(10));
-			}
-			return;
-		}
-		if (check_clk_handler_retry_count == 0)
-			LOG_INF("Init 312M CLK GEN finish");
-		else
-			LOG_INF("Init 312M CLK GEN finish, retry %d times",
-				check_clk_handler_retry_count);
+	if (pwrgd_p3v3_and_p1v8 != 3) {
+		LOG_INF("Power not ready, wait %dms retry", retry_delay_ms);
+		goto retry;
+	}
+
+	k_msleep(retry_delay_ms);
+
+	memcpy(data, (uint8_t[]){ 0x00, 0x01, 0x00, 0x00 }, 4);
+	if (!plat_i2c_write(I2C_BUS1, AEGIS_312M_CLK_GEN_ADDR, 0xFC, data, 4)) {
+		LOG_INF("312M CLK GEN[0xFC] write failed, wait %dms retry", retry_delay_ms);
+		goto retry;
+	}
+
+	memcpy(data, (uint8_t[]){ 0x84 }, 1);
+	if (!plat_i2c_write(I2C_BUS1, AEGIS_312M_CLK_GEN_ADDR, 0x04, data, 1)) {
+		LOG_INF("312M CLK GEN[0x04] write failed, wait %dms retry", retry_delay_ms);
+		goto retry;
+	}
+
+	memcpy(data, (uint8_t[]){ 0x00, 0x01, 0x00, 0x00 }, 4);
+	if (!plat_i2c_write(I2C_BUS1, AEGIS_312M_CLK_GEN_ADDR, 0xFC, data, 4)) {
+		LOG_INF("312M CLK GEN[0xFC] (second time) write failed, wait %dms retry",
+			retry_delay_ms);
+		goto retry;
+	}
+
+	memcpy(data, (uint8_t[]){ 0x74 }, 1);
+	if (!plat_i2c_write(I2C_BUS1, AEGIS_312M_CLK_GEN_ADDR, 0x14, data, 1)) {
+		LOG_INF("312M CLK GEN[0x14] write failed, wait %dms retry", retry_delay_ms);
+		goto retry;
+	}
+
+	if (check_clk_handler_retry_count == 0) {
+		LOG_INF("Init 312M CLK GEN finish");
+	} else {
+		LOG_INF("Init 312M CLK GEN finish, retry %d times", check_clk_handler_retry_count);
+	}
+	check_clk_handler_retry_count = 0;
+	return;
+
+retry:
+	check_clk_handler_retry_count++;
+	if (check_clk_handler_retry_count > retry_max_count) {
+		LOG_ERR("312M CLK GEN init failed after %d retries", retry_max_count);
 		check_clk_handler_retry_count = 0;
 	} else {
-		check_clk_handler_retry_count++;
-		if (check_clk_handler_retry_count > retry_max_count) {
-			LOG_ERR("312M CLK GEN init failed - power not ready");
-			check_clk_handler_retry_count = 0;
-		} else {
-			k_work_schedule(&check_clk_work, K_MSEC(10));
-		}
+		k_work_schedule(&check_clk_work, K_MSEC(retry_delay_ms));
 	}
 }
 
@@ -257,87 +229,91 @@ void check_clk_buffer_handler()
 	static uint8_t check_clk_buffer_handler_retry_count = 0;
 	uint8_t retry_max_count = 20;
 	uint8_t data[2] = { 0 };
+	const int retry_delay_ms = 10;
 
 	if (!plat_i2c_read(I2C_BUS5, AEGIS_CPLD_ADDR, 0x0B, data, 1)) {
-		LOG_ERR("Failed to read cpld");
-		check_clk_buffer_handler_retry_count++;
-		if (check_clk_buffer_handler_retry_count > retry_max_count) {
-			LOG_ERR("100M CLK BUFFER init failed - CPLD read failed");
-			check_clk_buffer_handler_retry_count = 0;
-		} else {
-			k_work_schedule(&check_clk_buffer_work, K_MSEC(10));
-		}
-		return;
+		LOG_INF("cpld[0x0B] read failed, wait %dms retry", retry_delay_ms);
+		goto retry;
 	}
 
 	uint8_t pwrgd_p3v3_and_p1v8 = (data[0] & GENMASK(4, 3)) >> 3;
-	if (pwrgd_p3v3_and_p1v8 == 3) {
-		memset(data, 0, sizeof(data));
-		memcpy(data, (uint8_t[]){ 0x01, 0x00 }, 2);
-		if (!plat_i2c_write(I2C_BUS1, AEGIS_100M_CLK_BUFFER_U471_ADDR, 0x14, data, 2)) {
-			LOG_ERR("Failed to write 100M CLK BUFFER U471 reg 0x14");
-			check_clk_buffer_handler_retry_count++;
-			if (check_clk_buffer_handler_retry_count > retry_max_count) {
-				LOG_ERR("100M CLK BUFFER init failed - U471 0x14 write failed");
-				check_clk_buffer_handler_retry_count = 0;
-			} else {
-				k_work_schedule(&check_clk_buffer_work, K_MSEC(10));
-			}
-			return;
-		}
-		memset(data, 0, sizeof(data));
-		memcpy(data, (uint8_t[]){ 0x01, 0x00 }, 2);
-		if (!plat_i2c_write(I2C_BUS1, AEGIS_100M_CLK_BUFFER_U471_ADDR, 0x15, data, 2)) {
-			LOG_ERR("Failed to write 100M CLK BUFFER U471 reg 0x15");
-			check_clk_buffer_handler_retry_count++;
-			if (check_clk_buffer_handler_retry_count > retry_max_count) {
-				LOG_ERR("100M CLK BUFFER init failed - U471 0x15 write failed");
-				check_clk_buffer_handler_retry_count = 0;
-			} else {
-				k_work_schedule(&check_clk_buffer_work, K_MSEC(10));
-			}
-			return;
-		}
-		memset(data, 0, sizeof(data));
-		memcpy(data, (uint8_t[]){ 0x01, 0x00 }, 2);
-		if (!plat_i2c_write(I2C_BUS1, AEGIS_100M_CLK_BUFFER_U519_ADDR, 0x14, data, 2)) {
-			LOG_ERR("Failed to write 100M CLK BUFFER U519 reg 0x14");
-			check_clk_buffer_handler_retry_count++;
-			if (check_clk_buffer_handler_retry_count > retry_max_count) {
-				LOG_ERR("100M CLK BUFFER init failed - U519 0x14 write failed");
-				check_clk_buffer_handler_retry_count = 0;
-			} else {
-				k_work_schedule(&check_clk_buffer_work, K_MSEC(10));
-			}
-			return;
-		}
-		memset(data, 0, sizeof(data));
-		memcpy(data, (uint8_t[]){ 0x01, 0x00 }, 2);
-		if (!plat_i2c_write(I2C_BUS1, AEGIS_100M_CLK_BUFFER_U519_ADDR, 0x15, data, 2)) {
-			LOG_ERR("Failed to write 100M CLK BUFFER U519 reg 0x15");
-			check_clk_buffer_handler_retry_count++;
-			if (check_clk_buffer_handler_retry_count > retry_max_count) {
-				LOG_ERR("100M CLK BUFFER init failed - U519 0x15 write failed");
-				check_clk_buffer_handler_retry_count = 0;
-			} else {
-				k_work_schedule(&check_clk_buffer_work, K_MSEC(10));
-			}
-			return;
-		}
-		if (check_clk_buffer_handler_retry_count == 0)
-			LOG_INF("Init 100M CLK BUFFER finish");
-		else
-			LOG_INF("Init 100M CLK BUFFER finish, retry %d times",
-				check_clk_buffer_handler_retry_count);
+
+	if (pwrgd_p3v3_and_p1v8 != 3) {
+		LOG_INF("Power not ready, wait %dms retry", retry_delay_ms);
+		goto retry;
+	}
+
+	k_msleep(retry_delay_ms);
+
+	// Set 1000mV
+	uint8_t output_amplitude_value = 0;
+	if (!plat_i2c_read(I2C_BUS1, AEGIS_100M_CLK_BUFFER_U471_ADDR, 0x11, data, 2)) {
+		LOG_INF("100M CLK BUFFER U471[0x11] read failed, wait %dms retry", retry_delay_ms);
+		goto retry;
+	}
+	output_amplitude_value = (data[1] & 0x0F) | 0xF0;
+	memcpy(data, (uint8_t[]){ data[0], output_amplitude_value }, 2);
+	if (!plat_i2c_write(I2C_BUS1, AEGIS_100M_CLK_BUFFER_U471_ADDR, 0x11, data, 2)) {
+		LOG_INF("100M CLK BUFFER U471[0x11] write failed, wait %dms retry", retry_delay_ms);
+		goto retry;
+	}
+	// Set slew rate slow,
+	memset(data, 0, sizeof(data));
+	memcpy(data, (uint8_t[]){ 0x01, 0x00 }, 2);
+	if (!plat_i2c_write(I2C_BUS1, AEGIS_100M_CLK_BUFFER_U471_ADDR, 0x14, data, 2)) {
+		LOG_INF("100M CLK BUFFER U471[0x14] write failed, wait %dms retry", retry_delay_ms);
+		goto retry;
+	}
+	memset(data, 0, sizeof(data));
+	memcpy(data, (uint8_t[]){ 0x01, 0x00 }, 2);
+	if (!plat_i2c_write(I2C_BUS1, AEGIS_100M_CLK_BUFFER_U471_ADDR, 0x15, data, 2)) {
+		LOG_INF("100M CLK BUFFER U471[0x15] write failed, wait %dms retry", retry_delay_ms);
+		goto retry;
+	}
+
+	memset(data, 0, sizeof(data));
+	// Set 1000mV
+	if (!plat_i2c_read(I2C_BUS1, AEGIS_100M_CLK_BUFFER_U519_ADDR, 0x11, data, 2)) {
+		LOG_INF("100M CLK BUFFER U519[0x11] read failed, wait %dms retry", retry_delay_ms);
+		goto retry;
+	}
+	output_amplitude_value = (data[1] & 0x0F) | 0xF0;
+	memcpy(data, (uint8_t[]){ data[0], output_amplitude_value }, 2);
+	if (!plat_i2c_write(I2C_BUS1, AEGIS_100M_CLK_BUFFER_U519_ADDR, 0x11, data, 2)) {
+		LOG_INF("100M CLK BUFFER U519[0x11] (second time) write failed, wait %dms retry",
+			retry_delay_ms);
+		goto retry;
+	}
+	// Set slew rate slow,
+	memset(data, 0, sizeof(data));
+	memcpy(data, (uint8_t[]){ 0x01, 0x00 }, 2);
+	if (!plat_i2c_write(I2C_BUS1, AEGIS_100M_CLK_BUFFER_U519_ADDR, 0x14, data, 2)) {
+		LOG_INF("100M CLK BUFFER U519[0x14] write failed, wait %dms retry", retry_delay_ms);
+		goto retry;
+	}
+	memset(data, 0, sizeof(data));
+	memcpy(data, (uint8_t[]){ 0x01, 0x00 }, 2);
+	if (!plat_i2c_write(I2C_BUS1, AEGIS_100M_CLK_BUFFER_U519_ADDR, 0x15, data, 2)) {
+		LOG_INF("100M CLK BUFFER U519[0x15] write failed, wait %dms retry", retry_delay_ms);
+		goto retry;
+	}
+
+	if (check_clk_buffer_handler_retry_count == 0) {
+		LOG_INF("Init 100M CLK BUFFER finish");
+	} else {
+		LOG_INF("Init 100M CLK BUFFER finish, retry %d times",
+			check_clk_buffer_handler_retry_count);
+	}
+	check_clk_buffer_handler_retry_count = 0;
+	return;
+
+retry:
+	check_clk_buffer_handler_retry_count++;
+	if (check_clk_buffer_handler_retry_count > retry_max_count) {
+		LOG_ERR("100M CLK BUFFER init failed after %d retries", retry_max_count);
 		check_clk_buffer_handler_retry_count = 0;
 	} else {
-		check_clk_buffer_handler_retry_count++;
-		if (check_clk_buffer_handler_retry_count > retry_max_count) {
-			LOG_ERR("100M CLK BUFFER init failed - power not ready");
-			check_clk_buffer_handler_retry_count = 0;
-		} else {
-			k_work_schedule(&check_clk_buffer_work, K_MSEC(10));
-		}
+		k_work_schedule(&check_clk_buffer_work, K_MSEC(retry_delay_ms));
 	}
 }
 

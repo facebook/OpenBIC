@@ -19,4 +19,15 @@
 #include <stdlib.h>
 #include <logging/log.h>
 
+#include "plat_gpio.h"
+#include "plat_cpld.h"
+
 LOG_MODULE_REGISTER(plat_isr);
+
+void ISR_GPIO_ALL_VR_PM_ALERT_R_N()
+{
+	LOG_DBG("gpio_%d_isr called, val=%d , dir= %d", ALL_VR_PM_ALERT_R_N,
+		gpio_get(ALL_VR_PM_ALERT_R_N), gpio_get_direction(ALL_VR_PM_ALERT_R_N));
+
+	check_cpld_polling_alert_status();
+}

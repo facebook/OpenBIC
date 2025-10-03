@@ -20,6 +20,8 @@
 #include <zephyr.h>
 #include "sensor_threshold_shell.h"
 #include "plat_pldm_sensor.h"
+#include "sensor.h"
+#include "plat_hook.h"
 
 #define MINERVA_THRESHOLD_UNIT 0.001
 
@@ -30,14 +32,11 @@ void cmd_set_sensor_threshold(const struct shell *shell, size_t argc, char **arg
 		return;
 	}
 
-	uint32_t sensor_max_count = 0;
-	sensor_max_count = plat_get_pdr_size(PLDM_NUMERIC_SENSOR_PDR);
-
 	int sensorID = strtol(argv[1], NULL, 16);
 
-	if (sensorID < UBC1_P12V_TEMP_C || sensorID > sensor_max_count) {
+	if (sensorID < UBC1_P12V_TEMP_C || sensorID >= PLAT_SENSOR_NUM_MAX) {
 		shell_error(shell, "Help: Sensor ID: 0x%x is higher than 0x%x or lower than 0x1",
-			    sensorID, sensor_max_count);
+			    sensorID, PLAT_SENSOR_NUM_MAX - 1);
 		return;
 	}
 
@@ -50,12 +49,12 @@ void cmd_set_sensor_threshold(const struct shell *shell, size_t argc, char **arg
 
 	char threshold_type[4] = { 0 };
 	int value = 0;
-	float threshold_value = 0;
+	uint32_t threshold_value = 0;
+	int temp_threshold_type = 0;
 
 	snprintf(threshold_type, sizeof(threshold_type), "%s", argv[2]);
 	value = strtol(argv[3], NULL, 10);
-	threshold_value = (float)value *
-			  MINERVA_THRESHOLD_UNIT; // If user want to send 3.3V, "value" will be 3300
+	threshold_value = (uint32_t)value; // Direct integer value
 
 	if (strcmp(threshold_type, "UCT") == 0) {
 		result = change_pdr_table_critical_high_with_sensor_id(sensorID, threshold_value);
@@ -63,15 +62,68 @@ void cmd_set_sensor_threshold(const struct shell *shell, size_t argc, char **arg
 			shell_error(shell, "Change critical high to pdr table failed");
 			return;
 		}
+
+		switch (sensorID) {
+		case TOP_INLET_TEMP_C:
+		case TOP_OUTLET_TEMP_C:
+		case BOT_INLET_TEMP_C:
+		case BOT_OUTLET_TEMP_C:
+			temp_threshold_type = LOCAL_HIGH_LIMIT;
+			break;
+		case ASIC_DIE_ATH_SENSOR_0_TEMP_C:
+		case ASIC_DIE_ATH_SENSOR_1_TEMP_C:
+			temp_threshold_type = REMOTE_1_HIGH_LIMIT;
+			break;
+		case ASIC_DIE_N_OWL_TEMP_C:
+		case ASIC_DIE_S_OWL_TEMP_C:
+			temp_threshold_type = REMOTE_2_HIGH_LIMIT;
+			break;
+		default:
+			break;
+		}
 	} else if (strcmp(threshold_type, "LCT") == 0) {
 		result = change_pdr_table_critical_low_with_sensor_id(sensorID, threshold_value);
 		if (result != 0) {
 			shell_error(shell, "Change critical low to pdr table failed");
 			return;
 		}
+
+		switch (sensorID) {
+		case TOP_INLET_TEMP_C:
+		case TOP_OUTLET_TEMP_C:
+		case BOT_INLET_TEMP_C:
+		case BOT_OUTLET_TEMP_C:
+			temp_threshold_type = LOCAL_LOW_LIMIT;
+			break;
+		case ASIC_DIE_ATH_SENSOR_0_TEMP_C:
+		case ASIC_DIE_ATH_SENSOR_1_TEMP_C:
+			temp_threshold_type = REMOTE_1_LOW_LIMIT;
+			break;
+		case ASIC_DIE_N_OWL_TEMP_C:
+		case ASIC_DIE_S_OWL_TEMP_C:
+			temp_threshold_type = REMOTE_2_LOW_LIMIT;
+			break;
+		default:
+			break;
+		}
 	} else {
 		shell_error(shell, "Help: Need to send <UCT/LCT>");
 		return;
+	}
+
+	uint8_t temp_index_threshold_type = 0;
+	if (sensorID >= TOP_INLET_TEMP_C && sensorID <= ASIC_DIE_S_OWL_TEMP_C) {
+		if (get_temp_index_threshold_type(temp_threshold_type, sensorID,
+						  &temp_index_threshold_type)) {
+			if (!plat_set_temp_threshold(temp_index_threshold_type, &value, false,
+						     false)) {
+				shell_error(shell, "Can't set temp_threshold by temp index: %d",
+					    temp_index_threshold_type);
+				return;
+			}
+		} else {
+			shell_error(shell, "Not found mapping temp_index_threshold_type!");
+		}
 	}
 
 	shell_print(shell, "sensor_threshold set 0x%x %s %d success!", sensorID, threshold_type,
@@ -92,13 +144,10 @@ void cmd_get_sensor_threshold(const struct shell *shell, size_t argc, char **arg
 	float critical_low = 0;
 	int result = 0;
 
-	uint32_t sensor_max_count = 0;
-	sensor_max_count = plat_get_pdr_size(PLDM_NUMERIC_SENSOR_PDR);
-
 	snprintf(threshold_all, sizeof(threshold_all), "%s", argv[1]);
 
 	if (strcmp(threshold_all, "All") == 0 || strcmp(threshold_all, "all") == 0) {
-		for (int i = UBC1_P12V_TEMP_C; i <= sensor_max_count; i++) {
+		for (int i = UBC1_P12V_TEMP_C; i < PLAT_SENSOR_NUM_MAX; i++) {
 			result = check_supported_threshold_with_sensor_id(i);
 			if (result == 0) {
 				char sensor_name[MAX_AUX_SENSOR_NAME_LEN] = { 0 };
@@ -120,9 +169,9 @@ void cmd_get_sensor_threshold(const struct shell *shell, size_t argc, char **arg
 	} else {
 		int sensorID = strtol(argv[1], NULL, 16);
 
-		if (sensorID < UBC1_P12V_TEMP_C || sensorID > sensor_max_count) {
+		if (sensorID < UBC1_P12V_TEMP_C || sensorID >= PLAT_SENSOR_NUM_MAX) {
 			shell_error(shell, "Sensor ID 0x%x is higher than 0x%x or lower than 0x1",
-				    sensorID, sensor_max_count);
+				    sensorID, PLAT_SENSOR_NUM_MAX - 1);
 			return;
 		}
 

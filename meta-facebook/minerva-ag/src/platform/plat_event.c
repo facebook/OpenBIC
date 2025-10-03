@@ -27,6 +27,8 @@
 #include "plat_event.h"
 #include "plat_hook.h"
 #include "plat_isr.h"
+#include <pmbus.h>
+#include "pldm_oem.h"
 
 LOG_MODULE_REGISTER(plat_event);
 
@@ -65,15 +67,25 @@ typedef struct _vr_error_callback_info_ {
 	uint8_t bit_mapping_vr_sensor_num[8];
 } vr_error_callback_info;
 
+typedef struct _vr_fault_info {
+	uint8_t mtia_event_source;
+	uint8_t cpld_reg_offset;
+	uint8_t cpld_reg_bit;
+	bool is_pmbus_vr;
+	uint8_t sensor_id;
+	uint8_t vr_ubc_device_index;
+} vr_fault_info;
+
 bool vr_error_callback(aegis_cpld_info *cpld_info, uint8_t *current_cpld_value);
+void process_mtia_vr_power_fault_sel(aegis_cpld_info *cpld_info, uint8_t *current_cpld_value);
 
 // clang-format off
 aegis_cpld_info aegis_cpld_info_table[] = {
-	{ VR_POWER_FAULT_1_REG, 			0x00, 0x00, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
-	{ VR_POWER_FAULT_2_REG, 			0x00, 0x00, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
-	{ VR_POWER_FAULT_3_REG, 			0x00, 0x00, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
-	{ VR_POWER_FAULT_4_REG, 			0x00, 0x00, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
-	{ VR_POWER_FAULT_5_REG, 			0x00, 0x00, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
+	{ VR_POWER_FAULT_1_REG, 			0x00, 0x00, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS, .event_type = VR_POWER_FAULT },
+	{ VR_POWER_FAULT_2_REG, 			0x00, 0x00, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS, .event_type = VR_POWER_FAULT  },
+	{ VR_POWER_FAULT_3_REG, 			0x00, 0x00, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS, .event_type = VR_POWER_FAULT  },
+	{ VR_POWER_FAULT_4_REG, 			0x00, 0x00, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS, .event_type = VR_POWER_FAULT  },
+	{ VR_POWER_FAULT_5_REG, 			0x00, 0x00, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS, .event_type = VR_POWER_FAULT  },
 	{ VR_SMBUS_ALERT_1_REG, 			0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
 	{ VR_SMBUS_ALERT_2_REG, 			0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
 	{ ASIC_OC_WARN_REG, 				0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
@@ -342,6 +354,20 @@ void check_ubc_delayed(struct k_work *work)
 			uint16_t error_code = (POWER_ON_SEQUENCE_TRIGGER_CAUSE << 13);
 			error_log_event(error_code, LOG_ASSERT);
 			LOG_ERR("Generated error code: 0x%x", error_code);
+
+			struct pldm_addsel_data sel_msg = { 0 };
+			sel_msg.assert_type = LOG_ASSERT;
+			sel_msg.event_type = MTIA_FAULT;
+			sel_msg.event_data_1 = MTIA_POWER_ON_SEQUENCE_FAIL;
+			if (PLDM_SUCCESS != send_event_log_to_bmc(sel_msg)) {
+				LOG_ERR("Failed to send MTIA FAULT assert SEL, event data: 0x%x 0x%x 0x%x",
+					sel_msg.event_data_1, sel_msg.event_data_2,
+					sel_msg.event_data_3);
+			} else {
+				LOG_INF("send MTIA FAULT assert SEL, event data: 0x%x 0x%x 0x%x",
+					sel_msg.event_data_1, sel_msg.event_data_2,
+					sel_msg.event_data_3);
+			}
 		}
 	}
 
@@ -456,6 +482,10 @@ void poll_cpld_registers()
 		/* Sleep for the polling interval */
 		k_msleep(CPLD_POLLING_INTERVAL_MS);
 
+		if (is_update_state_idle() == false) {
+			continue;
+		}
+
 		LOG_DBG("cpld_polling_alert_status = %d, cpld_polling_enable_flag = %d",
 			cpld_polling_alert_status, cpld_polling_enable_flag);
 
@@ -505,10 +535,191 @@ void poll_cpld_registers()
 					aegis_cpld_info_table[i].status_changed_cb(
 						&aegis_cpld_info_table[i], &data);
 				}
+				if (aegis_cpld_info_table[i].event_type == VR_POWER_FAULT) {
+					process_mtia_vr_power_fault_sel(&aegis_cpld_info_table[i],
+									&data);
+				}
 				// update map
 				aegis_cpld_info_table[i].is_fault_bit_map = new_fault_map;
 				aegis_cpld_info_table[i].last_polling_value = data;
 			}
+		}
+	}
+}
+
+// clang-format off
+const vr_fault_info vr_fault_table[] = {
+	// { mtia_event_source, cpld_reg_offset, cpld_reg_bit }
+	{ MTIA_P0V75_TRVDD_ZONEA, VR_POWER_FAULT_1_REG, BIT(1), true, VR_ASIC_P0V75_TRVDD_ZONEA_VOLT_V, VR_5 },
+	{ MTIA_P0V75_TRVDD_ZONEB, VR_POWER_FAULT_1_REG, BIT(2), true, VR_ASIC_P0V75_TRVDD_ZONEB_VOLT_V, VR_6 },
+	{ MTIA_P12V_UBC2, VR_POWER_FAULT_1_REG, BIT(3), true, UBC2_P12V_OUTPUT_VOLT_V, UBC_2 },
+	{ MTIA_P12V_UBC1, VR_POWER_FAULT_1_REG, BIT(4), true, UBC1_P12V_OUTPUT_VOLT_V, UBC_1 },
+	{ MTIA_P0V75_MAX_PHY_S, VR_POWER_FAULT_1_REG, BIT(5), true, VR_ASIC_P0V75_MAX_PHY_S_VOLT_V, VR_4 },
+	{ MTIA_P0V75_MAX_PHY_N, VR_POWER_FAULT_1_REG, BIT(6), true, VR_ASIC_P0V75_MAX_PHY_N_VOLT_V, VR_3 },
+
+	{ MTIA_P0V75_VDDPHY_HBM1_HBM3_HBM5, VR_POWER_FAULT_2_REG, BIT(0), true, VR_ASIC_P0V75_VDDPHY_HBM1_HBM3_HBM5_VOLT_V, VR_10 },
+	{ MTIA_P0V75_VDDPHY_HBM0_HBM2_HBM4, VR_POWER_FAULT_2_REG, BIT(1), true, VR_ASIC_P0V75_VDDPHY_HBM0_HBM2_HBM4_VOLT_V, VR_7 },
+	{ MTIA_P1V8_VPP_HBM1_HBM3_HBM5, VR_POWER_FAULT_2_REG, BIT(2), true, VR_ASIC_P1V8_VPP_HBM1_HBM3_HBM5_VOLT_V, VR_8 },
+	{ MTIA_P1V8_VPP_HBM0_HBM2_HBM4, VR_POWER_FAULT_2_REG, BIT(3), true, VR_ASIC_P1V8_VPP_HBM0_HBM2_HBM4_VOLT_V, VR_5 },
+	{ MTIA_P1V2_VDDHTX_PCIE, VR_POWER_FAULT_2_REG, BIT(4), true, VR_ASIC_P1V2_VDDHTX_PCIE_VOLT_V, VR_11 },
+	{ MTIA_PLL_VDDA15_PCIE_MAX_CORE, VR_POWER_FAULT_2_REG, BIT(5), false, 0x00 },
+	{ MTIA_P0V9_TRVDD_ZONEA, VR_POWER_FAULT_2_REG, BIT(6), true, VR_ASIC_P0V9_TRVDD_ZONEA_VOLT_V, VR_8},
+	{ MTIA_P0V9_TRVDD_ZONEB, VR_POWER_FAULT_2_REG, BIT(7), true, VR_ASIC_P0V9_TRVDD_ZONEB_VOLT_V, VR_9 },
+
+	{ MTIA_P0V75_PVDD_CH_S, VR_POWER_FAULT_3_REG, BIT(0), true, VR_ASIC_P0V75_PVDD_CH_S_VOLT_V, VR_4 },
+	{ MTIA_P0V75_PVDD_CH_N, VR_POWER_FAULT_3_REG, BIT(1), true, VR_ASIC_P0V75_PVDD_CH_N_VOLT_V, VR_3 },
+	{ MTIA_P1V1_VDDC_HBM1_HBM3_HBM5, VR_POWER_FAULT_3_REG, BIT(2), true, VR_ASIC_P1V1_VDDC_HBM1_HBM3_HBM5_VOLT_V, VR_10 },
+	{ MTIA_P0V75_AVDD_HSCL, VR_POWER_FAULT_3_REG, BIT(3), false, 0x00 },
+	{ MTIA_P1V1_VDDC_HBM0_HBM2_HBM4, VR_POWER_FAULT_3_REG, BIT(4), true, VR_ASIC_P1V1_VDDC_HBM0_HBM2_HBM4_VOLT_V, VR_7 },
+	{ MTIA_P0V75_VDDC_CLKOBS, VR_POWER_FAULT_3_REG, BIT(5), false, 0x00 },
+	{ MTIA_P0V4_VDDQL_HBM1_HBM3_HBM5, VR_POWER_FAULT_3_REG, BIT(6), true, VR_ASIC_P0V4_VDDQL_HBM1_HBM3_HBM5_VOLT_V, VR_9 },
+	{ MTIA_P0V4_VDDQL_HBM0_HBM2_HBM4, VR_POWER_FAULT_3_REG, BIT(7), true, VR_ASIC_P0V4_VDDQL_HBM0_HBM2_HBM4_VOLT_V, VR_6 },
+
+	{ MTIA_PLL_VDDA15_MAX_CORE_N, VR_POWER_FAULT_4_REG, BIT(0), false, 0x00 },
+	{ MTIA_PVDD1P5_S, VR_POWER_FAULT_4_REG, BIT(1), false, 0x00 },
+	{ MTIA_PVDD1P5_N, VR_POWER_FAULT_4_REG, BIT(2), false, 0x00 },
+	{ MTIA_PVDD0P9_S, VR_POWER_FAULT_4_REG, BIT(3), false, 0x00 },
+	{ MTIA_PVDD0P9_N, VR_POWER_FAULT_4_REG, BIT(4), false, 0x00 },
+	{ MTIA_PLL_VDDA15_HBM0_HBM2_HBM4, VR_POWER_FAULT_4_REG, BIT(5), false, 0x00 },
+	{ MTIA_PLL_VDDA15_HBM1_HBM3_HBM5, VR_POWER_FAULT_4_REG, BIT(6), false, 0x00 },
+	{ MTIA_P0V85_PVDD, VR_POWER_FAULT_4_REG, BIT(7), true,VR_ASIC_P0V85_PVDD_VOLT_V, VR_2 },
+	
+	{ MTIA_P3V3_OSC, VR_POWER_FAULT_5_REG, BIT(1), false, 0x00 },
+	{ MTIA_P5V, VR_POWER_FAULT_5_REG, BIT(2), false, 0x00 },
+	{ MTIA_P3V3, VR_POWER_FAULT_5_REG, BIT(3), true,VR_P3V3_VOLT_V, VR_1 },
+	{ MTIA_LDO_IN_1V8, VR_POWER_FAULT_5_REG, BIT(4), false, 0x00 },
+	{ MTIA_LDO_IN_1V2, VR_POWER_FAULT_5_REG, BIT(5), false, 0x00 },
+	{ MTIA_P0V8_VDDA_PCIE, VR_POWER_FAULT_5_REG, BIT(6), true, VR_ASIC_P0V8_VDDA_PCIE_VOLT_V, VR_11 },
+	{ MTIA_PLL_VDDA15_MAX_CORE_S, VR_POWER_FAULT_5_REG, BIT(7), false, 0x00 },
+
+	{ MTIA_FM_ASIC_0_THERMTRIP_N, TEMPERATURE_IC_OVERT_FAULT_2_REG, BIT(7), false, 0x00 },
+	{ MTIA_FM_ATH_PLD_HBM3_CATTRIP_ALARM, ASIC_OC_WARN_2_REG, BIT(5), false, 0x00 },
+};
+// clang-format on
+
+const vr_mapping_status vr_status_rail_list[] = {
+	{ .index = VR_STAUS_E_STATUS_BYTE, .pmbus_reg = PMBUS_STATUS_BYTE },
+	{ .index = VR_STAUS_E_STATUS_WORD, .pmbus_reg = PMBUS_STATUS_WORD },
+	{ .index = VR_STAUS_E_STATUS_VOUT, .pmbus_reg = PMBUS_STATUS_VOUT },
+	{ .index = VR_STAUS_E_STATUS_IOUT, .pmbus_reg = PMBUS_STATUS_IOUT },
+	{ .index = VR_STAUS_E_STATUS_INPUT, .pmbus_reg = PMBUS_STATUS_INPUT },
+	{ .index = VR_STAUS_E_STATUS_TEMPERATURE, .pmbus_reg = PMBUS_STATUS_TEMPERATURE },
+	{ .index = VR_STAUS_E_STATUS_CML, .pmbus_reg = PMBUS_STATUS_CML },
+};
+
+void process_mtia_vr_power_fault_sel(aegis_cpld_info *cpld_info, uint8_t *current_cpld_value)
+{
+	CHECK_NULL_ARG(cpld_info);
+	CHECK_NULL_ARG(current_cpld_value);
+
+	uint8_t expected_val =
+		ubc_enabled_delayed_status ? cpld_info->dc_on_defaut : cpld_info->dc_off_defaut;
+
+	uint8_t current_fault = (*current_cpld_value ^ expected_val) & cpld_info->bit_check_mask;
+	uint8_t status_changed_bit = current_fault ^ cpld_info->is_fault_bit_map;
+
+	if (!status_changed_bit)
+		return;
+
+	for (int i = 0; i < ARRAY_SIZE(vr_fault_table); i++) {
+		const vr_fault_info *vr = &vr_fault_table[i];
+
+		if (vr->cpld_reg_offset != cpld_info->cpld_offset)
+			continue;
+
+		if (!(status_changed_bit & vr->cpld_reg_bit))
+			continue;
+
+		uint8_t bit_val = (*current_cpld_value & vr->cpld_reg_bit) ? 1 : 0;
+		uint8_t expected_bit_val = (expected_val & vr->cpld_reg_bit) ? 1 : 0;
+
+		// Determine event type: ASSERT / DEASSERT
+		bool is_assert = (bit_val != expected_bit_val) && (bit_val == 1);
+
+		LOG_DBG("VR[0x%02X] reg[0x%02X] bit[0x%02X] is %s ", vr->mtia_event_source,
+			vr->cpld_reg_offset, vr->cpld_reg_bit, is_assert ? "ASSERT" : "DEASSERT");
+
+		if (vr_fault_table[i].is_pmbus_vr == false) {
+			// non-PMBus VR
+			struct pldm_addsel_data sel_msg = { 0 };
+
+			sel_msg.assert_type = is_assert ? LOG_ASSERT : LOG_DEASSERT;
+			sel_msg.event_type = MTIA_FAULT;
+			sel_msg.event_data_1 = vr_fault_table[i].mtia_event_source;
+
+			if (PLDM_SUCCESS != send_event_log_to_bmc(sel_msg)) {
+				LOG_ERR("Failed to send MTIA FAULT %s SEL, event data: 0x%x 0x%x 0x%x",
+					is_assert ? "ASSERT" : "DEASSERT", sel_msg.event_data_1,
+					sel_msg.event_data_2, sel_msg.event_data_3);
+			} else {
+				LOG_INF("Send MTIA FAULT %s SEL, event data: 0x%x 0x%x 0x%x",
+					is_assert ? "ASSERT" : "DEASSERT", sel_msg.event_data_1,
+					sel_msg.event_data_2, sel_msg.event_data_3);
+			}
+			continue;
+		} else {
+			set_plat_sensor_polling_enable_flag(false);
+			// wait 10ms for vr monitor stop
+			k_msleep(10);
+
+			uint8_t vr_status_buf[7] = { 0xFF };
+			uint8_t sensor_num = vr->sensor_id;
+			uint8_t device_id = vr->vr_ubc_device_index;
+			if (device_id == 0x00 || sensor_num == 0x00) {
+				LOG_ERR("Invalid VR mapping: device_id=0x%x, sensor_num=0x%x",
+					device_id, sensor_num);
+				set_plat_sensor_polling_enable_flag(true);
+				continue;
+			}
+
+			if (!vr_fault_get_error_data(sensor_num, device_id, vr_status_buf)) {
+				LOG_ERR("Failed to get VR[0x%02X] status", vr->mtia_event_source);
+				set_plat_sensor_polling_enable_flag(true);
+				continue;
+			}
+			uint8_t vr_reg_list_len = ARRAY_SIZE(vr_status_rail_list);
+			struct pldm_addsel_data sel_msg[vr_reg_list_len];
+			memset(sel_msg, 0, sizeof(sel_msg));
+			uint8_t sel_msg_idx = 0;
+
+			for (int j = 0; j < vr_reg_list_len; j++) {
+				uint8_t index = vr_status_rail_list[j].index;
+				uint16_t vr_status = 0xFFFF;
+
+				if (index == VR_STAUS_E_STATUS_WORD) {
+					vr_status = (vr_status_buf[1] << 8) | vr_status_buf[0];
+				} else {
+					uint8_t offset =
+						(index == VR_STAUS_E_STATUS_BYTE) ? 0 : index;
+					vr_status = vr_status_buf[offset];
+				}
+				sel_msg[sel_msg_idx].assert_type =
+					is_assert ? LOG_ASSERT : LOG_DEASSERT;
+				sel_msg[sel_msg_idx].event_type = MTIA_FAULT;
+				sel_msg[sel_msg_idx].event_data_1 = vr->mtia_event_source;
+				sel_msg[sel_msg_idx].event_data_2 =
+					(vr_status_rail_list[j].pmbus_reg == PMBUS_STATUS_WORD) ?
+						(uint8_t)((vr_status >> 8) & 0xFF) :
+						vr_status_rail_list[j].pmbus_reg;
+				sel_msg[sel_msg_idx].event_data_3 = (uint8_t)(vr_status & 0xFF);
+				sel_msg_idx++;
+			}
+			set_plat_sensor_polling_enable_flag(true);
+			// Send SEL to BMC
+			for (int k = 0; k < sel_msg_idx; k++) {
+				if (PLDM_SUCCESS != send_event_log_to_bmc(sel_msg[k])) {
+					LOG_ERR("Failed to send MTIA FAULT %s SEL, event data: 0x%x 0x%x 0x%x",
+						is_assert ? "ASSERT" : "DEASSERT",
+						sel_msg[k].event_data_1, sel_msg[k].event_data_2,
+						sel_msg[k].event_data_3);
+				} else {
+					LOG_INF("Send MTIA FAULT %s SEL, event data: 0x%x 0x%x 0x%x",
+						is_assert ? "ASSERT" : "DEASSERT",
+						sel_msg[k].event_data_1, sel_msg[k].event_data_2,
+						sel_msg[k].event_data_3);
+				}
+			}
+			continue;
 		}
 	}
 }

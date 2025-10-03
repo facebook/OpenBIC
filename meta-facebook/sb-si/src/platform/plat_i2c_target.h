@@ -20,6 +20,18 @@
 #include <drivers/i2c.h>
 #include "hal_i2c_target.h"
 
+typedef struct {
+	struct k_work set_slot_work;
+	int slot;
+} mmc_work_info_t;
+
+#define SLOT_0_I2C_SET_SLOT_REG 0x40
+#define SLOT_1_I2C_SET_SLOT_REG 0x41
+#define SLOT_2_I2C_SET_SLOT_REG 0x42
+#define SLOT_3_I2C_SET_SLOT_REG 0x43
+
+#define GET_MMC_INFO_REG 0x50
+
 #define TARGET_ENABLE 1
 #define TARGET_DISABLE 0
 

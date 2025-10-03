@@ -230,38 +230,22 @@ out:
 	return ret;
 }
 
-__weak bool rg3mxxb12_i3c_mode_only_init(I3C_MSG *i3c_msg, uint8_t ldo_volt, uint8_t pullup_val)
+bool rg3mxxb12_i3c_mode_only_init(I3C_MSG *i3c_msg, const uint8_t (*cmd_initial)[2], int cmd_count)
 {
 	bool ret = false;
 
 	const uint8_t cmd_unprotect[2] = { RG3MXXB12_PROTECTION_REG, 0x69 };
 	uint8_t cmd_protect[2] = { RG3MXXB12_PROTECTION_REG, 0x00 };
-	uint8_t cmd_initial[][2] = {
-		/* 
-		 * Refer to RG3MxxB12 datasheet page 13, LDO voltage depends
-		 * on each project's hard design
-		 */
-		{ RG3MXXB12_VOLT_LDO_SETTING, ldo_volt },
-		{ RG3MXXB12_SSPORTS_AGENT_ENABLE, 0x0 },
-		{ RG3MXXB12_SSPORTS_GPIO_ENABLE, 0x0 },
-		{ RG3MXXB12_SLAVE_PORT_ENABLE, 0x0 },
-		{ RG3MXXB12_SSPORTS_PULLUP_SETTING, pullup_val },
-		{ RG3MXXB12_SSPORTS_PULLUP_ENABLE, 0xFF },
-		{ RG3MXXB12_SSPORTS_OD_ONLY, 0x0 },
-		{ RG3MXXB12_SLAVE_PORT_ENABLE, 0xFF },
-		{ RG3MXXB12_SSPORTS_HUB_NETWORK_CONNECTION, 0xFF },
-	};
 
 	i3c_msg->tx_len = 2;
 	memcpy(i3c_msg->data, cmd_unprotect, 2);
-	int initial_cmd_size = sizeof(cmd_initial) / sizeof(cmd_initial[0]);
 
 	// Unlock protected regsiter
 	if (i3c_controller_write(i3c_msg) != 0) {
 		goto out;
 	}
 
-	for (int cmd = 0; cmd < initial_cmd_size; cmd++) {
+	for (int cmd = 0; cmd < cmd_count; cmd++) {
 		i3c_msg->tx_len = 2;
 		memcpy(i3c_msg->data, cmd_initial[cmd], 2);
 		if (i3c_controller_write(i3c_msg) != 0) {

@@ -37,6 +37,7 @@
 #include "plat_event.h"
 #include "plat_log.h"
 #include "plat_fru.h"
+#include "plat_datetime.h"
 
 LOG_MODULE_REGISTER(plat_init);
 
@@ -58,7 +59,6 @@ void pal_pre_init()
 		plat_clock_init();
 
 	plat_eusb_init();
-	init_temp_alert_mode();
 }
 
 void pal_set_sys_status()
@@ -69,11 +69,11 @@ void pal_set_sys_status()
 void pal_post_init()
 {
 	plat_mctp_init();
-	init_temp_limit(); //should be before temp_threshold_default_settings_init() and after pldm sensor init
 	user_settings_init();
 	pldm_load_state_effecter_table(MAX_STATE_EFFECTER_IDX);
 	pldm_assign_gpio_effecter_id(PLAT_EFFECTER_ID_GPIO_HIGH_BYTE);
 	init_fru_info();
+	rtc_init_once();
 	init_load_eeprom_log();
 	plat_set_ac_on_log();
 	init_cpld_polling();

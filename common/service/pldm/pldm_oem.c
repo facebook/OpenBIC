@@ -33,6 +33,22 @@
 
 LOG_MODULE_DECLARE(pldm, LOG_LEVEL_DBG);
 
+__weak uint8_t sensor_polling_cmd(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t instance_id,
+				  uint8_t *resp, uint16_t *resp_len, void *ext_params)
+{
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp_len, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(ext_params, PLDM_ERROR);
+
+	uint8_t *completion_code_p = resp;
+
+	*completion_code_p = PLDM_ERROR_UNSUPPORTED_PLDM_CMD;
+	*resp_len = 1;
+
+	return PLDM_ERROR_UNSUPPORTED_PLDM_CMD;
+}
 uint8_t check_iana(const uint8_t *iana)
 {
 	CHECK_NULL_ARG_WITH_RETURN(iana, PLDM_ERROR);
@@ -70,6 +86,14 @@ static uint8_t cmd_echo(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t ins
 
 	if (check_iana(req_p->iana) == PLDM_ERROR) {
 		resp_p->completion_code = PLDM_ERROR_INVALID_DATA;
+		return PLDM_SUCCESS;
+	}
+
+	if ((sizeof(pldm_hdr) + sizeof(resp_p->completion_code) + len) > PLDM_MAX_DATA_SIZE) {
+		LOG_WRN("echo size %d over buffer size %d",
+			(sizeof(pldm_hdr) + sizeof(resp_p->completion_code) + len),
+			PLDM_MAX_DATA_SIZE);
+		resp_p->completion_code = PLDM_ERROR_INVALID_LENGTH;
 		return PLDM_SUCCESS;
 	}
 
@@ -211,7 +235,9 @@ uint8_t send_event_log_to_bmc(struct pldm_addsel_data sel_msg)
 #endif
 
 static pldm_cmd_handler pldm_oem_cmd_tbl[] = { { PLDM_OEM_CMD_ECHO, cmd_echo },
-					       { PLDM_OEM_IPMI_BRIDGE, ipmi_cmd } };
+					       { PLDM_OEM_IPMI_BRIDGE, ipmi_cmd },
+					       { PLDM_OEM_SENSOR_POLLING_CMD,
+						 sensor_polling_cmd } };
 
 uint8_t pldm_oem_handler_query(uint8_t code, void **ret_fn)
 {

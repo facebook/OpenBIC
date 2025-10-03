@@ -156,6 +156,8 @@ const char *const sensor_type_name[] = {
 	sensor_name_to_num(bmr316)
 	sensor_name_to_num(lx6301)
 	sensor_name_to_num(ads7830)
+	sensor_name_to_num(s54ss4p180pmdafc)
+	sensor_name_to_num(pex90144)
 };
 // clang-format on
 
@@ -385,6 +387,12 @@ SENSOR_DRIVE_INIT_DECLARE(lx6301);
 #endif
 #ifdef ENABLE_ADS7830
 SENSOR_DRIVE_INIT_DECLARE(ads7830);
+#endif
+#ifdef ENABLE_S54SS4P180PMDCF
+SENSOR_DRIVE_INIT_DECLARE(s54ss4p180pmdafc);
+#endif
+#ifdef ENABLE_PEX90144
+SENSOR_DRIVE_INIT_DECLARE(pex90144);
 #endif
 
 // The sequence needs to same with SENSOR_DEV ID
@@ -773,6 +781,17 @@ sensor_drive_api sensor_drive_tbl[] = {
 #else
 	SENSOR_DRIVE_TYPE_UNUSE(ads7830),
 #endif
+#ifdef ENABLE_S54SS4P180PMDCF
+	SENSOR_DRIVE_TYPE_INIT_MAP(s54ss4p180pmdafc),
+#else
+	SENSOR_DRIVE_TYPE_UNUSE(s54ss4p180pmdafc),
+#endif
+#ifdef ENABLE_PEX90144
+	SENSOR_DRIVE_TYPE_INIT_MAP(pex90144),
+#else
+	SENSOR_DRIVE_TYPE_UNUSE(pex90144),
+#endif
+
 };
 
 static void init_sensor_num(void)

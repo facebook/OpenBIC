@@ -39,6 +39,8 @@
 #include "plat_class.h"
 #include "plat_pldm_monitor.h"
 #include "plat_sensor_table.h"
+#include "plat_fru.h"
+#include "plat_mctp.h"
 
 LOG_MODULE_REGISTER(plat_sensor_table);
 
@@ -1344,6 +1346,50 @@ sensor_cfg ina230_power_monitor_sensor_config_table[] = {
 };
 const int SENSOR_CONFIG_SIZE = ARRAY_SIZE(plat_sensor_config);
 
+void update_nic_sensor_config_for_pollara(void)
+{
+	if (get_nic_config() != NIC_CONFIG_POLLARA)
+		return;
+
+	LOG_INF("NIC_CONFIG_POLLARA detected, updating NIC sensor configurations");
+
+	// Update NIC temperature and optics sensor configurations
+	for (int i = 0; i < sensor_config_count; i++) {
+		switch (sensor_config[i].num) {
+		// NIC temperature sensors (0-7)
+		case SENSOR_NUM_TEMP_NIC_0:
+		case SENSOR_NUM_TEMP_NIC_1:
+		case SENSOR_NUM_TEMP_NIC_2:
+		case SENSOR_NUM_TEMP_NIC_3:
+		case SENSOR_NUM_TEMP_NIC_4:
+		case SENSOR_NUM_TEMP_NIC_5:
+		case SENSOR_NUM_TEMP_NIC_6:
+		case SENSOR_NUM_TEMP_NIC_7:
+			sensor_config[i].target_addr = AMD_NIC_CPLD_ADDR;
+			sensor_config[i].offset = AMD_NIC_CHIP_TEMP_OFFSET;
+			break;
+
+		// NIC optics sensors (0-7)
+		case SENSOR_NUM_TEMP_NIC_OPTICS_0:
+		case SENSOR_NUM_TEMP_NIC_OPTICS_1:
+		case SENSOR_NUM_TEMP_NIC_OPTICS_2:
+		case SENSOR_NUM_TEMP_NIC_OPTICS_3:
+		case SENSOR_NUM_TEMP_NIC_OPTICS_4:
+		case SENSOR_NUM_TEMP_NIC_OPTICS_5:
+		case SENSOR_NUM_TEMP_NIC_OPTICS_6:
+		case SENSOR_NUM_TEMP_NIC_OPTICS_7:
+			sensor_config[i].type = sensor_dev_tmp75;
+			sensor_config[i].target_addr = AMD_NIC_CPLD_ADDR;
+			sensor_config[i].offset = AMD_NIC_DR4_MODULE_TEMP_OFFSET;
+			sensor_config[i].init_args = NULL;
+			break;
+
+		default:
+			break;
+		}
+	}
+}
+
 void load_sensor_config(void)
 {
 	memcpy(sensor_config, plat_sensor_config, sizeof(plat_sensor_config));
@@ -1643,12 +1689,18 @@ bool is_nic_access(uint8_t sensor_num)
 {
 	uint8_t pin_index = ((sensor_num >> 4) * 3) + ((sensor_num & BIT_MASK(4)) / 5);
 
+	if (!get_is_nic_config_set())
+		return false;
+
 	return !gpio_get(nic_prsnt_pin[pin_index]) ? true : false;
 }
 
 bool is_nic_optics_access(uint8_t sensor_num)
 {
 	uint8_t pin_index = sensor_num & GENMASK(3, 0);
+
+	if (!get_is_nic_config_set())
+		return false;
 
 	return !gpio_get(nic_prsnt_pin[pin_index]) ? true : false;
 }

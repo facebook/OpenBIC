@@ -28,6 +28,10 @@
 #include "pmbus.h"
 #include "nvme.h"
 #include "plat_pldm_monitor.h"
+#include "plat_mctp.h"
+#include "plat_fru.h"
+#include "plat_class.h"
+#include "tmp75.h"
 
 #include <logging/log.h>
 
@@ -932,14 +936,38 @@ nct7718w_init_arg nct7718w_init_args[] = {
 };
 
 cx7_init_arg cx7_init_args[] = {
-	[0] = { .is_init = false, .endpoint = 0x10, .sensor_id = 0x0008 },
-	[1] = { .is_init = false, .endpoint = 0x11, .sensor_id = 0x0008 },
-	[2] = { .is_init = false, .endpoint = 0x12, .sensor_id = 0x0008 },
-	[3] = { .is_init = false, .endpoint = 0x13, .sensor_id = 0x0008 },
-	[4] = { .is_init = false, .endpoint = 0x14, .sensor_id = 0x0008 },
-	[5] = { .is_init = false, .endpoint = 0x15, .sensor_id = 0x0008 },
-	[6] = { .is_init = false, .endpoint = 0x16, .sensor_id = 0x0008 },
-	[7] = { .is_init = false, .endpoint = 0x17, .sensor_id = 0x0008 },
+	[0] = { .is_init = false,
+		.endpoint = 0x10,
+		.sensor_id = 0x0008,
+		.re_init_eid_fn = plat_set_dev_endpoint },
+	[1] = { .is_init = false,
+		.endpoint = 0x11,
+		.sensor_id = 0x0008,
+		.re_init_eid_fn = plat_set_dev_endpoint },
+	[2] = { .is_init = false,
+		.endpoint = 0x12,
+		.sensor_id = 0x0008,
+		.re_init_eid_fn = plat_set_dev_endpoint },
+	[3] = { .is_init = false,
+		.endpoint = 0x13,
+		.sensor_id = 0x0008,
+		.re_init_eid_fn = plat_set_dev_endpoint },
+	[4] = { .is_init = false,
+		.endpoint = 0x14,
+		.sensor_id = 0x0008,
+		.re_init_eid_fn = plat_set_dev_endpoint },
+	[5] = { .is_init = false,
+		.endpoint = 0x15,
+		.sensor_id = 0x0008,
+		.re_init_eid_fn = plat_set_dev_endpoint },
+	[6] = { .is_init = false,
+		.endpoint = 0x16,
+		.sensor_id = 0x0008,
+		.re_init_eid_fn = plat_set_dev_endpoint },
+	[7] = { .is_init = false,
+		.endpoint = 0x17,
+		.sensor_id = 0x0008,
+		.re_init_eid_fn = plat_set_dev_endpoint },
 };
 
 /**************************************************************************************************
@@ -1239,7 +1267,57 @@ void ssd_drive_reinit(void)
 			LOG_ERR("sensor number 0x%x cfg->read not init, do reinit", cfg->num);
 		}
 
-		if (!nvme_init(cfg)) {
+		if (nvme_init(cfg)) {
+			LOG_ERR("sensor number 0x%x cfg->read reinit fail", cfg->num);
+		}
+	}
+	enable_sensor_poll();
+}
+
+void nic_drive_reinit_for_pollara(void)
+{
+	if (get_nic_config() != NIC_CONFIG_POLLARA)
+		return;
+
+	LOG_INF("NIC_CONFIG_POLLARA detected, do nic drive reinit");
+
+	disable_sensor_poll();
+
+	for (uint8_t i = 0; i < ARRAY_SIZE(nic_temp_sensor_table); i++) {
+		uint8_t sensor_num = nic_temp_sensor_table[i];
+		sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
+
+		if (!cfg) {
+			LOG_ERR("The pointer to sensor number 0x%x cfg is NULL", sensor_num);
+			continue;
+		}
+
+		if (tmp75_init(cfg)) {
+			LOG_ERR("sensor number 0x%x cfg->read reinit fail", cfg->num);
+		}
+	}
+	enable_sensor_poll();
+}
+
+void nic_optics_drive_reinit_for_pollara(void)
+{
+	if (get_nic_config() != NIC_CONFIG_POLLARA)
+		return;
+
+	LOG_INF("NIC_CONFIG_POLLARA detected, do nic optics drive reinit");
+
+	disable_sensor_poll();
+
+	for (uint8_t i = 0; i < ARRAY_SIZE(nic_optics_sensor_table); i++) {
+		uint8_t sensor_num = nic_optics_sensor_table[i];
+		sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
+
+		if (!cfg) {
+			LOG_ERR("The pointer to sensor number 0x%x cfg is NULL", sensor_num);
+			continue;
+		}
+
+		if (tmp75_init(cfg)) {
 			LOG_ERR("sensor number 0x%x cfg->read reinit fail", cfg->num);
 		}
 	}

@@ -21,6 +21,7 @@
 #include "app_handler.h"
 #include "kcs.h"
 #include "rg3mxxb12.h"
+#include "p3h284x.h"
 #include "power_status.h"
 #include "sensor.h"
 #include "snoop.h"
@@ -165,59 +166,6 @@ static add_sel_info *find_event_work_items(uint8_t gpio_num)
 	return NULL;
 }
 
-bool rg3mxxb12_i3c_mode_only_init(I3C_MSG *i3c_msg, uint8_t ldo_volt, uint8_t pullup_val)
-{
-	bool ret = false;
-
-	const uint8_t cmd_unprotect[2] = { RG3MXXB12_PROTECTION_REG, 0x69 };
-	uint8_t cmd_protect[2] = { RG3MXXB12_PROTECTION_REG, 0x00 };
-	uint8_t cmd_initial[][2] = {
-		/* 
-		 * Refer to RG3MxxB12 datasheet page 13, LDO voltage depends
-		 * on each project's hard design
-		 */
-		{ RG3MXXB12_SLAVE_PORT_ENABLE, 0x0 },
-		{ RG3MXXB12_VOLT_LDO_SETTING, ldo_volt },
-		{ RG3MXXB12_SSPORTS_AGENT_ENABLE, 0x0 },
-		{ RG3MXXB12_SSPORTS_GPIO_ENABLE, 0x0 },
-		{ RG3MXXB12_SSPORTS_PULLUP_SETTING, pullup_val },
-		{ RG3MXXB12_SSPORTS_PULLUP_ENABLE, 0xFF },
-		{ RG3MXXB12_SSPORTS_OD_ONLY, 0x0 },
-		{ RG3MXXB12_SSPORTS_HUB_NETWORK_CONNECTION, 0x01 },
-		{ RG3MXXB12_SLAVE_PORT_ENABLE, 0x01 },
-	};
-
-	i3c_msg->tx_len = 2;
-	memcpy(i3c_msg->data, cmd_unprotect, 2);
-	int initial_cmd_size = sizeof(cmd_initial) / sizeof(cmd_initial[0]);
-
-	// Unlock protected regsiter
-	if (i3c_controller_write(i3c_msg) != 0) {
-		goto out;
-	}
-
-	for (int cmd = 0; cmd < initial_cmd_size; cmd++) {
-		i3c_msg->tx_len = 2;
-		memcpy(i3c_msg->data, cmd_initial[cmd], 2);
-		if (i3c_controller_write(i3c_msg) != 0) {
-			LOG_ERR("Failed to initial i3c mode. offset = 0x%02x, value = 0x%02x",
-				cmd_initial[cmd][0], cmd_initial[cmd][1]);
-			goto out;
-		}
-		k_msleep(10);
-	}
-
-	ret = true;
-out:
-	memcpy(i3c_msg->data, cmd_protect, 2);
-	if (i3c_controller_write(i3c_msg) != 0) {
-		LOG_ERR("Failed to set protect. offset = 0x%02x, value = 0x%02x", cmd_protect[0],
-			cmd_protect[1]);
-	}
-
-	return ret;
-}
-
 /*
  *	TODO: I3C hub is supplied by DC power currently. When DC off, it can't be initialized.
  *  	  Therefore, BIC needs to implement a workaround to reinitialize the I3C hub during DC on.
@@ -225,6 +173,7 @@ out:
  */
 void reinit_i3c_hub()
 {
+	uint16_t i3c_hub_type = I3C_HUB_TYPE_UNKNOWN;
 	// i3c master initial
 	I3C_MSG i3c_msg = { 0 };
 	i3c_msg.bus = I3C_BUS_HUB;
@@ -246,10 +195,18 @@ void reinit_i3c_hub()
 	}
 
 	i3c_attach(&i3c_msg);
+	init_i3c_hub_type();
+	i3c_hub_type = get_i3c_hub_type();
 
 	// Initialize I3C HUB
-	if (!rg3mxxb12_i3c_mode_only_init(&i3c_msg, LDO_VOLT, 0xF0)) {
-		printk("failed to initialize 1ou rg3mxxb12\n");
+	if(i3c_hub_type == P3H2840_DEVICE_INFO) {
+		if (!p3h284x_i3c_mode_only_init(&i3c_msg, p3h284x_cmd_initial, P3H284X_CMD_INITIAL_SIZE)) {
+			printk("failed to initialize 1ou p3h284x\n");
+		}
+	} else {
+		if (!rg3mxxb12_i3c_mode_only_init(&i3c_msg, rg3mxxb12_cmd_initial, RG3MXXB12_CMD_INITIAL_SIZE)) {
+			printk("failed to initialize 1ou rg3mxxb12\n");
+		}
 	}
 
 	// Set FF/WF's EID
@@ -318,6 +275,35 @@ void init_throttle_work_q(void)
 			   SYS_THROTTLE_WORKQ_PRIORITY, NULL);
 }
 
+static struct k_work_delayable add_post_timeout_sel_work;
+void add_post_timeout_sel_work_handler(struct k_work *work)
+{
+	struct pldm_addsel_data sel_msg = { 0 };
+
+	sel_msg.assert_type = EVENT_ASSERTED;
+	sel_msg.event_type = POST_TIMEOUTED;
+
+	if (PLDM_SUCCESS != send_event_log_to_bmc(sel_msg)) {
+		LOG_ERR("[%s] Failed to send Post-Timeouted assert SEL", __func__);
+	} else {
+		LOG_INF("[%s] Send Post-Timeouted assert SEL", __func__);
+	}
+}
+
+void init_post_timeout_event_work(void)
+{
+	k_work_init_delayable(&add_post_timeout_sel_work, add_post_timeout_sel_work_handler);
+}
+
+#define POST_TIMEOUT_SECONDS 1200
+K_TIMER_DEFINE(power_on_timer, post_timeout_handler, NULL);
+void post_timeout_handler(struct k_timer *timer_id)
+{
+	LOG_INF("[%s] DC power on over %d seconds. Post timeout", __func__, POST_TIMEOUT_SECONDS);
+
+	k_work_schedule_for_queue(&plat_work_q, &add_post_timeout_sel_work, K_NO_WAIT);
+}
+
 #define DC_ON_5_SECOND 5
 #define PROC_FAIL_START_DELAY_SECOND 10
 #define VR_EVENT_DELAY_MS 10
@@ -335,7 +321,12 @@ void ISR_DC_ON()
 		k_work_submit(&switch_i3c_dimm_work);
 		k_work_schedule_for_queue(&plat_work_q, &PROC_FAIL_work,
 					  K_SECONDS(PROC_FAIL_START_DELAY_SECOND));
+		k_timer_stop(&power_on_timer);
+		k_timer_start(&power_on_timer, K_SECONDS(POST_TIMEOUT_SECONDS), K_NO_WAIT);
+		LOG_INF("[%s] Start power on timer", __func__);
 	} else {
+		k_timer_stop(&power_on_timer);
+		LOG_INF("[%s] Stop power on timer", __func__);
 		if (k_work_cancel_delayable(&PROC_FAIL_work) != 0) {
 			LOG_ERR("Failed to cancel proc_fail delay work.");
 		}
@@ -361,6 +352,8 @@ void ISR_POST_COMPLETE()
 		read_cpuid();
 		LOG_INF("Post complete event assert");
 		hw_event_register[12]++;
+		k_timer_stop(&power_on_timer);
+		LOG_INF("[%s] Stop power on timer", __func__);
 	} else {
 		if (get_DC_status()) { // Host is reset
 			k_work_submit(&switch_i3c_dimm_work);
@@ -784,6 +777,10 @@ void IST_PLTRST()
 	k_work_schedule_for_queue(&plat_work_q, &ABORT_FRB2_WDT_THREAD, K_NO_WAIT);
 
 	k_work_schedule_for_queue(&plat_work_q, &event_item->add_sel_work, K_NO_WAIT);
+
+	k_timer_stop(&power_on_timer);
+	k_timer_start(&power_on_timer, K_SECONDS(POST_TIMEOUT_SECONDS), K_NO_WAIT);
+	LOG_INF("[%s] Start power on timer", __func__);
 }
 
 static void APML_ALERT_handler(struct k_work *work)
