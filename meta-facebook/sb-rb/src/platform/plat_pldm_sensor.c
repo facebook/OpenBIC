@@ -12354,7 +12354,7 @@ void change_sensor_cfg(uint8_t asic_board_id, uint8_t vr_module, uint8_t ubc_mod
 	LOG_INF("vr change mode: 0x%x", vr_change_mode);
 	// vr sensor
 	for (uint8_t i = VR_SENSOR_THREAD_ID; i <= QUICK_VR_SENSOR_THREAD_ID; i++) {
-		if (vr_change_mode == OLD_RNS)
+		if (vr_change_mode == OLD_MPS)
 			continue;
 
 		pldm_sensor_info *table = plat_pldm_sensor_load(i);
