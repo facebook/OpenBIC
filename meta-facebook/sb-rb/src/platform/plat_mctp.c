@@ -40,7 +40,7 @@
 LOG_MODULE_REGISTER(plat_mctp);
 
 /* i2c 8 bit address */
-#define I2C_ADDR_BIC 0x40
+#define I2C_ADDR_BIC 0x42
 #define I2C_ADDR_BMC 0x20
 
 /* i2c dev bus */
@@ -87,10 +87,10 @@ uint8_t MCTP_SUPPORTED_MESSAGES_TYPES[] = {
 static mctp *find_mctp_by_bus(uint8_t bus)
 {
 	uint8_t i;
-	for (i = 0; i < ARRAY_SIZE(plat_mctp_port); i++) {
-		mctp_port *p = plat_mctp_port + i;
+	for (i = 0; i < ARRAY_SIZE(smbus_port); i++) {
+		mctp_port *p = smbus_port + i;
 
-		if (bus == p->conf.i3c_conf.bus)
+		if (bus == p->conf.smbus_conf.bus)
 			return p->mctp_inst;
 	}
 
@@ -190,6 +190,16 @@ int load_mctp_support_types(uint8_t *type_len, uint8_t *types)
 	*type_len = sizeof(MCTP_SUPPORTED_MESSAGES_TYPES);
 	memcpy(types, MCTP_SUPPORTED_MESSAGES_TYPES, sizeof(MCTP_SUPPORTED_MESSAGES_TYPES));
 	return MCTP_SUCCESS;
+}
+
+uint8_t plat_get_mctp_port_count()
+{
+	return ARRAY_SIZE(smbus_port);
+}
+
+mctp_port *plat_get_mctp_port(uint8_t index)
+{
+	return smbus_port + index;
 }
 
 void plat_i3c_set_pid(void)

@@ -19,6 +19,7 @@
 
 #include "plat_pldm_sensor.h"
 #include "plat_cpld.h"
+#include "plat_class.h"
 
 // test command
 void cmd_test(const struct shell *shell, size_t argc, char **argv)
@@ -78,6 +79,40 @@ void cmd_cpld_dump(const struct shell *shell, size_t argc, char **argv)
 	shell_print(shell, "");
 }
 
+void cmd_info(const struct shell *shell, size_t argc, char **argv)
+{
+	static const char *const vr_module_str[] = {
+		[VR_MODULE_MPS] = "MPS",
+		[VR_MODULE_RNS] = "RNS",
+	};
+
+	static const char *const ubc_module_str[] = {
+		[UBC_MODULE_DELTA] = "DELTA",
+		[UBC_MODULE_MPS] = "MPS",
+		[UBC_MODULE_FLEX] = "FLEX",
+		[UBC_MODULE_LUXSHARE] = "LUXSHARE",
+	};
+
+	static const char *const asic_board_id_str[] = {
+		[ASIC_BOARD_ID_RSVD1] = "RSVD1",
+		[ASIC_BOARD_ID_RSVD2] = "RSVD2",
+		[ASIC_BOARD_ID_RAINBOW] = "RAINBOW",
+		[ASIC_BOARD_ID_EVB] = "EVB",
+	};
+
+	uint8_t vr = get_vr_module();
+	uint8_t ubc = get_ubc_module();
+	uint8_t board_id = get_asic_board_id();
+
+	shell_warn(shell, "vr module: %s",
+		   (vr < VR_MODULE_UNKNOWN) ? vr_module_str[vr] : "UNKNOWN");
+	shell_warn(shell, "ubc module: %s",
+		   (ubc < UBC_MODULE_UNKNOWN) ? ubc_module_str[ubc] : "UNKNOWN");
+	shell_warn(shell, "mmc slot: %d", get_mmc_slot() + 1);
+	shell_warn(shell, "asic board id: %s",
+		   (board_id < ASIC_BOARD_ID_UNKNOWN) ? asic_board_id_str[board_id] : "UNKNOWN");
+}
+
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_cpld_cmds, SHELL_CMD(dump, NULL, "cpld dump", cmd_cpld_dump),
 			       SHELL_SUBCMD_SET_END);
 
@@ -85,6 +120,7 @@ SHELL_STATIC_SUBCMD_SET_CREATE(sub_test_cmds, SHELL_CMD(test, NULL, "test comman
 			       SHELL_CMD(read_raw, NULL, "read raw data test command",
 					 cmd_read_raw),
 			       SHELL_CMD(cpld, &sub_cpld_cmds, "cpld commands", NULL),
+			       SHELL_CMD(info, NULL, "info commands", cmd_info),
 			       SHELL_SUBCMD_SET_END);
 
 /* Root of command test */
