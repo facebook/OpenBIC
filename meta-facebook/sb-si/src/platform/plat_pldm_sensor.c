@@ -2594,7 +2594,7 @@ bool get_plat_sensor_vr_polling_enable_flag()
 
 bool is_adc_access(uint8_t sensor_num)
 {
-	if (!get_plat_sensor_adc_polling_enable_flag() || !get_plat_sensor_polling_enable_flag()) {
+	if ( !is_pcie_switch_access(2) || !get_plat_sensor_adc_polling_enable_flag() || !get_plat_sensor_polling_enable_flag()) {
 		LOG_DBG("Polling disabled: ADC polling enable flag=%d, general polling enable flag=%d",
 			get_plat_sensor_adc_polling_enable_flag(),
 			get_plat_sensor_polling_enable_flag());
@@ -2656,7 +2656,7 @@ bool is_pcie_switch_access(uint8_t cfg_idx)
 
 bool is_vr_access(uint8_t sensor_num)
 {
-	return (get_plat_sensor_vr_polling_enable_flag() && get_plat_sensor_polling_enable_flag());
+	return (is_pcie_switch_access(2) && get_plat_sensor_vr_polling_enable_flag() && get_plat_sensor_polling_enable_flag());
 }
 
 bool get_sensor_info_by_sensor_id(uint8_t sensor_id, uint8_t *vr_bus, uint8_t *vr_addr,
