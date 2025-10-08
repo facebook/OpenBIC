@@ -45,6 +45,7 @@ enum THRESHOLD_STATUS {
 
 void set_threshold_poll_enable_flag(bool flag);
 bool get_threshold_poll_enable_flag();
+void set_threshold_status_to_normal(void);
 void threshold_poll_init();
 void fan_pump_pwrgd();
 sensor_threshold *find_threshold_tbl_entry(uint8_t sensor_num);

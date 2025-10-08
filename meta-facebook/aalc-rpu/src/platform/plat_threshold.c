@@ -1129,6 +1129,13 @@ static bool set_threshold_status(sensor_threshold *threshold_tbl, float val)
 	return true;
 }
 
+void set_threshold_status_to_normal(void)
+{
+	for(uint8_t i = 0; i <ARRAY_SIZE(threshold_tbl); i++)
+		threshold_tbl[i].last_status = THRESHOLD_STATUS_NORMAL;
+}
+
+
 void threshold_poll_init()
 {
 	static uint8_t is_init = 0;
