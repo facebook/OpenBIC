@@ -12328,8 +12328,8 @@ void change_sensor_cfg(uint8_t asic_board_id, uint8_t vr_module, uint8_t ubc_mod
 		}
 		break;
 	case ASIC_BOARD_ID_RAINBOW:
-		// check newer than FAB2
-		if (board_rev_id >= REV_ID_EVT1B) {
+		// check newer than FAB2 (EVT2)
+		if (board_rev_id >= REV_ID_EVT2) {
 			// new RNS
 			if (vr_module == VR_MODULE_RNS) {
 				LOG_WRN("change VR address to new RNS");
@@ -12391,6 +12391,9 @@ void change_sensor_cfg(uint8_t asic_board_id, uint8_t vr_module, uint8_t ubc_mod
 					      SENSOR_CFG_NO_CHANGE, NULL, ubc1_change_flag);
 	else if (ubc_module == UBC_MODULE_LUXSHARE)
 		change_sensor_cfg_from_thread(UBC_SENSOR_THREAD_ID, sensor_dev_lx6301,
+					      SENSOR_CFG_NO_CHANGE, NULL, ubc1_change_flag);
+	else if (ubc_module == UBC_MODULE_DELTA)
+		change_sensor_cfg_from_thread(UBC_SENSOR_THREAD_ID, sensor_dev_u50su4p180pmdafc,
 					      SENSOR_CFG_NO_CHANGE, NULL, ubc1_change_flag);
 }
 
