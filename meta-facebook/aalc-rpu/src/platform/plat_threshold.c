@@ -572,7 +572,7 @@ void set_is_rack_level_abnormal(bool flag)
 
 bool get_is_rack_level_abnormal()
 {
-	return 	is_rack_level_abnormal;
+	return is_rack_level_abnormal;
 }
 
 void level_sensor_do(uint32_t unused, uint32_t status)
@@ -605,7 +605,7 @@ void set_is_rpu_level_abnormal(bool flag)
 
 bool get_is_rpu_level_abnormal()
 {
-	return 	is_rpu_level_abnormal;
+	return is_rpu_level_abnormal;
 }
 
 void rpu_level_sensor_do(uint32_t unused, uint32_t status)
@@ -773,14 +773,14 @@ void set_is_press_abnormal(bool flag)
 
 bool get_is_press_abnormal()
 {
-	return 	is_press_abnormal;
+	return is_press_abnormal;
 }
 
 void abnormal_press_do(uint32_t thres_tbl_idx, uint32_t status)
 {
 	if (thres_tbl_idx >= ARRAY_SIZE(threshold_tbl))
 		return;
-	
+
 	if (status == THRESHOLD_STATUS_UCR) {
 		sensor_threshold *thres_p = &threshold_tbl[thres_tbl_idx];
 		float flow_rate_val = 0.0;
@@ -816,7 +816,8 @@ void abnormal_press_log(uint32_t thres_tbl_idx, uint32_t status)
 	}
 }
 
-static bool is_pump_not_access[3] = {false, false, false};;
+static bool is_pump_not_access[3] = { false, false, false };
+;
 
 void set_is_pump_not_access(uint8_t index, bool flag)
 {
@@ -853,11 +854,10 @@ void pump_failure_do(uint32_t thres_tbl_idx, uint32_t status)
 		(sensor_num == SENSOR_NUM_PB_3_PUMP_TACH_RPM) ? SENSOR_NUM_PB_3_PUMP_TACH_RPM_UCR :
 								0xFF;
 
-	uint8_t pump_not_access_idx =
-		(sensor_num == SENSOR_NUM_PB_1_PUMP_TACH_RPM) ? 0 :
-		(sensor_num == SENSOR_NUM_PB_2_PUMP_TACH_RPM) ? 1 :
-		(sensor_num == SENSOR_NUM_PB_3_PUMP_TACH_RPM) ? 2 :
-								0xFF;
+	uint8_t pump_not_access_idx = (sensor_num == SENSOR_NUM_PB_1_PUMP_TACH_RPM) ? 0 :
+				      (sensor_num == SENSOR_NUM_PB_2_PUMP_TACH_RPM) ? 1 :
+				      (sensor_num == SENSOR_NUM_PB_3_PUMP_TACH_RPM) ? 2 :
+										      0xFF;
 
 	switch (status) {
 	case THRESHOLD_STATUS_NOT_ACCESS:
@@ -867,7 +867,7 @@ void pump_failure_do(uint32_t thres_tbl_idx, uint32_t status)
 		}
 		if (pump_fail_check())
 			set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_TWO_PUMP_X, 1);
-		break;	
+		break;
 	case THRESHOLD_STATUS_LCR:
 		error_log_event(sensor_num, IS_ABNORMAL_VAL);
 		if (pump_fail_check())
@@ -1131,10 +1131,9 @@ static bool set_threshold_status(sensor_threshold *threshold_tbl, float val)
 
 void set_threshold_status_to_normal(void)
 {
-	for(uint8_t i = 0; i <ARRAY_SIZE(threshold_tbl); i++)
+	for (uint8_t i = 0; i < ARRAY_SIZE(threshold_tbl); i++)
 		threshold_tbl[i].last_status = THRESHOLD_STATUS_NORMAL;
 }
-
 
 void threshold_poll_init()
 {
@@ -1238,7 +1237,7 @@ void set_is_hsc_hsc_fail(bool flag)
 
 bool get_is_hsc_hsc_fail()
 {
-	return 	is_hsc_hsc_fail;
+	return is_hsc_hsc_fail;
 }
 
 void check_bpb_hsc_status(void)
