@@ -256,7 +256,8 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
 	sub_throttle_switch_cmds,
 	SHELL_CMD(get, NULL, "get throttle switch status", cmd_throttle_status_get),
 	SHELL_CMD_ARG(set, &throttle_name,
-		      "set throttle <sense0|sense1|all> <enable|disable> [perm]", NULL, 3, 1),
+		      "throttle_switch set <lv1 |lv2 |lv3 |all> <enable>|<disable> [perm]", NULL, 3,
+		      1),
 	SHELL_SUBCMD_SET_END);
 
 /* Root of command test */
