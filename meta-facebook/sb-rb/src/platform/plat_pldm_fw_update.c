@@ -58,6 +58,7 @@ compnt_mapping_sensor vr_compnt_mapping_sensor_table[] = {
 	{ COMPNT_VR_10, SENSOR_NUM_ASIC_P0V4_VDDQL_HBM0246_TEMP_C, "ASIC_P0V4_VDDQL_HBM0246" },
 	{ COMPNT_VR_11, SENSOR_NUM_ASIC_P0V75_OWL_W_VDD_TEMP_C, "ASIC_P0V75_OWL_W_VDD" },
 	{ COMPNT_VR_12, SENSOR_NUM_ASIC_P0V9_OWL_W_TRVDD_TEMP_C, "ASIC_P0V9_OWL_W_TRVDD" },
+	{ COMPNT_VR_3V3, SENSOR_NUM_P3V3_OSFP_TEMP_C, "P3V3_OSFP" },
 };
 static uint8_t pldm_pre_bic_update(void *fw_update_param)
 {
@@ -245,6 +246,7 @@ pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
 		.self_apply_work_func = NULL,
 		.comp_version_str = NULL,
 	},
+	VR_COMPONENT_DEF(COMPNT_VR_3V3),
 };
 
 uint8_t plat_pldm_query_device_identifiers(const uint8_t *buf, uint16_t len, uint8_t *resp,
@@ -344,6 +346,11 @@ void load_pldmupdate_comp_config(void)
 static uint8_t pldm_pre_vr_update(void *fw_update_param)
 {
 	CHECK_NULL_ARG_WITH_RETURN(fw_update_param, 1);
+
+	if (get_asic_board_id() != ASIC_BOARD_ID_EVB) {
+		LOG_ERR("only evb support 3V3 vr update");
+		return 1;
+	}
 
 	pldm_fw_update_param_t *p = (pldm_fw_update_param_t *)fw_update_param;
 

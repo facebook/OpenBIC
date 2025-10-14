@@ -34,6 +34,7 @@ enum FIRMWARE_COMPONENT {
 	COMPNT_HAMSA,
 	COMPNT_MEDHA0,
 	COMPNT_MEDHA1,
+	COMPNT_VR_3V3,
 };
 
 bool find_sensor_id_and_name_by_firmware_comp_id(uint8_t comp_identifier, uint8_t *sensor_id,
