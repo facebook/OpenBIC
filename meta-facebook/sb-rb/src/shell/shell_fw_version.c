@@ -24,6 +24,7 @@
 #include "plat_pldm_fw_update.h"
 #include "plat_pldm_sensor.h"
 #include "plat_hook.h"
+#include "plat_class.h"
 
 LOG_MODULE_REGISTER(shell_fw_version);
 
@@ -38,11 +39,17 @@ void cmd_get_fw_version_vr(const struct shell *shell, size_t argc, char **argv)
 	set_plat_sensor_polling_enable_flag(false);
 
 	shell_print(shell, "comp_id |                rail name               |version |remain");
-	for (int i = COMPNT_VR_1; i <= COMPNT_VR_12; i++) {
+	for (int i = COMPNT_VR_1; i <= COMPNT_VR_3V3; i++) {
 		uint8_t sensor_id = 0;
 		char sensor_name[MAX_AUX_SENSOR_NAME_LEN] = { 0 };
 
 		if (is_mb_dc_on() == false)
+			continue;
+
+		if (i == COMPNT_HAMSA || i == COMPNT_MEDHA0 || i == COMPNT_MEDHA1)
+			continue;
+
+		if (i == COMPNT_VR_3V3 && (get_asic_board_id() != ASIC_BOARD_ID_EVB))
 			continue;
 
 		if (!find_sensor_id_and_name_by_firmware_comp_id(i, &sensor_id, sensor_name)) {
