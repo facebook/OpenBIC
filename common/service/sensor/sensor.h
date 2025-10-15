@@ -284,6 +284,7 @@ typedef struct _sensor_cfg_ {
 	uint8_t retry;
 	uint8_t (*init)(uint8_t, int *);
 	uint8_t (*read)(struct _sensor_cfg_ *, int *);
+	bool is_initialized;
 } sensor_cfg;
 
 typedef struct _sensor_monitor_table_info {

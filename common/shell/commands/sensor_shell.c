@@ -127,7 +127,7 @@ static int get_sdr_index_by_sensor_num(uint8_t sensor_num)
 
 #ifdef ENABLE_PLDM_SENSOR
 static int pldm_sensor_access(const struct shell *shell, uint16_t thread_id,
-			      uint16_t sensor_pdr_index, char *keyword)
+			      uint16_t sensor_pdr_index, const char *keyword)
 {
 	if (shell == NULL) {
 		return -1;
@@ -155,7 +155,7 @@ static int pldm_sensor_access(const struct shell *shell, uint16_t thread_id,
 	pldm_get_sensor_name_via_sensor_id(sensor_id, sensor_name, sizeof(sensor_name));
 	char sign = ' ';
 
-	pldm_sensor_thread *thread_info = pldm_sensor_get_thread_info(thread_id);
+	const pldm_sensor_thread *thread_info = pldm_sensor_get_thread_info(thread_id);
 	uint32_t actual_poll_interval_ms = 0;
 
 	if (thread_info && thread_info->poll_interval_ms > 0) {
@@ -274,6 +274,7 @@ static int sensor_access(const struct shell *shell, uint16_t table_idx, sensor_c
 
 		char check_access = ((cfg->access_checker(cfg->num) == true) ? 'O' : 'X');
 		char check_poll = ((cfg->is_enable_polling == true) ? 'O' : 'X');
+		char check_init = ((cfg->is_initialized == true) ? 'O' : 'X');
 
 		if (check_access == 'O') {
 			if (cfg->cache_status == SENSOR_READ_4BYTE_ACUR_SUCCESS) {
@@ -281,27 +282,29 @@ static int sensor_access(const struct shell *shell, uint16_t table_idx, sensor_c
 				int16_t integer = cfg->cache & 0xFFFF;
 				shell_print(
 					shell,
-					"[0x%-2x] %-25s: %-10s | access[%c] | poll[%c] %-4d sec | %-25s | %5d.%03d",
+					"[0x%-2x] %-25s: %-10s | access[%c] | init[%c] | poll[%c] %-4d sec | %-25s | %5d.%03d",
 					cfg->num, sensor_name, sensor_type_name[cfg->type],
-					check_access, check_poll, (int)cfg->poll_time,
+					check_access, check_init, check_poll, (int)cfg->poll_time,
 					sensor_status_name[cfg->cache_status], integer, fraction);
 				break;
 			} else if (cfg->cache_status == SENSOR_READ_SUCCESS ||
 				   cfg->cache_status == SENSOR_READ_ACUR_SUCCESS) {
 				shell_print(
 					shell,
-					"[0x%-2x] %-25s: %-10s | access[%c] | poll[%c] %-4d sec | %-25s | %-8d",
+					"[0x%-2x] %-25s: %-10s | access[%c] | init[%c] | poll[%c] %-4d sec | %-25s | %-8d",
 					cfg->num, sensor_name, sensor_type_name[cfg->type],
-					check_access, check_poll, (int)cfg->poll_time,
+					check_access, check_init, check_poll, (int)cfg->poll_time,
 					sensor_status_name[cfg->cache_status], cfg->cache);
 				break;
 			}
 		}
 
-		shell_print(shell,
-			    "[0x%-2x] %-25s: %-10s | access[%c] | poll[%c] %-4d sec | %-25s | na",
-			    cfg->num, sensor_name, sensor_type_name[cfg->type], check_access,
-			    check_poll, (int)cfg->poll_time, sensor_status_name[cfg->cache_status]);
+		shell_print(
+			shell,
+			"[0x%-2x] %-25s: %-10s | access[%c] | init[%c] | poll[%c] %-4d sec | %-25s | na",
+			cfg->num, sensor_name, sensor_type_name[cfg->type], check_access,
+			check_init, check_poll, (int)cfg->poll_time,
+			sensor_status_name[cfg->cache_status]);
 		break;
 
 	case SENSOR_WRITE:
@@ -374,7 +377,7 @@ void cmd_sensor_cfg_list_all_sensor(const struct shell *shell, size_t argc, char
 	int sdr_index = -1;
 	uint16_t table_idx = 0;
 	uint8_t sensor_idx = 0;
-	char *keyword = NULL;
+	const char *keyword = NULL;
 	if (argc == 2)
 		keyword = argv[1];
 
