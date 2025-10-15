@@ -347,12 +347,11 @@ static uint8_t pldm_pre_vr_update(void *fw_update_param)
 {
 	CHECK_NULL_ARG_WITH_RETURN(fw_update_param, 1);
 
-	if (get_asic_board_id() != ASIC_BOARD_ID_EVB) {
+	pldm_fw_update_param_t *p = (pldm_fw_update_param_t *)fw_update_param;
+	if (get_asic_board_id() != ASIC_BOARD_ID_EVB && p->comp_id == COMPNT_VR_3V3) {
 		LOG_ERR("only evb support 3V3 vr update");
 		return 1;
 	}
-
-	pldm_fw_update_param_t *p = (pldm_fw_update_param_t *)fw_update_param;
 
 	/* Stop sensor polling */
 	set_plat_sensor_polling_enable_flag(false);
