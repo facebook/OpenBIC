@@ -60,6 +60,7 @@
 #define TEMP_DIMM_A7_PARAM 0x0007
 #define DPV2_16_ADDR 0x50
 #define DPV2_HSM_TEMP_ADDR 0x4C
+#define HSM_SOC_ADDR 0x77
 
 /*  threshold sensor number, 1 based  */
 #define SENSOR_NUM_TEMP_TMP75_IN 0x01
@@ -136,6 +137,7 @@
 #define SENSOR_NUM_TEMP_DPV2_EFUSE 0x94
 #define SENSOR_NUM_PWR_DPV2 0x95
 #define SENSOR_NUM_TEMP_DPV2_HSM 0x96
+#define SENSOR_NUM_TEMP_HSM_SOC 0x97
 
 #define POLL_TIME_BAT3V 3600 // sec
 

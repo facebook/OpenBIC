@@ -33,6 +33,7 @@
 #include "power_status.h"
 #include "pmbus.h"
 #include "tmp431.h"
+#include "tmp421.h"
 #include "libutil.h"
 #include "xdpe15284.h"
 
@@ -377,6 +378,9 @@ sensor_cfg DPV2_sensor_config_table[] = {
 	  TMP431_LOCAL_TEMPERATRUE, hsm_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_hsm_read, NULL, post_hsm_read, NULL,
 	  NULL },
+	{ SENSOR_NUM_TEMP_HSM_SOC, sensor_dev_tmp421, I2C_BUS9, HSM_SOC_ADDR,
+	  TMP421_REMOTE_TEMPERATRUE_1, hsm_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, post_hsm_soc_read, NULL, NULL },
 };
 
 const int SENSOR_CONFIG_SIZE = ARRAY_SIZE(plat_sensor_config);
