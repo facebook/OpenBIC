@@ -32,7 +32,7 @@ static uint8_t ubc_module = 0;
 static uint8_t mmc_slot = 0;
 static uint8_t asic_board_id = 0;
 
-static bool plat_slot_read(uint8_t *data)
+bool plat_cpld_eerprom_read(uint8_t *data, uint16_t offset, uint8_t len)
 {
 	CHECK_NULL_ARG_WITH_RETURN(data, false);
 
@@ -43,16 +43,16 @@ static bool plat_slot_read(uint8_t *data)
 	i2c_msg.bus = I2C_BUS11;
 	i2c_msg.target_addr = CPLD_EEPROM_ADDR;
 	i2c_msg.tx_len = 2;
-	i2c_msg.rx_len = 1;
-	i2c_msg.data[0] = 0;
-	i2c_msg.data[1] = 0;
+	i2c_msg.rx_len = len;
+	i2c_msg.data[0] = offset >> 8;
+	i2c_msg.data[1] = offset & 0xFF;
 
 	if (i2c_master_read(&i2c_msg, retry)) {
 		LOG_ERR("Failed to read cpld fru offset 0");
 		return false;
 	}
 
-	memcpy(data, i2c_msg.data, 1);
+	memcpy(data, i2c_msg.data, len);
 	return true;
 }
 
@@ -72,7 +72,7 @@ void init_plat_config()
 
 	change_sensor_cfg(asic_board_id, vr_module, ubc_module, board_rev_id);
 	// cpld fru offset 0: slot
-	plat_slot_read(&mmc_slot);
+	plat_cpld_eerprom_read(&mmc_slot, 0, 1);
 	// mmc slot 1-4 * 0x0A
 	uint8_t init_plat_eid = ((get_mmc_slot() + 1) * MCTP_DEFAULT_ENDPOINT);
 	plat_set_eid(init_plat_eid);

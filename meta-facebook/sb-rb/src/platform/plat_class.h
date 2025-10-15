@@ -58,5 +58,5 @@ uint8_t get_vr_module();
 uint8_t get_ubc_module();
 uint8_t get_mmc_slot();
 uint8_t get_asic_board_id();
-
+bool plat_cpld_eerprom_read(uint8_t *data, uint16_t offset, uint8_t len);
 #endif
