@@ -143,4 +143,72 @@ uint8_t vistara_init(sensor_cfg *cfg)
 	return SENSOR_INIT_SUCCESS;
 }
 
+static inline int validate_spd_read_params(uint8_t *out, uint8_t dimm_idx, uint16_t offset,
+					   uint8_t length)
+{
+	if (!out || length == 0 || length > VISTARA_SPD_CHUNK_DEFAULT || dimm_idx > 3 ||
+	    (offset + length) > VISTARA_SPD_DDR4_TOTAL_BYTES) {
+		return -EINVAL;
+	}
+	return 0;
+}
+
+int vistara_read_dimm_spd_chunk_eid(uint8_t cxl_eid, uint8_t dimm_idx, uint16_t offset,
+				    uint8_t length, uint8_t *out)
+{
+	int ret = validate_spd_read_params(out, dimm_idx, offset, length);
+	if (ret != 0)
+		return ret;
+
+	mctp *inst = NULL;
+	mctp_ext_params xp = (mctp_ext_params){ 0 };
+	if (!get_mctp_info_by_eid(cxl_eid, &inst, &xp))
+		return -EIO;
+
+	uint8_t req[12];
+	struct vistara_dimm_spd_read_args a = {
+		.spd_id = dimm_idx,
+		.offset = offset,
+		.num_bytes = length,
+	};
+	vistara_encode_dimm_spd_read(req, &a);
+
+	mctp_cci_msg msg = { 0 };
+	msg.hdr.cci_msg_req_resp = 0;
+	msg.hdr.op = CCI_OEM_OP_DIMM_SPD_READ;
+	msg.hdr.pl_len = sizeof(req);
+	msg.pl_data = req;
+	msg.ext_params = xp;
+	msg.timeout_ms = pal_get_cci_timeout_ms();
+
+	uint8_t rbuf[VISTARA_CCI_BUFFER_SIZE] = { 0 };
+	int rlen = mctp_cci_read(inst, &msg, rbuf, sizeof(rbuf));
+	if (rlen < (int)length)
+		return -EIO;
+
+	memcpy(out, rbuf, length);
+	return 0;
+}
+
+bool vistara_read_dimm_spd_ddr4(uint8_t cxl_eid, uint8_t dimm_idx,
+				uint8_t out512[VISTARA_SPD_DDR4_TOTAL_BYTES])
+{
+	uint16_t got = 0;
+	while (got < VISTARA_SPD_DDR4_TOTAL_BYTES) {
+		uint16_t remain = (uint16_t)(VISTARA_SPD_DDR4_TOTAL_BYTES - got);
+		uint8_t chunk = (remain < VISTARA_SPD_CHUNK_DEFAULT) ?
+					(uint8_t)remain :
+					(uint8_t)VISTARA_SPD_CHUNK_DEFAULT;
+		int rc = vistara_read_dimm_spd_chunk_eid(cxl_eid, dimm_idx, got, chunk,
+							 &out512[got]);
+		if (rc != 0) {
+			LOG_ERR("SPD chunk fail (eid=%u dimm=%u off=0x%03X len=%u rc=%d)", cxl_eid,
+				dimm_idx, got, chunk, rc);
+			return false;
+		}
+		got += chunk;
+	}
+	return true;
+}
+
 #endif

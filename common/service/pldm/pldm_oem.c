@@ -30,8 +30,18 @@
 #ifdef ENABLE_EVENT_TO_BMC
 #include "plat_mctp.h"
 #endif
+#ifdef ENABLE_VISTARA
+#include "vistara.h"
+#include "plat_mctp.h"
+#endif
 
 LOG_MODULE_DECLARE(pldm, LOG_LEVEL_DBG);
+
+#ifdef ENABLE_VISTARA
+static uint8_t oem_wf_read_spd_chunk(void *mctp_inst, uint8_t *buf, uint16_t len,
+				     uint8_t instance_id, uint8_t *resp, uint16_t *resp_len,
+				     void *ext_params);
+#endif
 
 __weak uint8_t sensor_polling_cmd(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t instance_id,
 				  uint8_t *resp, uint16_t *resp_len, void *ext_params)
@@ -234,10 +244,14 @@ uint8_t send_event_log_to_bmc(struct pldm_addsel_data sel_msg)
 #endif
 #endif
 
-static pldm_cmd_handler pldm_oem_cmd_tbl[] = { { PLDM_OEM_CMD_ECHO, cmd_echo },
-					       { PLDM_OEM_IPMI_BRIDGE, ipmi_cmd },
-					       { PLDM_OEM_SENSOR_POLLING_CMD,
-						 sensor_polling_cmd } };
+static pldm_cmd_handler pldm_oem_cmd_tbl[] = {
+	{ PLDM_OEM_CMD_ECHO, cmd_echo },
+	{ PLDM_OEM_IPMI_BRIDGE, ipmi_cmd },
+	{ PLDM_OEM_SENSOR_POLLING_CMD, sensor_polling_cmd },
+#ifdef ENABLE_VISTARA
+	{ PLDM_OEM_WF_READ_SPD_CHUNK, oem_wf_read_spd_chunk },
+#endif
+};
 
 uint8_t pldm_oem_handler_query(uint8_t code, void **ret_fn)
 {
@@ -257,3 +271,70 @@ uint8_t pldm_oem_handler_query(uint8_t code, void **ret_fn)
 	*ret_fn = (void *)fn;
 	return fn ? PLDM_SUCCESS : PLDM_ERROR;
 }
+
+#ifdef ENABLE_VISTARA
+static uint8_t oem_wf_read_spd_chunk(void *mctp_inst, uint8_t *buf, uint16_t len,
+				     uint8_t instance_id, uint8_t *resp, uint16_t *resp_len,
+				     void *ext_params)
+{
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp_len, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(ext_params, PLDM_ERROR);
+
+	/* Minimum length: IANA (3) + CXL (1) + DIMM (1) + offset (2) + length (1) = 8 */
+	if (len < 8) {
+		uint16_t w = 0;
+		resp[w++] = PLDM_ERROR_INVALID_LENGTH;
+		resp[w++] = 0x00;
+		resp[w++] = 0x00;
+		resp[w++] = 0x00;
+		resp[w++] = 0x00;
+		*resp_len = w;
+		return PLDM_SUCCESS;
+	}
+
+	uint8_t *iana = &buf[0];
+	uint8_t cxl_id = buf[3];
+	uint8_t dimm_idx = buf[4];
+	uint16_t offset = (uint16_t)buf[5] | ((uint16_t)buf[6] << 8);
+	uint8_t rlen = buf[7];
+
+	if ((rlen == 0) || (rlen > VISTARA_SPD_CHUNK_DEFAULT) ||
+	    ((uint32_t)offset + rlen > VISTARA_SPD_DDR4_TOTAL_BYTES)) {
+		uint16_t w = 0;
+		resp[w++] = PLDM_ERROR_INVALID_DATA;
+		resp[w++] = iana[0];
+		resp[w++] = iana[1];
+		resp[w++] = iana[2];
+		resp[w++] = 0x00;
+		*resp_len = w;
+		return PLDM_SUCCESS;
+	}
+
+	uint8_t cxl_eid = plat_get_cxl_eid(cxl_id);
+
+	uint8_t data[VISTARA_SPD_CHUNK_DEFAULT] = { 0 };
+	int rc = -1;
+
+	rc = vistara_read_dimm_spd_chunk_eid(cxl_eid, dimm_idx, offset, rlen, data);
+	uint8_t cc = (rc == 0) ? PLDM_SUCCESS : PLDM_ERROR;
+	uint16_t w = 0;
+	resp[w++] = cc;
+	resp[w++] = iana[0];
+	resp[w++] = iana[1];
+	resp[w++] = iana[2];
+
+	if (cc == PLDM_SUCCESS) {
+		resp[w++] = rlen;
+		memcpy(&resp[w], data, rlen);
+		w += rlen;
+	} else {
+		resp[w++] = 0x00;
+	}
+
+	*resp_len = w;
+	return PLDM_SUCCESS;
+}
+#endif
