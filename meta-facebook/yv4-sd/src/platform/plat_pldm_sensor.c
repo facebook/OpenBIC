@@ -2583,7 +2583,7 @@ pldm_sensor_info plat_pldm_sensor_mb_temp_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
