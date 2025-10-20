@@ -36,6 +36,9 @@
 #define VR_3_EN 0x41
 #define VR_4_EN 0x42
 #define PREST_DELAY_REG 0x9D
+#define VR_SMBUS_ALERT_EVENT_LOG_REG 0x26
+#define HAMSA_MFIO_REG 0x17
+#define VR_AND_CLK_EN_PIN_CTRL 0xA1
 
 #define CPLD_ADDR (0x4C >> 1)
 #define I2C_BUS_CPLD I2C_BUS11
@@ -73,5 +76,5 @@ void init_cpld_polling(void);
 void check_cpld_polling_alert_status(void);
 void check_ubc_delayed_timer_handler(struct k_timer *timer);
 bool set_cpld_bit(uint8_t cpld_offset, uint8_t bit, uint8_t value);
-
+void give_all_vr_pm_alert_sem();
 #endif

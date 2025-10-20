@@ -58,6 +58,14 @@ K_THREAD_STACK_DEFINE(cpld_polling_stack, POLLING_CPLD_STACK_SIZE);
 struct k_thread cpld_polling_thread;
 k_tid_t cpld_polling_tid;
 
+void ragular_cpld_polling_sem_handler(struct k_timer *timer);
+K_TIMER_DEFINE(ragular_cpld_polling_sem_timer, ragular_cpld_polling_sem_handler, NULL);
+static struct k_sem all_vr_pm_alert_sem; // ALL_VR_PM_ALERT_R_N gpio sem
+
+void ragular_cpld_polling_sem_handler(struct k_timer *timer)
+{
+	k_sem_give(&all_vr_pm_alert_sem);
+}
 // cpld tbd
 //void get_vr_vout_handler(struct k_work *work);
 //K_WORK_DEFINE(vr_vout_work, get_vr_vout_handler);
@@ -77,6 +85,7 @@ cpld_info cpld_info_table[] = {
 	{ VR_POWER_FAULT_3_REG, 			0x00, 0x00, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS, .event_type = VR_POWER_FAULT },
 	{ VR_POWER_FAULT_4_REG, 			0x00, 0x00, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS, .event_type = VR_POWER_FAULT },
 	{ VR_POWER_FAULT_5_REG, 			0x00, 0x00, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS, .event_type = VR_POWER_FAULT },
+	{ VR_SMBUS_ALERT_EVENT_LOG_REG, 	0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
 };
 
 bool cpld_polling_alert_status = false; // only polling cpld when alert status is true
@@ -196,6 +205,12 @@ bool vr_error_callback(cpld_info *cpld_info, uint8_t *current_cpld_value)
 	return true;
 }
 
+void give_all_vr_pm_alert_sem()
+{
+	k_sem_give(&all_vr_pm_alert_sem);
+	LOG_WRN("gpio give all_vr_pm_alert_sem");
+}
+
 void poll_cpld_registers()
 {
 	uint8_t data = 0;
@@ -203,7 +218,7 @@ void poll_cpld_registers()
 
 	while (1) {
 		/* Sleep for the polling interval */
-		k_msleep(CPLD_POLLING_INTERVAL_MS);
+		k_sem_take(&all_vr_pm_alert_sem, K_FOREVER);
 
 		if (is_update_state_idle() == false) {
 			continue;
@@ -261,6 +276,32 @@ void poll_cpld_registers()
 				if (cpld_info_table[i].event_type == VR_POWER_FAULT) {
 					process_mtia_vr_power_fault_sel(&cpld_info_table[i],
 									&data);
+				}
+				if (cpld_info_table[i].cpld_offset == VR_SMBUS_ALERT_EVENT_LOG_REG) {
+					//get sensor pmbus alert status(if temperature bit-2 is 1)
+					uint8_t temp_data = 0;
+					plat_read_cpld(VR_SMBUS_ALERT_EVENT_LOG_REG, &temp_data, 1);
+					// check which VR_SMBUS_ALERT_EVENT_LOG_REG bit is changed
+					LOG_INF("VR_SMBUS_ALERT_EVENT_LOG_REG: 0x%x", temp_data);
+					for (int j = 0; j < 8; j++) {
+						if (j == 0)
+							continue; // skip bit-0
+						
+						// if temp data is changed
+						if ((temp_data & BIT(j)) == 0)
+						{
+							LOG_WRN("SMBUS_ALERT_REG changed, bit-%d is changed", j);
+							if(!check_temp_status_bit(j))
+							{
+								// write cpld register HAMSA_MFIO_REG, bit-7 to 1
+								plat_read_cpld(HAMSA_MFIO_REG, &data, 1);
+								data |= BIT(7);
+								plat_write_cpld(HAMSA_MFIO_REG, &data);
+								LOG_WRN("Temperature bit-2 is 1, write cpld register HAMSA_MFIO_REG, bit-7 to 1");
+								break;
+							}
+						}
+					}
 				}
 				// update map
 				cpld_info_table[i].is_fault_bit_map = new_fault_map;
@@ -328,7 +369,8 @@ void init_cpld_polling(void)
 	check_cpld_polling_alert_status();
 
 	k_timer_start(&init_ubc_delayed_timer, K_MSEC(1000), K_NO_WAIT);
-	
+	k_sem_init(&all_vr_pm_alert_sem, 0, 1);
+	k_timer_start(&ragular_cpld_polling_sem_timer, K_MSEC(1000), K_MSEC(1000));	
 	cpld_polling_tid =
 		k_thread_create(&cpld_polling_thread, cpld_polling_stack,
 				K_THREAD_STACK_SIZEOF(cpld_polling_stack), poll_cpld_registers,

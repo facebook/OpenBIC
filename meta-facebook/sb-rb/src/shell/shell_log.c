@@ -87,6 +87,18 @@ const cpld_bit_name_table_t cpld_bit_name_table[] = {
 		  "P3V3",
 		  "P5V",
 		  "P12V_UBC_PWRGD",
+	  } },
+	{ VR_SMBUS_ALERT_EVENT_LOG_REG,
+	  "VR SMBALRT , Status",
+	  {
+		  "RSVD",
+		  "MAX_N_VDDRXTX_SMBALRT_N",
+		  "VDDQC_VDDQL_0246_SMBALRT_N",
+		  "MAX_M_VDDQC_1357_SMBALRT_N",
+		  "OWL_W_SMBALRT_N",
+		  "OWL_E_SMBALRT_N",
+		  "MEDHA1_VDD_ALERT_R_N",
+		  "MEDHA0_VDD_ALERT_R_N",
 	  } }
 };
 
