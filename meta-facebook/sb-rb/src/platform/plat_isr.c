@@ -34,6 +34,9 @@ void ISR_GPIO_ALL_VR_PM_ALERT_R_N()
 		gpio_get(ALL_VR_PM_ALERT_R_N), gpio_get_direction(ALL_VR_PM_ALERT_R_N));
 
 	check_cpld_polling_alert_status();
+	if (gpio_get(ALL_VR_PM_ALERT_R_N) == GPIO_LOW) {
+		give_all_vr_pm_alert_sem();
+	}
 }
 
 void ISR_GPIO_FM_PLD_UBC_EN_R()
