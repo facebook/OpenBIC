@@ -147,8 +147,15 @@ void bubble_sort_power_sequence_table(const struct shell *shell,
 			}
 		}
 	}
-
+	uint8_t fail_flag = 0;
 	for (size_t i = 0; i < size; i++) {
+		if (sorted_power_sequence_table[i].value == 0) {
+			if (fail_flag == 0) {
+				shell_print(shell, "Power-up sequence fail -> %s",
+					    sorted_power_sequence_table[i].power_rail_name);
+				fail_flag = 1;
+			}
+		}
 		shell_print(shell, "            [%2d]%-50s %d ms", i,
 			    sorted_power_sequence_table[i].power_rail_name,
 			    sorted_power_sequence_table[i].value * 2);

@@ -111,7 +111,7 @@ int power_steps = 0;
 void cmd_iris_steps_on(const struct shell *shell, size_t argc, char **argv)
 {
 	if (power_steps >= MAX_STEPS) {
-		shell_warn(shell, "no more steps");
+		LOG_WRN("no more steps");
 		return;
 	}
 	// first step need to inverse all enable bit
@@ -123,7 +123,7 @@ void cmd_iris_steps_on(const struct shell *shell, size_t argc, char **argv)
 		}
 
 		if (!iris_power_control(1)) {
-			shell_warn(shell, "iris power on fail!");
+			LOG_WRN("iris power on fail!");
 			return;
 		}
 	}
@@ -133,10 +133,10 @@ void cmd_iris_steps_on(const struct shell *shell, size_t argc, char **argv)
 
 	// turn on the steps on bit
 	if (inverse_bit(steps_on[power_steps].cpld_offset, steps_on[power_steps].bit)) {
-		shell_print(shell, "set %-35s fail", steps_on[power_steps].name);
+		LOG_ERR("set %-35s fail", steps_on[power_steps].name);
 		return;
 	} else
-		shell_print(shell, "set %-35s success", steps_on[power_steps].name);
+		LOG_INF("set %-35s success", steps_on[power_steps].name);
 
 	power_steps += 1;
 }
