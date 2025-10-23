@@ -314,7 +314,7 @@ void poll_cpld_registers()
 bool set_cpld_bit(uint8_t cpld_offset, uint8_t bit, uint8_t value)
 {
 	
-	if (bit > 8 || bit < 0) {
+	if (bit > 8) {
 		LOG_ERR("Invalid bit index %d", bit);
 		return false;
 	}
