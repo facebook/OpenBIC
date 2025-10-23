@@ -186,6 +186,35 @@ static bool is_critical_error(uint8_t dimm_id)
 	return false;
 }
 
+static bool get_pmic_error_status(void)
+{
+	int ret = 0;
+	int retry = 3;
+	I2C_MSG msg = { 0 };
+	uint8_t offset = 0x05;
+
+	memset(&msg, 0, sizeof(I2C_MSG));
+
+	msg.bus = I2C_BUS5;
+	msg.target_addr = CPLD_ADDR;
+	msg.tx_len = 1;
+	msg.rx_len = 1;
+	msg.data[0] = offset;
+
+	ret = i2c_master_read(&msg, retry);
+	if (ret != 0) {
+		LOG_ERR("[%s] Failed to get cpld reg, bus: 0x%x, addr: 0x%x, reg: 0x%x", __func__,
+			msg.bus, msg.target_addr, offset);
+		return true;
+	}
+
+	if (msg.data[0] & BIT(0)) {
+		return true;
+	}
+
+	return false;
+}
+
 void monitor_pmic_error_via_i3c_handler()
 {
 	int ret = 0, dimm_id = 0;
@@ -201,6 +230,12 @@ void monitor_pmic_error_via_i3c_handler()
 			continue;
 		}
 
+		// Check CPLD pmic error bit
+		if (get_pmic_error_status() == false) {
+			continue;
+		}
+		k_msleep(READ_PMIC_CRITICAL_ERROR_MS);
+
 		// Check which PMIC is error
 		if (k_mutex_lock(&i3c_dimm_mutex, K_MSEC(I3C_DIMM_MUTEX_TIMEOUT_MS))) {
 			LOG_ERR("Failed to lock I3C dimm MUX");
@@ -208,21 +243,21 @@ void monitor_pmic_error_via_i3c_handler()
 		}
 
 		for (dimm_id = 0; dimm_id < DIMM_ID_MAX; dimm_id++) {
-			if (!get_post_status()) {
-				break;
-			}
-
 			if (get_dimm_present(dimm_id) == DIMM_NOT_PRSNT) {
 				continue;
 			}
 
 			memset(&error_data, 0, sizeof(error_data));
-			ret = get_pmic_error_data_one(dimm_id, error_data, true);
+			ret = get_pmic_error_data_one(dimm_id, error_data, false);
 			if (ret < 0) {
 				LOG_ERR("Fail to get PMIC error data on monitor thread, dimm: 0x%x",
 					dimm_id);
 				continue;
 			}
+
+			LOG_DBG("DIMM ID 0x%x PMIC error data: R05 %02x, R06 %02x, R08 %02x, R09 %02x, R0A %02x, R0B %02x, R33 %02x",
+				dimm_id, error_data[0], error_data[1], error_data[3], error_data[4],
+				error_data[5], error_data[6], error_data[46]);
 
 			// Compare error pattern, add SEL to BMC and update record
 			ret = compare_pmic_error(dimm_id, error_data, sizeof(error_data));
