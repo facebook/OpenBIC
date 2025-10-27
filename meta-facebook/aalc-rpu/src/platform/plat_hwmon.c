@@ -130,7 +130,7 @@ static bool hsc_reset(uint8_t sensor_num)
 	if (cfg->type == sensor_dev_adm1272) {
 		if (enable_adm1272_hsc(bus, addr, false)) {
 			// check pump is already enable
-			k_msleep(500);
+			k_msleep(5000);
 			// enable pump
 			if (enable_adm1272_hsc(bus, addr, true)) {
 				return true;
