@@ -88,21 +88,30 @@ uint16_t get_sensor_status_for_modbus_cmd(uint8_t status)
 		WRITE_BIT(val, 1, (get_threshold_status(SENSOR_NUM_MB_FAN2_TACH_RPM)) ? 1 : 0);
 		break;
 	case RPU_PUMP1_STATUS:
-		val = (get_threshold_status(SENSOR_NUM_PB_1_PUMP_TACH_RPM)) ?
+		val = (get_threshold_status(SENSOR_NUM_PB_1_PUMP_TACH_RPM)) ==
+				      THRESHOLD_STATUS_NOT_ACCESS ?
+			      PUMP_STATUS_DISABLE :
+		      (get_threshold_status(SENSOR_NUM_PB_1_PUMP_TACH_RPM)) ?
 			      PUMP_STATUS_ABNORMAL :
 		      (get_status_flag(STATUS_FLAG_PUMP_REDUNDANT) == PUMP_REDUNDANT_23) ?
 			      PUMP_STATUS_REDAUNDANT :
 			      PUMP_STATUS_ENABLE;
 		break;
 	case RPU_PUMP2_STATUS:
-		val = (get_threshold_status(SENSOR_NUM_PB_2_PUMP_TACH_RPM)) ?
+		val = (get_threshold_status(SENSOR_NUM_PB_2_PUMP_TACH_RPM)) ==
+				      THRESHOLD_STATUS_NOT_ACCESS ?
+			      PUMP_STATUS_DISABLE :
+		      (get_threshold_status(SENSOR_NUM_PB_2_PUMP_TACH_RPM)) ?
 			      PUMP_STATUS_ABNORMAL :
 		      (get_status_flag(STATUS_FLAG_PUMP_REDUNDANT) == PUMP_REDUNDANT_13) ?
 			      PUMP_STATUS_REDAUNDANT :
 			      PUMP_STATUS_ENABLE;
 		break;
 	case RPU_PUMP3_STATUS:
-		val = (get_threshold_status(SENSOR_NUM_PB_3_PUMP_TACH_RPM)) ?
+		val = (get_threshold_status(SENSOR_NUM_PB_3_PUMP_TACH_RPM)) ==
+				      THRESHOLD_STATUS_NOT_ACCESS ?
+			      PUMP_STATUS_DISABLE :
+		      (get_threshold_status(SENSOR_NUM_PB_3_PUMP_TACH_RPM)) ?
 			      PUMP_STATUS_ABNORMAL :
 		      (get_status_flag(STATUS_FLAG_PUMP_REDUNDANT) == PUMP_REDUNDANT_12) ?
 			      PUMP_STATUS_REDAUNDANT :

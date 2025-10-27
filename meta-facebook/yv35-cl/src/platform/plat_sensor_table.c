@@ -65,7 +65,18 @@ bool m2_access(uint8_t sensor_num)
 	if (get_system_sku() == SYS_TYPE_EMR) {
 		return false;
 	}
+
 	return get_post_status();
+}
+
+bool hsm_access(uint8_t sensor_num)
+{
+	if (get_system_sku() != SYS_TYPE_EMR) {
+		return false;
+	}
+	bool is_marvell = (TYPE_2OU_MARVELL_HSM == get_2ou_card_type()) ? true : false;
+
+	return (get_post_status() && is_marvell);
 }
 
 sensor_cfg plat_sensor_config[] = {
@@ -362,6 +373,10 @@ sensor_cfg DPV2_sensor_config_table[] = {
 	{ SENSOR_NUM_PWR_DPV2, sensor_dev_max16550a, I2C_BUS9, DPV2_16_ADDR, PMBUS_READ_PIN,
 	  dc_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
 	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &max16550a_init_args[0] },
+	{ SENSOR_NUM_TEMP_DPV2_HSM, sensor_dev_tmp431, I2C_BUS9, DPV2_HSM_TEMP_ADDR,
+	  TMP431_LOCAL_TEMPERATRUE, hsm_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_hsm_read, NULL, post_hsm_read, NULL,
+	  NULL },
 };
 
 const int SENSOR_CONFIG_SIZE = ARRAY_SIZE(plat_sensor_config);
@@ -401,7 +416,7 @@ uint8_t pal_get_extend_sensor_config()
 	CARD_STATUS _2ou_status = get_2ou_status();
 	if (_2ou_status.present) {
 		// Add DPV2 config if DPV2_16 is present
-		if ((_2ou_status.card_type & TYPE_2OU_DPV2_16) == TYPE_2OU_DPV2_16) {
+		if ((_2ou_status.dpv2_type & TYPE_2OU_DPV2_16) == TYPE_2OU_DPV2_16) {
 			extend_sensor_config_size += ARRAY_SIZE(DPV2_sensor_config_table);
 		}
 	}
@@ -642,7 +657,7 @@ void pal_extend_sensor_config()
 	/* Fix sensor table if 2ou card is present */
 	if (_2ou_status.present) {
 		// Add DPV2 sensor config if DPV2_16 is present
-		if ((_2ou_status.card_type & TYPE_2OU_DPV2_16) == TYPE_2OU_DPV2_16) {
+		if ((_2ou_status.dpv2_type & TYPE_2OU_DPV2_16) == TYPE_2OU_DPV2_16) {
 			sensor_count = ARRAY_SIZE(DPV2_sensor_config_table);
 			for (int index = 0; index < sensor_count; index++) {
 				add_sensor_config(DPV2_sensor_config_table[index]);

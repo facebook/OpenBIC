@@ -48,7 +48,8 @@ bool pal_request_msg_to_BIC_from_HOST(uint8_t netfn, uint8_t cmd)
 	if (netfn == NETFN_OEM_1S_REQ) {
 		if ((cmd == CMD_OEM_1S_FW_UPDATE) || (cmd == CMD_OEM_1S_RESET_BMC) ||
 		    (cmd == CMD_OEM_1S_GET_BIC_STATUS) || (cmd == CMD_OEM_1S_RESET_BIC) ||
-		    (cmd == CMD_OEM_1S_GET_BIC_FW_INFO))
+		    (cmd == CMD_OEM_1S_GET_BIC_FW_INFO) || (cmd == CMD_OEM_1S_SET_CARD_TYPE) ||
+		    (cmd == CMD_OEM_1S_GET_CARD_TYPE))
 			return true;
 	} else if (netfn == NETFN_APP_REQ) {
 		if (cmd == CMD_APP_GET_SYSTEM_GUID) {
@@ -141,28 +142,52 @@ void OEM_1S_GET_CARD_TYPE(ipmi_msg *msg)
 	CARD_STATUS _1ou_status = get_1ou_status();
 	CARD_STATUS _2ou_status = get_2ou_status();
 	switch (msg->data[0]) {
-	case GET_1OU_CARD_TYPE:
+	case CMD_1OU_CARD_TYPE:
 		msg->data_len = 2;
 		msg->completion_code = CC_SUCCESS;
-		msg->data[0] = GET_1OU_CARD_TYPE;
+		msg->data[0] = CMD_1OU_CARD_TYPE;
 		if (_1ou_status.present) {
 			msg->data[1] = _1ou_status.card_type;
 		} else {
 			msg->data[1] = TYPE_1OU_ABSENT;
 		}
 		break;
-	case GET_2OU_CARD_TYPE:
+	case CMD_2OU_CARD_TYPE:
 		msg->data_len = 2;
 		msg->completion_code = CC_SUCCESS;
-		msg->data[0] = GET_2OU_CARD_TYPE;
+		msg->data[0] = CMD_2OU_CARD_TYPE;
 		if (_2ou_status.present) {
 			msg->data[1] = _2ou_status.card_type;
 		} else {
-			msg->data[1] = TYPE_2OU_ABSENT;
+			msg->data[1] = TYPE_2OU_DPV2_ABSENT;
 		}
 		break;
 	default:
 		msg->data_len = 0;
+		msg->completion_code = CC_INVALID_DATA_FIELD;
+		break;
+	}
+
+	return;
+}
+
+void OEM_1S_SET_CARD_TYPE(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	if (msg->data_len != 2) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+	msg->data_len = 0;
+
+	switch (msg->data[0]) {
+	case CMD_2OU_CARD_TYPE:
+		msg->completion_code = CC_SUCCESS;
+		set_2ou_card_type(msg->data[1]);
+		LOG_INF("Set HSM type to %u", msg->data[1]);
+		break;
+	default:
 		msg->completion_code = CC_INVALID_DATA_FIELD;
 		break;
 	}

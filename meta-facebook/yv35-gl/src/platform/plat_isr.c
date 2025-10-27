@@ -24,6 +24,9 @@
 #include "ipmi.h"
 #include "power_status.h"
 #include "kcs.h"
+#include "pmbus.h"
+#include "util_worker.h"
+#include "vr_fault.h"
 
 #include "plat_i2c.h"
 #include "plat_isr.h"
@@ -32,6 +35,7 @@
 #include "plat_dimm.h"
 #include "plat_sensor_table.h"
 #include "plat_pmic.h"
+#include "plat_ipmi.h"
 
 LOG_MODULE_REGISTER(plat_isr);
 
@@ -402,6 +406,52 @@ void ISR_HSC_OC()
 	}
 }
 
+add_vr_sel_info vr_pwr_fault_work_item;
+
+const vr_pwr_fault_t vr_pwr_fault_table[] = {
+	{ BIT(0), IPMI_EVENT_VR_PWR_FAULT_PVCCD1_HV, I2C_BUS5, PVCCD0_PVCCD1_ADDR, 1 },
+	{ BIT(1), IPMI_EVENT_VR_PWR_FAULT_PVCCD0_HV, I2C_BUS5, PVCCD0_PVCCD1_ADDR, 0 },
+	{ BIT(2), IPMI_EVENT_VR_PWR_FAULT_PVCCINF, I2C_BUS5, FIVRA_PVCCINF_ADDR, 1 },
+	{ BIT(3), IPMI_EVENT_VR_PWR_FAULT_VCCIN, I2C_BUS5, PVCCIN_EHV_ADDR, 0 },
+	{ BIT(4), IPMI_EVENT_VR_PWR_FAULT_PVCCFA_EHV_FIVRA, I2C_BUS5, FIVRA_PVCCINF_ADDR, 0 },
+	{ BIT(5), IPMI_EVENT_VR_PWR_FAULT_PVCCFA_EHV, I2C_BUS5, PVCCIN_EHV_ADDR, 1 },
+};
+
+const size_t vr_pwr_fault_table_size = ARRAY_SIZE(vr_pwr_fault_table);
+
+const cpld_vr_reg_t cpld_vr_reg_table = { SB_CPLD_BUS, CPLD_ADDR, CPLD_VR_FAULT_REG };
+
+bool pal_skip_pmbus_cmd_code(uint8_t vendor_type, uint8_t cmd, uint8_t page)
+{
+	// if VR is RENESAS, skip PMBUS_STATUS_OTHER command
+	if ((vendor_type == VR_TYPE_ISL69259) && (cmd == PMBUS_STATUS_OTHER)) {
+		return true;
+	}
+
+	// if VR is MPS on page 1, skip PMBUS_STATUS_OTHER command
+	if ((vendor_type == VR_TYPE_MP2985) && (cmd == PMBUS_STATUS_OTHER) && (page == 1)) {
+		return true;
+	}
+
+	return false;
+}
+
+void init_vr_pwr_fault_work()
+{
+	k_work_init_delayable(&vr_pwr_fault_work_item.add_vr_work, vr_pwr_fault_handler);
+}
+
+void ISR_VR_PWR_FAULT()
+{
+	// Check CPLD pull the FM_FAST_PROCHOT_EN_R_N pin high
+	if (gpio_get(FM_FAST_PROCHOT_EN_R_N) == GPIO_HIGH) {
+		LOG_ERR("Triggered VR power fault successfully !");
+		k_work_schedule_for_queue(&plat_work_q, &vr_pwr_fault_work_item.add_vr_work,
+					  K_MSEC(VR_PWR_FAULT_DELAY_MS));
+	} else {
+		LOG_ERR("Triggered VR power fault falied !");
+	}
+}
 
 static void cpu_memory_hot_handler()
 {
@@ -409,19 +459,19 @@ static void cpu_memory_hot_handler()
 	int ret = 0, retry = 3;
 
 	i2c_msg.bus = SB_CPLD_BUS;
-    i2c_msg.target_addr = SB_CPLD_ADDR;
-    i2c_msg.tx_len = 1;
-    i2c_msg.rx_len = 1;
-    i2c_msg.data[0] = SB_CPLD_REG_POWER_SEQ;
-    ret = i2c_master_read(&i2c_msg, retry);
-    if (ret != 0) {
+	i2c_msg.target_addr = SB_CPLD_ADDR;
+	i2c_msg.tx_len = 1;
+	i2c_msg.rx_len = 1;
+	i2c_msg.data[0] = SB_CPLD_REG_POWER_SEQ;
+	ret = i2c_master_read(&i2c_msg, retry);
+	if (ret != 0) {
 		LOG_ERR("%s() failed to get cpld register, ret %d", __func__, ret);
 		return;
-    }
+	}
 
-    uint8_t rst_pltrst_pld_n_val = GETBIT(i2c_msg.data[0], 2);
+	uint8_t rst_pltrst_pld_n_val = GETBIT(i2c_msg.data[0], 2);
 
-    if (rst_pltrst_pld_n_val == GPIO_HIGH) {
+	if (rst_pltrst_pld_n_val == GPIO_HIGH) {
 		common_addsel_msg_t sel_msg;
 
 		if (gpio_get(H_CPU_MEMHOT_OUT_LVC3_N) == GPIO_HIGH) {
@@ -439,13 +489,13 @@ static void cpu_memory_hot_handler()
 		if (!common_add_sel_evt_record(&sel_msg)) {
 			LOG_ERR("Failed to add CPU MEM HOT SEL");
 		}
-    }
+	}
 }
 
 K_WORK_DEFINE(cpu_memory_hot_work, cpu_memory_hot_handler);
 void ISR_CPU_MEMHOT()
 {
-	if(gpio_get(PWRGD_CPU_LVC3) == GPIO_HIGH) {
+	if (gpio_get(PWRGD_CPU_LVC3) == GPIO_HIGH) {
 		k_work_submit(&cpu_memory_hot_work);
 	}
 }
@@ -534,7 +584,7 @@ static void adr_mode0_handler(struct k_work *work)
 	 * Offset: 16h ADR mode 0 GPIO control
 	 * Bit[0]: FM_ADR_MODE0, 0'b: (default) disable ADR
 	 */
-	struct vgpio_info *info = CONTAINER_OF(work, struct vgpio_info, work);
+	const struct vgpio_info *info = CONTAINER_OF(work, struct vgpio_info, work);
 	int status;
 	uint8_t value;
 	I2C_MSG msg;

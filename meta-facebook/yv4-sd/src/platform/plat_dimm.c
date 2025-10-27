@@ -57,6 +57,76 @@ void start_get_dimm_info_thread()
 	k_thread_name_set(&get_dimm_info_thread, "get_dimm_info_thread");
 }
 
+static int ddr5_spd_read_bytes(uint8_t i2c_bus, uint8_t spd_addr, uint8_t *out)
+{
+	uint8_t keep_present = out[SPD_OEM_PRESENT];
+	uint8_t keep_status = out[SPD_OEM_STATUS];
+	memset(out, 0, SPD_RAW_LEN);
+	out[SPD_OEM_PRESENT] = keep_present;
+	out[SPD_OEM_STATUS] = keep_status;
+	typedef struct {
+		uint16_t raw_off;
+		uint16_t comp_off;
+		uint16_t len;
+	} seg_t;
+	static const seg_t segs[] = {
+		{ 0x0002, SPD_TYPE, 1 },
+		{ 0x0004, SPD_SZ_B4, 1 },
+		{ 0x0006, SPD_SZ_B6, 1 },
+		{ 0x0014, SPD_SPEED_L, 2 },
+		{ 0x00C6, SPD_PMICVEN_L, 2 },
+		{ 0x00EA, SPD_SZ_BEA, 1 },
+		{ 0x00EB, SPD_SZ_BEB, 1 },
+		{ 0x00F0, SPD_REGVEN_L, 2 },
+		{ 0x0200, SPD_MFG_ID_L, 2 },
+		{ 0x0202, SPD_MFG_LOC, 1 },
+		{ 0x0203, SPD_MFG_YY, 2 },
+		{ 0x0205, SPD_SN_OFF, SPD_SN_LEN }, /* 4 */
+		{ 0x0209, SPD_PN_OFF, SPD_PN_LEN }, /* 30 */
+	};
+
+	uint16_t offset = 0x0000;
+	uint16_t end_excl = 0x0227;
+	size_t len = (size_t)(end_excl - offset);
+
+	while (len) {
+		size_t chunk = (len > 16) ? 16 : len;
+
+		I2C_MSG spd_msg;
+		memset(&spd_msg, 0, sizeof(I2C_MSG));
+		spd_msg.bus = i2c_bus;
+		spd_msg.target_addr = spd_addr;
+		spd_msg.tx_len = 2;
+		spd_msg.rx_len = chunk;
+
+		// set MR11[3] = 1b for 2-bytes addressing (offset) mode
+		uint16_t enc_offset = ((offset & 0x780) << 1) | (0x80 | (offset & 0x7F));
+		spd_msg.data[0] = enc_offset & 0xFF;
+		spd_msg.data[1] = enc_offset >> 8;
+
+		if (i2c_master_read(&spd_msg, 1) != 0) {
+			return -1;
+		}
+
+		for (size_t i = 0; i < chunk; ++i) {
+			uint16_t cur = offset + (uint16_t)i;
+			for (size_t s = 0; s < (sizeof(segs) / sizeof(segs[0])); ++s) {
+				uint16_t so = segs[s].raw_off;
+				uint16_t sl = segs[s].len;
+				if (cur >= so && cur < (uint16_t)(so + sl)) {
+					out[segs[s].comp_off + (cur - so)] = spd_msg.data[i];
+					break;
+				}
+			}
+		}
+
+		offset += (uint16_t)chunk;
+		len -= chunk;
+	}
+
+	return 0;
+}
+
 void get_dimm_info_handler()
 {
 	I2C_MSG msg = { 0 };
@@ -156,6 +226,38 @@ void get_dimm_info_handler()
 			if (!get_post_status()) {
 				switch_i3c_dimm_mux(I3C_MUX_CPU_TO_DIMM);
 				break;
+			}
+
+			if (!dimm_data[dimm_id].is_spd_raw_ready) {
+				const uint8_t spd_addr =
+					spd_i3c_addr_list[dimm_id % (DIMM_ID_MAX / 2)];
+
+				I2C_MSG msg;
+				memset(&msg, 0, sizeof(I2C_MSG));
+				msg.bus = I2C_BUS13;
+				msg.target_addr = spd_addr;
+				msg.tx_len = 2;
+				msg.rx_len = 0;
+				msg.data[0] = 0x0B;
+				msg.data[1] = 0x08;
+
+				uint8_t *out = dimm_data[dimm_id].spd_raw_data;
+
+				out[SPD_OEM_STATUS] &= ~SPD_OEM_STATUS_SPD_READY;
+
+				if (i2c_master_write(&msg, 1) == 0) {
+					if (ddr5_spd_read_bytes(I2C_BUS13, spd_addr, out) == 0) {
+						out[SPD_OEM_STATUS] |= SPD_OEM_STATUS_SPD_READY;
+						dimm_data[dimm_id].is_spd_raw_ready = true;
+						LOG_INF("DIMM %d: SPD compact cache ready (0x50 bytes)",
+							dimm_id);
+					} else {
+						LOG_DBG("DIMM %d: SPD compact cache read failed",
+							dimm_id);
+					}
+				} else {
+					LOG_DBG("DIMM %d: MR11 setting failed", dimm_id);
+				}
 			}
 
 			memset(&msg, 0, sizeof(I2C_MSG));
@@ -324,6 +426,26 @@ void clear_unaccessible_dimm_data(uint8_t dimm_id)
 	       sizeof(dimm_data[dimm_id].pmic_pwr_data));
 }
 
+bool get_spd_raw_ready(uint8_t dimm_id)
+{
+	if (dimm_id < DIMM_ID_MAX)
+		return dimm_data[dimm_id].is_spd_raw_ready;
+	return false;
+}
+
+int plat_get_spd_raw(uint8_t dimm_id, uint8_t **buf_out, bool *ready_out)
+{
+	if (dimm_id >= DIMM_ID_MAX || buf_out == NULL || ready_out == NULL) {
+		return -1;
+	}
+	if (dimm_data[dimm_id].is_present == DIMM_NOT_PRSNT) {
+		return -2;
+	}
+	*buf_out = dimm_data[dimm_id].spd_raw_data;
+	*ready_out = dimm_data[dimm_id].is_spd_raw_ready;
+	return 0;
+}
+
 int switch_i3c_dimm_mux(uint8_t i3c_ctrl_mux_data)
 {
 	I2C_MSG i2c_msg = { 0 };
@@ -408,12 +530,17 @@ int init_dimm_prsnt_status()
 		uint8_t i3c_ctrl_mux_data = (dimm_id / (DIMM_ID_MAX / 2)) ?
 						    I3C_MUX_BIC_TO_DIMMG_TO_L :
 						    I3C_MUX_BIC_TO_DIMMA_TO_F;
-
+		dimm_data[dimm_id].is_spd_raw_ready = false;
+		memset(dimm_data[dimm_id].spd_raw_data, 0, SPD_RAW_LEN);
 		ret = switch_i3c_dimm_mux(i3c_ctrl_mux_data);
 		if (ret != 0) {
 			clear_unaccessible_dimm_data(dimm_id);
 			LOG_DBG("[%s]DIMM ID 0x%02x is not present", __func__, dimm_id);
 			dimm_data[dimm_id].is_present = DIMM_NOT_PRSNT;
+			dimm_data[dimm_id].is_spd_raw_ready = false;
+			dimm_data[dimm_id].spd_raw_data[SPD_OEM_PRESENT] = 0;
+			dimm_data[dimm_id].spd_raw_data[SPD_OEM_STATUS] &=
+				~SPD_OEM_STATUS_SPD_READY;
 			is_dimm_not_present = 1;
 			continue;
 		}
@@ -429,10 +556,15 @@ int init_dimm_prsnt_status()
 			clear_unaccessible_dimm_data(dimm_id);
 			LOG_INF("[%s]DIMM ID 0x%02x is not present", __func__, dimm_id);
 			dimm_data[dimm_id].is_present = DIMM_NOT_PRSNT;
+			dimm_data[dimm_id].is_spd_raw_ready = false;
 			is_dimm_not_present = 1;
 		} else {
 			LOG_DBG("[%s]DIMM ID 0x%02x is present", __func__, dimm_id);
 			dimm_data[dimm_id].is_present = DIMM_PRSNT;
+			dimm_data[dimm_id].is_spd_raw_ready = false;
+			dimm_data[dimm_id].spd_raw_data[SPD_OEM_PRESENT] = 1;
+			dimm_data[dimm_id].spd_raw_data[SPD_OEM_STATUS] &=
+				~SPD_OEM_STATUS_SPD_READY;
 		}
 	}
 

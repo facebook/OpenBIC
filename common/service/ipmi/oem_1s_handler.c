@@ -1778,6 +1778,15 @@ __weak void OEM_1S_GET_CARD_TYPE(ipmi_msg *msg)
 	return;
 }
 
+__weak void OEM_1S_SET_CARD_TYPE(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	msg->data_len = 0;
+	msg->completion_code = CC_INVALID_CMD;
+	return;
+}
+
 __weak void OEM_1S_MULTI_ACCURACY_SENSOR_READING(ipmi_msg *msg)
 {
 	/*********************************
@@ -2521,9 +2530,9 @@ void IPMI_OEM_1S_handler(ipmi_msg *msg)
 		OEM_1S_CONTROL_SENSOR_POLLING(msg);
 		break;
 	case CMD_OEM_1S_ERASE_BIOS_FLASH:
-        LOG_DBG("Received 1S Erase BIOS Flash command");
-        OEM_1S_ERASE_BIOS_FLASH(msg);
-        break;
+		LOG_DBG("Received 1S Erase BIOS Flash command");
+		OEM_1S_ERASE_BIOS_FLASH(msg);
+		break;
 	case CMD_OEM_1S_GET_BIOS_ERASE_PROGRESS:
 		LOG_DBG("Received 1S GET Erase BIOS Flash Progress command");
 		OEM_1S_GET_BIOS_ERASE_PROGRESS(msg);
@@ -2677,6 +2686,10 @@ void IPMI_OEM_1S_handler(ipmi_msg *msg)
 		LOG_DBG("Received 1S Get Card Type command");
 		OEM_1S_GET_CARD_TYPE(msg);
 		break;
+	case CMD_OEM_1S_SET_CARD_TYPE:
+		LOG_DBG("Received 1S Set Card Type command");
+		OEM_1S_SET_CARD_TYPE(msg);
+		break;
 	case CMD_OEM_1S_MULTI_ACCURACY_SENSOR_READING:
 		LOG_DBG("Received 1S Multi-accuracy Sensor Read command");
 		OEM_1S_MULTI_ACCURACY_SENSOR_READING(msg);
@@ -2777,7 +2790,7 @@ __weak void OEM_1S_RECORD_DAM_PIN_STATUS(uint8_t gpio_num, uint8_t status)
 
 void erase_bios_work_handler(struct k_work *work)
 {
-    LOG_INF("Start erasing BIOS flash ...");
+	LOG_INF("Start erasing BIOS flash ...");
 	cmd_erase_bios(0);
 }
 
@@ -2785,18 +2798,17 @@ K_WORK_DEFINE(erase_bios_work, erase_bios_work_handler);
 
 __weak void OEM_1S_ERASE_BIOS_FLASH(ipmi_msg *msg)
 {
-    CHECK_NULL_ARG(msg);
+	CHECK_NULL_ARG(msg);
 	msg->data_len = 6;
 	k_work_submit(&erase_bios_work);
 	msg->data_len = 0;
 	msg->completion_code = CC_SUCCESS;
 	return;
-	
 }
 
 __weak void OEM_1S_GET_BIOS_ERASE_PROGRESS(ipmi_msg *msg)
 {
-    msg->data[0] = bios_erase_progress;
-    msg->data_len = 1;
-    msg->completion_code = CC_SUCCESS;
+	msg->data[0] = bios_erase_progress;
+	msg->data_len = 1;
+	msg->completion_code = CC_SUCCESS;
 }

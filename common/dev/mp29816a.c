@@ -93,10 +93,10 @@ uint8_t parsing_line(char *str, uint16_t len, struct cfg_data *cfg_data)
 			break;
 		case CFG_PARAM_IDX_REG_NAME:
 			if (!strncmp(k, "CRC", strlen("CRC"))) {
-				LOG_ERR("CRC: %s", k);
+				LOG_INF("CRC: %s", log_strdup(k));
 				return 1;
 			} else if (!strncmp(k, "TRIM", strlen("TRIM"))) {
-				LOG_INF("TRIM: %s", k);
+				LOG_INF("TRIM: %s", log_strdup(k));
 				return 1;
 			}
 			break;

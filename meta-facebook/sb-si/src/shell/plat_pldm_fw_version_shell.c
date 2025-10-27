@@ -31,6 +31,7 @@
 #include "plat_isr.h"
 #include "plat_i2c.h"
 #include "plat_pldm_fw_version_shell.h"
+#include "pex90144.h"
 
 LOG_MODULE_REGISTER(plat_pldm_fw_version_shell);
 
@@ -139,4 +140,47 @@ void cmd_get_fw_version_vr(const struct shell *shell, size_t argc, char **argv)
 	set_plat_sensor_polling_enable_flag(true);
 
 	return;
+}
+
+void cmd_get_fw_version_pcie_switch(const struct shell *shell, size_t argc, char **argv)
+{
+	if (argc != 1) {
+		shell_warn(shell, "Help: get_fw_version pcie_switch");
+		return;
+	}
+
+	set_plat_sensor_polling_enable_flag(false);
+
+	uint8_t comp_identifier = SI_COMPNT_PEX90144;
+	uint8_t sensor_id = 0;
+	char sensor_name[MAX_AUX_SENSOR_NAME_LEN] = { 0 };
+	uint8_t bus = 0, addr = 0;
+	uint8_t sensor_dev = 0;
+
+	shell_print(shell, "comp_id |       rail name        |  SBR version  | remain");
+
+	if (!find_sensor_id_and_name_by_firmware_comp_id(comp_identifier, &sensor_id,
+							 sensor_name)) {
+		shell_print(shell, "Can't find sensor id and name by comp id: %d", comp_identifier);
+		goto exit;
+	}
+
+	if (!get_sensor_info_by_sensor_id(sensor_id, &bus, &addr, &sensor_dev)) {
+		shell_print(shell, "Can't find PCIe switch addr and bus by sensor id: %d",
+			    sensor_id);
+		goto exit;
+	}
+
+	uint32_t version = 0;
+	if (pex90144_access_engine(bus, addr, 0, pex_access_sbr_ver, &version)) {
+		shell_print(shell, "PEX90144 SBR version read failed");
+		goto exit;
+	}
+
+	version = sys_cpu_to_be32(version);
+	shell_print(shell, "%-8d| %-22s |  0x%08X   |   N/A", comp_identifier, sensor_name,
+		    version);
+
+exit:
+	set_plat_sensor_polling_enable_flag(true);
 }

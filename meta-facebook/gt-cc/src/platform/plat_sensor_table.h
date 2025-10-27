@@ -25,6 +25,9 @@
 #define NIC_OPTICS_TEMP_OFFSET 0x01
 #define TMP75_TEMP_OFFSET 0x00
 #define NIC_ADDR (0x3E >> 1)
+#define AMD_NIC_CHIP_TEMP_OFFSET 0x16
+#define AMD_NIC_DR4_MODULE_TEMP_OFFSET 0x19
+#define AMD_NIC_CPLD_ADDR (0x9E >> 1)
 #define NIC_0_POWER_MONITOR_ADDR (0x80 >> 1)
 #define NIC_1_POWER_MONITOR_ADDR (0x82 >> 1)
 #define NIC_2_POWER_MONITOR_ADDR (0x84 >> 1)
@@ -285,6 +288,7 @@
 
 uint8_t plat_get_config_size();
 void load_sensor_config(void);
+void update_nic_sensor_config_for_pollara(void);
 bool is_e1s_access(uint8_t sensor_num);
 bool is_nic_access(uint8_t sensor_num);
 bool is_nic_optics_access(uint8_t sensor_num);

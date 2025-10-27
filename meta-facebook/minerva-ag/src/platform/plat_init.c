@@ -37,6 +37,7 @@
 #include "plat_event.h"
 #include "plat_log.h"
 #include "plat_fru.h"
+#include "plat_datetime.h"
 
 LOG_MODULE_REGISTER(plat_init);
 
@@ -50,6 +51,7 @@ void pal_pre_init()
 				1);
 	}
 	init_platform_config();
+	init_worker(); // init util_worker
 	plat_led_init();
 	vr_mutex_init();
 	pwr_level_mutex_init();
@@ -72,9 +74,12 @@ void pal_post_init()
 	pldm_load_state_effecter_table(MAX_STATE_EFFECTER_IDX);
 	pldm_assign_gpio_effecter_id(PLAT_EFFECTER_ID_GPIO_HIGH_BYTE);
 	init_fru_info();
+	if (get_mb_type() == MB_PRESENT)
+		rtc_init_once();
 	init_load_eeprom_log();
 	plat_set_ac_on_log();
-	init_cpld_polling();
+	if (get_mb_type() == MB_PRESENT)
+		init_cpld_polling();
 	plat_telemetry_table_init();
 
 	LOG_INF("Init done");

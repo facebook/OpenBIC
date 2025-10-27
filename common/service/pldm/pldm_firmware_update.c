@@ -258,21 +258,28 @@ uint8_t pldm_vr_update(void *fw_update_param)
 			     ARRAY_SIZE(KEYWORD_VR_MP2857) - 1))) {
 		if (mp2971_fwupdate(p->bus, p->addr, hex_buff, fw_update_cfg.image_size) == false)
 			goto exit;
-	} else if (!strncmp(p->comp_version_str, KEYWORD_VR_XDPE15284,
-			    ARRAY_SIZE(KEYWORD_VR_XDPE15284) - 1)) {
+	}
+#ifndef DISABLE_XDPE15284
+	else if (!strncmp(p->comp_version_str, KEYWORD_VR_XDPE15284,
+			  ARRAY_SIZE(KEYWORD_VR_XDPE15284) - 1)) {
 		if (xdpe15284_fwupdate(p->bus, p->addr, hex_buff, fw_update_cfg.image_size) ==
 		    false)
 			goto exit;
-	} else if (!strncmp(p->comp_version_str, KEYWORD_VR_MP2985,
-			    ARRAY_SIZE(KEYWORD_VR_MP2985) - 1)) {
+	}
+#endif
+#ifndef DISABLE_MP2985
+	else if (!strncmp(p->comp_version_str, KEYWORD_VR_MP2985,
+			  ARRAY_SIZE(KEYWORD_VR_MP2985) - 1)) {
 		if (mp2985_fwupdate(p->bus, p->addr, hex_buff, fw_update_cfg.image_size) == false)
 			goto exit;
-	} else if ((!strncmp(p->comp_version_str, KEYWORD_VR_RAA229620,
-			     ARRAY_SIZE(KEYWORD_VR_RAA229620) - 1)) ||
-		   (!strncmp(p->comp_version_str, KEYWORD_VR_RAA229621,
-			     ARRAY_SIZE(KEYWORD_VR_RAA229621) - 1)) ||
-		   (!strncmp(p->comp_version_str, KEYWORD_VR_ISL69260,
-			     ARRAY_SIZE(KEYWORD_VR_ISL69260) - 1))) {
+	}
+#endif
+	else if ((!strncmp(p->comp_version_str, KEYWORD_VR_RAA229620,
+			   ARRAY_SIZE(KEYWORD_VR_RAA229620) - 1)) ||
+		 (!strncmp(p->comp_version_str, KEYWORD_VR_RAA229621,
+			   ARRAY_SIZE(KEYWORD_VR_RAA229621) - 1)) ||
+		 (!strncmp(p->comp_version_str, KEYWORD_VR_ISL69260,
+			   ARRAY_SIZE(KEYWORD_VR_ISL69260) - 1))) {
 		if (raa229621_fwupdate(p->bus, p->addr, hex_buff, fw_update_cfg.image_size) ==
 		    false)
 			goto exit;
@@ -300,16 +307,23 @@ uint8_t pldm_vr_update(void *fw_update_param)
 			    ARRAY_SIZE(KEYWORD_VR_MP2988) - 1)) {
 		if (mp2988_fwupdate(p->bus, p->addr, hex_buff, fw_update_cfg.image_size) == false)
 			goto exit;
-	} else if (!strncmp(p->comp_version_str, KEYWORD_VR_MP29816A,
-			    ARRAY_SIZE(KEYWORD_VR_MP29816A) - 1)) {
+	}
+#ifdef ENABLE_MP29816A
+	else if (!strncmp(p->comp_version_str, KEYWORD_VR_MP29816A,
+			  ARRAY_SIZE(KEYWORD_VR_MP29816A) - 1)) {
 		if (mp29816a_fwupdate(p->bus, p->addr, hex_buff, fw_update_cfg.image_size) == false)
 			goto exit;
-	} else if (!strncmp(p->comp_version_str, KEYWORD_VR_RAA228249,
-			    ARRAY_SIZE(KEYWORD_VR_RAA228249) - 1)) {
+	}
+#endif
+#ifdef ENABLE_RAA228249
+	else if (!strncmp(p->comp_version_str, KEYWORD_VR_RAA228249,
+			  ARRAY_SIZE(KEYWORD_VR_RAA228249) - 1)) {
 		if (raa228249_fwupdate(p->bus, p->addr, hex_buff, fw_update_cfg.image_size) ==
 		    false)
 			goto exit;
-	} else {
+	}
+#endif
+	else {
 		LOG_ERR("Non-support VR detected with component string %s!",
 			log_strdup(p->comp_version_str));
 		goto exit;

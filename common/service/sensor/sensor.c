@@ -39,15 +39,9 @@ LOG_MODULE_REGISTER(sensor);
 
 #define SENSOR_DRIVE_INIT_DECLARE(name) uint8_t name##_init(sensor_cfg *cfg)
 
-#define SENSOR_DRIVE_TYPE_INIT_MAP(name)                                                           \
-	{                                                                                          \
-		sensor_dev_##name, name##_init                                                     \
-	}
+#define SENSOR_DRIVE_TYPE_INIT_MAP(name) { sensor_dev_##name, name##_init }
 
-#define SENSOR_DRIVE_TYPE_UNUSE(name)                                                              \
-	{                                                                                          \
-		sensor_dev_##name, NULL                                                            \
-	}
+#define SENSOR_DRIVE_TYPE_UNUSE(name) { sensor_dev_##name, NULL }
 
 #define SENSOR_READ_RETRY_MAX 3
 
@@ -157,6 +151,7 @@ const char *const sensor_type_name[] = {
 	sensor_name_to_num(lx6301)
 	sensor_name_to_num(ads7830)
 	sensor_name_to_num(s54ss4p180pmdafc)
+	sensor_name_to_num(pex90144)
 };
 // clang-format on
 
@@ -389,6 +384,9 @@ SENSOR_DRIVE_INIT_DECLARE(ads7830);
 #endif
 #ifdef ENABLE_S54SS4P180PMDCF
 SENSOR_DRIVE_INIT_DECLARE(s54ss4p180pmdafc);
+#endif
+#ifdef ENABLE_PEX90144
+SENSOR_DRIVE_INIT_DECLARE(pex90144);
 #endif
 
 // The sequence needs to same with SENSOR_DEV ID
@@ -782,6 +780,11 @@ sensor_drive_api sensor_drive_tbl[] = {
 #else
 	SENSOR_DRIVE_TYPE_UNUSE(s54ss4p180pmdafc),
 #endif
+#ifdef ENABLE_PEX90144
+	SENSOR_DRIVE_TYPE_INIT_MAP(pex90144),
+#else
+	SENSOR_DRIVE_TYPE_UNUSE(pex90144),
+#endif
 
 };
 
@@ -1091,6 +1094,14 @@ void sensor_poll_handler(void *arug0, void *arug1, void *arug2)
 					}
 				}
 
+				// check init status then reinit before reading
+				if (cfg->is_initialized != true) {
+					if (cfg->access_checker(sensor_num) ==
+					    true) { // to skip access check fail sensor
+						common_tbl_sen_reinit(sensor_num);
+					}
+				}
+
 				get_sensor_reading(cfg_table, sensor_count, sensor_num, &reading,
 						   GET_FROM_SENSOR);
 
@@ -1291,6 +1302,14 @@ static inline bool init_drive_type(sensor_cfg *p, uint16_t current_drive)
 		return false;
 	}
 
+	p->is_initialized = false; // init this flag
+
+	if (p->access_checker) {
+		if (p->access_checker(p->num) == false) {
+			return false;
+		}
+	}
+
 	if (p->pre_sensor_read_hook) {
 		if (p->pre_sensor_read_hook(p, p->pre_sensor_read_args) == false) {
 			LOG_ERR("Sensor 0x%x pre sensor read failed!", p->num);
@@ -1307,6 +1326,11 @@ static inline bool init_drive_type(sensor_cfg *p, uint16_t current_drive)
 		if (p->post_sensor_read_hook(p, p->post_sensor_read_args, NULL) == false) {
 			LOG_ERR("Sensor 0x%x post sensor read failed!", p->num);
 		}
+	}
+
+	// set flag for init success (after post hook)
+	if (ret == SENSOR_INIT_SUCCESS) {
+		p->is_initialized = true;
 	}
 
 	return true;
@@ -1376,11 +1400,13 @@ static void drive_init(void)
 							break;
 						}
 					}
-
-					ret = init_drive_type(cfg, current_drive);
-					if (ret != true) {
-						LOG_ERR("init drive type fail, table index: 0x%x, sensor num: 0x%x, type: 0x%x",
-							table_index, cfg->num, cfg->type);
+					if (cfg->access_checker(cfg->num) ==
+					    true) { // to skip access check fail sensor
+						ret = init_drive_type(cfg, current_drive);
+						if (ret != true) {
+							LOG_ERR("init drive type fail, table index: 0x%x, sensor num: 0x%x, type: 0x%x",
+								table_index, cfg->num, cfg->type);
+						}
 					}
 
 					if (table_info->post_monitor != NULL) {
@@ -1500,7 +1526,7 @@ bool check_reading_pointer_null_is_allowed(sensor_cfg *cfg)
 
 	/* Reading pointer NULL is allowed in sensor initial stage and sensor reading fail */
 	/* Sensor retry count will be set to zero when the sensor read success */
-	if (is_sensor_initial_done && (sensor_retry_count == 0)) {
+	if (is_sensor_initial_done && cfg->is_initialized && (sensor_retry_count == 0)) {
 		return false;
 	} else {
 		return true;
@@ -1515,12 +1541,15 @@ bool init_drive_type_delayed(sensor_cfg *cfg)
 	uint8_t index = 0;
 	const uint16_t max_drive_num = ARRAY_SIZE(sensor_drive_tbl);
 
+	cfg->is_initialized = false; // init this flag
+
 	for (index = 0; index < max_drive_num; index++) {
 		if (cfg->type == sensor_drive_tbl[index].dev) {
 			ret = sensor_drive_tbl[index].init(cfg);
 			if (ret != SENSOR_INIT_SUCCESS) {
 				return false;
 			}
+			cfg->is_initialized = true;
 
 			return true;
 		}

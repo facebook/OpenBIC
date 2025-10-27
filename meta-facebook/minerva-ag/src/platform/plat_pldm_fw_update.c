@@ -38,6 +38,7 @@
 #include "mp29816a.h"
 #include "plat_hook.h"
 #include "plat_event.h"
+#include "drivers/i2c_npcm4xx.h"
 
 LOG_MODULE_REGISTER(plat_fwupdate);
 
@@ -53,26 +54,26 @@ typedef struct aegis_compnt_mapping_sensor {
 } aegis_compnt_mapping_sensor;
 
 aegis_compnt_mapping_sensor aegis_vr_compnt_mapping_sensor_table[] = {
-	{ AG_COMPNT_P3V3, VR_P3V3_TEMP_C, "Minerva_Aegis_VR_P3V3" },
-	{ AG_COMPNT_P0V85_PVDD, VR_ASIC_P0V85_PVDD_TEMP_C, "Minerva_Aegis_VR_ASIC_P0V85_PVDD" },
+	{ AG_COMPNT_P3V3, VR_P3V3_TEMP_C, "MINERVA_AEGIS_VR_P3V3" },
+	{ AG_COMPNT_P0V85_PVDD, VR_ASIC_P0V85_PVDD_TEMP_C, "MINERVA_AEGIS_VR_ASIC_P0V85_PVDD" },
 	{ AG_COMPNT_P0V75_PVDD_CH_N, VR_ASIC_P0V75_PVDD_CH_N_TEMP_C,
-	  "Minerva_Aegis_VR_ASIC_P0V75_PVDD_CH_N" },
+	  "MINERVA_AEGIS_VR_ASIC_P0V75_PVDD_CH_N" },
 	{ AG_COMPNT_P0V75_PVDD_CH_S, VR_ASIC_P0V75_PVDD_CH_S_TEMP_C,
-	  "Minerva_Aegis_VR_ASIC_P0V75_PVDD_CH_S" },
+	  "MINERVA_AEGIS_VR_ASIC_P0V75_PVDD_CH_S" },
 	{ AG_COMPNT_P0V75_TRVDD_ZONEA, VR_ASIC_P0V75_TRVDD_ZONEA_TEMP_C,
-	  "Minerva_Aegis_VR_ASIC_P0V75_TRVDD_ZONEA" },
+	  "MINERVA_AEGIS_VR_ASIC_P0V75_TRVDD_ZONEA" },
 	{ AG_COMPNT_P0V75_TRVDD_ZONEB, VR_ASIC_P0V75_TRVDD_ZONEB_TEMP_C,
-	  "Minerva_Aegis_VR_ASIC_P0V75_TRVDD_ZONEB" },
+	  "MINERVA_AEGIS_VR_ASIC_P0V75_TRVDD_ZONEB" },
 	{ AG_COMPNT_P1V1_VDDC_HBM0_HBM2_HBM4, VR_ASIC_P1V1_VDDC_HBM0_HBM2_HBM4_TEMP_C,
-	  "Minerva_Aegis_VR_ASIC_P1V1_VDDC_HBM0_HBM2_HBM4" },
+	  "MINERVA_AEGIS_VR_ASIC_P1V1_VDDC_HBM0_HBM2_HBM4" },
 	{ AG_COMPNT_P0V9_TRVDD_ZONEA, VR_ASIC_P0V9_TRVDD_ZONEA_TEMP_C,
-	  "Minerva_Aegis_VR_ASIC_P0V9_TRVDD_ZONEA" },
+	  "MINERVA_AEGIS_VR_ASIC_P0V9_TRVDD_ZONEA" },
 	{ AG_COMPNT_P0V9_TRVDD_ZONEB, VR_ASIC_P0V9_TRVDD_ZONEB_TEMP_C,
-	  "Minerva_Aegis_VR_ASIC_P0V9_TRVDD_ZONEB" },
+	  "MINERVA_AEGIS_VR_ASIC_P0V9_TRVDD_ZONEB" },
 	{ AG_COMPNT_P1V1_VDDC_HBM1_HBM3_HBM5, VR_ASIC_P1V1_VDDC_HBM1_HBM3_HBM5_TEMP_C,
-	  "Minerva_Aegis_VR_ASIC_P1V1_VDDC_HBM1_HBM3_HBM5" },
+	  "MINERVA_AEGIS_VR_ASIC_P1V1_VDDC_HBM1_HBM3_HBM5" },
 	{ AG_COMPNT_P0V8_VDDA_PCIE, VR_ASIC_P0V8_VDDA_PCIE_TEMP_C,
-	  "Minerva_Aegis_VR_ASIC_P0V8_VDDA_PCIE" },
+	  "MINERVA_AEGIS_VR_ASIC_P0V8_VDDA_PCIE" },
 };
 
 /* PLDM FW update table */
@@ -371,6 +372,7 @@ static uint8_t pldm_pre_vr_update(void *fw_update_param)
 
 	/* Stop sensor polling */
 	set_plat_sensor_polling_enable_flag(false);
+	k_msleep(2000);
 
 	uint8_t bus = 0;
 	uint8_t addr = 0;
@@ -411,6 +413,7 @@ static uint8_t pldm_post_vr_update(void *fw_update_param)
 	ARG_UNUSED(fw_update_param);
 
 	/* Start sensor polling */
+	k_msleep(2000);
 	set_plat_sensor_polling_enable_flag(true);
 
 	return 0;
@@ -667,4 +670,31 @@ int get_aegis_vr_compnt_mapping_sensor_table_count(void)
 	int count = 0;
 	count = ARRAY_SIZE(aegis_vr_compnt_mapping_sensor_table);
 	return count;
+}
+
+void plat_reset_prepare()
+{
+	const char *i2c_labels[] = { "I2C_0", "I2C_1", "I2C_2", "I2C_3",
+				     "I2C_4", "I2C_5", "I2C_6", "I2C_11" };
+
+	for (int i = 0; i < ARRAY_SIZE(i2c_labels); i++) {
+		const struct device *i2c_dev = device_get_binding(i2c_labels[i]);
+		if (!i2c_dev) {
+			LOG_ERR("Failed to get binding for %s", i2c_labels[i]);
+			continue;
+		}
+
+		int ret = i2c_npcm_device_disable(i2c_dev);
+		if (ret) {
+			LOG_ERR("Failed to disable %s (ret=%d)", i2c_labels[i], ret);
+		} else {
+			LOG_INF("%s disabled", i2c_labels[i]);
+		}
+	}
+}
+
+void pal_warm_reset_prepare()
+{
+	LOG_INF("cmd platform warm reset prepare");
+	plat_reset_prepare();
 }

@@ -307,8 +307,6 @@ void post_timeout_handler(struct k_timer *timer_id)
 #define DC_ON_5_SECOND 5
 #define PROC_FAIL_START_DELAY_SECOND 10
 #define VR_EVENT_DELAY_MS 10
-// The PMIC needs a total of 200ms from CAMP signal assertion to complete the write operation
-#define READ_PMIC_CRITICAL_ERROR_MS 200
 void ISR_DC_ON()
 {
 	set_DC_status(PWRGD_CPU_LVC3);
@@ -334,8 +332,6 @@ void ISR_DC_ON()
 		reset_4byte_postcode_ok();
 
 		set_DC_on_delayed_status();
-		// Read PMIC error when DC off
-		k_work_schedule(&read_pmic_critical_work, K_MSEC(READ_PMIC_CRITICAL_ERROR_MS));
 	}
 }
 

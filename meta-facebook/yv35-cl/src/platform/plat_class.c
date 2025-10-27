@@ -36,8 +36,8 @@ static uint8_t system_class = SYS_CLASS_1;
 static uint8_t system_sku = 0;
 static uint8_t board_revision = 0x0F;
 static uint8_t hsc_module = HSC_MODULE_UNKNOWN;
-static CARD_STATUS _1ou_status = { false, TYPE_1OU_UNKNOWN };
-static CARD_STATUS _2ou_status = { false, TYPE_2OU_UNKNOWN };
+static CARD_STATUS _1ou_status = { false, TYPE_1OU_UNKNOWN, TYPE_2OU_DPV2_UNKNOWN };
+static CARD_STATUS _2ou_status = { false, TYPE_2OU_UNKNOWN, TYPE_2OU_DPV2_UNKNOWN };
 
 uint8_t get_system_class()
 {
@@ -57,6 +57,16 @@ CARD_STATUS get_1ou_status()
 CARD_STATUS get_2ou_status()
 {
 	return _2ou_status;
+}
+
+void set_2ou_card_type(uint8_t card_type)
+{
+	_2ou_status.card_type = card_type;
+}
+
+uint8_t get_2ou_card_type()
+{
+	return _2ou_status.card_type;
 }
 
 uint8_t get_board_revision()
@@ -457,14 +467,18 @@ void init_platform_config()
 			case TYPE_2OU_DPV2_8:
 			case TYPE_2OU_DPV2_16:
 			case (TYPE_2OU_DPV2_8 | TYPE_2OU_DPV2_16):
-				_2ou_status.card_type = i2c_msg.data[0];
+				_2ou_status.dpv2_type = i2c_msg.data[0];
 				break;
 			default:
-				_2ou_status.card_type = TYPE_2OU_UNKNOWN;
-				LOG_ERR("Unknown the 2OU card type, the card type read from CPLD is 0x%x",
-					i2c_msg.data[0]);
+				_2ou_status.dpv2_type = TYPE_2OU_DPV2_UNKNOWN;
+				LOG_ERR("Unknown DPv2 card type 0x%x", i2c_msg.data[0]);
 				break;
 			}
+		}
+		data[0] = 1; // enable channel 0
+		i2c_msg = construct_i2c_message(I2C_BUS9, 0x70, 1, data, 0);
+		if (i2c_master_write(&i2c_msg, retry)) {
+			LOG_ERR("Unable to switch mux to HSM");
 		}
 	}
 

@@ -145,6 +145,8 @@ uint8_t pldm_get_sensor_reading(void *mctp_inst, uint8_t *buf, uint16_t len, uin
 
 	struct pldm_get_sensor_reading_req *req_p = (struct pldm_get_sensor_reading_req *)buf;
 	struct pldm_get_sensor_reading_resp *res_p = (struct pldm_get_sensor_reading_resp *)resp;
+	uint8_t sensor_number = (uint8_t)req_p->sensor_id;
+	PDR_numeric_sensor sensor_pdr;
 
 	if (len != PLDM_GET_SENSOR_READING_REQ_BYTES) {
 		res_p->completion_code = PLDM_ERROR_INVALID_LENGTH;
@@ -158,7 +160,6 @@ uint8_t pldm_get_sensor_reading(void *mctp_inst, uint8_t *buf, uint16_t len, uin
 		goto ret;
 	}
 
-	uint8_t sensor_number = (uint8_t)req_p->sensor_id;
 	uint8_t status;
 	int reading = 0;
 
@@ -208,8 +209,13 @@ uint8_t pldm_get_sensor_reading(void *mctp_inst, uint8_t *buf, uint16_t len, uin
 #endif
 
 ret:
-	/* Only support 4-bytes unsinged sensor data */
-	res_p->sensor_data_size = get_sensor_data_size(PLDM_SENSOR_DATA_SIZE_UINT32);
+	if (get_pdr_with_sensor_id(sensor_number, &sensor_pdr) != 0) {
+		/* Only support 4-bytes unsinged sensor data */
+		res_p->sensor_data_size = PLDM_SENSOR_DATA_SIZE_UINT32;
+	} else {
+		res_p->sensor_data_size = sensor_pdr.sensor_data_size;
+	}
+
 	res_p->sensor_event_message_enable = PLDM_EVENTS_DISABLED;
 	res_p->previous_state =
 		(res_p->completion_code == PLDM_SUCCESS) ? PLDM_SENSOR_NORMAL : PLDM_SENSOR_UNKNOWN;
@@ -223,7 +229,8 @@ ret:
 		reading = -1;
 
 	memcpy(res_p->present_reading, &reading, sizeof(reading));
-	*resp_len = sizeof(struct pldm_get_sensor_reading_resp) + res_p->sensor_data_size - 1;
+	*resp_len = sizeof(struct pldm_get_sensor_reading_resp) +
+		    get_sensor_data_size(sensor_pdr.sensor_data_size) - 1;
 	return PLDM_SUCCESS;
 }
 
