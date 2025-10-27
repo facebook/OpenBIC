@@ -34,6 +34,7 @@ LOG_MODULE_REGISTER(plat_class);
 #define AEGIS_CPLD_BOARD_TYPE_REG 0x1A
 
 #define TMP_EMC1413_SMSC_ID_DEFAULT 0x5D
+#define AEGIS_CPLD_CMM_STATUS_REG 0x31
 
 static uint8_t vr_vender_type = VR_VENDOR_UNKNOWN;
 static uint8_t vr_type = VR_UNKNOWN;
@@ -41,6 +42,7 @@ static uint8_t ubc_type = UBC_UNKNOWN;
 static uint8_t tmp_type = TMP_TYPE_UNKNOWN;
 static uint8_t board_stage = BOARD_STAGE_UNKNOWN;
 static uint8_t board_type = BOARD_TYPE_UNKNOWN;
+static uint8_t mb_type = MB_TYPE_UNKNOWN;
 
 bool plat_read_cpld(uint8_t offset, uint8_t *data)
 {
@@ -321,6 +323,30 @@ void init_tmp_type()
 	}
 }
 
+void init_mb_type(void)
+{
+	uint8_t mb_type_data = MB_TYPE_UNKNOWN;
+	//get CPLD MB_TYPE
+	if (!plat_read_cpld(AEGIS_CPLD_CMM_STATUS_REG, &mb_type_data)) {
+		LOG_ERR("Failed to get CPLD MB_TYPE 0x%02X", AEGIS_CPLD_CMM_STATUS_REG);
+	}
+
+	//print board type word
+	switch (mb_type_data >> 7) {
+	case MB_NOT_PRESENT:
+		mb_type = MB_NOT_PRESENT;
+		LOG_ERR("MB_TYPE(0x%02X) = MB_NOT_PRESENT", mb_type);
+		break;
+	case MB_PRESENT:
+		mb_type = MB_PRESENT;
+		LOG_INF("MB_TYPE(0x%02X) = MB_PRESENT", mb_type);
+		break;
+	default:
+		LOG_INF("MB_TYPE = 0x%02X", mb_type_data);
+		break;
+	}
+}
+
 uint8_t get_vr_type()
 {
 	return vr_type;
@@ -346,12 +372,18 @@ uint8_t get_tmp_type()
 	return tmp_type;
 }
 
+uint8_t get_mb_type()
+{
+	return mb_type;
+}
+
 void init_platform_config()
 {
 	init_board_type();
 	init_board_stage();
 	init_vr_vendor_type();
 	init_tmp_type();
+	init_mb_type();
 }
 
 void pal_show_board_types(const struct shell *shell)
@@ -426,6 +458,11 @@ void pal_show_board_types(const struct shell *shell)
 		    (tmp_type == TMP_EMC1413) ? "TMP_EMC1413" :
 		    (tmp_type == TMP_TMP432)  ? "TMP_TMP432" :
 						"not supported");
+
+	shell_print(shell, "* MB_TYPE:       (0x%02X)%s", mb_type,
+		    (mb_type == MB_NOT_PRESENT) ? "MB_NOT_PRESENT" :
+		    (mb_type == MB_PRESENT)	? "MB_PRESENT" :
+						  "not supported");
 
 	return;
 }
