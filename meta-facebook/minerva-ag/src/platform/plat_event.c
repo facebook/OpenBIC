@@ -29,6 +29,7 @@
 #include "plat_isr.h"
 #include <pmbus.h>
 #include "pldm_oem.h"
+#include "util_worker.h"
 
 LOG_MODULE_REGISTER(plat_event);
 
@@ -43,7 +44,6 @@ LOG_MODULE_REGISTER(plat_event);
 #endif
 
 void check_cpld_handler();
-K_WORK_DELAYABLE_DEFINE(check_cpld_work, check_cpld_handler);
 
 K_TIMER_DEFINE(init_ubc_delayed_timer, check_ubc_delayed_timer_handler, NULL);
 
@@ -744,7 +744,10 @@ void check_cpld_handler()
 	version = (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | data[3];
 	LOG_DBG("The cpld version: %08x", version);
 
-	k_work_schedule(&check_cpld_work, K_MSEC(5000));
+	worker_job job = { 0 };
+	job.delay_ms = 5000;
+	job.fn = check_cpld_handler;
+	add_work(&job);
 }
 
 void init_cpld_polling(void)
@@ -762,5 +765,8 @@ void init_cpld_polling(void)
 
 	k_timer_start(&init_ubc_delayed_timer, K_MSEC(1000), K_NO_WAIT);
 
-	k_work_schedule(&check_cpld_work, K_MSEC(100));
+	worker_job job = { 0 };
+	job.delay_ms = 100;
+	job.fn = check_cpld_handler;
+	add_work(&job);
 }

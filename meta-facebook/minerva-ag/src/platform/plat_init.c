@@ -51,6 +51,7 @@ void pal_pre_init()
 				1);
 	}
 	init_platform_config();
+	init_worker(); // init util_worker
 	plat_led_init();
 	vr_mutex_init();
 	pwr_level_mutex_init();
