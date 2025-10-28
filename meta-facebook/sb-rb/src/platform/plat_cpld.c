@@ -23,9 +23,6 @@
 #include "plat_hook.h"
 #include <logging/log.h>
 
-#define CPLD_ADDR (0x4C >> 1)
-#define I2C_BUS_CPLD I2C_BUS11
-
 #define POLLING_CPLD_STACK_SIZE 2048
 #define CPLD_POLLING_INTERVAL_MS 1000 // 1 second polling interval
 

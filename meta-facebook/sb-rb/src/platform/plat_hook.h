@@ -18,11 +18,11 @@
 #define PLAT_HOOK_H
 
 #include "sensor.h"
+#include "plat_pldm_sensor.h"
 
-#define VR_MAX_NUM 12
 #define VR_MUTEX_LOCK_TIMEOUT_MS 1000
 
-#include "plat_pldm_sensor.h"
+extern mp2971_init_arg mp2971_init_args[];
 
 enum VR_INDEX_E {
 	VR_INDEX_E_1 = 0,
@@ -37,6 +37,7 @@ enum VR_INDEX_E {
 	VR_INDEX_E_10,
 	VR_INDEX_E_11,
 	VR_INDEX_E_12,
+	VR_INDEX_E_13, // P3V3 OSFP
 	VR_INDEX_MAX,
 };
 

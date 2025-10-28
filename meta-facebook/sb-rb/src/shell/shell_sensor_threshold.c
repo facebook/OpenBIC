@@ -110,7 +110,7 @@ void cmd_get_sensor_threshold(const struct shell *shell, size_t argc, char **arg
 
 				shell_print(
 					shell,
-					"sensor ID: 0x%x  |  sensor name: %-50s  |  critical high: %10.3f  |  critical low: %10.3f",
+					"sensor ID: 0x%02x  |  sensor name: %-50s  |  critical high: %10.3f  |  critical low: %10.3f",
 					i, sensor_name, critical_high, critical_low);
 				critical_high = 0;
 				critical_low = 0;
