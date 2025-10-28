@@ -14,19 +14,11 @@
  * limitations under the License.
  */
 
-#ifndef PLAT_DEF_H
-#define PLAT_DEF_H
+#ifndef OCTEON_H
+#define OCTEON_H
 
-#define ENABLE_ASD
-#define ENABLE_ISL69260
-#define ENABLE_FIX_SENSOR
-#define ENABLE_PLDM
-#define ENABLE_OEM_PLDM
-#define ENABLE_MCTP_I3C
-#define ENABLE_OCTEON
-
-#define BMC_USB_PORT "CDC_ACM_0"
-
-#define WORKER_STACK_SIZE 4096
+enum OCTEON_REIGSTER_OFFSET {
+	OCTEON_DIE_JUNCTION_TEMPERATRUE = 0x01,
+};
 
 #endif

@@ -388,6 +388,9 @@ SENSOR_DRIVE_INIT_DECLARE(s54ss4p180pmdafc);
 #ifdef ENABLE_PEX90144
 SENSOR_DRIVE_INIT_DECLARE(pex90144);
 #endif
+#ifdef ENABLE_OCTEON
+SENSOR_DRIVE_INIT_DECLARE(octeon);
+#endif
 
 // The sequence needs to same with SENSOR_DEV ID
 sensor_drive_api sensor_drive_tbl[] = {
@@ -784,6 +787,11 @@ sensor_drive_api sensor_drive_tbl[] = {
 	SENSOR_DRIVE_TYPE_INIT_MAP(pex90144),
 #else
 	SENSOR_DRIVE_TYPE_UNUSE(pex90144),
+#endif
+#ifdef ENABLE_OCTEON
+	SENSOR_DRIVE_TYPE_INIT_MAP(octeon),
+#else
+	SENSOR_DRIVE_TYPE_UNUSE(octeon),
 #endif
 
 };
