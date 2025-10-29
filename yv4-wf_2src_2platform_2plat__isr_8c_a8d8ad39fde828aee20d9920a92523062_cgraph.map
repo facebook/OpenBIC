@@ -1,0 +1,12 @@
+<map id="process_pmbus_vr_event_handler" name="process_pmbus_vr_event_handler">
+<area shape="rect" id="node1" title=" " alt="" coords="5,175,176,217"/>
+<area shape="rect" id="node2" href="$sensor_8c.html#a254481b5d30d7b182e368c57ff208184" title=" " alt="" coords="237,5,373,32"/>
+<area shape="rect" id="node3" href="$sensor_8c.html#a943433215e208bf552a04105d8d7b320" title=" " alt="" coords="239,56,372,83"/>
+<area shape="rect" id="node4" href="$yv4-wf_2src_2platform_2plat__gpio_8c.html#a49fcac8a9cff9b16dbba2845722cf9ec" title=" " alt="" coords="254,107,357,133"/>
+<area shape="rect" id="node5" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="436,157,555,184"/>
+<area shape="rect" id="node7" href="$hal__gpio_8c.html#af700ee50de3d113e223c2b011c41f966" title=" " alt="" coords="460,237,531,264"/>
+<area shape="rect" id="node8" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="435,292,556,319"/>
+<area shape="rect" id="node9" href="$yv4-wf_2src_2platform_2plat__pldm__sensor_8c.html#af4281c23c804342282b5f9f19ed5d929" title=" " alt="" coords="231,259,380,301"/>
+<area shape="rect" id="node10" href="$pldm__oem_8h.html#abfa67ccc03b5a09b8503f95d5f8e5c5f" title=" " alt="" coords="224,376,387,403"/>
+<area shape="rect" id="node6" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="604,212,747,239"/>
+</map>

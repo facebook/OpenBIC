@@ -1,0 +1,9 @@
+<map id="pal_get_set_dam_status" name="pal_get_set_dam_status">
+<area shape="rect" id="node1" title=" " alt="" coords="5,56,169,83"/>
+<area shape="rect" id="node2" href="$eeprom_8c.html#af84d506534770494cca55b2db24730ba" title=" " alt="" coords="219,5,316,32"/>
+<area shape="rect" id="node6" href="$eeprom_8c.html#ab838e3d27c232117306d8611e48be202" title=" " alt="" coords="217,56,317,83"/>
+<area shape="rect" id="node7" href="$fru_8c.html#a4694b8ef2f5e4e98917fc28fe989a2d9" title=" " alt="" coords="219,107,315,133"/>
+<area shape="rect" id="node3" href="$eeprom_8c.html#ac470cc411f066d8f6bc2c1d7a74c8a5a" title=" " alt="" coords="365,31,504,57"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="552,31,673,57"/>
+<area shape="rect" id="node5" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="721,31,864,57"/>
+</map>

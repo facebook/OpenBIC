@@ -1,0 +1,26 @@
+var plat__adc_8c =
+[
+    [ "adc_info_t", "structadc__info__t.html", "structadc__info__t" ],
+    [ "ADC_STACK_SIZE", "plat__adc_8c.html#ab199f2f05f51a4064a4786cb8a228c81", null ],
+    [ "BUFFER_SIZE", "plat__adc_8c.html#a6b20d41d6252e9871430c242cb1a56e7", null ],
+    [ "MEDHA0_ADC_CHANNEL", "plat__adc_8c.html#ae39e607196ba9b488e3eaae7849f36d1", null ],
+    [ "MEDHA1_ADC_CHANNEL", "plat__adc_8c.html#a5cab0991e303445a12ff53dce9490807", null ],
+    [ "adc_get_poll_flag", "plat__adc_8c.html#a37345383a2498cdc058335686d171cd5", null ],
+    [ "adc_polling_handler", "plat__adc_8c.html#a4f6755a4d0bd204e5ac501870b87e17a", null ],
+    [ "adc_raw_mv_to_apms", "plat__adc_8c.html#a79adc0268188e31dbfc2ab8673d6aeba", null ],
+    [ "adc_set_averge_times", "plat__adc_8c.html#afb4f04bb1fa84495d01589dce2fc425b", null ],
+    [ "adc_set_poll_flag", "plat__adc_8c.html#a7d594b2fb04baa374774e95f56e4e514", null ],
+    [ "get_adc_averge_times", "plat__adc_8c.html#ae991ba79bfbfce86a88860b7d18e28f9", null ],
+    [ "get_adc_averge_val", "plat__adc_8c.html#ae6564a6e2e1b32389105d6ade606905b", null ],
+    [ "get_adc_buf", "plat__adc_8c.html#a8d337afaff34e97fed87c04f1c93aa08", null ],
+    [ "get_adc_ucr", "plat__adc_8c.html#aed9ee7e7781a84de64a8dcb87c95bb26", null ],
+    [ "get_adc_ucr_status", "plat__adc_8c.html#a396ef87cf83e7c71ba90d43bdc744b39", null ],
+    [ "K_THREAD_STACK_DEFINE", "plat__adc_8c.html#a66e1b117d69a7f866efe6f33cd90f2b2", null ],
+    [ "K_WORK_DEFINE", "plat__adc_8c.html#a4e72d559ebd0d88fcb64d02307e56dd2", null ],
+    [ "LOG_MODULE_REGISTER", "plat__adc_8c.html#a7ada697713ea4c8690de28410338fef4", null ],
+    [ "plat_adc_init", "plat__adc_8c.html#a7a13338674afb2da4a19f57fb1e02562", null ],
+    [ "set_adc_ucr", "plat__adc_8c.html#a1666c96a47bdccd202a7f2763dc5601e", null ],
+    [ "set_adc_ucr_status", "plat__adc_8c.html#a2f6f71f423b18123ff60c1dd878c2426", null ],
+    [ "adc_info", "plat__adc_8c.html#ae9e11b7dcf4f30579375c3166f5c1265", null ],
+    [ "adc_poll_thread", "plat__adc_8c.html#ade2221a69cbe512e3a55486bdc404f4e", null ]
+];
