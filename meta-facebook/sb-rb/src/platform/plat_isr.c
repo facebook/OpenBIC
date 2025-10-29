@@ -57,3 +57,18 @@ void ISR_GPIO_FM_PLD_UBC_EN_R()
 
 	k_timer_start(&check_ubc_delayed_timer, K_MSEC(1000), K_NO_WAIT);
 }
+
+bool plat_gpio_immediate_int_cb(uint8_t gpio_num)
+{
+	bool ret = false;
+
+	switch (gpio_num) {
+	case ALL_VR_PM_ALERT_R_N:
+		ret = true;
+		break;
+	default:
+		break;
+	}
+
+	return ret;
+}
