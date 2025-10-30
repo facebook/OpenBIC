@@ -99,9 +99,9 @@ bool inverse_bit(uint8_t offset, uint8_t bit)
 	bool error_flag = false;
 	if (!plat_read_cpld(offset, &tmp_data, 1))
 		error_flag = true;
-	LOG_INF("read offset 0x%x = 0x%x", offset, tmp_data);
+	LOG_DBG("read offset 0x%x = 0x%x", offset, tmp_data);
 	tmp_data ^= BIT(bit);
-	LOG_WRN("write offset 0x%x = 0x%x", offset, tmp_data);
+	LOG_DBG("write offset 0x%x = 0x%x", offset, tmp_data);
 	if (!plat_write_cpld(offset, &tmp_data))
 		error_flag = true;
 	return error_flag;
