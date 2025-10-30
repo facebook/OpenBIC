@@ -359,6 +359,8 @@ uint8_t modbus_pump_setting(modbus_command_mapping *cmd)
 		set_is_pump_not_access(0, false);
 		set_is_pump_not_access(1, false);
 		set_is_pump_not_access(2, false);
+		// restore leak led
+		led_ctrl(LED_IDX_E_LEAK, LED_STOP_BLINK);
 		set_status_flag(STATUS_FLAG_FAILURE, GPIO_FAIL_BPB_HSC, 0);
 		for (uint8_t i = PUMP_FAIL_EMERGENCY_BUTTON; i <= PUMP_FAIL_CLOSE_PUMP; i++) {
 			set_status_flag(STATUS_FLAG_FAILURE, i, 0);

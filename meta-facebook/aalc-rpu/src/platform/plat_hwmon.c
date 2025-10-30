@@ -122,6 +122,18 @@ static bool hsc_reset(uint8_t sensor_num)
 		LOG_ERR("Fail when getting pump sensor config, 0x%x", sensor_num);
 		return false;
 	}
+	// stop polling
+	plat_disable_sensor_poll();
+
+	//change mux
+	I2C_MSG msg = { 0 };
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
+	msg.tx_len = 2;
+	if (!pre_PCA9546A_read(cfg, cfg->pre_sensor_read_args)) {
+		LOG_ERR("pre lock mutex fail !\n");
+		return true;
+	}
 
 	//uint8_t bus,uint8_t addr, bool enable_flag
 	uint8_t bus = cfg->port;
@@ -129,20 +141,39 @@ static bool hsc_reset(uint8_t sensor_num)
 	// 1 enable, 0 disable, stop pump first
 	if (cfg->type == sensor_dev_adm1272) {
 		if (enable_adm1272_hsc(bus, addr, false)) {
-			// check pump is already enable
+			// check pump is already enable, unlock mutex
+			if (!post_PCA9546A_read(cfg, cfg->pre_sensor_read_args, 0))
+				LOG_ERR("post unlock mutex fail !");
+			plat_enable_sensor_poll();
+			// wait 5s
 			k_msleep(5000);
+			//stop polling
+			plat_disable_sensor_poll();
+			// change mux
+			if (!pre_PCA9546A_read(cfg, cfg->pre_sensor_read_args))
+				LOG_ERR("pre lock mutex fail !");
 			// enable pump
 			if (enable_adm1272_hsc(bus, addr, true)) {
+				if (!post_PCA9546A_read(cfg, cfg->pre_sensor_read_args, 0))
+					LOG_ERR("post unlock mutex fail !");
+				plat_enable_sensor_poll();
 				return true;
 			} else
 				LOG_ERR("Fail when start the pump.");
 		}
 	} else if (cfg->type == sensor_dev_xdp710) {
 		hsc_xdp710_pwr_ctrl(cfg, XDP710_RESTART_ADDR, 0);
+		if (!post_PCA9546A_read(cfg, cfg->pre_sensor_read_args, 0))
+			LOG_ERR("post unlock mutex fail !");
+		plat_enable_sensor_poll();
 		return true;
 	} else {
 		LOG_ERR("Unknown sensor type, Fail when stop the pump.");
 	}
+
+	if (!post_PCA9546A_read(cfg, cfg->pre_sensor_read_args, 0))
+		LOG_ERR("post unlock mutex fail !");
+	plat_enable_sensor_poll();
 	return false;
 }
 
