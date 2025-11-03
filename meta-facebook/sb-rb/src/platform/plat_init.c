@@ -30,6 +30,7 @@
 #include "plat_log.h"
 #include "plat_user_setting.h"
 #include "plat_pldm_monitor.h"
+#include "plat_hwmon.h"
 
 LOG_MODULE_REGISTER(plat_init);
 
@@ -46,6 +47,7 @@ void pal_pre_init()
 	plat_led_init();
 	vr_mutex_init();
 	pwr_level_mutex_init();
+	init_pwm_dev();
 }
 
 void pal_set_sys_status()
@@ -67,6 +69,12 @@ void pal_post_init()
 	// if board id >= EVB EVT2(FAB2)
 	if (get_asic_board_id() == ASIC_BOARD_ID_EVB && get_board_rev_id() >= REV_ID_EVT1B) {
 		quick_sensor_poll_init();
+	}
+	// if board id == EVB
+	if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
+		init_pwm_dev();
+		ast_pwm_set(65, PWM_PORT1);
+		ast_pwm_set(65, PWM_PORT6);
 	}
 
 	init_cpld_polling();
