@@ -898,10 +898,12 @@ __weak void OEM_1S_SET_JTAG_TAP_STA(ipmi_msg *msg)
 		msg->completion_code = CC_INVALID_LENGTH;
 		return;
 	}
+
 	uint8_t tapbitlen, tapdata;
 
 	tapbitlen = msg->data[0];
 	tapdata = msg->data[1];
+	/* For hardware mode, tapbitlen use as clock cycle count */
 	jtag_set_tap(tapdata, tapbitlen);
 
 	msg->data_len = 0;
@@ -913,31 +915,77 @@ __weak void OEM_1S_JTAG_DATA_SHIFT(ipmi_msg *msg)
 {
 	CHECK_NULL_ARG(msg);
 
-	uint8_t lastidx;
-	uint16_t writebitlen, readbitlen, readbyte, databyte;
-
-	writebitlen = (msg->data[1] << 8) | msg->data[0];
-	databyte = (writebitlen + 7) >> 3;
-	readbitlen = (msg->data[3 + databyte] << 8) | msg->data[2 + databyte];
-	readbyte = (readbitlen + 7) >> 3;
-	lastidx = msg->data[4 + databyte];
-
-	if (msg->data_len != (5 + databyte)) {
+	struct jtag_xfer *xfer = malloc(sizeof(struct jtag_xfer));
+	if (xfer == NULL) {
+		LOG_ERR("JTAG HW mode malloc xfer fail");
+		msg->completion_code = CC_OUT_OF_SPACE;
+		return;
+	}
+#ifndef CONFIG_JTAG_HW_MODE
+	uint16_t writebitlen = (msg->data[1] << 8) | msg->data[0];
+	uint16_t tdi_bytes = (writebitlen + 7) >> 3;
+	uint16_t readbitlen = (msg->data[3 + tdi_bytes] << 8) | msg->data[2 + tdi_bytes];
+	uint16_t tdo_bytes = (readbitlen + 7) >> 3;
+	uint8_t end_tap_state = msg->data[4 + tdi_bytes];
+	if (msg->data_len != (5 + tdi_bytes)) {
 		msg->completion_code = CC_INVALID_LENGTH;
+		SAFE_FREE(xfer);
 		return;
 	}
 
-	uint8_t shiftdata[databyte], receivedata[readbyte];
-	memset(shiftdata, 0, databyte);
-	memset(receivedata, 0, readbyte);
-	memcpy(shiftdata, &msg->data[2], databyte);
-	jtag_shift_data(writebitlen, shiftdata, readbitlen, receivedata, lastidx);
+	xfer->tdi_bits = writebitlen;
+	xfer->tdo_bits = readbitlen;
+	xfer->end_tap_state = end_tap_state;
 
-	memcpy(&msg->data[0], &receivedata[0], readbyte);
-	msg->data_len = readbyte;
+	memset(xfer->tdi, 0, sizeof(xfer->tdi));
+	memset(xfer->tdo, 0, sizeof(xfer->tdo));
+	memcpy(xfer->tdi, &msg->data[2], tdi_bytes);
+
+	jtag_shift_data(xfer);
+	memcpy(&msg->data[0], xfer->tdo, tdo_bytes);
+	msg->data_len = tdo_bytes;
 	msg->completion_code = CC_SUCCESS;
+#else
+	xfer->op = msg->data[0];
+	xfer->length = (int)((msg->data[2] << 8) | msg->data[1]);
+	uint16_t tdi_bytes = (xfer->length + 7) >> 3;
+	xfer->end_tap_state = msg->data[3 + tdi_bytes];
+	uint8_t pretck = msg->data[4 + tdi_bytes];
+	uint8_t posttck = msg->data[5 + tdi_bytes];
+	uint8_t xfer_status = msg->data[6 + tdi_bytes];
+
+	if (msg->data_len != (7 + tdi_bytes)) {
+		LOG_ERR("JTAG HW mode invalid length: %d, expected: %d", msg->data_len,
+			7 + tdi_bytes);
+		msg->completion_code = CC_INVALID_LENGTH;
+		SAFE_FREE(xfer);
+		return;
+	}
+
+	memset(xfer->tdi, 0, 512);
+	memset(xfer->tdo, 0, 512);
+	memcpy(xfer->tdi, &msg->data[3], tdi_bytes);
+
+	if (GETBIT(xfer_status, 0)) {
+		jtag_tck_cycle(pretck);
+	}
+
+	jtag_shift_data(xfer);
+
+	if (GETBIT(xfer_status, 1)) {
+		jtag_tck_cycle(posttck);
+	}
+
+	memcpy(&msg->data[0], xfer->tdo, tdi_bytes);
+
+	msg->data_len = tdi_bytes;
+	msg->completion_code = CC_SUCCESS;
+#endif
+
+	SAFE_FREE(xfer);
 	return;
 }
+
 __weak void OEM_1S_JTAG_TCK_CYCLE(ipmi_msg *msg)
 {
 	CHECK_NULL_ARG(msg);
@@ -2629,6 +2677,7 @@ void IPMI_OEM_1S_handler(ipmi_msg *msg)
 	case CMD_OEM_1S_JTAG_TCK_CYCLE:
 		LOG_DBG("Received 1S JTAG TCK cycle command");
 		OEM_1S_JTAG_TCK_CYCLE(msg);
+		break;
 	case CMD_OEM_1S_SET_JTAG_TAP_STA:
 		LOG_DBG("Received 1S Set JTAG Tap Status command");
 		OEM_1S_SET_JTAG_TAP_STA(msg);

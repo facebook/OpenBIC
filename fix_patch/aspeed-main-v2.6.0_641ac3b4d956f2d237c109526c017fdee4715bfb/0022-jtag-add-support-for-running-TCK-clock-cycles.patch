@@ -1,0 +1,61 @@
+From e4b0fb8511342b7dbc9a72df9ef941b5d16682df Mon Sep 17 00:00:00 2001
+From: Billy Tsai <billy_tsai@aspeedtech.com>
+Date: Mon, 11 Aug 2025 17:59:48 +0800
+Subject: [PATCH 2/2] jtag: add support for running TCK clock cycles
+
+Adds a new shell command `tck_run` to control the JTAG TCK clock for a
+specified number of cycles.
+
+Change-Id: I94cd1cdab3e5709a3d6a9a94cab0b4ef85f6ee7c
+Signed-off-by: Billy Tsai <billy_tsai@aspeedtech.com>
+---
+ drivers/jtag/jtag_shell.c | 26 ++++++++++++++++++++++++++
+ 1 file changed, 26 insertions(+)
+
+diff --git a/drivers/jtag/jtag_shell.c b/drivers/jtag/jtag_shell.c
+index 3a998ee86ab..f5cabad54d8 100644
+--- a/drivers/jtag/jtag_shell.c
++++ b/drivers/jtag/jtag_shell.c
+@@ -106,6 +106,30 @@ static int cmd_frequency(const struct shell *shell, size_t argc, char **argv)
+ 	return 0;
+ }
+ 
++static int cmd_tck_run(const struct shell *shell, size_t argc, char **argv)
++{
++	const struct device *dev;
++	uint32_t tck;
++	int err;
++
++	dev = device_get_binding(argv[-1]);
++	if (!dev) {
++		shell_error(shell, "JTAG device not found");
++		return -EINVAL;
++	}
++
++	tck = strtoul(argv[1], NULL, 0);
++
++	err = jtag_tck_run(dev, tck);
++	if (err) {
++		shell_error(shell, "failed to run JTAG TCK (err %d)",
++			    err);
++		return err;
++	}
++
++	return 0;
++}
++
+ static int cmd_tap_state(const struct shell *shell, size_t argc, char **argv, void *data)
+ {
+ 	const struct device *dev;
+@@ -188,6 +212,8 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
+ 	sub_jtag_cmds,
+ 	SHELL_CMD_ARG(frequency, NULL, "<frequency>", cmd_frequency, 2,
+ 		      0),
++	SHELL_CMD_ARG(tck_run, NULL, "<run_count>", cmd_tck_run, 2,
++		      0),
+ 	SHELL_CMD_ARG(ir_scan, NULL, "<len> <value>", cmd_ir_scan, 3,
+ 		      0),
+ 	SHELL_CMD_ARG(dr_scan, NULL, "<len> <value>", cmd_dr_scan, 3,
+-- 
+2.25.1
+
