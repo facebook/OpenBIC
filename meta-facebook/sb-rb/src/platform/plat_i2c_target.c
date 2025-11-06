@@ -97,6 +97,8 @@ voltage_rail_mapping_sensor voltage_rail_mapping_table[] = {
 	{ CONTROL_VOL_VR_ASIC_P0V4_VDDQL_HBM1357_REG, VR_RAIL_E_ASIC_P0V4_VDDQL_HBM1357 },
 	{ CONTROL_VOL_VR_ASIC_P1V8_VPP_HBM0246_REG, VR_RAIL_E_ASIC_P1V8_VPP_HBM0246 },
 	{ CONTROL_VOL_VR_ASIC_P1V8_VPP_HBM1357_REG, VR_RAIL_E_ASIC_P1V8_VPP_HBM1357 },
+	{ CONTROL_VOL_VR_ASIC_P0V85_MEDHA0_VDD_REG, VR_RAIL_E_ASIC_P0V85_MEDHA0_VDD },
+	{ CONTROL_VOL_VR_ASIC_P0V85_MEDHA1_VDD_REG, VR_RAIL_E_ASIC_P0V85_MEDHA1_VDD },
 };
 
 uint8_t get_vr_rail_by_control_vol_reg(uint8_t control_vol_reg)
@@ -666,7 +668,9 @@ static bool command_reply_data_handle(void *arg)
 			case CONTROL_VOL_VR_ASIC_P0V4_VDDQL_HBM0246_REG:
 			case CONTROL_VOL_VR_ASIC_P0V4_VDDQL_HBM1357_REG:
 			case CONTROL_VOL_VR_ASIC_P1V8_VPP_HBM0246_REG:
-			case CONTROL_VOL_VR_ASIC_P1V8_VPP_HBM1357_REG: {
+			case CONTROL_VOL_VR_ASIC_P1V8_VPP_HBM1357_REG:
+			case CONTROL_VOL_VR_ASIC_P0V85_MEDHA0_VDD_REG:
+			case CONTROL_VOL_VR_ASIC_P0V85_MEDHA1_VDD_REG: {
 				uint8_t rail = get_vr_rail_by_control_vol_reg(reg_offset);
 				uint16_t vout = 0xFFFF;
 				if (!voltage_command_setting_get(rail, &vout)) {
@@ -943,7 +947,9 @@ void plat_master_write_thread_handler()
 		case CONTROL_VOL_VR_ASIC_P0V4_VDDQL_HBM0246_REG:
 		case CONTROL_VOL_VR_ASIC_P0V4_VDDQL_HBM1357_REG:
 		case CONTROL_VOL_VR_ASIC_P1V8_VPP_HBM0246_REG:
-		case CONTROL_VOL_VR_ASIC_P1V8_VPP_HBM1357_REG: {
+		case CONTROL_VOL_VR_ASIC_P1V8_VPP_HBM1357_REG:
+		case CONTROL_VOL_VR_ASIC_P0V85_MEDHA0_VDD_REG:
+		case CONTROL_VOL_VR_ASIC_P0V85_MEDHA1_VDD_REG: {
 			if (rlen != 3) {
 				LOG_ERR("Invalid length for offset(write): 0x%02x", reg_offset);
 				break;
