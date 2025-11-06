@@ -28,7 +28,7 @@
 #define TMP75_TEMP_OFFSET 0x00
 #define SSD0_ADDR (0xD4 >> 1)
 #define SSD0_OFFSET 0x00
-#define ADI_ADM1278_ADDR (0x80 >> 1)
+#define ADI_ADM1278_ADDR (0x20 >> 1)
 #define ADI_LTC4286_ADDR (0x84 >> 1)
 #define MPS_MP5990_ADDR (0x16 >> 1)
 #define ADI_LTC4282_ADDR (0x88 >> 1)
@@ -142,7 +142,7 @@ typedef struct _dimm_pmic_mapping_cfg {
 } dimm_pmic_mapping_cfg;
 
 uint8_t plat_get_config_size();
-//uint8_t pal_get_extend_sensor_config();
+uint8_t pal_get_extend_sensor_config();
 void load_sensor_config(void);
 bool disable_dimm_pmic_sensor(uint8_t sensor_num);
 
