@@ -12,7 +12,7 @@
 };
 
 &i2c1a {
-	clock-frequency = <I2C_BITRATE_STANDARD>;
+	clock-frequency = <I2C_BITRATE_FAST>;
 	status = "okay";
 };
 
@@ -39,12 +39,12 @@
 };
 
 &i2c4b {
-	clock-frequency = <I2C_BITRATE_STANDARD>;
+	clock-frequency = <I2C_BITRATE_FAST>;
 	status = "okay";
 };
 
 &i2c5a {
-	clock-frequency = <I2C_BITRATE_STANDARD>;
+	clock-frequency = <I2C_BITRATE_FAST>;
 	status = "okay";
 };
 
@@ -60,32 +60,32 @@
 };
 
 &i2c7a {
-	clock-frequency = <I2C_BITRATE_STANDARD>;
+	clock-frequency = <I2C_BITRATE_FAST>;
 	status = "okay";
 };
 
 &i2c8a {
-	clock-frequency = <I2C_BITRATE_STANDARD>;
+	clock-frequency = <I2C_BITRATE_FAST>;
 	status = "okay";
 };
 
 &i2c9a {
-	clock-frequency = <I2C_BITRATE_STANDARD>;
+	clock-frequency = <I2C_BITRATE_FAST>;
 	status = "okay";
 };
 
 &i2c10a {
-	clock-frequency = <I2C_BITRATE_STANDARD>;
+	clock-frequency = <I2C_BITRATE_FAST>;
 	status = "okay";
 };
 
 &i2c11a {
-    clock-frequency = <I2C_BITRATE_STANDARD>;
+    clock-frequency = <I2C_BITRATE_FAST>;
     status = "okay";
 };
 
 &i2c12a {
-	clock-frequency = <I2C_BITRATE_STANDARD>;
+	clock-frequency = <I2C_BITRATE_FAST>;
 	status = "okay";
 };
 
