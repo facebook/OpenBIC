@@ -30,6 +30,10 @@
 #include "drivers/i2c_npcm4xx.h"
 #include "util_spi.h"
 #include "plat_gpio.h"
+#include "plat_cpld.h"
+
+#define RESET_CPLD_ON 0x3F
+#define RESET_CPLD_OFF 0x00
 
 LOG_MODULE_REGISTER(plat_fwupdate);
 
@@ -99,12 +103,24 @@ void change_spi_node_to_medha1()
 	gpio_set(QSPI_CPLD_SEL_1, 1);
 }
 
+void set_cpld_reset_reg(uint8_t value)
+{
+	uint8_t temp_data = 0;
+	plat_read_cpld(RESET, &temp_data, 1);
+	LOG_INF("cpld reset reg: 0x%x", temp_data);
+	temp_data = value; // set cpld reset
+	plat_write_cpld(RESET, &temp_data);
+	// check cpld reset reg
+	plat_read_cpld(RESET, &temp_data, 1);
+	LOG_INF("check cpld reset reg: 0x%x", temp_data);
+}
+
 static uint8_t pldm_pre_mtia_flash_update(void *fw_update_param)
 {
 	CHECK_NULL_ARG_WITH_RETURN(fw_update_param, 1);
 
 	pldm_fw_update_param_t *p = (pldm_fw_update_param_t *)fw_update_param;
-
+	set_cpld_reset_reg(RESET_CPLD_OFF);
 	uint16_t spi_node = p->comp_id;
 	LOG_INF("MTIA flash comp id: 0x%x", p->comp_id);
 	switch (spi_node) {
@@ -122,6 +138,7 @@ static uint8_t pldm_pre_mtia_flash_update(void *fw_update_param)
 		break;
 	default:
 		LOG_ERR("Unsupported MTIA flash comp id: 0x%x", p->comp_id);
+		set_cpld_reset_reg(RESET_CPLD_ON);
 		return 1;
 	}
 
@@ -132,6 +149,7 @@ static uint8_t pldm_pre_mtia_flash_update(void *fw_update_param)
 	rc = spi_nor_re_init(flash_dev);
 	if (rc != 0) {
 		LOG_ERR("spi_nor_re_init fail");
+		set_cpld_reset_reg(RESET_CPLD_ON);
 		return 1;
 	}
 
@@ -151,6 +169,7 @@ static uint8_t pldm_post_mtia_flash_update(void *fw_update_param)
 	// disable spi node
 	spi_node_disable();
 	LOG_INF("Disable spi node");
+	set_cpld_reset_reg(RESET_CPLD_ON);
 	return 0;
 }
 // clang-format off

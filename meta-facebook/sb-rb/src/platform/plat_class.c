@@ -31,6 +31,7 @@ static uint8_t vr_module = 0;
 static uint8_t ubc_module = 0;
 static uint8_t mmc_slot = 0;
 static uint8_t asic_board_id = 0;
+uint8_t board_rev_id = 0;
 
 bool plat_cpld_eerprom_read(uint8_t *data, uint16_t offset, uint8_t len)
 {
@@ -59,7 +60,6 @@ bool plat_cpld_eerprom_read(uint8_t *data, uint16_t offset, uint8_t len)
 void init_plat_config()
 {
 	uint8_t module = 0;
-	uint8_t board_rev_id = 0;
 	plat_read_cpld(CPLD_OFFSET_VR_VENDER_TYPE, &module, 1);
 	plat_read_cpld(CPLD_OFFSET_BOARD_REV_ID, &board_rev_id, 1);
 	// rev id only support 0, 1, 2 bit
@@ -97,4 +97,9 @@ uint8_t get_mmc_slot()
 uint8_t get_asic_board_id()
 {
 	return asic_board_id;
+}
+
+uint8_t get_board_rev_id()
+{
+	return board_rev_id;
 }

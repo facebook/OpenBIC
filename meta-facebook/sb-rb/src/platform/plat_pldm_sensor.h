@@ -321,6 +321,8 @@ enum SENSOR_THREAD_LIST {
 	MAX_SENSOR_THREAD_ID,
 };
 
+enum U200051_REG { INPUT_PORT = 0, OUTPUT_PORT = 1, POLARITY_INVERSION = 2, CONFIG = 3 };
+
 enum VR_ADDRESS_VIRSION { OLD_MPS = 0, OLD_RNS, NEW_MPS, NEW_RNS, MAX_VR_ADDRESS_VIRSION };
 
 int plat_pldm_sensor_get_sensor_count(int thread_id);
@@ -348,4 +350,6 @@ void change_sensor_cfg(uint8_t asic_board_id, uint8_t vr_module, uint8_t ubc_mod
 		       uint8_t board_rev_id);
 uint8_t convert_vr_addr(uint8_t addr, uint8_t vr_change_mode);
 uint32_t plat_get_pdr_size(uint8_t pdr_type);
+void init_U200051_IO();
+void quick_sensor_poll_init();
 #endif
