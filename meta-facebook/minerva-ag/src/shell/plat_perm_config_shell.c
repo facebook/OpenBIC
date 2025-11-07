@@ -100,8 +100,11 @@ static int cmd_perm_config_get(const struct shell *shell, size_t argc, char **ar
 		LOG_ERR("get thermaltrip user settings failed");
 	} else {
 		if (setting_data_for_thermaltrip != 0xFF) {
-			shell_print(shell, "thermaltrip                            val=%s",
-				    (setting_data_for_thermaltrip ? "enable" : "disable"));
+			shell_print(shell, "thermaltrip                            %s",
+				    ((setting_data_for_thermaltrip == 0x00) ?
+					     "thermaltrip disable" :
+				     (setting_data_for_thermaltrip == 0x01) ? "thermaltrip enable" :
+									      "unknown"));
 			config_count++;
 		}
 	}

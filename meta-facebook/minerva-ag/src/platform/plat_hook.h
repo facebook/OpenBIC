@@ -28,6 +28,7 @@
 #define POWER_CAPPING_DISABLE 0
 #define POWER_CAPPING_AVERAGE_TIME_MS_DEFAULT 50 // 50ms
 #define POWER_CAPPING_HISTORY_SIZE 10
+#define THERMALTRIP_BIT BIT(0)
 
 #include "plat_pldm_sensor.h"
 
@@ -343,7 +344,7 @@ bool vr_status_enum_get(uint8_t *name, uint8_t *num);
 bool vr_vout_default_settings_init(void);
 bool vr_vout_user_settings_init(void);
 bool get_user_settings_thermaltrip_from_eeprom(void *user_settings, uint8_t data_length);
-bool set_thermaltrip_user_settings(bool thermaltrip_enable, bool is_perm);
+bool set_thermaltrip_user_settings(uint8_t *thermaltrip_status_reg, bool is_perm);
 bool get_user_settings_throttle_from_eeprom(void *user_settings, uint8_t data_length);
 bool set_throttle_user_settings(uint8_t *throttle_status_reg, bool is_perm);
 bool strap_name_get(uint8_t rail, uint8_t **name);

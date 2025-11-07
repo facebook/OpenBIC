@@ -1450,15 +1450,16 @@ bool set_user_settings_thermaltrip_to_eeprom(void *thermaltrip_user_settings, ui
 	return true;
 }
 
-bool set_thermaltrip_user_settings(bool thermaltrip_enable, bool is_perm)
+bool set_thermaltrip_user_settings(uint8_t *thermaltrip_status_reg, bool is_perm)
 {
-	I2C_MSG msg = { 0 };
+	CHECK_NULL_ARG_WITH_RETURN(thermaltrip_status_reg, false);
 
+	I2C_MSG msg = { 0 };
 	msg.bus = I2C_BUS5;
 	msg.target_addr = AEGIS_CPLD_ADDR;
 	msg.tx_len = 2;
 	msg.data[0] = CPLD_THERMALTRIP_SWITCH_ADDR;
-	msg.data[1] = (thermaltrip_enable) ? 1 : 0;
+	msg.data[1] = *thermaltrip_status_reg;
 
 	if (i2c_master_write(&msg, 3)) {
 		LOG_ERR("Failed to write to bus %d device: %x", msg.bus, msg.target_addr);
@@ -1466,8 +1467,8 @@ bool set_thermaltrip_user_settings(bool thermaltrip_enable, bool is_perm)
 	}
 
 	if (is_perm) {
-		thermaltrip_user_settings.thermaltrip_user_setting_value =
-			(thermaltrip_enable ? 0x01 : 0x00);
+		uint8_t masked_value = *thermaltrip_status_reg & THERMALTRIP_BIT;
+		thermaltrip_user_settings.thermaltrip_user_setting_value = masked_value;
 
 		if (!set_user_settings_thermaltrip_to_eeprom(&thermaltrip_user_settings,
 							     sizeof(thermaltrip_user_settings))) {
@@ -1648,11 +1649,22 @@ static bool thermaltrip_user_settings_init(void)
 	}
 
 	if (setting_data != 0xFF) {
-		if (!plat_i2c_write(I2C_BUS5, AEGIS_CPLD_ADDR, CPLD_THERMALTRIP_SWITCH_ADDR,
-				    &setting_data, sizeof(setting_data))) {
-			LOG_ERR("Can't set thermaltrip=%d by user settings", setting_data);
+		uint8_t data = 0;
+		if (!plat_i2c_read(I2C_BUS5, AEGIS_CPLD_ADDR, CPLD_THERMALTRIP_SWITCH_ADDR, &data,
+				   1)) {
+			LOG_ERR("Can't find thermaltrip from cpld: 0x%02x",
+				CPLD_THERMALTRIP_SWITCH_ADDR);
 			return false;
 		}
+		data = (data & ~THERMALTRIP_BIT) | (setting_data & THERMALTRIP_BIT);
+
+		if (!plat_i2c_write(I2C_BUS5, AEGIS_CPLD_ADDR, CPLD_THERMALTRIP_SWITCH_ADDR, &data,
+				    sizeof(data))) {
+			LOG_ERR("Can't set thermaltrip=%d by user settings", data);
+			return false;
+		}
+
+		LOG_INF("set thermaltrip=0x%02x by user settings", setting_data);
 	}
 
 	return true;
