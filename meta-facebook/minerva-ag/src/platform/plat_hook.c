@@ -853,6 +853,7 @@ bool vr_status_name_get(uint8_t rail, uint8_t **name)
 #define SOC_PCIE_PERST_USER_SETTINGS_OFFSET 0x8300
 #define BOOTSTRAP_USER_SETTINGS_OFFSET 0x8400
 #define THERMALTRIP_USER_SETTINGS_OFFSET 0x8500
+#define ATH_GPIO_USER_SETTINGS_OFFSET 0x8550
 #define THROTTLE_USER_SETTINGS_OFFSET 0x8600
 #define POWER_CAPPING_USER_SETTINGS_OFFSET 0x8650
 
@@ -1479,6 +1480,90 @@ bool set_thermaltrip_user_settings(uint8_t *thermaltrip_status_reg, bool is_perm
 	return true;
 }
 
+ath_gpio_user_settings_struct ath_gpio_user_settings = { 0xFF };
+#define CPLD_ATH_GPIO_SWITCH_ADDR 0x3D
+
+bool get_user_settings_ath_gpio_from_eeprom(void *user_settings, uint8_t data_length)
+{
+	CHECK_NULL_ARG_WITH_RETURN(user_settings, false);
+
+	I2C_MSG msg = { 0 };
+	uint8_t retry = 5;
+	msg.bus = I2C_BUS12;
+	msg.target_addr = 0xA0 >> 1;
+	msg.tx_len = 2;
+	msg.data[0] = ATH_GPIO_USER_SETTINGS_OFFSET >> 8;
+	msg.data[1] = ATH_GPIO_USER_SETTINGS_OFFSET & 0xff;
+	msg.rx_len = data_length;
+
+	if (i2c_master_read(&msg, retry)) {
+		LOG_ERR("Failed to read eeprom, bus: %d, addr: 0x%x, reg: 0x%x%x", msg.bus,
+			msg.target_addr, msg.data[0], msg.data[1]);
+		return false;
+	}
+	memcpy(user_settings, msg.data, data_length);
+
+	LOG_HEXDUMP_DBG(msg.data, data_length, "EEPROM data read ath_gpio");
+
+	return true;
+}
+
+bool set_user_settings_ath_gpio_to_eeprom(void *ath_gpio_user_settings, uint8_t data_length)
+{
+	CHECK_NULL_ARG_WITH_RETURN(ath_gpio_user_settings, false);
+
+	/* write the ath_gpio_user_settings to eeprom */
+	I2C_MSG msg = { 0 };
+	uint8_t retry = 5;
+	msg.bus = I2C_BUS12;
+	msg.target_addr = 0xA0 >> 1;
+	msg.tx_len = data_length + 2;
+	msg.data[0] = ATH_GPIO_USER_SETTINGS_OFFSET >> 8;
+	msg.data[1] = ATH_GPIO_USER_SETTINGS_OFFSET & 0xff;
+
+	memcpy(&msg.data[2], ath_gpio_user_settings, data_length);
+	LOG_DBG("Ath_gpio user settings write into eeprom, bus: %d, addr: 0x%x, reg: 0x%x 0x%x, tx_len: %d",
+		msg.bus, msg.target_addr, msg.data[0], msg.data[1], msg.tx_len);
+
+	if (i2c_master_write(&msg, retry)) {
+		LOG_ERR("Ath_gpio user settings failed to write into eeprom, bus: %d, addr: 0x%x, reg: 0x%x 0x%x, tx_len: %d",
+			msg.bus, msg.target_addr, msg.data[0], msg.data[1], msg.tx_len);
+		return false;
+	}
+	k_msleep(EEPROM_MAX_WRITE_TIME);
+
+	return true;
+}
+
+bool set_ath_gpio_user_settings(uint8_t *ath_gpio_status_reg, bool is_perm)
+{
+	CHECK_NULL_ARG_WITH_RETURN(ath_gpio_status_reg, false);
+
+	I2C_MSG msg = { 0 };
+	msg.bus = I2C_BUS5;
+	msg.target_addr = AEGIS_CPLD_ADDR;
+	msg.tx_len = 2;
+	msg.data[0] = CPLD_ATH_GPIO_SWITCH_ADDR;
+	msg.data[1] = *ath_gpio_status_reg;
+
+	if (i2c_master_write(&msg, 3)) {
+		LOG_ERR("Failed to write to bus %d device: %x", msg.bus, msg.target_addr);
+		return false;
+	}
+
+	if (is_perm) {
+		uint8_t masked_value = *ath_gpio_status_reg & (ATH_GPIO_3_BIT | ATH_GPIO_4_BIT);
+		ath_gpio_user_settings.ath_gpio_user_setting_value = masked_value;
+
+		if (!set_user_settings_ath_gpio_to_eeprom(&ath_gpio_user_settings,
+							  sizeof(ath_gpio_user_settings))) {
+			LOG_ERR("Failed to save ATH_GPIO settings to EEPROM");
+			return false;
+		}
+	}
+	return true;
+}
+
 throttle_user_settings_struct throttle_user_settings = { 0xFF };
 #define CPLD_THROTTLE_SWITCH_ADDR 0x32
 
@@ -1665,6 +1750,37 @@ static bool thermaltrip_user_settings_init(void)
 		}
 
 		LOG_INF("set thermaltrip=0x%02x by user settings", setting_data);
+	}
+
+	return true;
+}
+
+static bool ath_gpio_user_settings_init(void)
+{
+	uint8_t setting_data = 0xFF;
+
+	if (!get_user_settings_ath_gpio_from_eeprom(&setting_data, sizeof(setting_data))) {
+		LOG_ERR("get ath_gpio user settings fail");
+		return false;
+	}
+
+	if (setting_data != 0xFF) {
+		uint8_t data = 0;
+		if (!plat_i2c_read(I2C_BUS5, AEGIS_CPLD_ADDR, CPLD_ATH_GPIO_SWITCH_ADDR, &data,
+				   1)) {
+			LOG_ERR("Can't find ATH_GPIO from CPLD: 0x%02x", CPLD_ATH_GPIO_SWITCH_ADDR);
+			return false;
+		}
+		data = (data & ~(ATH_GPIO_3_BIT | ATH_GPIO_4_BIT)) |
+		       (setting_data & (ATH_GPIO_3_BIT | ATH_GPIO_4_BIT));
+
+		if (!plat_i2c_write(I2C_BUS5, AEGIS_CPLD_ADDR, CPLD_ATH_GPIO_SWITCH_ADDR, &data,
+				    sizeof(data))) {
+			LOG_ERR("Can't set ATH_GPIO user settings to CPLD (data=0x%02x)", data);
+			return false;
+		}
+
+		LOG_INF("set ATH_GPIO=0x%02x by user settings", setting_data);
 	}
 
 	return true;
@@ -2938,6 +3054,14 @@ bool perm_config_clear(void)
 		return false;
 	}
 
+	/* clear ath_gpio perm parameter */
+	uint8_t setting_value_for_ath_gpio = 0xFF;
+	if (!set_user_settings_ath_gpio_to_eeprom(&setting_value_for_ath_gpio,
+						  sizeof(setting_value_for_ath_gpio))) {
+		LOG_ERR("The perm_config clear failed");
+		return false;
+	}
+
 	/* clear throttle perm parameter */
 	uint8_t setting_value_for_throttle = 0xFF;
 	if (!set_user_settings_throttle_to_eeprom(&setting_value_for_throttle,
@@ -2967,6 +3091,7 @@ void user_settings_init(void)
 	bootstrap_user_settings_init();
 	vr_vout_range_user_settings_init();
 	thermaltrip_user_settings_init();
+	ath_gpio_user_settings_init();
 	throttle_user_settings_init();
 	power_capping_default_settings_init();
 	power_capping_user_settings_init();

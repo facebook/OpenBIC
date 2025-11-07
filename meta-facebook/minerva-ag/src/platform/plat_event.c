@@ -99,7 +99,7 @@ aegis_cpld_info aegis_cpld_info_table[] = {
 	{ LEAK_DETCTION_REG, 				0xDF, 0xDF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_BIT_6_ONLY},
 
 	{ TEMPERATURE_IC_OVERT_FAULT_2_REG, 0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
-	{ ASIC_OC_WARN_2_REG, 				0x1F, 0x1F, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
+	{ ASIC_OC_WARN_2_REG, 				0x1C, 0x1C, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
 	{ SYSTEM_ALERT_FAULT_2_REG, 		0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_BIT_7_ONLY },
 	{ VR_SMBUS_ALERT_3_REG, 			0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
 	{ VR_SMBUS_ALERT_4_REG, 			0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },	
@@ -240,7 +240,7 @@ const cpld_bit_name_table_t cpld_bit_name_table[] = {
 		  "RSVD",
 	  } },
 	{ TEMPERATURE_IC_OVERT_FAULT_2_REG,
-	  "Temperature IC OVERT Fault Status",
+	  "THERMTRIP_N(POWER DOWN): TEMP_IC_OVERT Status/ATH_SOC_CATTRIP/ATH_HBM_CATTRIP",
 	  {
 		  "RSVD",
 		  "RSVD",
@@ -254,8 +254,8 @@ const cpld_bit_name_table_t cpld_bit_name_table[] = {
 	{ ASIC_OC_WARN_2_REG,
 	  "ASIC OC WARN ,HBM CATTRIP and ASIC Alert to BMC/MMC Status",
 	  {
-		  "RSVD",
-		  "RSVD",
+		  "ATH_GPIO_3_SOC_THERMAL_INTERRUP (high active)",
+		  "ATH_GPIO_4_SOC_THERMAL_CATTRIP (high active)",
 		  "RSVD",
 		  "RSVD",
 		  "RSVD",
@@ -626,6 +626,9 @@ const vr_fault_info vr_fault_table[] = {
 	{ MTIA_PLL_VDDA15_MAX_CORE_S, VR_POWER_FAULT_5_REG, BIT(7), false, 0x00 },
 
 	{ MTIA_FM_ASIC_0_THERMTRIP_N, TEMPERATURE_IC_OVERT_FAULT_2_REG, BIT(7), false, 0x00 },
+
+	{ MTIA_ATH_GPIO_3, ASIC_OC_WARN_2_REG, BIT(0), false, 0x00 },
+	{ MTIA_ATH_GPIO_4, ASIC_OC_WARN_2_REG, BIT(1), false, 0x00 },
 	{ MTIA_FM_ATH_PLD_HBM3_CATTRIP_ALARM, ASIC_OC_WARN_2_REG, BIT(5), false, 0x00 },
 };
 // clang-format on
