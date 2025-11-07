@@ -78,8 +78,7 @@ void pal_post_init()
 		rtc_init_once();
 	init_load_eeprom_log();
 	plat_set_ac_on_log();
-	if (get_mb_type() == MB_PRESENT)
-		init_cpld_polling();
+	init_cpld_polling();
 	plat_telemetry_table_init();
 
 	LOG_INF("Init done");

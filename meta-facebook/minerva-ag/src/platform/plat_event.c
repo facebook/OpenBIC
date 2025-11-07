@@ -364,14 +364,16 @@ void check_ubc_delayed(struct k_work *work)
 			sel_msg.assert_type = LOG_ASSERT;
 			sel_msg.event_type = MTIA_FAULT;
 			sel_msg.event_data_1 = MTIA_POWER_ON_SEQUENCE_FAIL;
-			if (PLDM_SUCCESS != send_event_log_to_bmc(sel_msg)) {
-				LOG_ERR("Failed to send MTIA FAULT assert SEL, event data: 0x%x 0x%x 0x%x",
-					sel_msg.event_data_1, sel_msg.event_data_2,
-					sel_msg.event_data_3);
-			} else {
-				LOG_INF("send MTIA FAULT assert SEL, event data: 0x%x 0x%x 0x%x",
-					sel_msg.event_data_1, sel_msg.event_data_2,
-					sel_msg.event_data_3);
+			if (get_mb_type() == MB_PRESENT) {
+				if (PLDM_SUCCESS != send_event_log_to_bmc(sel_msg)) {
+					LOG_ERR("Failed to send MTIA FAULT assert SEL, event data: 0x%x 0x%x 0x%x",
+						sel_msg.event_data_1, sel_msg.event_data_2,
+						sel_msg.event_data_3);
+				} else {
+					LOG_INF("send MTIA FAULT assert SEL, event data: 0x%x 0x%x 0x%x",
+						sel_msg.event_data_1, sel_msg.event_data_2,
+						sel_msg.event_data_3);
+				}
 			}
 		}
 	}
@@ -656,15 +658,18 @@ void process_mtia_vr_power_fault_sel(aegis_cpld_info *cpld_info, uint8_t *curren
 			sel_msg.assert_type = is_assert ? LOG_ASSERT : LOG_DEASSERT;
 			sel_msg.event_type = MTIA_FAULT;
 			sel_msg.event_data_1 = vr_fault_table[i].mtia_event_source;
-
-			if (PLDM_SUCCESS != send_event_log_to_bmc(sel_msg)) {
-				LOG_ERR("Failed to send MTIA FAULT %s SEL, event data: 0x%x 0x%x 0x%x",
-					is_assert ? "ASSERT" : "DEASSERT", sel_msg.event_data_1,
-					sel_msg.event_data_2, sel_msg.event_data_3);
-			} else {
-				LOG_INF("Send MTIA FAULT %s SEL, event data: 0x%x 0x%x 0x%x",
-					is_assert ? "ASSERT" : "DEASSERT", sel_msg.event_data_1,
-					sel_msg.event_data_2, sel_msg.event_data_3);
+			if (get_mb_type() == MB_PRESENT) {
+				if (PLDM_SUCCESS != send_event_log_to_bmc(sel_msg)) {
+					LOG_ERR("Failed to send MTIA FAULT %s SEL, event data: 0x%x 0x%x 0x%x",
+						is_assert ? "ASSERT" : "DEASSERT",
+						sel_msg.event_data_1, sel_msg.event_data_2,
+						sel_msg.event_data_3);
+				} else {
+					LOG_INF("Send MTIA FAULT %s SEL, event data: 0x%x 0x%x 0x%x",
+						is_assert ? "ASSERT" : "DEASSERT",
+						sel_msg.event_data_1, sel_msg.event_data_2,
+						sel_msg.event_data_3);
+				}
 			}
 			continue;
 		} else {
@@ -717,16 +722,20 @@ void process_mtia_vr_power_fault_sel(aegis_cpld_info *cpld_info, uint8_t *curren
 			set_plat_sensor_polling_enable_flag(true);
 			// Send SEL to BMC
 			for (int k = 0; k < sel_msg_idx; k++) {
-				if (PLDM_SUCCESS != send_event_log_to_bmc(sel_msg[k])) {
-					LOG_ERR("Failed to send MTIA FAULT %s SEL, event data: 0x%x 0x%x 0x%x",
-						is_assert ? "ASSERT" : "DEASSERT",
-						sel_msg[k].event_data_1, sel_msg[k].event_data_2,
-						sel_msg[k].event_data_3);
-				} else {
-					LOG_INF("Send MTIA FAULT %s SEL, event data: 0x%x 0x%x 0x%x",
-						is_assert ? "ASSERT" : "DEASSERT",
-						sel_msg[k].event_data_1, sel_msg[k].event_data_2,
-						sel_msg[k].event_data_3);
+				if (get_mb_type() == MB_PRESENT) {
+					if (PLDM_SUCCESS != send_event_log_to_bmc(sel_msg[k])) {
+						LOG_ERR("Failed to send MTIA FAULT %s SEL, event data: 0x%x 0x%x 0x%x",
+							is_assert ? "ASSERT" : "DEASSERT",
+							sel_msg[k].event_data_1,
+							sel_msg[k].event_data_2,
+							sel_msg[k].event_data_3);
+					} else {
+						LOG_INF("Send MTIA FAULT %s SEL, event data: 0x%x 0x%x 0x%x",
+							is_assert ? "ASSERT" : "DEASSERT",
+							sel_msg[k].event_data_1,
+							sel_msg[k].event_data_2,
+							sel_msg[k].event_data_3);
+					}
 				}
 			}
 			continue;
