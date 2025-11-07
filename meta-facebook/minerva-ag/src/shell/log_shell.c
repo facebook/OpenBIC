@@ -79,6 +79,9 @@ void cmd_log_dump(const struct shell *shell, size_t argc, char **argv)
 		case DC_ON_TRIGGER_CAUSE:
 			shell_print(shell, "\tDC_ON_DETECTED");
 			break;
+		case POWER_DOWN_TRIGGER_CAUSE:
+			shell_print(shell, "\tMTIA POWER_DOWN (Fault)");
+			break;
 		default:
 			shell_print(shell, "Unknown error type: %d", err_type);
 			break;

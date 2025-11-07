@@ -41,10 +41,12 @@ LOG_MODULE_REGISTER(plat_isr);
 
 void check_clk_handler();
 void check_clk_buffer_handler();
+void vr_fault_check_work_handler(struct k_work *work);
 
 K_TIMER_DEFINE(check_ubc_delayed_timer, check_ubc_delayed_timer_handler, NULL);
 K_WORK_DELAYABLE_DEFINE(check_clk_work, check_clk_handler);
 K_WORK_DELAYABLE_DEFINE(check_clk_buffer_work, check_clk_buffer_handler);
+K_WORK_DELAYABLE_DEFINE(vr_fault_check_work, vr_fault_check_work_handler);
 
 void ISR_GPIO_FM_ASIC_0_THERMTRIP_R_N()
 {
@@ -95,6 +97,11 @@ void ISR_GPIO_ALL_VR_PM_ALERT_R_N()
 		gpio_get(ALL_VR_PM_ALERT_R_N), gpio_get_direction(ALL_VR_PM_ALERT_R_N));
 
 	check_cpld_polling_alert_status();
+
+	if (gpio_get(ALL_VR_PM_ALERT_R_N) == GPIO_LOW && gpio_get(RST_ATH_PWR_ON_PLD_R1_N)) {
+		LOG_INF("ALL_VR_PM_ALERT_R_N low, start delayed VR fault check");
+		k_work_schedule(&vr_fault_check_work, K_MSEC(300));
+	}
 }
 
 void ISR_GPIO_ATH_SMB_ALERT_NPCM_LVC33_R_N()
@@ -165,6 +172,38 @@ bool plat_i2c_write(uint8_t bus, uint8_t addr, uint8_t offset, uint8_t *data, ui
 		return false;
 	}
 	return true;
+}
+
+uint8_t check_data_nonzero(const uint8_t *data, uint8_t len)
+{
+	if (data == NULL || len == 0)
+		return 0;
+
+	for (uint8_t i = 0; i < len; i++) {
+		if (data[i] != 0)
+			return 1;
+	}
+
+	return 0;
+}
+
+void vr_fault_check_work_handler(struct k_work *work)
+{
+	if (gpio_get(FM_PLD_UBC_EN_R) == GPIO_HIGH) {
+		uint8_t data[5] = { 0 };
+
+		if (!plat_i2c_read(I2C_BUS5, AEGIS_CPLD_ADDR, VR_POWER_FAULT_1_REG, data,
+				   sizeof(data))) {
+			LOG_ERR("Failed to read cpld 0x%02X", VR_POWER_FAULT_1_REG);
+			return;
+		}
+		uint8_t result = check_data_nonzero(data, sizeof(data));
+
+		if (result) {
+			LOG_INF("ALL_VR_PM_ALERT_R_N=low,RST_ATH_PWR_ON_PLD_R1_N=low, FM_PLD_UBC_EN_R=High, trigger power down event");
+			plat_set_power_down_log();
+		}
+	}
 }
 
 void check_clk_handler()
