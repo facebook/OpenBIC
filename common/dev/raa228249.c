@@ -478,9 +478,16 @@ bool raa228249_get_vout_command(sensor_cfg *cfg, uint8_t rail, uint16_t *millivo
 		return false;
 	}
 
-	uint16_t val = data[0] | (data[1] << 8);
+	uint8_t data_cal_offset[2] = { 0 };
+	if (!raa228249_i2c_read(cfg->port, cfg->target_addr, PMBUS_VOUT_CAL_OFFSET, data_cal_offset,
+				sizeof(data_cal_offset))) {
+		return false;
+	}
 
-	*millivolt = val;
+	uint16_t val = data[0] | (data[1] << 8);
+	uint16_t val_cal_offset = data_cal_offset[0] | (data_cal_offset[1] << 8);
+
+	*millivolt = val + val_cal_offset;
 
 	return true;
 }
@@ -490,9 +497,18 @@ bool raa228249_set_vout_command(sensor_cfg *cfg, uint8_t rail, uint16_t *millivo
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	CHECK_NULL_ARG_WITH_RETURN(millivolt, false);
 
+	uint8_t data_cal_offset[2] = { 0 };
+	if (!raa228249_i2c_read(cfg->port, cfg->target_addr, PMBUS_VOUT_CAL_OFFSET, data_cal_offset,
+				sizeof(data_cal_offset))) {
+		return false;
+	}
+
+	uint16_t val_cal_offset = data_cal_offset[0] | (data_cal_offset[1] << 8);
+	uint16_t val = *millivolt - val_cal_offset;
+
 	uint8_t data[2] = { 0 };
-	data[0] = *millivolt & 0xFF;
-	data[1] = (*millivolt >> 8) & 0xFF;
+	data[0] = val & 0xFF;
+	data[1] = (val >> 8) & 0xFF;
 
 	if (!raa228249_i2c_write(cfg->port, cfg->target_addr, PMBUS_VOUT_COMMAND, data,
 				 sizeof(data))) {

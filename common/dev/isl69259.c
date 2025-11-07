@@ -666,9 +666,16 @@ bool isl69260_get_vout_command(sensor_cfg *cfg, uint8_t rail, uint16_t *millivol
 		return false;
 	}
 
-	uint16_t val = (data[0] | (data[1] << 8)) / vout_scale;
+	uint8_t data_cal_offset[2] = { 0 };
+	if (!isl69260_i2c_read(cfg->port, cfg->target_addr, PMBUS_VOUT_CAL_OFFSET, data_cal_offset,
+			       sizeof(data_cal_offset))) {
+		return false;
+	}
 
-	*millivolt = val;
+	uint16_t val = (data[0] | (data[1] << 8)) / vout_scale;
+	uint16_t val_cal_offset = (data_cal_offset[0] | (data_cal_offset[1] << 8)) / vout_scale;
+
+	*millivolt = val + val_cal_offset;
 
 	return true;
 }
@@ -685,7 +692,16 @@ bool isl69260_set_vout_command(sensor_cfg *cfg, uint8_t rail, uint16_t *millivol
 		if (init_arg->vout_scale_enable)
 			vout_scale = init_arg->vout_scale;
 	}
-	uint16_t val = *millivolt * vout_scale;
+
+	uint8_t data_cal_offset[2] = { 0 };
+	if (!isl69260_i2c_read(cfg->port, cfg->target_addr, PMBUS_VOUT_CAL_OFFSET, data_cal_offset,
+			       sizeof(data_cal_offset))) {
+		return false;
+	}
+
+	uint16_t val_cal_offset = data_cal_offset[0] | (data_cal_offset[1] << 8);
+
+	uint16_t val = (*millivolt * vout_scale) - val_cal_offset;
 	uint8_t data[2] = { 0 };
 	data[0] = val & 0xFF;
 	data[1] = (val >> 8) & 0xFF;
