@@ -86,11 +86,11 @@ void process_mtia_vr_power_fault_sel(aegis_cpld_info *cpld_info, uint8_t *curren
 
 // clang-format off
 aegis_cpld_info aegis_cpld_info_table[] = {
-	{ VR_POWER_FAULT_1_REG, 			0x00, 0x00, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS, .event_type = VR_POWER_FAULT },
-	{ VR_POWER_FAULT_2_REG, 			0x00, 0x00, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS, .event_type = VR_POWER_FAULT  },
-	{ VR_POWER_FAULT_3_REG, 			0x00, 0x00, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS, .event_type = VR_POWER_FAULT  },
-	{ VR_POWER_FAULT_4_REG, 			0x00, 0x00, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS, .event_type = VR_POWER_FAULT  },
-	{ VR_POWER_FAULT_5_REG, 			0x00, 0x00, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS, .event_type = VR_POWER_FAULT  },
+	{ VR_POWER_FAULT_1_REG, 			0x00, 0x00, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS, .event_type = 0x7E },
+	{ VR_POWER_FAULT_2_REG, 			0x00, 0x00, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS, .event_type = 0xFF  },
+	{ VR_POWER_FAULT_3_REG, 			0x00, 0x00, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS, .event_type = 0xFF  },
+	{ VR_POWER_FAULT_4_REG, 			0x00, 0x00, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS, .event_type = 0xFF  },
+	{ VR_POWER_FAULT_5_REG, 			0x00, 0x00, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS, .event_type = 0xFE  },
 	{ VR_SMBUS_ALERT_1_REG, 			0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
 	{ VR_SMBUS_ALERT_2_REG, 			0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
 	{ ASIC_OC_WARN_REG, 				0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
@@ -98,8 +98,8 @@ aegis_cpld_info aegis_cpld_info_table[] = {
 	{ TEMPERATURE_IC_OVERT_FAULT_REG, 	0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
 	{ LEAK_DETCTION_REG, 				0xDF, 0xDF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_BIT_6_ONLY},
 
-	{ TEMPERATURE_IC_OVERT_FAULT_2_REG, 0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
-	{ ASIC_OC_WARN_2_REG, 				0x1C, 0x1C, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
+	{ TEMPERATURE_IC_OVERT_FAULT_2_REG, 0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS, .event_type = 0x80  },
+	{ ASIC_OC_WARN_2_REG, 				0x1C, 0x1C, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS, .event_type = 0x23  },
 	{ SYSTEM_ALERT_FAULT_2_REG, 		0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_BIT_7_ONLY },
 	{ VR_SMBUS_ALERT_3_REG, 			0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
 	{ VR_SMBUS_ALERT_4_REG, 			0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },	
@@ -568,10 +568,22 @@ void poll_cpld_registers()
 					aegis_cpld_info_table[i].status_changed_cb(
 						&aegis_cpld_info_table[i], &data);
 				}
-				if (aegis_cpld_info_table[i].event_type == VR_POWER_FAULT) {
-					process_mtia_vr_power_fault_sel(&aegis_cpld_info_table[i],
-									&data);
+
+				if (aegis_cpld_info_table[i].event_type) {
+					uint8_t event_trigger_bits =
+						is_status_changed &
+						aegis_cpld_info_table[i].event_type;
+					if (event_trigger_bits) {
+						LOG_INF("CPLD offset 0x%02X triggered event (mask=0x%02X, changed=0x%02X)",
+							aegis_cpld_info_table[i].cpld_offset,
+							aegis_cpld_info_table[i].event_type,
+							event_trigger_bits);
+
+						process_mtia_vr_power_fault_sel(
+							&aegis_cpld_info_table[i], &data);
+					}
 				}
+
 				// update map
 				aegis_cpld_info_table[i].is_fault_bit_map = new_fault_map;
 				aegis_cpld_info_table[i].last_polling_value = data;
