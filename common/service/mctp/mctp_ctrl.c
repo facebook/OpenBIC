@@ -54,6 +54,11 @@ __weak void plat_update_mctp_routing_table(uint8_t eid)
 	return;
 }
 
+__weak void plat_mctp_get_message_type_support_received()
+{
+	return;
+}
+
 uint8_t mctp_ctrl_cmd_set_endpoint_id(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t *resp,
 				      uint16_t *resp_len, void *ext_params)
 {
@@ -149,6 +154,7 @@ uint8_t mctp_ctrl_cmd_get_message_type_support(void *mctp_inst, uint8_t *buf, ui
 	free(types);
 	*resp_len = (p->completion_code == MCTP_CTRL_CC_SUCCESS) ? (sizeof(*p) + type_len) : 1;
 
+	plat_mctp_get_message_type_support_received();
 	return MCTP_SUCCESS;
 }
 

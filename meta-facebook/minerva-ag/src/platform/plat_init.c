@@ -74,8 +74,6 @@ void pal_post_init()
 	pldm_load_state_effecter_table(MAX_STATE_EFFECTER_IDX);
 	pldm_assign_gpio_effecter_id(PLAT_EFFECTER_ID_GPIO_HIGH_BYTE);
 	init_fru_info();
-	if (get_mb_type() == MB_PRESENT)
-		rtc_init_once();
 	init_load_eeprom_log();
 	plat_set_ac_on_log();
 	init_cpld_polling();

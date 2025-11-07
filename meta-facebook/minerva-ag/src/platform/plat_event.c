@@ -811,7 +811,7 @@ void init_cpld_polling(void)
 	k_timer_start(&init_ubc_delayed_timer, K_MSEC(1000), K_NO_WAIT);
 
 	worker_job job = { 0 };
-	job.delay_ms = 100;
+	job.delay_ms = 15000; // 15 seconds
 	job.fn = check_cpld_handler;
 	add_work(&job);
 }

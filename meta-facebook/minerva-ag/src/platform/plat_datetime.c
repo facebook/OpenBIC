@@ -23,6 +23,7 @@
 #include "pldm_firmware_update.h"
 #include "mctp.h"
 #include "pldm.h"
+#include "plat_class.h"
 
 LOG_MODULE_REGISTER(plat_datetime);
 
@@ -33,9 +34,10 @@ LOG_MODULE_REGISTER(plat_datetime);
 
 static struct tm base_tm;
 static int64_t base_uptime_ms;
-static bool rtc_synced;
+static bool rtc_synced = false;
+static bool rtc_workq_initialized = false;
 
-struct k_work_q rtc_workq;
+static struct k_work_q rtc_workq;
 K_THREAD_STACK_DEFINE(rtc_workq_stack, RTC_WORKQ_STACK_SIZE);
 
 static void rtc_sync_work_handler(struct k_work *work);
@@ -117,10 +119,16 @@ static void rtc_sync_work_handler(struct k_work *work)
 
 void rtc_init_once(void)
 {
+	if (rtc_workq_initialized) {
+		LOG_DBG("RTC work queue already initialized");
+		return;
+	}
 	k_work_queue_start(&rtc_workq, rtc_workq_stack, K_THREAD_STACK_SIZEOF(rtc_workq_stack),
 			   RTC_WORKQ_PRIORITY, NULL);
 
 	k_work_schedule_for_queue(&rtc_workq, &rtc_sync_work, K_SECONDS(RTC_SYNC_INTERVAL_SEC));
+	rtc_workq_initialized = true;
+	LOG_INF("RTC work queue initialized");
 }
 
 time_t rtc_time(time_t *tloc)
@@ -145,4 +153,12 @@ void rtc_get_tm(struct tm *tm_now)
 	time_t now = rtc_time(NULL);
 	if (tm_now)
 		*tm_now = *gmtime(&now);
+}
+
+void plat_mctp_get_message_type_support_received()
+{
+	if (get_mb_type() == MB_PRESENT)
+		rtc_init_once();
+	LOG_INF("plat_mctp_get_message_type_support_received() completed");
+	return;
 }
