@@ -406,6 +406,27 @@ void plat_set_dc_on_log(bool is_assert)
 	}
 }
 
+void plat_set_power_down_log()
+{
+	uint16_t error_code = (POWER_DOWN_TRIGGER_CAUSE << 13);
+	error_log_event(error_code, LOG_ASSERT);
+	LOG_INF("Generated power down error code: 0x%x", error_code);
+
+	struct pldm_addsel_data sel_msg = { 0 };
+	sel_msg.assert_type = LOG_ASSERT;
+	sel_msg.event_type = MTIA_FAULT;
+	sel_msg.event_data_1 = MTIA_VR_FAULT_CAUSE_POWER_DOWN;
+	if (get_mb_type() == MB_PRESENT) {
+		if (PLDM_SUCCESS != send_event_log_to_bmc(sel_msg)) {
+			LOG_ERR("Failed to send MTIA FAULT assert SEL, event data: 0x%x 0x%x 0x%x",
+				sel_msg.event_data_1, sel_msg.event_data_2, sel_msg.event_data_3);
+		} else {
+			LOG_INF("send MTIA FAULT assert SEL, event data: 0x%x 0x%x 0x%x",
+				sel_msg.event_data_1, sel_msg.event_data_2, sel_msg.event_data_3);
+		}
+	}
+}
+
 void get_vr_vout_handler(struct k_work *work)
 {
 	vr_vout_default_settings_init();
