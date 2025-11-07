@@ -58,6 +58,12 @@ void ISR_GPIO_FM_PLD_UBC_EN_R()
 	k_timer_start(&check_ubc_delayed_timer, K_MSEC(1000), K_NO_WAIT);
 }
 
+void ISR_GPIO_RST_IRIS_PWR_ON_PLD_R1_N()
+{
+	LOG_INF("dc off, clear io expander init flag");
+	set_ioe_init_flag(0);
+}
+
 bool plat_gpio_immediate_int_cb(uint8_t gpio_num)
 {
 	bool ret = false;

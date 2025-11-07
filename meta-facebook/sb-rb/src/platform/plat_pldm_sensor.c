@@ -42,7 +42,7 @@ static struct pldm_sensor_thread pal_pldm_sensor_thread[MAX_SENSOR_THREAD_ID] = 
 
 extern vr_pre_proc_arg vr_pre_read_args[];
 extern mpc12109_init_arg mpc12109_init_args[];
-
+uint8_t ioe_init_flag = 0;
 static bool is_quick_vr_sensor(uint8_t sensor_num)
 {
 	switch (sensor_num) {
@@ -12474,7 +12474,8 @@ void set_ioe_value(uint8_t ioe_addr, uint8_t ioe_reg, uint8_t value)
 	ret = i2c_master_write(&msg, retry);
 
 	if (ret != 0) {
-		LOG_DBG("Failed to write IOE(0x%02X). The register is 0x%02X.", ioe_addr, ioe_reg);
+		LOG_ERR("Failed to write IOE(0x%02X). The register is 0x%02X.", ioe_addr, ioe_reg);
+		k_msleep(3000);
 	}
 }
 int get_ioe_value(uint8_t ioe_addr, uint8_t ioe_reg, uint8_t *value)
@@ -12492,13 +12493,24 @@ int get_ioe_value(uint8_t ioe_addr, uint8_t ioe_reg, uint8_t *value)
 	ret = i2c_master_read(&msg, retry);
 
 	if (ret != 0) {
-		LOG_DBG("Failed to read IOE(0x%02X). The register is 0x%02X.", ioe_addr, ioe_reg);
+		LOG_ERR("Failed to read IOE(0x%02X). The register is 0x%02X.", ioe_addr, ioe_reg);
+		k_msleep(3000);
 		return -1;
 	}
 
 	*value = msg.data[0];
 
 	return 0;
+}
+
+uint8_t get_ioe_init_flag()
+{
+	return ioe_init_flag;
+}
+
+void set_ioe_init_flag(uint8_t flag)
+{
+	ioe_init_flag = flag;
 }
 
 struct k_thread quick_sensor_poll;
@@ -12525,6 +12537,19 @@ void quick_sensor_poll_handler(void *arug0, void *arug1, void *arug2)
 	uint8_t set_io7_value = 0;
 	uint8_t log_show_flag = 0;
 	while (1) {
+		//check dc on/off
+		if (is_mb_dc_on() == false) {
+			//dc is off, sleep 1 second
+			k_msleep(1000);
+			continue;
+		}
+
+		if (!get_ioe_init_flag()) {
+			LOG_INF("U200051 IO expander need init");
+			init_U200051_IO();
+			set_ioe_init_flag(1);
+		}
+
 		k_msleep(quick_sensor_poll_interval_ms);
 		// read mux U200051 IO_6, if change means leak detected set io_7 to 1
 		ret = get_ioe_value(U200051_IO_ADDR, INPUT_PORT, &leak_2_value);

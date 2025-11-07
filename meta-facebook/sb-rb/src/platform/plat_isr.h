@@ -19,5 +19,5 @@
 
 void ISR_GPIO_ALL_VR_PM_ALERT_R_N();
 void ISR_GPIO_FM_PLD_UBC_EN_R();
-
+void ISR_GPIO_RST_IRIS_PWR_ON_PLD_R1_N();
 #endif
