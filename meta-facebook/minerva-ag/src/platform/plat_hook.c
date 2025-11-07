@@ -2433,8 +2433,8 @@ bool plat_set_temp_threshold(uint8_t temp_index_threshold_type, uint32_t *millid
 	return true;
 }
 
-#define PLAT_TMP432_THERM_HYSTERESIS_VAL 0x5A //90
-#define PLAT_EMC1413_THERM_HYSTERESIS_VAL 0x5A //90
+#define PLAT_TMP432_THERM_HYSTERESIS_VAL 0x64 //90
+#define PLAT_EMC1413_THERM_HYSTERESIS_VAL 0x64 //90
 
 void init_temp_alert_mode(void)
 {
@@ -2518,7 +2518,7 @@ void init_temp_limit(void)
 			temp_index_threshold_type_table[followed_ucr_lcr_limit_temp[i]].sensor_id;
 		get_pdr_table_critical_high_and_low_with_sensor_id(sensor_id, &critical_high,
 								   &critical_low);
-
+		critical_high = 100.0; // fatal_high = 100.0
 		uint32_t high_threshold = (uint32_t)(critical_high * 1000);
 		uint32_t low_threshold = (uint32_t)(critical_low * 1000);
 		LOG_INF("set %s: %d",
