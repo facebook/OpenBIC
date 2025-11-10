@@ -30,7 +30,7 @@ static const struct device *pwm_dev;
 void init_pwm_dev(void)
 {
 	pwm_dev = device_get_binding("PWM");
-
+	LOG_INF("FAN PWM init");
 	if (pwm_dev == NULL)
 		LOG_ERR("FAN PWM init failed due to device not found");
 }

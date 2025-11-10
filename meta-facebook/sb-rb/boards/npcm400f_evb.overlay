@@ -153,3 +153,11 @@
 &i3c5 {
 	status = "disabled";
 };
+
+&pwm1 {
+    status = "okay";
+};
+
+&pwm6 {
+    status = "okay";
+};
