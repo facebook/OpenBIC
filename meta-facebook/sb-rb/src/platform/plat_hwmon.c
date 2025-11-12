@@ -23,22 +23,33 @@
 LOG_MODULE_REGISTER(plat_hwmon);
 
 #define MAX_FAN_DUTY_VALUE 100
-#define PWM_PERIOD 40 // 25kHz
+#define PWM_PERIOD 1000 // 25kHz
 
-static const struct device *pwm_dev;
+static const struct device *pwm1_dev;
+static const struct device *pwm6_dev;
 
 void init_pwm_dev(void)
 {
-	pwm_dev = device_get_binding("PWM");
 	LOG_INF("FAN PWM init");
-	if (pwm_dev == NULL)
-		LOG_ERR("FAN PWM init failed due to device not found");
+	pwm1_dev = device_get_binding("PWM_1");
+	pwm6_dev = device_get_binding("PWM_6");
+
+	if (pwm1_dev == NULL)
+		LOG_ERR("FAN_1 PWM1 init failed due to device not found");
+
+	if (pwm6_dev == NULL)
+		LOG_ERR("FAN_6 PWM6 init failed due to device not found");
 }
 
 int ast_pwm_set(int duty, uint32_t port)
 {
-	if (pwm_dev == NULL) {
-		LOG_ERR("PWM dev not found!");
+	if (pwm1_dev == NULL) {
+		LOG_ERR("FAN_1 PWM1 dev not found!");
+		return 1;
+	}
+
+	if (pwm6_dev == NULL) {
+		LOG_ERR("FAN_6 PWM6 dev not found!");
 		return 1;
 	}
 
@@ -47,11 +58,14 @@ int ast_pwm_set(int duty, uint32_t port)
 		return 1;
 	}
 
-	if (port != PWM_PORT1 || port != PWM_PORT6) {
+	if (port != PWM_PORT1 && port != PWM_PORT6) {
 		LOG_ERR("Invalid PWM port %d", port);
 		return 1;
 	}
 
-	LOG_INF("Set AST PWM port %d , duty %d", port, duty);
-	return pwm_pin_set_usec(pwm_dev, port, PWM_PERIOD, (PWM_PERIOD * duty / 100), 0);
+	LOG_INF("Set PWM port %d , duty %d", port, duty);
+	//dev, pwm, period, pulse, flags)
+	pwm_pin_set_cycles(pwm1_dev, port, PWM_PERIOD, (PWM_PERIOD * duty / 100), 0);
+	pwm_pin_set_cycles(pwm6_dev, port, PWM_PERIOD, (PWM_PERIOD * duty / 100), 0);
+	return 0;
 }

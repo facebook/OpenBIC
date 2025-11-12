@@ -72,9 +72,22 @@ void cmd_adc_get_averge_val(const struct shell *shell, size_t argc, char **argv)
 		shell_warn(shell, "adc invalid idx %d", idx);
 		return;
 	}
+	float vref = 0;
+	uint8_t adc_type = get_adc_type();
+	if (adc_type == ADI_AD4058)
+		vref = get_ad4058_vref();
+	else if (adc_type == TIC_ADS7066)
+		vref = get_ads7066_vref();
+	else
+		shell_error(shell, "invalid adc type %d", adc_type);
 
 	// real val(A) = raw data(mV) * 2 * mV_to_A
-	shell_warn(shell, "adc %d val: %f(A)", idx, adc_raw_mv_to_apms(get_adc_averge_val(idx)));
+	shell_warn(shell, "adc %d val: %f(A)", idx, adc_raw_mv_to_apms(get_adc_averge_val(idx), vref));
+	//P = V * I
+	float temp_v = (float)get_adc_averge_val(idx) / 0xffff * vref;
+	float pwr = temp_v * adc_raw_mv_to_apms(get_adc_averge_val(idx), vref);
+	shell_warn(shell, "adc %d volt: %f(V)", idx, temp_v);
+	shell_warn(shell, "adc %d pwr: %f(W)", idx, pwr);
 }
 
 void cmd_adc_get_buf_raw(const struct shell *shell, size_t argc, char **argv)
@@ -109,9 +122,17 @@ void cmd_adc_get_buf(const struct shell *shell, size_t argc, char **argv)
 
 	uint8_t len = get_adc_averge_times(idx);
 	uint16_t *buf = get_adc_buf(idx);
+	float vref = 0;
+	uint8_t adc_type = get_adc_type();
+	if (adc_type == ADI_AD4058)
+		vref = get_ad4058_vref();
+	else if (adc_type == TIC_ADS7066)
+		vref = get_ads7066_vref();
+	else
+		shell_error(shell, "invalid adc type %d", adc_type);
 	shell_warn(shell, "adc %d buf(len=%d)(unit=A)): ", idx, len);
 	for (uint8_t i = 0; i < len; i++) {
-		shell_fprintf(shell, SHELL_NORMAL, "%f ", adc_raw_mv_to_apms(buf[i]));
+		shell_fprintf(shell, SHELL_NORMAL, "%f ", adc_raw_mv_to_apms(buf[i], vref));
 		if ((i + 1) % 10 == 0) {
 			shell_print(shell, "");
 		}
