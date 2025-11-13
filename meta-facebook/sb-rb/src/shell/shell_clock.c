@@ -22,7 +22,7 @@
 #include <sys/slist.h>
 #include "libutil.h"
 #include "plat_i2c.h"
-#include "clock_shell.h"
+#include <shell/shell.h>
 
 LOG_MODULE_REGISTER(clock_shell);
 
@@ -34,6 +34,14 @@ LOG_MODULE_REGISTER(clock_shell);
 #define CLK_BUF_100M_BYTE_COUNT 0x7
 #define REGISTER_BYTE_MAX 4
 
+enum CLOCK_COMPONENT { CLK_BUF_100M_U85, CLK_BUF_100M_U87, CLK_BUF_100M_U88, CLK_COMPONENT_MAX };
+
+typedef struct clock_compnt_mapping {
+	uint8_t clock_name_index;
+	uint8_t addr;
+	uint8_t bus;
+	uint8_t *clock_name;
+} clock_compnt_mapping;
 typedef struct _clock_default_info {
 	sys_snode_t node;
 	bool is_default;
