@@ -165,6 +165,31 @@ static void pldm_read_timeout_handler(void *args)
 	k_msgq_put(msgq, &status, K_NO_WAIT);
 }
 
+uint16_t mctp_pldm_read_check(void *mctp_p, pldm_msg *msg, uint8_t *rbuf, uint16_t rbuf_len)
+{
+	CHECK_NULL_ARG_WITH_RETURN(mctp_p, 0);
+	CHECK_NULL_ARG_WITH_RETURN(msg, 0);
+	CHECK_NULL_ARG_WITH_RETURN(rbuf, 0);
+	
+	uint16_t ret_len = 0;
+
+	for (int8_t i = 0; i < PLDM_RETRY; i++) {
+		ret_len = mctp_pldm_read(mctp_p, msg, rbuf, rbuf_len);
+		if (ret_len == 0) {
+			break;
+		} else if (rbuf[0] == PLDM_SUCCESS) {
+			return ret_len;
+		} else {
+			LOG_ERR("BMC PLDM read failed cc(0x%02x)", rbuf[0]);
+			k_msleep(PLDM_RETRY_TIME_MS);
+			LOG_WRN("PLDM send failed retry: %d", i + 1);
+		}
+	}
+	LOG_WRN("PLDM read failed and retry reach max!");
+	return ret_len;
+}
+
+
 /*
  * The return value is the read length from PLDM device
  */
