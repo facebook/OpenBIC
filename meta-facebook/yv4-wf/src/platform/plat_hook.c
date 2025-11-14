@@ -31,6 +31,10 @@
 #include "plat_isr.h"
 #include "pmbus.h"
 
+#include "plat_dimm.h"
+#include "vistara.h"
+#include "plat_power_seq.h"
+
 LOG_MODULE_REGISTER(plat_hook);
 
 #define ADJUST_P0V85_VOLTAGE(x) (x * 1.01)
@@ -229,6 +233,29 @@ bool post_adc128d818_read(sensor_cfg *cfg, void *args, int *reading)
 
 	// The external pull-up for INT_ADC_2_TI_R_N is not on the board currently.
 	// Will check the INT_ADC_2_TI_R_N if the external pull-up is ready.
+
+	return true;
+}
+
+bool pre_dimm_read(sensor_cfg *cfg, void *args)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	ARG_UNUSED(args);
+
+	uint8_t cxl_id = cfg->port;
+
+	if (!g_ddr_slot_cache.valid) {
+		LOG_WRN("DDR slot info cache is not valid");
+		return true; // Do not stop sensor polling
+	}
+
+	uint8_t dimm_id = cfg->target_addr;
+	dimm_id = cxl_id * MAX_DIMM_PER_CXL + dimm_id;
+	if (get_dimm_present(dimm_id) ==
+	    DIMM_NOT_PRSNT) { // Stop monitoring DIMM when it is not present.
+			LOG_ERR("CXL_%d DIMM_%d not present", cxl_id, dimm_id);
+		return false;
+	}
 
 	return true;
 }

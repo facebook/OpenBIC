@@ -4714,6 +4714,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.init_args = &vistara_init_args[0],
+			.pre_sensor_read_hook = pre_dimm_read,
 		},
 	},
 	{
@@ -4781,6 +4782,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.init_args = &vistara_init_args[0],
+			.pre_sensor_read_hook = pre_dimm_read,
 		},
 	},
 	{
@@ -4848,6 +4850,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.init_args = &vistara_init_args[0],
+			.pre_sensor_read_hook = pre_dimm_read,
 		},
 	},
 	{
@@ -4915,6 +4918,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.init_args = &vistara_init_args[0],
+			.pre_sensor_read_hook = pre_dimm_read,
 		},
 	},
 	{
@@ -4982,6 +4986,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.init_args = &vistara_init_args[0],
+			.pre_sensor_read_hook = pre_dimm_read,
 		},
 	},
 	{
@@ -5049,6 +5054,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.init_args = &vistara_init_args[0],
+			.pre_sensor_read_hook = pre_dimm_read,
 		},
 	},
 	{
@@ -5116,6 +5122,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.init_args = &vistara_init_args[0],
+			.pre_sensor_read_hook = pre_dimm_read,
 		},
 	},
 	{
@@ -5183,6 +5190,7 @@ pldm_sensor_info plat_pldm_sensor_dimm_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.init_args = &vistara_init_args[0],
+			.pre_sensor_read_hook = pre_dimm_read,
 		},
 	},
 };
