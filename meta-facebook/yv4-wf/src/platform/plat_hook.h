@@ -35,5 +35,5 @@ bool pre_vr_read(sensor_cfg *cfg, void *args);
 bool post_vr_read(sensor_cfg *cfg, void *args, int *const reading);
 bool post_p085v_voltage_read(sensor_cfg *cfg, void *args, int *reading);
 bool post_adc128d818_read(sensor_cfg *cfg, void *args, int *reading);
-
+bool pre_dimm_read(sensor_cfg *cfg, void *args);
 #endif

@@ -23,6 +23,10 @@
 
 #define READ_DDR_TEMP_REQ_LEN 0
 #define READ_DDR_TEMP_RESP_LEN 32
+#define READ_DDR_SLOT_INFO_REQ_LEN 0
+#define READ_DDR_SLOT_INFO_RESP_LEN 68  // 4 + 4*16 bytes
+#define MAX_DIMM_PER_CXL 4
+#define MAX_CXL_COUNT 2
 
 #define VISTARA_SPD_DDR4_TOTAL_BYTES 512
 #define VISTARA_SPD_CHUNK_DEFAULT 64
@@ -33,6 +37,7 @@
 enum VISTARA_CCI_CMD_OEM_OPCODE {
 	CCI_OEM_OP_READ_DDR_TEMP = 0xC531,
 	CCI_OEM_OP_DIMM_SPD_READ = 0xC510,
+	CCI_OEM_OP_DIMM_SLOT_INFO = 0xC520,
 };
 
 enum VISTARA_SENSOR_TYPE {
@@ -70,6 +75,28 @@ static inline size_t vistara_encode_dimm_spd_read(uint8_t dst[12],
 	return 12;
 }
 
+typedef struct {
+	uint8_t spd_i2c_addr;
+	uint8_t channel_id;
+	uint8_t dimm_silk_screen;
+	uint8_t dimm_present;
+	uint8_t reserved[12];  // 16 bytes per slot
+} dimm_slot_info_t;
+
+typedef struct {
+	uint32_t num_dimm_slots;
+	dimm_slot_info_t dimm_info[MAX_DIMM_PER_CXL];
+} read_ddr_slot_info_resp;
+
+typedef struct {
+	bool valid;
+	uint32_t timestamp;
+	read_ddr_slot_info_resp slot_info[MAX_CXL_COUNT];
+	uint8_t master_dimm_id[MAX_CXL_COUNT];
+} ddr_slot_info_cache_t;
+
+extern ddr_slot_info_cache_t g_ddr_slot_cache;
+
 uint8_t plat_get_cxl_eid(uint8_t cxl_id);
 void plat_set_dimm_cache(uint8_t *resp_buf, uint8_t cxl_id, uint8_t status);
 float plat_get_dimm_cache(uint8_t cxl_id, uint8_t dimm_id);
@@ -79,5 +106,9 @@ int vistara_read_dimm_spd_chunk_eid(uint8_t cxl_eid, uint8_t dimm_idx, uint16_t 
 				    uint8_t length, uint8_t *out);
 bool vistara_read_dimm_spd_ddr4(uint8_t cxl_eid, uint8_t dimm_idx,
 				uint8_t out512[VISTARA_SPD_DDR4_TOTAL_BYTES]);
+bool vistara_read_ddr_slot_info(uint8_t cxl_eid, uint8_t *resp);
+int vistara_init_ddr_slot_info(void);
+bool vistara_get_dimm_present_from_cache(uint8_t dimm_id);
+
 #endif
 #endif
