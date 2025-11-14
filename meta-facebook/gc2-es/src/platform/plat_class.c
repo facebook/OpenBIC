@@ -27,6 +27,7 @@
 #include "plat_i2c.h"
 
 static uint8_t system_class = SYS_CLASS_1;
+static uint8_t system_sku = 0;
 static uint8_t board_revision = 0x0F;
 static uint8_t hsc_module = HSC_MODULE_UNKNOWN;
 static CARD_STATUS _1ou_status = { false, TYPE_1OU_UNKNOWN };
@@ -35,6 +36,11 @@ static CARD_STATUS _2ou_status = { false, TYPE_2OU_UNKNOWN };
 uint8_t get_system_class()
 {
 	return system_class;
+}
+
+uint8_t get_system_sku()
+{
+	return system_sku;
 }
 
 CARD_STATUS get_1ou_status()
@@ -148,13 +154,13 @@ bool get_adc_voltage(int channel, float *voltage)
 	return true;
 }
 
-
-void init_hsc_module() {
-    hsc_module = HSC_MODULE_ADM1278;
+void init_hsc_module()
+{
+	hsc_module = HSC_MODULE_ADM1278;
 }
 
-void init_platform_config() {
-    // default just let hsc_module be ADM1278
-    init_hsc_module();
+void init_platform_config()
+{
+	// default just let hsc_module be ADM1278
+	init_hsc_module();
 }
-

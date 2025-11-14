@@ -32,6 +32,9 @@
 #include "pmbus.h"
 #include "tmp431.h"
 #include "libutil.h"
+#include <logging/log.h>
+
+LOG_MODULE_REGISTER(plat_sensor_table);
 
 SET_GPIO_VALUE_CFG pre_bat_3v = { A_P3V_BAT_SCALED_EN_R, GPIO_HIGH };
 SET_GPIO_VALUE_CFG post_bat_3v = { A_P3V_BAT_SCALED_EN_R, GPIO_LOW };
@@ -92,7 +95,61 @@ sensor_cfg plat_sensor_config[] = {
 	{ SENSOR_NUM_VOL_STBY1V8, sensor_dev_ast_adc, ADC_PORT15, NONE, NONE, stby_access, 1, 1,
 	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
 	  NULL, NULL, NULL, NULL, &adc_asd_init_args[0] },
-	  
+
+	// VR current
+	{ SENSOR_NUM_CUR_PVCCD_HV, sensor_dev_isl69259, I2C_BUS5, PVCCD_HV_ADDR, VR_CUR_CMD,
+	  vr_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, pre_isl69259_read, &isl69259_pre_read_args[0], NULL, NULL, NULL },
+	{ SENSOR_NUM_CUR_PVCCINFAON, sensor_dev_isl69259, I2C_BUS5, PVCCINFAON_ADDR, VR_CUR_CMD,
+	  vr_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, pre_isl69259_read, &isl69259_pre_read_args[0], NULL, NULL, NULL },
+	{ SENSOR_NUM_CUR_PVCCFA_EHV, sensor_dev_isl69259, I2C_BUS5, PVCCFA_EHV_ADDR, VR_CUR_CMD,
+	  vr_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, pre_isl69259_read, &isl69259_pre_read_args[1], NULL, NULL, NULL },
+	{ SENSOR_NUM_CUR_PVCCIN, sensor_dev_isl69259, I2C_BUS5, PVCCIN_ADDR, VR_CUR_CMD, vr_access,
+	  0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, pre_isl69259_read, &isl69259_pre_read_args[0], NULL, NULL, NULL },
+	{ SENSOR_NUM_CUR_PVCCFA_EHV_FIVRA, sensor_dev_isl69259, I2C_BUS5, PVCCFA_EHV_FIVRA_ADDR,
+	  VR_CUR_CMD, vr_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_isl69259_read,
+	  &isl69259_pre_read_args[1], NULL, NULL, NULL },
+
+	// VR temperature
+	{ SENSOR_NUM_TEMP_PVCCD_HV, sensor_dev_isl69259, I2C_BUS5, PVCCD_HV_ADDR, VR_TEMP_CMD,
+	  vr_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, pre_isl69259_read, &isl69259_pre_read_args[0], NULL, NULL, NULL },
+	{ SENSOR_NUM_TEMP_PVCCINFAON, sensor_dev_isl69259, I2C_BUS5, PVCCINFAON_ADDR, VR_TEMP_CMD,
+	  vr_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, pre_isl69259_read, &isl69259_pre_read_args[0], NULL, NULL, NULL },
+	{ SENSOR_NUM_TEMP_PVCCFA_EHV, sensor_dev_isl69259, I2C_BUS5, PVCCFA_EHV_ADDR, VR_TEMP_CMD,
+	  vr_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, pre_isl69259_read, &isl69259_pre_read_args[1], NULL, NULL, NULL },
+	{ SENSOR_NUM_TEMP_PVCCIN, sensor_dev_isl69259, I2C_BUS5, PVCCIN_ADDR, VR_TEMP_CMD,
+	  vr_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, pre_isl69259_read, &isl69259_pre_read_args[0], NULL, NULL, NULL },
+	{ SENSOR_NUM_TEMP_PVCCFA_EHV_FIVRA, sensor_dev_isl69259, I2C_BUS5, PVCCFA_EHV_FIVRA_ADDR,
+	  VR_TEMP_CMD, vr_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_isl69259_read,
+	  &isl69259_pre_read_args[1], NULL, NULL, NULL },
+
+	// VR power
+	{ SENSOR_NUM_PWR_PVCCD_HV, sensor_dev_isl69259, I2C_BUS5, PVCCD_HV_ADDR, VR_PWR_CMD,
+	  vr_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, pre_isl69259_read, &isl69259_pre_read_args[0], NULL, NULL, NULL },
+	{ SENSOR_NUM_PWR_PVCCINFAON, sensor_dev_isl69259, I2C_BUS5, PVCCINFAON_ADDR, VR_PWR_CMD,
+	  vr_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, pre_isl69259_read, &isl69259_pre_read_args[0], NULL, NULL, NULL },
+	{ SENSOR_NUM_PWR_PVCCFA_EHV, sensor_dev_isl69259, I2C_BUS5, PVCCFA_EHV_ADDR, VR_PWR_CMD,
+	  vr_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, pre_isl69259_read, &isl69259_pre_read_args[1], NULL, NULL, NULL },
+	{ SENSOR_NUM_PWR_PVCCIN, sensor_dev_isl69259, I2C_BUS5, PVCCIN_ADDR, VR_PWR_CMD, vr_access,
+	  0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, pre_isl69259_read, &isl69259_pre_read_args[0], NULL, NULL, NULL },
+	{ SENSOR_NUM_PWR_PVCCFA_EHV_FIVRA, sensor_dev_isl69259, I2C_BUS5, PVCCFA_EHV_FIVRA_ADDR,
+	  VR_PWR_CMD, vr_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_isl69259_read,
+	  &isl69259_pre_read_args[1], NULL, NULL, NULL },
+
 	// ME
 	{ SENSOR_NUM_TEMP_PCH, sensor_dev_pch, I2C_BUS3, PCH_ADDR, ME_SENSOR_NUM_TEMP_PCH,
 	  me_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
@@ -218,6 +275,30 @@ void load_sensor_config(void)
 	pal_extend_sensor_config();
 }
 
+uint8_t pal_get_extend_sensor_config()
+{
+	uint8_t extend_sensor_config_size = 0;
+	uint8_t hsc_module = get_hsc_module();
+	switch (hsc_module) {
+	case HSC_MODULE_ADM1278:
+		extend_sensor_config_size += ARRAY_SIZE(adm1278_sensor_config_table);
+		break;
+	case HSC_MODULE_MP5990:
+		extend_sensor_config_size += ARRAY_SIZE(mp5990_sensor_config_table);
+		break;
+	case HSC_MODULE_LTC4286:
+		extend_sensor_config_size += ARRAY_SIZE(ltc4286_sensor_config_table);
+		break;
+	case HSC_MODULE_LTC4282:
+		extend_sensor_config_size += ARRAY_SIZE(ltc4282_sensor_config_table);
+		break;
+	default:
+		printf("[%s] unsupported HSC module, HSC module: 0x%x\n", __func__, hsc_module);
+		break;
+	}
+	return extend_sensor_config_size;
+}
+
 void check_vr_type(uint8_t index)
 {
 	uint8_t retry = 5;
@@ -331,6 +412,59 @@ void check_outlet_temp_type(uint8_t index)
 
 void pal_extend_sensor_config()
 {
+	uint8_t sensor_count = 0;
+	uint8_t hsc_module = get_hsc_module();
+
+	/* Check the VR sensor type */
+	sensor_count = ARRAY_SIZE(plat_sensor_config);
+	for (uint8_t index = 0; index < sensor_count; index++) {
+		if (sensor_config[index].type == sensor_dev_isl69259) {
+			check_vr_type(index);
+		}
+	}
+
+	/* Follow the hardware design,
+	 * the GPIOA7(HSC_SET_EN_R) should be set to "H"
+	 * and the 2OU configuration is set if the 2OU is present.
+	 */
+	CARD_STATUS _2ou_status = get_2ou_status();
+
+	int arg_index = (_2ou_status.present) ? 1 : 0;
+
+	switch (hsc_module) {
+	case HSC_MODULE_ADM1278:
+		sensor_count = ARRAY_SIZE(adm1278_sensor_config_table);
+		for (int index = 0; index < sensor_count; index++) {
+			add_sensor_config(adm1278_sensor_config_table[index]);
+		}
+		break;
+	case HSC_MODULE_MP5990:
+		sensor_count = ARRAY_SIZE(mp5990_sensor_config_table);
+		for (int index = 0; index < sensor_count; index++) {
+			mp5990_sensor_config_table[index].init_args = &mp5990_init_args[arg_index];
+			add_sensor_config(mp5990_sensor_config_table[index]);
+		}
+		break;
+	case HSC_MODULE_LTC4286:
+		sensor_count = ARRAY_SIZE(ltc4286_sensor_config_table);
+		for (int index = 0; index < sensor_count; index++) {
+			ltc4286_sensor_config_table[index].init_args =
+				&ltc4286_init_args[arg_index];
+			add_sensor_config(ltc4286_sensor_config_table[index]);
+		}
+		break;
+	case HSC_MODULE_LTC4282:
+		sensor_count = ARRAY_SIZE(ltc4282_sensor_config_table);
+		for (int index = 0; index < sensor_count; index++) {
+			ltc4282_sensor_config_table[index].init_args =
+				&ltc4282_init_args[arg_index];
+			add_sensor_config(ltc4282_sensor_config_table[index]);
+		}
+		break;
+	default:
+		LOG_ERR("Unsupported HSC module, HSC module: 0x%x", hsc_module);
+		break;
+	}
 
 	if (sensor_config_count != sdr_count) {
 		printf("[%s] extend sensor SDR and config table not match, sdr size: 0x%x, sensor config size: 0x%x\n",
