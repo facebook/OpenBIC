@@ -278,6 +278,7 @@ struct pldm_platform_event_message_req {
 	uint8_t tid;
 	uint8_t event_class;
 	uint8_t event_data[PLDM_MONITOR_EVENT_DATA_SIZE_MAX];
+	uint32_t event_timestamp;
 } __attribute__((packed));
 
 struct pldm_platform_event_message_resp {
