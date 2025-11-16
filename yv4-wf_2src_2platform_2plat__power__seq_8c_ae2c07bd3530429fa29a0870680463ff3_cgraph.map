@@ -1,0 +1,9 @@
+<map id="init_cxl_heartbeat_monitor_work" name="init_cxl_heartbeat_monitor_work">
+<area shape="rect" id="node1" title=" " alt="" coords="5,75,128,117"/>
+<area shape="rect" id="node2" href="$yv4-wf_2src_2platform_2plat__power__seq_8c.html#a90ab25ff515faf6819cd50d7598fc183" title=" " alt="" coords="176,42,332,83"/>
+<area shape="rect" id="node7" href="$yv4-wf_2src_2platform_2plat__power__seq_8c.html#ad3357454bd3ea7efee6e6d60b23fd778" title=" " alt="" coords="176,107,332,149"/>
+<area shape="rect" id="node3" href="$yv4-wf_2src_2platform_2plat__power__seq_8c.html#af9ac51794f6eac91ccb1da6d2908a205" title=" " alt="" coords="399,107,523,133"/>
+<area shape="rect" id="node4" href="$power__status_8c.html#a647e7f9c1247d6a1785d9b9502e7fd29" title=" " alt="" coords="407,157,515,184"/>
+<area shape="rect" id="node5" href="$hal__gpio_8c.html#af700ee50de3d113e223c2b011c41f966" title=" " alt="" coords="426,5,497,32"/>
+<area shape="rect" id="node6" href="$pldm__oem_8h.html#abfa67ccc03b5a09b8503f95d5f8e5c5f" title=" " alt="" coords="380,56,543,83"/>
+</map>

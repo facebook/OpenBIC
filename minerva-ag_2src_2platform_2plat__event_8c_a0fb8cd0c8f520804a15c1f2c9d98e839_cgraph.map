@@ -1,0 +1,13 @@
+<map id="process_mtia_vr_power_fault_sel" name="process_mtia_vr_power_fault_sel">
+<area shape="rect" id="node1" title=" " alt="" coords="5,78,165,119"/>
+<area shape="rect" id="node2" href="$minerva-ag_2src_2platform_2plat__class_8c.html#a3e46415535b1d670b8df0d8b80801d15" title=" " alt="" coords="247,5,343,32"/>
+<area shape="rect" id="node3" href="$pldm__oem_8h.html#abfa67ccc03b5a09b8503f95d5f8e5c5f" title=" " alt="" coords="213,56,376,83"/>
+<area shape="rect" id="node4" href="$minerva-ag_2src_2platform_2plat__pldm__sensor_8c.html#a9229c6224b9029726a4240164e574765" title=" " alt="" coords="215,107,374,149"/>
+<area shape="rect" id="node5" href="$minerva-ag_2src_2platform_2plat__log_8c.html#a0fee7371f2d7f682546f1b9557c3f801" title=" " alt="" coords="217,173,372,200"/>
+<area shape="rect" id="node6" href="$minerva-ag_2src_2platform_2plat__pldm__sensor_8c.html#aaf3c9d1d12d6776c9ce1ec2c153e1a3e" title=" " alt="" coords="436,107,571,149"/>
+<area shape="rect" id="node8" href="$minerva-ag_2src_2platform_2plat__log_8c.html#a572d0b7db004c5ee1bfe74863a7f0be3" title=" " alt="" coords="424,173,583,200"/>
+<area shape="rect" id="node11" href="$minerva-ag_2src_2platform_2plat__hook_8c.html#ad5531e3e41f01179ee8cb4e96c1ea132" title=" " alt="" coords="453,224,553,251"/>
+<area shape="rect" id="node7" href="$minerva-ag_2src_2platform_2plat__pldm__sensor_8c.html#a18272dc8dce4f373b85555817c2cc6f3" title=" " alt="" coords="631,107,780,149"/>
+<area shape="rect" id="node9" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="646,173,765,200"/>
+<area shape="rect" id="node10" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="828,173,971,200"/>
+</map>

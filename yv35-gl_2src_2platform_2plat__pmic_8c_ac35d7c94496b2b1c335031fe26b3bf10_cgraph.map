@@ -1,0 +1,4 @@
+<map id="get_pmic_fault_status" name="get_pmic_fault_status">
+<area shape="rect" id="node1" title=" " alt="" coords="5,5,156,32"/>
+<area shape="rect" id="node2" href="$ipmb_8h.html#a260c07ba372e6648a635b20dbb790fa9" title=" " alt="" coords="204,5,287,32"/>
+</map>

@@ -1,0 +1,38 @@
+var sb_rb_2src_2platform_2plat__log_8h =
+[
+    [ "CPLD_REGISTER_1ST_PART_NUM", "sb-rb_2src_2platform_2plat__log_8h.html#a37cb08720681fd93ed8f8d9c6e2b0c05", null ],
+    [ "CPLD_REGISTER_1ST_PART_START_OFFSET", "sb-rb_2src_2platform_2plat__log_8h.html#a60af662d3b7756b23884ec35b2ea0234", null ],
+    [ "CPLD_REGISTER_2ND_PART_NUM", "sb-rb_2src_2platform_2plat__log_8h.html#ae9fcea507d825469507e8dc94d80197c", null ],
+    [ "CPLD_REGISTER_2ND_PART_START_OFFSET", "sb-rb_2src_2platform_2plat__log_8h.html#a2ea5a20332697cc5f937fa9fca23876c", null ],
+    [ "CPLD_REGISTER_MAX_NUM", "sb-rb_2src_2platform_2plat__log_8h.html#a828d2dfb80177f071fea10e5b0a080e2", null ],
+    [ "FRU_LOG_SIZE", "sb-rb_2src_2platform_2plat__log_8h.html#afdfa0f0c6941cf99e28d050102c9561a", null ],
+    [ "LOG_ASSERT", "sb-rb_2src_2platform_2plat__log_8h.html#a53ec7753b503eb40130cb639a1182c26", null ],
+    [ "LOG_DEASSERT", "sb-rb_2src_2platform_2plat__log_8h.html#a0d3caf1744fcd4800b6bbad25f57fbe1", null ],
+    [ "VR_POWER_FAULT_1_REG", "sb-rb_2src_2platform_2plat__log_8h.html#a4933aad2b102031fe55b31a2c02a0b67", null ],
+    [ "VR_POWER_FAULT_2_REG", "sb-rb_2src_2platform_2plat__log_8h.html#a682d67b368f5038f0066736f1163a480", null ],
+    [ "VR_POWER_FAULT_3_REG", "sb-rb_2src_2platform_2plat__log_8h.html#aa1e57c95f6ba1871b25da6f9913f5b21", null ],
+    [ "VR_POWER_FAULT_4_REG", "sb-rb_2src_2platform_2plat__log_8h.html#a28d37d98e4dda6d2bce15f6c5135113d", null ],
+    [ "VR_POWER_FAULT_5_REG", "sb-rb_2src_2platform_2plat__log_8h.html#a0a51a98da30021aa509220caf27eae22", null ],
+    [ "LOG_ERROR_TRIGGER_CAUSE", "sb-rb_2src_2platform_2plat__log_8h.html#a51541c8f77054b8a97788f521f595c86", [
+      [ "CPLD_UNEXPECTED_VAL_TRIGGER_CAUSE", "minerva-ag_2src_2platform_2plat__log_8h.html#a51541c8f77054b8a97788f521f595c86a6298389ea6d01807e95adca4bba2010d", null ],
+      [ "POWER_ON_SEQUENCE_TRIGGER_CAUSE", "minerva-ag_2src_2platform_2plat__log_8h.html#a51541c8f77054b8a97788f521f595c86abd5f41a2f45a618da2ae7603a4f0e45d", null ],
+      [ "AC_ON_TRIGGER_CAUSE", "minerva-ag_2src_2platform_2plat__log_8h.html#a51541c8f77054b8a97788f521f595c86a4ad57f69140bf9eff665cb4fc646ea6b", null ],
+      [ "DC_ON_TRIGGER_CAUSE", "minerva-ag_2src_2platform_2plat__log_8h.html#a51541c8f77054b8a97788f521f595c86aa91c5bb48430fd3e6d932c8e73d9543b", null ],
+      [ "POWER_DOWN_TRIGGER_CAUSE", "minerva-ag_2src_2platform_2plat__log_8h.html#a51541c8f77054b8a97788f521f595c86a7c203a03de33a8d3f8ada231b571416a", null ],
+      [ "MAX_TRIGGER_CAUSE", "minerva-ag_2src_2platform_2plat__log_8h.html#a51541c8f77054b8a97788f521f595c86a8c2409b8dd630b0c1c488658f5ef9e9c", null ],
+      [ "CPLD_UNEXPECTED_VAL_TRIGGER_CAUSE", "sb-rb_2src_2platform_2plat__log_8h.html#a51541c8f77054b8a97788f521f595c86a6298389ea6d01807e95adca4bba2010d", null ],
+      [ "POWER_ON_SEQUENCE_TRIGGER_CAUSE", "sb-rb_2src_2platform_2plat__log_8h.html#a51541c8f77054b8a97788f521f595c86abd5f41a2f45a618da2ae7603a4f0e45d", null ],
+      [ "AC_ON_TRIGGER_CAUSE", "sb-rb_2src_2platform_2plat__log_8h.html#a51541c8f77054b8a97788f521f595c86a4ad57f69140bf9eff665cb4fc646ea6b", null ],
+      [ "DC_ON_TRIGGER_CAUSE", "sb-rb_2src_2platform_2plat__log_8h.html#a51541c8f77054b8a97788f521f595c86aa91c5bb48430fd3e6d932c8e73d9543b", null ],
+      [ "MAX_TRIGGER_CAUSE", "sb-rb_2src_2platform_2plat__log_8h.html#a51541c8f77054b8a97788f521f595c86a8c2409b8dd630b0c1c488658f5ef9e9c", null ]
+    ] ],
+    [ "__attribute__", "sb-rb_2src_2platform_2plat__log_8h.html#af3509f9250ee1d0ea99355524fcf7b8b", null ],
+    [ "error_log_count", "sb-rb_2src_2platform_2plat__log_8h.html#a5566e8efb33e45bddb096a7340d29acc", null ],
+    [ "error_log_event", "sb-rb_2src_2platform_2plat__log_8h.html#af4883060245d9c5101ff83feb7e40a43", null ],
+    [ "init_load_eeprom_log", "sb-rb_2src_2platform_2plat__log_8h.html#a2453aa56476ef2a698940c4774b6b268", null ],
+    [ "plat_clear_log", "sb-rb_2src_2platform_2plat__log_8h.html#a9c8ecdf578564e4b093d3cfe8c0fe61e", null ],
+    [ "plat_log_get_num", "sb-rb_2src_2platform_2plat__log_8h.html#abc7efe8e6ec1e0f353fe32c747389862", null ],
+    [ "plat_log_read", "sb-rb_2src_2platform_2plat__log_8h.html#ad41592ddbfab5427f24fe366ab5e52d0", null ],
+    [ "reset_error_log_event", "sb-rb_2src_2platform_2plat__log_8h.html#acfadcc5aa2d8d414259f6928a0271d61", null ],
+    [ "plat_err_log_mapping", "sb-rb_2src_2platform_2plat__log_8h.html#a31a20a4ed27a0c5dc57a1941ada9c5b4", null ]
+];
