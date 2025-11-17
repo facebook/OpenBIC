@@ -26,7 +26,7 @@ extern "C" {
 
 #define IANA_LEN 0x03
 /* define for pldm oem event */
-#define OEM_EVENT_LEN 0x05
+#define OEM_EVENT_LEN 0x09
 #define EVENT_ASSERTED 0x01
 #define EVENT_DEASSERTED 0x00
 
@@ -273,6 +273,7 @@ struct pldm_addsel_data {
 	uint8_t event_data_1;
 	uint8_t event_data_2;
 	uint8_t event_data_3;
+	uint32_t timestamp;
 } __attribute__((packed));
 
 struct _sensor_polling_cmd_req {
