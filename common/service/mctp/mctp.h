@@ -24,6 +24,7 @@ extern "C" {
 #include <stdint.h>
 #include <sys/printk.h>
 #include <zephyr.h>
+#include "plat_def.h"
 
 #define MCTP_DEBUG 1
 
@@ -44,7 +45,11 @@ extern "C" {
 #define MCTP_DEFAULT_ENDPOINT 0x0A
 #define MCTP_NULL_EID 0x00
 
+#ifdef PLAT_MCTP_MSG_MAX_SIZE
+#define MCTP_DEFAULT_MSG_MAX_SIZE PLAT_MCTP_MSG_MAX_SIZE
+#else
 #define MCTP_DEFAULT_MSG_MAX_SIZE 244
+#endif
 #define MCTP_TRANSPORT_HEADER_SIZE 4
 #define MCTP_MEDIUM_META_SIZE_SMBUS 3
 #define MCTP_PEC_SIZE 1 /* SMBUS/I3C */
