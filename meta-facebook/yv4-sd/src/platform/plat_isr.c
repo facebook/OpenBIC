@@ -727,12 +727,10 @@ void process_vr_power_fault_sel(struct k_work *work_item)
 
 void ISR_VR_PWR_FAULT()
 {
-	if (get_DC_status() == true) {
-		LOG_ERR("VR power fault event triggered");
-		hw_event_register[7]++;
-		k_work_schedule_for_queue(&plat_work_q, &vr_event_work_item[0].add_sel_work,
-					  K_MSEC(VR_EVENT_DELAY_MS));
-	}
+	LOG_INF("VR power fault event triggered");
+	hw_event_register[7]++;
+	k_work_schedule_for_queue(&plat_work_q, &vr_event_work_item[0].add_sel_work,
+					K_MSEC(VR_EVENT_DELAY_MS));
 }
 
 void ISR_UV_DETECT()
