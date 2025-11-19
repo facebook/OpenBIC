@@ -3757,8 +3757,8 @@ SDR_Full_sensor dpv2_sdr_table[] = {
 		0x00, // normal minimum
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
-		0x63, // UNRT
-		0x5F, // UCT
+		0x62, // UNRT
+		0x5D, // UCT
 		0x00, // UNCT
 		0x00, // LNRT
 		0x00, // LCT
