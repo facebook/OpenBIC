@@ -714,7 +714,42 @@ static int alert_level_user_settings_init(void)
 
 	return 0;
 }
+static int delay_asic_rst_user_settings_init(void)
+{
+	uint8_t setting_value = 0;
 
+	if (get_user_settings_delay_asic_rst_from_eeprom(&setting_value, sizeof(setting_value)) == false) {
+		LOG_ERR("get alert level user settings failed");
+		return -1;
+	}
+
+	if (setting_value != 0xff) {
+		if (!plat_write_cpld(CPLD_OFFSET_ASIC_RST_DELAY, &setting_value)) {
+			LOG_ERR("plat delay_asic_rst set failed");
+			return -1;
+		}
+	}
+
+	return 0;
+}
+static int delay_module_pg_user_settings_init(void)
+{
+	uint8_t setting_value = 0;
+
+	if (get_user_settings_delay_module_pg_from_eeprom(&setting_value, sizeof(setting_value)) == false) {
+		LOG_ERR("get alert level user settings failed");
+		return -1;
+	}
+
+	if (setting_value != 0xff) {
+		if (!plat_write_cpld(CPLD_OFFSET_MODULE_PG_DELAY, &setting_value)) {
+			LOG_ERR("plat delay_module_pg set failed");
+			return -1;
+		}
+	}
+
+	return 0;
+}
 bool get_user_settings_soc_pcie_perst_from_eeprom(void *user_settings, uint8_t data_length)
 {
 	CHECK_NULL_ARG_WITH_RETURN(user_settings, false);
@@ -731,6 +766,50 @@ bool set_user_settings_soc_pcie_perst_to_eeprom(void *user_settings, uint8_t dat
 
 	if (!plat_eeprom_write(SOC_PCIE_PERST_USER_SETTINGS_OFFSET, user_settings, data_length)) {
 		LOG_ERR("soc_pcie_perst Failed to write eeprom");
+		return false;
+	}
+	k_msleep(EEPROM_MAX_WRITE_TIME);
+
+	return true;
+}
+bool get_user_settings_delay_asic_rst_from_eeprom(void *user_settings, uint8_t data_length)
+{
+	CHECK_NULL_ARG_WITH_RETURN(user_settings, false);
+
+	if (!plat_eeprom_read(DELAY_ASIC_RST_USER_SETTINGS_OFFSET, user_settings, data_length)) {
+		LOG_ERR("Failed to read delay_asic_rst from eeprom");
+		return false;
+	}
+	return true;
+}
+bool set_user_settings_delay_asic_rst_to_eeprom(void *user_settings, uint8_t data_length)
+{
+	CHECK_NULL_ARG_WITH_RETURN(user_settings, false);
+
+	if (!plat_eeprom_write(DELAY_ASIC_RST_USER_SETTINGS_OFFSET, user_settings, data_length)) {
+		LOG_ERR("delay_asic_rst Failed to write eeprom");
+		return false;
+	}
+	k_msleep(EEPROM_MAX_WRITE_TIME);
+
+	return true;
+}
+bool get_user_settings_delay_module_pg_from_eeprom(void *user_settings, uint8_t data_length)
+{
+	CHECK_NULL_ARG_WITH_RETURN(user_settings, false);
+
+	if (!plat_eeprom_read(DELAY_MODULE_PG_USER_SETTINGS_OFFSET, user_settings, data_length)) {
+		LOG_ERR("Failed to read delay_module_pg from eeprom");
+		return false;
+	}
+	return true;
+}
+bool set_user_settings_delay_module_pg_to_eeprom(void *user_settings, uint8_t data_length)
+{
+	CHECK_NULL_ARG_WITH_RETURN(user_settings, false);
+
+	if (!plat_eeprom_write(DELAY_MODULE_PG_USER_SETTINGS_OFFSET, user_settings, data_length)) {
+		LOG_ERR("delay_module_pg Failed to write eeprom");
 		return false;
 	}
 	k_msleep(EEPROM_MAX_WRITE_TIME);
@@ -1208,4 +1287,6 @@ void user_settings_init(void)
 	thermaltrip_user_settings_init();
 	throttle_user_settings_init();
 	alert_level_user_settings_init();
+	delay_asic_rst_user_settings_init();
+	delay_module_pg_user_settings_init();
 }
