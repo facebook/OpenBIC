@@ -23,6 +23,8 @@
 #include "plat_cpld.h"
 #include "plat_log.h"
 #include "plat_event.h"
+#include "plat_ioexp.h"
+#include "plat_hook.h"
 
 LOG_MODULE_REGISTER(plat_isr);
 
@@ -60,8 +62,14 @@ void ISR_GPIO_FM_PLD_UBC_EN_R()
 
 void ISR_GPIO_RST_IRIS_PWR_ON_PLD_R1_N()
 {
-	LOG_INF("dc off, clear io expander init flag");
-	set_ioe_init_flag(0);
+	// dc on
+	if (gpio_get(RST_IRIS_PWR_ON_PLD_R1_N)) {
+		pca6416a_init();
+		set_bootstrap_ioexp_val();
+	} else {
+		LOG_INF("dc off, clear io expander init flag");
+		set_ioe_init_flag(0);
+	}
 }
 
 bool plat_gpio_immediate_int_cb(uint8_t gpio_num)

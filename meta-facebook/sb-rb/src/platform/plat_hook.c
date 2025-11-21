@@ -30,6 +30,7 @@
 #include "plat_class.h"
 #include "plat_i2c_target.h"
 #include "shell_plat_average_power.h"
+#include "plat_ioexp.h"
 
 LOG_MODULE_REGISTER(plat_hook);
 
@@ -279,6 +280,11 @@ bootstrap_mapping_register bootstrap_table[] = {
 	  0x0, true },
 	{ STRAP_INDEX_OWL_W_UART_MUX_PLD_SEL_0_2, 0x22, "OWL_W_UART_MUX_PLD_SEL_0_2", 0, 3, 0x0,
 	  0x0, true },
+
+	{ STRAP_INDEX_OWL_E_DVT_ENABLE, 0x9E, "OWL_E_DVT_ENABLE", 1, 1, 0x0, 0x0, false },
+	{ STRAP_INDEX_OWL_W_DVT_ENABLE, 0x9E, "OWL_W_DVT_ENABLE", 0, 1, 0x0, 0x0, false },
+	{ STRAP_INDEX_OWL_E_BOOT_SOURCE_0_7, 0xFF, "OWL_E_BOOT_SOURCE_0_7", 0, 8, 0x0, 0x0, false },
+	{ STRAP_INDEX_OWL_W_BOOT_SOURCE_0_7, 0xFF, "OWL_W_BOOT_SOURCE_0_7", 0, 8, 0x0, 0x0, false },
 };
 bool vr_rail_name_get(uint8_t rail, uint8_t **name)
 {
@@ -791,7 +797,7 @@ static uint8_t reverse_bits(uint8_t byte, uint8_t bit_cnt)
 bool bootstrap_default_settings_init(void)
 {
 	// read cpld value and write to bootstrap_table
-	for (int i = 0; i < STRAP_INDEX_MAX; i++) {
+	for (int i = 0; i <= STRAP_INDEX_OWL_W_DVT_ENABLE; i++) {
 		uint8_t data = 0;
 		if (!plat_read_cpld(bootstrap_table[i].cpld_offsets, &data, 1)) {
 			LOG_ERR("Can't find bootstrap default by rail index from cpld: %d", i);
@@ -806,6 +812,27 @@ bool bootstrap_default_settings_init(void)
 			bootstrap_table[i].change_setting_value =
 				reverse_bits(bootstrap_table[i].change_setting_value,
 					     bootstrap_table[i].bit_count);
+	}
+
+	// read io-exp value and write to bootstrap_table
+	uint8_t data[2] = { 0x00, 0x00 };
+	if (!pca6416a_i2c_read(PCA6414A_OUTPUT_PORT_0, data, 2)) {
+		LOG_ERR("Can't find bootstrap default from ioexp");
+		return false;
+	}
+	bootstrap_table[STRAP_INDEX_OWL_E_BOOT_SOURCE_0_7].change_setting_value = data[0];
+	bootstrap_table[STRAP_INDEX_OWL_W_BOOT_SOURCE_0_7].change_setting_value = data[1];
+
+	return true;
+}
+bool set_bootstrap_ioexp_val(void)
+{
+	uint8_t data[2] = { 0 };
+	data[0] = bootstrap_table[STRAP_INDEX_OWL_E_BOOT_SOURCE_0_7].change_setting_value;
+	data[1] = bootstrap_table[STRAP_INDEX_OWL_W_BOOT_SOURCE_0_7].change_setting_value;
+	if (!pca6416a_i2c_write(PCA6414A_OUTPUT_PORT_0, data, 2)) {
+		LOG_ERR("Can't set ioexp val from bootstrap_table");
+		return false;
 	}
 	return true;
 }
@@ -905,6 +932,12 @@ bool set_bootstrap_table_and_user_settings(uint8_t rail, uint8_t *change_setting
 			for (int j = 0; j < STRAP_INDEX_MAX; j++) {
 				if (bootstrap_table[j].cpld_offsets ==
 				    bootstrap_table[i].cpld_offsets) {
+					//if not cpld register
+					if (bootstrap_table[j].cpld_offsets == 0xFF) {
+						*change_setting_value =
+							bootstrap_table[i].change_setting_value;
+						break;
+					}
 					uint8_t tmp_reverse = 0;
 					if (bootstrap_table[j].reverse)
 						tmp_reverse = reverse_bits(
@@ -975,12 +1008,28 @@ bool bootstrap_user_settings_init(void)
 				return false;
 			}
 
-			// write cpld
-			if (!plat_write_cpld(bootstrap_table[i].cpld_offsets,
-					     &change_setting_value)) {
-				LOG_ERR("Can't set bootstrap[%2d]=%02x by user settings", i,
-					change_setting_value);
-				return false;
+			// write cpld or io-exp
+			if (i == STRAP_INDEX_OWL_E_BOOT_SOURCE_0_7) {
+				if (!pca6416a_i2c_write(PCA6414A_OUTPUT_PORT_0,
+							&change_setting_value, 1)) {
+					LOG_ERR("Can't set bootstrap[%2d]=%02x by user settings", i,
+						change_setting_value);
+					return false;
+				}
+			} else if (i == STRAP_INDEX_OWL_W_BOOT_SOURCE_0_7) {
+				if (!pca6416a_i2c_write(PCA6414A_OUTPUT_PORT_1,
+							&change_setting_value, 1)) {
+					LOG_ERR("Can't set bootstrap[%2d]=%02x by user settings", i,
+						change_setting_value);
+					return false;
+				}
+			} else {
+				if (!plat_write_cpld(bootstrap_table[i].cpld_offsets,
+						     &change_setting_value)) {
+					LOG_ERR("Can't set bootstrap[%2d]=%02x by user settings", i,
+						change_setting_value);
+					return false;
+				}
 			}
 
 			LOG_INF("set [%2d]%s: %02x", i, bootstrap_table[i].strap_name,

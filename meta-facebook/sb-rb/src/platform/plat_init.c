@@ -31,6 +31,7 @@
 #include "plat_user_setting.h"
 #include "plat_pldm_monitor.h"
 #include "plat_hwmon.h"
+#include "plat_ioexp.h"
 
 LOG_MODULE_REGISTER(plat_init);
 
@@ -79,6 +80,7 @@ void pal_post_init()
 
 	init_cpld_polling();
 	plat_telemetry_table_init();
+	pca6416a_init();
 }
 
 #define DEF_PROJ_GPIO_PRIORITY 78

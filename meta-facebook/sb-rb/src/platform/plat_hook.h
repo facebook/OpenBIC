@@ -172,6 +172,10 @@ enum PLAT_STRAP_INDEX_E {
 	STRAP_INDEX_OWL_W_JTAG_MUX_PLD_SEL_0_3,
 	STRAP_INDEX_OWL_E_UART_MUX_PLD_SEL_0_2,
 	STRAP_INDEX_OWL_W_UART_MUX_PLD_SEL_0_2,
+	STRAP_INDEX_OWL_E_DVT_ENABLE,
+	STRAP_INDEX_OWL_W_DVT_ENABLE,
+	STRAP_INDEX_OWL_E_BOOT_SOURCE_0_7,
+	STRAP_INDEX_OWL_W_BOOT_SOURCE_0_7,
 	STRAP_INDEX_MAX,
 };
 typedef struct vr_vout_range_user_settings_struct {
@@ -241,4 +245,5 @@ bool post_sensor_reading_hook_func(uint8_t sensor_number);
 bool post_ubc_read(sensor_cfg *cfg, void *args, int *reading);
 bool bootstrap_user_settings_set(void *bootstrap_user_settings);
 bool vr_vout_user_settings_set(void *user_settings_value);
+bool set_bootstrap_ioexp_val(void);
 #endif

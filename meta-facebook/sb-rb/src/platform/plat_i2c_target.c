@@ -37,6 +37,7 @@
 #include "plat_cpld.h"
 #include "plat_hook.h"
 #include "plat_i2c.h"
+#include "plat_ioexp.h"
 
 LOG_MODULE_REGISTER(plat_i2c_target);
 
@@ -798,12 +799,27 @@ bool set_bootstrap_element(uint8_t bootstrap_pin, uint8_t user_setting_level)
 	// LOG_DBG("set bootstrap_table[%2x]=%x, cpld_offsets 0x%02x change_setting_value 0x%02x",
 	// 	bootstrap_pin, drive_index_level, bootstrap_item.cpld_offsets,
 	// 	change_setting_value);
-	if (!plat_write_cpld(bootstrap_item.cpld_offsets, &change_setting_value)) {
-		LOG_ERR("Can't write bootstrap[0x%02x]=%x, cpld_offsets 0x%02x change_setting_value 0x%02x",
-			bootstrap_pin, user_setting_level, bootstrap_item.cpld_offsets,
-			change_setting_value);
-		return false;
+	if (bootstrap_pin == STRAP_INDEX_OWL_E_BOOT_SOURCE_0_7) {
+		if (!pca6416a_i2c_write(PCA6414A_OUTPUT_PORT_0, &change_setting_value, 1)) {
+			LOG_ERR("Can't write bootstrap[0x%02x]=%x, change_setting_value 0x%02x",
+				bootstrap_pin, user_setting_level, change_setting_value);
+			return false;
+		}
+	} else if (bootstrap_pin == STRAP_INDEX_OWL_W_BOOT_SOURCE_0_7) {
+		if (!pca6416a_i2c_write(PCA6414A_OUTPUT_PORT_1, &change_setting_value, 1)) {
+			LOG_ERR("Can't write bootstrap[0x%02x]=%x, change_setting_value 0x%02x",
+				bootstrap_pin, user_setting_level, change_setting_value);
+			return false;
+		}
+	} else {
+		if (!plat_write_cpld(bootstrap_item.cpld_offsets, &change_setting_value)) {
+			LOG_ERR("Can't write bootstrap[0x%02x]=%x, cpld_offsets 0x%02x change_setting_value 0x%02x",
+				bootstrap_pin, user_setting_level, bootstrap_item.cpld_offsets,
+				change_setting_value);
+			return false;
+		}
 	}
+
 	return true;
 }
 void set_bootstrap_element_handler()
