@@ -70,10 +70,10 @@ typedef struct {
 
 //MEDHA0: level 2 , level3
 //MEDHA1: level 2 , level3
-adc_info_t adc_info[ADC_IDX_MAX] = { { .avg_times = 20, .ucr = 1255},
+adc_info_t adc_info[ADC_IDX_MAX] = { { .avg_times = 20, .ucr = 1255 },
 				     { .avg_times = 60, .ucr = 1255 },
 				     { .avg_times = 600, .ucr = 1255 },
-				     { .avg_times = 800, .ucr = 1255} };
+				     { .avg_times = 800, .ucr = 1255 } };
 
 static const struct device *spi_dev;
 
@@ -85,12 +85,12 @@ static void adc_poll_init()
 		adc_info[i].avg_val = 0;
 		adc_info[i].vr_sum = 0;
 		adc_info[i].pwr_avg_val = 0;
-		memset(adc_info[i].buf, 0, sizeof(uint16_t)*ADC_AVERGE_TIMES_MAX);
+		memset(adc_info[i].buf, 0, sizeof(uint16_t) * ADC_AVERGE_TIMES_MAX);
 	}
 }
 
 float get_ads7066_vref()
-{	
+{
 	return ads7066_vref;
 }
 
@@ -148,7 +148,7 @@ void set_adc_ucr_status(uint8_t idx, bool status)
 float adc_raw_mv_to_apms(uint16_t v, float vref)
 {
 	float temp_v = ((float)v / 0xffff) * vref;
-	return (get_vr_module() == VR_MODULE_MPS) ? 1000 * temp_v * 0.796 :1000 * temp_v * 0.797;
+	return (get_vr_module() == VR_MODULE_MPS) ? 1000 * temp_v * 0.796 : 1000 * temp_v * 0.797;
 }
 
 static bool adc_ucr_handler(uint8_t idx, bool state) // state is ucr or not
@@ -187,7 +187,7 @@ static void adc_ucr_work_handler(struct k_work *work)
 uint16_t float_voltage_transfer_to_uint16(float temp_voltage_value)
 {
 	// Upper:ex. 0.85 → 85
-	uint8_t upper = (uint8_t)(temp_voltage_value * 100); 
+	uint8_t upper = (uint8_t)(temp_voltage_value * 100);
 	// Lower: (0.8523 - 0.85) = 0.0023 → 23
 	uint16_t lower_raw = (uint16_t)((temp_voltage_value * 10000) - (upper * 100));
 	uint8_t lower = (uint8_t)(lower_raw & 0xFF);
@@ -197,7 +197,7 @@ uint16_t float_voltage_transfer_to_uint16(float temp_voltage_value)
 }
 float uint16_voltage_transfer_to_float(uint16_t temp_voltage_value)
 {
-	uint8_t upper = (temp_voltage_value >> 8) & 0xFF; 
+	uint8_t upper = (temp_voltage_value >> 8) & 0xFF;
 	uint8_t lower = temp_voltage_value & 0xFF;
 	// restore upper (2 digit)
 	float upper_val = upper / 100.0f;
@@ -211,8 +211,7 @@ K_WORK_DEFINE(adc_ucr_work, adc_ucr_work_handler);
 static void update_adc_info(uint16_t raw_data, uint8_t base_idx, float vref)
 {
 	LOG_DBG("base_idx: %d", base_idx);
-	for (uint8_t i = base_idx; i < ADC_IDX_MAX; i+=2)
-	{
+	for (uint8_t i = base_idx; i < ADC_IDX_MAX; i += 2) {
 		uint16_t m_sample_buffer[BUFFER_SIZE];
 		m_sample_buffer[0] = raw_data;
 		m_sample_buffer[1] = raw_data;
@@ -220,23 +219,28 @@ static void update_adc_info(uint16_t raw_data, uint8_t base_idx, float vref)
 		// current averge
 		adc->sum -= adc->buf[adc->buf_idx];
 		adc->buf[adc->buf_idx] = ((i == ADC_IDX_MEDHA0_1) || (i == ADC_IDX_MEDHA0_2)) ?
-							m_sample_buffer[1] :
-							m_sample_buffer[0];
+						 m_sample_buffer[1] :
+						 m_sample_buffer[0];
 		adc->sum += adc->buf[adc->buf_idx];
 		adc->avg_val = adc->sum / adc->avg_times;
 		// voltage averge
 		float temp_voltage_value = 0;
 		if (base_idx == ADC_RB_IDX_MEDHA0)
-			temp_voltage_value = get_sensor_reading_cache_as_float(SENSOR_NUM_ASIC_P0V85_MEDHA0_VDD_VOLT_V) / 1000;
+			temp_voltage_value = get_sensor_reading_cache_as_float(
+						     SENSOR_NUM_ASIC_P0V85_MEDHA0_VDD_VOLT_V) /
+					     1000;
 		else if (base_idx == ADC_RB_IDX_MEDHA1)
-			temp_voltage_value = get_sensor_reading_cache_as_float(SENSOR_NUM_ASIC_P0V85_MEDHA1_VDD_VOLT_V) / 1000;
+			temp_voltage_value = get_sensor_reading_cache_as_float(
+						     SENSOR_NUM_ASIC_P0V85_MEDHA1_VDD_VOLT_V) /
+					     1000;
 		// transfer to uint16_t
 		uint16_t voltage_packed = float_voltage_transfer_to_uint16(temp_voltage_value);
 		adc->vr_sum -= adc->vr_voltage_buf[adc->buf_idx];
 		adc->vr_voltage_buf[adc->buf_idx] = voltage_packed;
 		adc->vr_sum += adc->vr_voltage_buf[adc->buf_idx];
 		// average pwr = average voltage * average current
-		adc->pwr_avg_val = (temp_voltage_value / adc->avg_times) * adc_raw_mv_to_apms(adc->avg_val, vref);
+		adc->pwr_avg_val = (temp_voltage_value / adc->avg_times) *
+				   adc_raw_mv_to_apms(adc->avg_val, vref);
 
 		// decrease buffer idx
 		adc->buf_idx = (adc->buf_idx + 1) % adc->avg_times;
@@ -288,8 +292,7 @@ int ads7066_read_reg(uint8_t reg, uint8_t idx)
 		.gpio_dt_flags = GPIO_ACTIVE_LOW,
 		.delay = 0, // No delay
 	};
-	switch (idx)
-	{
+	switch (idx) {
 	case ADC_RB_IDX_MEDHA0:
 		// do nothing
 		break;
@@ -307,7 +310,8 @@ int ads7066_read_reg(uint8_t reg, uint8_t idx)
 
 	const struct spi_config spi_cfg = {
 		.frequency = 6000000, // 6MHz
-		.operation = SPI_OP_MODE_MASTER | SPI_TRANSFER_MSB | SPI_WORD_SET(8) | SPI_LINES_SINGLE,
+		.operation =
+			SPI_OP_MODE_MASTER | SPI_TRANSFER_MSB | SPI_WORD_SET(8) | SPI_LINES_SINGLE,
 		.slave = 0,
 		.cs = &cs_ctrl,
 	};
@@ -331,7 +335,8 @@ int ads7066_read_reg(uint8_t reg, uint8_t idx)
 		return ret;
 	}
 
-	LOG_INF("medha%d ADS7066 read reg 0x%02x: 0x%02x 0x%02x 0x%02x", idx, reg, rx_buf[0], rx_buf[1], rx_buf[2]);
+	LOG_INF("medha%d ADS7066 read reg 0x%02x: 0x%02x 0x%02x 0x%02x", idx, reg, rx_buf[0],
+		rx_buf[1], rx_buf[2]);
 	return 0;
 }
 int ads7066_write_reg(uint8_t reg, uint8_t write_val, uint8_t idx)
@@ -347,8 +352,7 @@ int ads7066_write_reg(uint8_t reg, uint8_t write_val, uint8_t idx)
 		.gpio_dt_flags = GPIO_ACTIVE_LOW,
 		.delay = 0, // No delay
 	};
-	switch (idx)
-	{
+	switch (idx) {
 	case ADC_RB_IDX_MEDHA0:
 		// do nothing
 		break;
@@ -366,7 +370,8 @@ int ads7066_write_reg(uint8_t reg, uint8_t write_val, uint8_t idx)
 
 	const struct spi_config spi_cfg = {
 		.frequency = 6000000, // 6MHz
-		.operation = SPI_OP_MODE_MASTER | SPI_TRANSFER_MSB | SPI_WORD_SET(8) | SPI_LINES_SINGLE,
+		.operation =
+			SPI_OP_MODE_MASTER | SPI_TRANSFER_MSB | SPI_WORD_SET(8) | SPI_LINES_SINGLE,
 		.slave = 0,
 		.cs = &cs_ctrl,
 	};
@@ -399,8 +404,7 @@ static void ads7066_read_voltage(uint8_t idx)
 		.gpio_dt_flags = GPIO_ACTIVE_LOW,
 		.delay = 0, // No delay
 	};
-	switch (idx)
-	{
+	switch (idx) {
 	case ADC_RB_IDX_MEDHA0:
 		// do nothing
 		break;
@@ -418,12 +422,13 @@ static void ads7066_read_voltage(uint8_t idx)
 
 	const struct spi_config spi_cfg = {
 		.frequency = 6000000, // 6MHz
-		.operation = SPI_OP_MODE_MASTER | SPI_TRANSFER_MSB | SPI_WORD_SET(8) | SPI_LINES_SINGLE,
+		.operation =
+			SPI_OP_MODE_MASTER | SPI_TRANSFER_MSB | SPI_WORD_SET(8) | SPI_LINES_SINGLE,
 		.slave = 0,
 		.cs = &cs_ctrl,
 	};
 
-	uint8_t tx_buf[3] = { 0x00, 0x00, 0x00};
+	uint8_t tx_buf[3] = { 0x00, 0x00, 0x00 };
 	uint8_t rx_buf[3] = { 0 };
 	uint8_t out_buf[3] = { 0 };
 
@@ -450,7 +455,7 @@ static void ads7066_read_voltage(uint8_t idx)
 		ads7066_val_1 = ((float)raw_value / 65536) * ads7066_vref;
 		update_adc_info(raw_value, ADC_RB_IDX_MEDHA1, ads7066_vref);
 	}
-	
+
 	return;
 }
 int ad4058_read_reg(uint8_t reg, uint8_t idx)
@@ -468,8 +473,7 @@ int ad4058_read_reg(uint8_t reg, uint8_t idx)
 		.gpio_dt_flags = GPIO_ACTIVE_LOW,
 		.delay = 0, // No delay
 	};
-	switch (idx)
-	{
+	switch (idx) {
 	case ADC_RB_IDX_MEDHA0:
 		// do nothing
 		cnv_pin = MEDHA0_CNV;
@@ -489,13 +493,13 @@ int ad4058_read_reg(uint8_t reg, uint8_t idx)
 
 	const struct spi_config spi_cfg = {
 		.frequency = 6000000, // 6MHz
-		.operation = SPI_OP_MODE_MASTER | SPI_TRANSFER_MSB | SPI_WORD_SET(8) | SPI_LINES_SINGLE,
+		.operation =
+			SPI_OP_MODE_MASTER | SPI_TRANSFER_MSB | SPI_WORD_SET(8) | SPI_LINES_SINGLE,
 		.slave = 0,
 		.cs = &cs_ctrl,
 	};
 
-
-	uint8_t tx_buf[3] = { 0x80, 0x00, 0x00};
+	uint8_t tx_buf[3] = { 0x80, 0x00, 0x00 };
 	uint8_t rx_buf[3] = { 0 };
 
 	struct spi_buf tx = { .buf = tx_buf, .len = 3 };
@@ -527,8 +531,7 @@ int ad4058_write_reg(uint8_t reg, uint8_t write_val, uint8_t idx)
 		.gpio_dt_flags = GPIO_ACTIVE_LOW,
 		.delay = 0, // No delay
 	};
-	switch (idx)
-	{
+	switch (idx) {
 	case ADC_RB_IDX_MEDHA0:
 		// do nothing
 		break;
@@ -546,7 +549,8 @@ int ad4058_write_reg(uint8_t reg, uint8_t write_val, uint8_t idx)
 
 	const struct spi_config spi_cfg = {
 		.frequency = 6000000, // 6MHz
-		.operation = SPI_OP_MODE_MASTER | SPI_TRANSFER_MSB | SPI_WORD_SET(8) | SPI_LINES_SINGLE,
+		.operation =
+			SPI_OP_MODE_MASTER | SPI_TRANSFER_MSB | SPI_WORD_SET(8) | SPI_LINES_SINGLE,
 		.slave = 0,
 		.cs = &cs_ctrl,
 	};
@@ -584,8 +588,7 @@ static void ad4058_read_voltage(uint8_t idx)
 		.gpio_dt_flags = GPIO_ACTIVE_LOW,
 		.delay = 0, // No delay
 	};
-	switch (idx)
-	{
+	switch (idx) {
 	case ADC_RB_IDX_MEDHA0:
 		// do nothing
 		cnv_pin = MEDHA0_CNV;
@@ -605,11 +608,12 @@ static void ad4058_read_voltage(uint8_t idx)
 
 	const struct spi_config spi_cfg = {
 		.frequency = 6000000, // 6MHz
-		.operation = SPI_OP_MODE_MASTER | SPI_TRANSFER_MSB | SPI_WORD_SET(8) | SPI_LINES_SINGLE,
+		.operation =
+			SPI_OP_MODE_MASTER | SPI_TRANSFER_MSB | SPI_WORD_SET(8) | SPI_LINES_SINGLE,
 		.slave = 0,
 		.cs = &cs_ctrl,
 	};
-	
+
 	uint8_t tx_buf[2] = { 0 };
 	uint8_t rx_buf[3] = { 0 };
 	uint8_t out_buf[3] = { 0 };
@@ -628,7 +632,7 @@ static void ad4058_read_voltage(uint8_t idx)
 		LOG_ERR("SPI failed: %d", ret);
 		return;
 	}
-	
+
 	memcpy(out_buf, rx_buf, 3);
 	/*
 	(Read_back 16 bits data / 0xFFFF ) * Vref 
@@ -637,9 +641,9 @@ static void ad4058_read_voltage(uint8_t idx)
 	0xb628 / 0xffff = (0xb628 / 0xffff) * 3.3
 	*/
 	uint8_t high = (uint8_t)((out_buf[0] << 4) | (out_buf[1] >> 4));
-    uint8_t low  = (uint8_t)(((out_buf[1] & 0x0F) << 4) | (out_buf[2] >> 4));
+	uint8_t low = (uint8_t)(((out_buf[1] & 0x0F) << 4) | (out_buf[2] >> 4));
 
-    uint16_t raw_value = (uint16_t)((high << 8) | low);
+	uint16_t raw_value = (uint16_t)((high << 8) | low);
 	if (idx == ADC_RB_IDX_MEDHA0) {
 		ad4058_val_0 = (float)raw_value / 65536 * ad4058_vref;
 		update_adc_info(raw_value, ADC_RB_IDX_MEDHA0, ad4058_vref);
@@ -647,7 +651,7 @@ static void ad4058_read_voltage(uint8_t idx)
 		ad4058_val_1 = (float)raw_value / 65536 * ad4058_vref;
 		update_adc_info(raw_value, ADC_RB_IDX_MEDHA1, ad4058_vref);
 	}
-	
+
 	// set cnv_pin to high
 	gpio_set(cnv_pin, 1);
 
@@ -670,7 +674,7 @@ void ads7066_mode_init()
 {
 	//set auto-sequence mode
 	// medha0 & medha1
- 	for (int i = 0; i < ADC_RB_IDX_MAX; i++) {
+	for (int i = 0; i < ADC_RB_IDX_MAX; i++) {
 		ads7066_write_reg(0, 0x1, i);
 		ads7066_write_reg(0x1, 0x82, i);
 		ads7066_write_reg(0x12, 0x1, i);
@@ -711,10 +715,8 @@ void adc_rainbow_polling_handler(void *p1, void *p2, void *p3)
 		LOG_ERR("Invalid ADC index %d", adc_idx);
 
 	while (1) {
-		if (adc_poll_flag)
-		{
-			switch (adc_idx)
-			{
+		if (adc_poll_flag) {
+			switch (adc_idx) {
 			case ADI_AD4058:
 				ad4058_read_voltage(ADC_RB_IDX_MEDHA0);
 				ad4058_read_voltage(ADC_RB_IDX_MEDHA1);
@@ -737,8 +739,9 @@ void plat_adc_rainbow_init(void)
 	for (uint8_t i = 0; i < ADC_IDX_MAX; i++) {
 		k_work_init(&adc_info[i].ucr_work, adc_ucr_work_handler);
 	}
-	k_thread_create(&adc_rainbow_poll_thread, adc_rainbow_thread_stack, ADC_STACK_SIZE, adc_rainbow_polling_handler,
-			NULL, NULL, NULL, CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
+	k_thread_create(&adc_rainbow_poll_thread, adc_rainbow_thread_stack, ADC_STACK_SIZE,
+			adc_rainbow_polling_handler, NULL, NULL, NULL, CONFIG_MAIN_THREAD_PRIORITY,
+			0, K_NO_WAIT);
 
 	k_thread_name_set(&adc_rainbow_poll_thread, "platform adc(rainbow) read");
 

@@ -82,8 +82,8 @@ typedef struct _cpld_info_ {
 } cpld_info;
 
 typedef struct {
-    const char *name;
-    uint8_t bit;
+	const char *name;
+	uint8_t bit;
 	uint8_t offset;
 } cpld_pin_map_t;
 

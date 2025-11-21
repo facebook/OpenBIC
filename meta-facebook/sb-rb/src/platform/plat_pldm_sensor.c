@@ -8856,9 +8856,9 @@ pldm_sensor_info plat_pldm_sensor_quick_vr_table[] = {
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
 			.pre_sensor_read_hook = pre_vr_read,
-			.pre_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_8 * 2 + 1],
+			.pre_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_8 * 2],
 			.post_sensor_read_hook = post_vr_read,
-			.post_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_8 * 2 + 1],
+			.post_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_8 * 2],
 		},
 	},
 };
