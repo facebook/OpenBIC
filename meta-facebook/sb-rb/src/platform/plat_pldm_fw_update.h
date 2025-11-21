@@ -17,6 +17,15 @@
 #ifndef _PLAT_FWUPDATE_H_
 #define _PLAT_FWUPDATE_H_
 
+#define PLAT_CRC32_READ_SIZE 128
+
+enum ASIC_BOOT0_COMPONENT {
+	BOOT0_HAMSA,
+	BOOT0_MEDHA0,
+	BOOT0_MEDHA1,
+	BOOT0_MAX,
+};
+
 enum FIRMWARE_COMPONENT {
 	COMPNT_BIC,
 	COMPNT_VR_1,
@@ -39,5 +48,6 @@ enum FIRMWARE_COMPONENT {
 
 bool find_sensor_id_and_name_by_firmware_comp_id(uint8_t comp_identifier, uint8_t *sensor_id,
 						 char *sensor_name);
+uint32_t plat_get_image_crc_checksum(uint8_t index);
 
 #endif /* _PLAT_FWUPDATE_H_ */

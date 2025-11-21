@@ -127,10 +127,18 @@ void cmd_get_fw_version_cpld(const struct shell *shell, size_t argc, char **argv
 	return;
 }
 
-SHELL_STATIC_SUBCMD_SET_CREATE(sub_get_fw_version_cmd,
-			       SHELL_CMD(vr, NULL, "get fw version vr", cmd_get_fw_version_vr),
-			       SHELL_CMD(cpld, NULL, "get fw version cpld",
-					 cmd_get_fw_version_cpld),
-			       SHELL_SUBCMD_SET_END);
+void cmd_get_fw_version_asic(const struct shell *shell, size_t argc, char **argv)
+{
+	shell_print(shell, "HAMSA boot0 CRC32 : %08x", plat_get_image_crc_checksum(BOOT0_HAMSA));
+	shell_print(shell, "MEDHA0 boot0 CRC32 : %08x", plat_get_image_crc_checksum(BOOT0_MEDHA0));
+	shell_print(shell, "MEDHA1 boot0 CRC32 : %08x", plat_get_image_crc_checksum(BOOT0_MEDHA1));
+	return;
+}
+
+SHELL_STATIC_SUBCMD_SET_CREATE(
+	sub_get_fw_version_cmd, SHELL_CMD(vr, NULL, "get fw version vr", cmd_get_fw_version_vr),
+	SHELL_CMD(cpld, NULL, "get fw version cpld", cmd_get_fw_version_cpld),
+	SHELL_CMD(asic, NULL, "get fw version asic", cmd_get_fw_version_asic),
+	SHELL_SUBCMD_SET_END);
 
 SHELL_CMD_REGISTER(get_fw_version, &sub_get_fw_version_cmd, "get fw version command", NULL);

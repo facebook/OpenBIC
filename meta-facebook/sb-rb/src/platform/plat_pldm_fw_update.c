@@ -18,6 +18,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <logging/log.h>
+#include <sys/crc.h>
 
 #include "pldm_firmware_update.h"
 #include "plat_pldm_fw_update.h"
@@ -41,6 +42,8 @@ static uint8_t pldm_pre_vr_update(void *fw_update_param);
 static uint8_t pldm_post_vr_update(void *fw_update_param);
 static uint8_t pldm_pre_bic_update(void *fw_update_param);
 static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len);
+
+static uint32_t crc_boot0[3] = { 0 };
 
 typedef struct {
 	uint8_t firmware_comp_id;
@@ -163,9 +166,67 @@ uint8_t pldm_mtia_flash_update(void *fw_update_param)
 	return pldm_fw_update(fw_update_param, DEVSPI_SPI1_CS1);
 }
 
+uint32_t plat_get_image_crc_checksum(uint8_t index)
+{
+	if (index >= BOOT0_MAX) {
+		return 0;
+	} else {
+		return crc_boot0[index];
+	}
+}
+
 static uint8_t pldm_post_mtia_flash_update(void *fw_update_param)
 {
-	ARG_UNUSED(fw_update_param);
+	CHECK_NULL_ARG_WITH_RETURN(fw_update_param, 1);
+	pldm_fw_update_param_t *p = (pldm_fw_update_param_t *)fw_update_param;
+
+	//read data back to calculate CRC32
+	uint8_t *rxbuf = NULL;
+	int remain = fw_update_cfg.image_size;
+	uint32_t offset = 0;
+	uint32_t crc32 = 0;
+
+	rxbuf = malloc(PLAT_CRC32_READ_SIZE);
+	if (rxbuf == NULL) {
+		LOG_ERR("Fail to allocate size %d", PLAT_CRC32_READ_SIZE);
+	} else {
+		while (remain > 0) {
+			if (remain > PLAT_CRC32_READ_SIZE) {
+				if (read_fw_image(offset, PLAT_CRC32_READ_SIZE, rxbuf,
+						  DEVSPI_SPI1_CS1)) {
+					LOG_ERR("Fail to read offset %x", offset);
+					break;
+				}
+				crc32 = crc32_ieee_update(crc32, rxbuf, PLAT_CRC32_READ_SIZE);
+				remain = remain - PLAT_CRC32_READ_SIZE;
+				offset += PLAT_CRC32_READ_SIZE;
+			} else {
+				if (read_fw_image(offset, remain, rxbuf, DEVSPI_SPI1_CS1)) {
+					LOG_ERR("Fail to read offset %x", offset);
+					break;
+				}
+				crc32 = crc32_ieee_update(crc32, rxbuf, remain);
+				remain = 0;
+				break;
+			}
+		}
+	}
+	SAFE_FREE(rxbuf);
+
+	switch (p->comp_id) {
+	case COMPNT_HAMSA:
+		crc_boot0[BOOT0_HAMSA] = crc32;
+		break;
+	case COMPNT_MEDHA0:
+		crc_boot0[BOOT0_MEDHA0] = crc32;
+		break;
+	case COMPNT_MEDHA1:
+		crc_boot0[BOOT0_MEDHA1] = crc32;
+		break;
+	default:
+		break;
+	}
+
 	// disable spi node
 	spi_node_disable();
 	LOG_INF("Disable spi node");
