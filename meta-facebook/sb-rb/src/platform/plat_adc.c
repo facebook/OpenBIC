@@ -24,6 +24,8 @@
 #include "plat_cpld.h"
 #include <device.h>
 #include "util_sys.h"
+#include "plat_i2c_target.h"
+#include "plat_pldm_sensor.h"
 
 LOG_MODULE_REGISTER(plat_adc);
 
@@ -55,20 +57,23 @@ const struct spi_cs_control *cs_ctrl;
 typedef struct {
 	uint16_t avg_times; // 20ms at a time
 	uint16_t buf[ADC_AVERGE_TIMES_MAX];
-	uint8_t buf_idx;
+	uint16_t buf_idx;
 	uint16_t avg_val;
 	uint32_t sum;
 	uint16_t ucr; // pwr
+	uint16_t vr_voltage_buf[ADC_AVERGE_TIMES_MAX]; //ex. 0.8523 will save as 0.85 and 0.0023
+	float pwr_avg_val;
+	float vr_sum;
 	bool ucr_status; // over current
 	struct k_work ucr_work;
 } adc_info_t;
 
 //MEDHA0: level 2 , level3
 //MEDHA1: level 2 , level3
-adc_info_t adc_info[ADC_IDX_MAX] = { { .avg_times = 20, .ucr = 1254},
-				     { .avg_times = 10, .ucr = 1254 },
-				     { .avg_times = 20, .ucr = 1254 },
-				     { .avg_times = 10, .ucr = 1254} };
+adc_info_t adc_info[ADC_IDX_MAX] = { { .avg_times = 20, .ucr = 1255},
+				     { .avg_times = 60, .ucr = 1255 },
+				     { .avg_times = 600, .ucr = 1255 },
+				     { .avg_times = 800, .ucr = 1255} };
 
 static const struct device *spi_dev;
 
@@ -78,7 +83,9 @@ static void adc_poll_init()
 		adc_info[i].sum = 0;
 		adc_info[i].buf_idx = 0;
 		adc_info[i].avg_val = 0;
-		memset(adc_info[i].buf, 0, sizeof(adc_info[i].buf));
+		adc_info[i].vr_sum = 0;
+		adc_info[i].pwr_avg_val = 0;
+		memset(adc_info[i].buf, 0, sizeof(uint16_t)*ADC_AVERGE_TIMES_MAX);
 	}
 }
 
@@ -96,9 +103,14 @@ uint16_t get_adc_averge_val(uint8_t idx)
 	return adc_info[idx].avg_val;
 }
 
-uint16_t *get_adc_buf(uint8_t idx)
+uint16_t *get_adc_buf(uint16_t idx)
 {
 	return adc_info[idx].buf;
+}
+
+uint16_t *get_vr_buf(uint16_t idx)
+{
+	return adc_info[idx].vr_voltage_buf;
 }
 
 uint16_t get_adc_averge_times(uint8_t idx)
@@ -171,6 +183,29 @@ static void adc_ucr_work_handler(struct k_work *work)
 	uint8_t idx = adc - adc_info;
 	adc_ucr_handler(idx, adc->ucr_status);
 }
+
+uint16_t float_voltage_transfer_to_uint16(float temp_voltage_value)
+{
+	// Upper:ex. 0.85 → 85
+	uint8_t upper = (uint8_t)(temp_voltage_value * 100); 
+	// Lower: (0.8523 - 0.85) = 0.0023 → 23
+	uint16_t lower_raw = (uint16_t)((temp_voltage_value * 10000) - (upper * 100));
+	uint8_t lower = (uint8_t)(lower_raw & 0xFF);
+	// Pack into one uint16
+	uint16_t packed = ((uint16_t)upper << 8) | lower;
+	return packed;
+}
+float uint16_voltage_transfer_to_float(uint16_t temp_voltage_value)
+{
+	uint8_t upper = (temp_voltage_value >> 8) & 0xFF; 
+	uint8_t lower = temp_voltage_value & 0xFF;
+	// restore upper (2 digit)
+	float upper_val = upper / 100.0f;
+	// restore lower（2 digit）
+	float lower_val = lower / 10000.0f;
+	float restored = upper_val + lower_val;
+	return restored;
+}
 K_WORK_DEFINE(adc_ucr_work, adc_ucr_work_handler);
 
 static void update_adc_info(uint16_t raw_data, uint8_t base_idx, float vref)
@@ -181,21 +216,35 @@ static void update_adc_info(uint16_t raw_data, uint8_t base_idx, float vref)
 		uint16_t m_sample_buffer[BUFFER_SIZE];
 		m_sample_buffer[0] = raw_data;
 		m_sample_buffer[1] = raw_data;
-		float temp_v = ((float)raw_data / 0xffff) * vref;
 		adc_info_t *adc = &adc_info[i];
+		// current averge
 		adc->sum -= adc->buf[adc->buf_idx];
 		adc->buf[adc->buf_idx] = ((i == ADC_IDX_MEDHA0_1) || (i == ADC_IDX_MEDHA0_2)) ?
 							m_sample_buffer[1] :
 							m_sample_buffer[0];
 		adc->sum += adc->buf[adc->buf_idx];
 		adc->avg_val = adc->sum / adc->avg_times;
+		// voltage averge
+		float temp_voltage_value = 0;
+		if (base_idx == ADC_RB_IDX_MEDHA0)
+			temp_voltage_value = get_sensor_reading_cache_as_float(SENSOR_NUM_ASIC_P0V85_MEDHA0_VDD_VOLT_V) / 1000;
+		else if (base_idx == ADC_RB_IDX_MEDHA1)
+			temp_voltage_value = get_sensor_reading_cache_as_float(SENSOR_NUM_ASIC_P0V85_MEDHA1_VDD_VOLT_V) / 1000;
+		// transfer to uint16_t
+		uint16_t voltage_packed = float_voltage_transfer_to_uint16(temp_voltage_value);
+		adc->vr_sum -= adc->vr_voltage_buf[adc->buf_idx];
+		adc->vr_voltage_buf[adc->buf_idx] = voltage_packed;
+		adc->vr_sum += adc->vr_voltage_buf[adc->buf_idx];
+		// average pwr = average voltage * average current
+		adc->pwr_avg_val = (temp_voltage_value / adc->avg_times) * adc_raw_mv_to_apms(adc->avg_val, vref);
+
+		// decrease buffer idx
 		adc->buf_idx = (adc->buf_idx + 1) % adc->avg_times;
 
 		// check status
-		float pwr = temp_v * adc_raw_mv_to_apms(adc->avg_val, vref);
-		bool curr_status = (pwr >= adc->ucr);
-		if (adc->ucr_status != curr_status) {
-			adc->ucr_status = curr_status;
+		bool pwr_status = (adc->pwr_avg_val >= adc->ucr);
+		if (adc->ucr_status != pwr_status) {
+			adc->ucr_status = pwr_status;
 			k_work_submit(&adc->ucr_work);
 		}
 	}
@@ -222,7 +271,70 @@ uint8_t get_adc_type()
 	return adc_idx;
 }
 
-static int ads7066_write_reg(uint8_t reg, uint8_t write_val, uint8_t idx)
+float get_adc_vr_pwr(uint8_t idx)
+{
+	return adc_info[idx].pwr_avg_val;
+}
+int ads7066_read_reg(uint8_t reg, uint8_t idx)
+{
+	spi_dev = device_get_binding("SPIP");
+	if (!spi_dev) {
+		LOG_ERR("SPI device not find");
+	}
+	// Set GPIO73 as CS control pin SPI_ADC_CS0_N
+	struct spi_cs_control cs_ctrl = {
+		.gpio_dev = device_get_binding("GPIO_7"),
+		.gpio_pin = 3,
+		.gpio_dt_flags = GPIO_ACTIVE_LOW,
+		.delay = 0, // No delay
+	};
+	switch (idx)
+	{
+	case ADC_RB_IDX_MEDHA0:
+		// do nothing
+		break;
+	case ADC_RB_IDX_MEDHA1:
+		// Set GPIO73 as CS control pin SPI_ADC_CS1_N
+		cs_ctrl.gpio_dev = device_get_binding("GPIO_C");
+		cs_ctrl.gpio_pin = 1;
+		cs_ctrl.gpio_dt_flags = GPIO_ACTIVE_LOW;
+		cs_ctrl.delay = 0; // No delay
+		break;
+	default:
+		LOG_ERR("Invalid ADC index %d", idx);
+		break;
+	}
+
+	const struct spi_config spi_cfg = {
+		.frequency = 6000000, // 6MHz
+		.operation = SPI_OP_MODE_MASTER | SPI_TRANSFER_MSB | SPI_WORD_SET(8) | SPI_LINES_SINGLE,
+		.slave = 0,
+		.cs = &cs_ctrl,
+	};
+
+	uint8_t tx_buf[3] = { 0x10, reg, 0x00 }; // bit15=1: read
+	uint8_t rx_buf[3] = { 0 };
+
+	struct spi_buf tx = { .buf = tx_buf, .len = sizeof(tx_buf) };
+	struct spi_buf rx = { .buf = rx_buf, .len = sizeof(rx_buf) };
+	struct spi_buf_set tx_set = { .buffers = &tx, .count = 1 };
+	struct spi_buf_set rx_set = { .buffers = &rx, .count = 1 };
+
+	int ret = spi_write(spi_dev, &spi_cfg, &tx_set);
+	if (ret < 0) {
+		LOG_ERR("SPI write failed: %d", ret);
+		return ret;
+	}
+	ret = spi_read(spi_dev, &spi_cfg, &rx_set);
+	if (ret < 0) {
+		LOG_ERR("SPI read failed: %d", ret);
+		return ret;
+	}
+
+	LOG_INF("medha%d ADS7066 read reg 0x%02x: 0x%02x 0x%02x 0x%02x", idx, reg, rx_buf[0], rx_buf[1], rx_buf[2]);
+	return 0;
+}
+int ads7066_write_reg(uint8_t reg, uint8_t write_val, uint8_t idx)
 {
 	spi_dev = device_get_binding("SPIP");
 	if (!spi_dev) {
@@ -269,7 +381,7 @@ static int ads7066_write_reg(uint8_t reg, uint8_t write_val, uint8_t idx)
 		LOG_ERR("SPI write failed: %d", ret);
 		return ret;
 	}
-
+	LOG_INF("medha%d ADS7066 write reg 0x%02x", idx, reg);
 	return 0;
 }
 
@@ -293,7 +405,7 @@ static void ads7066_read_voltage(uint8_t idx)
 		// do nothing
 		break;
 	case ADC_RB_IDX_MEDHA1:
-		// Set GPIO73 as CS control pin SPI_ADC_CS1_N
+		// Set GPIOC1 as CS control pin SPI_ADC_CS1_N
 		cs_ctrl.gpio_dev = device_get_binding("GPIO_C");
 		cs_ctrl.gpio_pin = 1;
 		cs_ctrl.gpio_dt_flags = GPIO_ACTIVE_LOW;
@@ -331,7 +443,6 @@ static void ads7066_read_voltage(uint8_t idx)
 
 	LOG_HEXDUMP_DBG(out_buf, 3, "ads7066_read_voltage_value");
 	uint16_t raw_value = out_buf[0] << 8 | out_buf[1];
-
 	if (idx == ADC_RB_IDX_MEDHA0) {
 		ads7066_val_0 = ((float)raw_value / 65536) * ads7066_vref;
 		update_adc_info(raw_value, ADC_RB_IDX_MEDHA0, ads7066_vref);
@@ -342,8 +453,68 @@ static void ads7066_read_voltage(uint8_t idx)
 	
 	return;
 }
+int ad4058_read_reg(uint8_t reg, uint8_t idx)
+{
+	spi_dev = device_get_binding("SPIP");
+	if (!spi_dev) {
+		LOG_ERR("SPI device not find");
+	}
 
-static int ad4058_write_reg(uint8_t reg, uint8_t write_val, uint8_t idx)
+	uint8_t cnv_pin = 0;
+	// Set GPIO73 as CS control pin SPI_ADC_CS0_N
+	struct spi_cs_control cs_ctrl = {
+		.gpio_dev = device_get_binding("GPIO_7"),
+		.gpio_pin = 3,
+		.gpio_dt_flags = GPIO_ACTIVE_LOW,
+		.delay = 0, // No delay
+	};
+	switch (idx)
+	{
+	case ADC_RB_IDX_MEDHA0:
+		// do nothing
+		cnv_pin = MEDHA0_CNV;
+		break;
+	case ADC_RB_IDX_MEDHA1:
+		// Set GPIO73 as CS control pin SPI_ADC_CS1_N
+		cs_ctrl.gpio_dev = device_get_binding("GPIO_C");
+		cs_ctrl.gpio_pin = 1;
+		cs_ctrl.gpio_dt_flags = GPIO_ACTIVE_LOW;
+		cs_ctrl.delay = 0; // No delay
+		cnv_pin = MEDHA1_CNV;
+		break;
+	default:
+		LOG_ERR("Invalid ADC index %d", idx);
+		break;
+	}
+
+	const struct spi_config spi_cfg = {
+		.frequency = 6000000, // 6MHz
+		.operation = SPI_OP_MODE_MASTER | SPI_TRANSFER_MSB | SPI_WORD_SET(8) | SPI_LINES_SINGLE,
+		.slave = 0,
+		.cs = &cs_ctrl,
+	};
+
+
+	uint8_t tx_buf[3] = { 0x80, 0x00, 0x00};
+	uint8_t rx_buf[3] = { 0 };
+
+	struct spi_buf tx = { .buf = tx_buf, .len = 3 };
+	struct spi_buf rx = { .buf = rx_buf, .len = 3 };
+	struct spi_buf_set tx_set = { .buffers = &tx, .count = 1 };
+	struct spi_buf_set rx_set = { .buffers = &rx, .count = 1 };
+
+	tx_buf[0] += reg;
+
+	int ret = spi_transceive(spi_dev, &spi_cfg, &tx_set, &rx_set);
+	if (ret < 0) {
+		LOG_ERR("SPI write failed: %d", ret);
+		return ret;
+	}
+
+	LOG_HEXDUMP_INF(rx_buf, 3, "ad4058_read_reg");
+	return 0;
+}
+int ad4058_write_reg(uint8_t reg, uint8_t write_val, uint8_t idx)
 {
 	spi_dev = device_get_binding("SPIP");
 	if (!spi_dev) {
@@ -469,10 +640,8 @@ static void ad4058_read_voltage(uint8_t idx)
     uint8_t low  = (uint8_t)(((out_buf[1] & 0x0F) << 4) | (out_buf[2] >> 4));
 
     uint16_t raw_value = (uint16_t)((high << 8) | low);
-
 	if (idx == ADC_RB_IDX_MEDHA0) {
 		ad4058_val_0 = (float)raw_value / 65536 * ad4058_vref;
-		//raw_value = rand_between_0x1111_0xFFF2(); // only for test need delete
 		update_adc_info(raw_value, ADC_RB_IDX_MEDHA0, ad4058_vref);
 	} else if (idx == ADC_RB_IDX_MEDHA1) {
 		ad4058_val_1 = (float)raw_value / 65536 * ad4058_vref;
@@ -503,7 +672,7 @@ void ads7066_mode_init()
 	// medha0 & medha1
  	for (int i = 0; i < ADC_RB_IDX_MAX; i++) {
 		ads7066_write_reg(0, 0x1, i);
-		ads7066_write_reg(0x1, 0x2, i);
+		ads7066_write_reg(0x1, 0x82, i);
 		ads7066_write_reg(0x12, 0x1, i);
 		ads7066_write_reg(0x3, 0x6, i);
 		ads7066_write_reg(0x4, 0x8, i);
@@ -534,7 +703,6 @@ void adc_rainbow_polling_handler(void *p1, void *p2, void *p3)
 {
 	read_adc_info();
 	LOG_INF("adc index is %d", adc_idx);
-	//adc_idx = TIC_ADS7066;
 	if (adc_idx == ADI_AD4058)
 		ad4058_mode_init();
 	else if (adc_idx == TIC_ADS7066)
@@ -560,9 +728,6 @@ void adc_rainbow_polling_handler(void *p1, void *p2, void *p3)
 				break;
 			}
 		}
-		//LOG_INF("end of polling\n");
-		//sys_sleep_for_1ms();
-		//LOG_INF("sleep for 1ms\n");
 		k_msleep(1);
 	}
 }

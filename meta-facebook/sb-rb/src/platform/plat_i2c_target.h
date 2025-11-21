@@ -181,4 +181,5 @@ typedef struct __attribute__((__packed__)) {
 void plat_telemetry_table_init(void);
 void update_sensor_reading_by_sensor_number(uint8_t sensor_number);
 void update_strap_capability_table(void);
+float get_sensor_reading_cache_as_float(uint8_t sensor_number);
 #endif

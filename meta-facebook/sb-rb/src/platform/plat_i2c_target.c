@@ -220,6 +220,13 @@ int get_cached_sensor_reading_by_sensor_number(uint8_t sensor_number)
 	return sensor_data->sensor_entries[sensor_index].sensor_value;
 }
 
+float get_sensor_reading_cache_as_float(uint8_t sensor_number)
+{
+	int reading = get_cached_sensor_reading_by_sensor_number(sensor_number);
+	const sensor_val *sval = (sensor_val *)&reading;
+	return ((sval->integer * 1000 + sval->fraction) / 1000.0);
+}
+
 bool initialize_inventory_ids(telemetry_info *telemetry_info, uint8_t *buffer_size)
 {
 	CHECK_NULL_ARG_WITH_RETURN(telemetry_info, false);

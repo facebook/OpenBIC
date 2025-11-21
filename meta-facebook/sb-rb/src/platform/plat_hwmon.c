@@ -23,7 +23,7 @@
 LOG_MODULE_REGISTER(plat_hwmon);
 
 #define MAX_FAN_DUTY_VALUE 100
-#define PWM_PERIOD 1000 // 25kHz
+#define PWM_PERIOD 4000 // 25kHz
 
 static const struct device *pwm1_dev;
 static const struct device *pwm6_dev;
