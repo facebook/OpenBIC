@@ -1,62 +1,210 @@
-#include <stdlib.h>
-#include <shell/shell.h>
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-#include "plat_pldm_sensor.h"
+#include <shell/shell.h>
+#include <stdlib.h>
+#include <string.h>
+#include <logging/log.h>
+#include "plat_i2c.h"
 #include "plat_cpld.h"
 #include "plat_class.h"
 
-LOG_MODULE_REGISTER(plat_vqps_shell);
+LOG_MODULE_REGISTER(vqps, LOG_LEVEL_DBG);
 
-void set_cmd_vqps(const struct shell *shell, size_t argc, char **argv)
+#ifndef ARRAY_SIZE
+#define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
+#endif
+
+#define VQPS_STATUS_CPLD_OFFSET 0x13
+#define EVB_VQPS_CPLD_OFFSET 0xA7
+#define RAINBOW_VQPS_CPLD_OFFSET 0xA8
+
+#define MEDHA0_VQPS_TOP_EN_BIT 4
+#define MEDHA1_VQPS_TOP_EN_BIT 3
+#define MEDHA0_VQPS_U_EN_BIT 2
+#define MEDHA1_VQPS_U_EN_BIT 1
+#define HAMSA_VQPS_EFUSE_USER_BIT 0
+
+/* Board-dependent VQPS enable bits (EVB / RAINBOW) */
+#define MEDHA1_VQPS_W_EN_BIT 3
+#define MEDHA0_VQPS_W_EN_BIT 2
+#define MEDHA0_VQPS_E_EN_BIT 1
+#define MEDHA1_VQPS_E_EN_BIT 0
+
+#define VQPS_SET_BIT(orig, bit) ((uint8_t)((orig) | (1u << (bit))))
+#define VQPS_CLR_BIT(orig, bit) ((uint8_t)((orig) & ~(1u << (bit))))
+
+static const cpld_pin_map_t vqps_list[] = {
+	{ "MEDHA0_VQPS_TOP_EN", MEDHA0_VQPS_TOP_EN_BIT, VQPS_STATUS_CPLD_OFFSET },
+	{ "MEDHA1_VQPS_TOP_EN", MEDHA1_VQPS_TOP_EN_BIT, VQPS_STATUS_CPLD_OFFSET },
+	{ "MEDHA0_VQPS_U_EN", MEDHA0_VQPS_U_EN_BIT, VQPS_STATUS_CPLD_OFFSET },
+	{ "MEDHA1_VQPS_U_EN", MEDHA1_VQPS_U_EN_BIT, VQPS_STATUS_CPLD_OFFSET },
+	{ "HAMSA_VQPS_EFUSE_USER", HAMSA_VQPS_EFUSE_USER_BIT, VQPS_STATUS_CPLD_OFFSET },
+	{ "MEDHA1_VQPS_E_EN", MEDHA1_VQPS_E_EN_BIT, 0 },
+	{ "MEDHA0_VQPS_E_EN", MEDHA0_VQPS_E_EN_BIT, 0 },
+	{ "MEDHA0_VQPS_W_EN", MEDHA0_VQPS_W_EN_BIT, 0 },
+	{ "MEDHA1_VQPS_W_EN", MEDHA1_VQPS_W_EN_BIT, 0 },
+};
+
+static uint8_t get_vqps_offset_by_board(void)
 {
-	// if type in "vqps set MEDHA0_VQPS_U_EN 1" than will show "set MEDHA0_VQPS_U_EN 1"
-	shell_info(shell, "set %s %s", argv[0], argv[1]);
-	// set "pin" in 1 or 0
-	if (strcmp(argv[0], "MEDHA0_VQPS_TOP_EN") == 0)
-		set_cpld_bit(ASIC_VQPS, 4, atoi(argv[1]));
-	else if (strcmp(argv[0], "MEDHA1_VQPS_TOP_EN") == 0)
-		set_cpld_bit(ASIC_VQPS, 3, atoi(argv[1]));
-	else if (strcmp(argv[0], "MEDHA0_VQPS_U_EN") == 0)
-		set_cpld_bit(ASIC_VQPS, 2, atoi(argv[1]));
-	else if (strcmp(argv[0], "MEDHA1_VQPS_U_EN") == 0)
-		set_cpld_bit(ASIC_VQPS, 1, atoi(argv[1]));
-	else if (strcmp(argv[0], "HAMSA_VQPS_EFUSE_USER") == 0)
-		set_cpld_bit(ASIC_VQPS, 0, atoi(argv[1]));
-	else
-		shell_error(shell, "Unknown name: %s.", argv[0]);
+	uint8_t board_id = get_asic_board_id();
+
+	switch (board_id) {
+	case ASIC_BOARD_ID_RAINBOW:
+		return RAINBOW_VQPS_CPLD_OFFSET;
+	case ASIC_BOARD_ID_EVB:
+		return EVB_VQPS_CPLD_OFFSET;
+	default:
+		LOG_DBG("unknown board id: 0x%02x, use EVB offset", board_id);
+		return EVB_VQPS_CPLD_OFFSET;
+	}
 }
 
-void vqps_get_cmds(const struct shell *shell, size_t argc, char **argv)
+static uint8_t get_vqps_offset_for_item(const cpld_pin_map_t *item)
 {
-	uint8_t vqps_status = 0;
-	plat_read_cpld(ASIC_VQPS, &vqps_status, 1);
-	/*
-	"vqps get" will show below value
-	MEDHA0_VQPS_TOP_EN : 0
-	MEDHA1_VQPS_TOP_EN : 0
-	MEDHA0_VQPS_U_EN : 0
-	MEDHA1_VQPS_U_EN : 0
-	HAMSA_VQPS_EFUSE_USER : 0
-	*/
-	shell_info(shell, "MEDHA0_VQPS_TOP_EN : %d", (vqps_status >> 4) & 0x1);
-	shell_info(shell, "MEDHA1_VQPS_TOP_EN : %d", (vqps_status >> 3) & 0x1);
-	shell_info(shell, "MEDHA0_VQPS_U_EN : %d", (vqps_status >> 2) & 0x1);
-	shell_info(shell, "MEDHA1_VQPS_U_EN : %d", (vqps_status >> 1) & 0x1);
-	shell_info(shell, "HAMSA_VQPS_EFUSE_USER : %d", (vqps_status >> 0) & 0x1);
+	if (!item) {
+		return 0;
+	}
+
+	if (item->offset != 0) {
+		return item->offset;
+	}
+
+	return get_vqps_offset_by_board();
 }
 
-SHELL_STATIC_SUBCMD_SET_CREATE(
-	vqps_set_cmds, SHELL_CMD(MEDHA0_VQPS_TOP_EN, NULL, "MEDHA0_VQPS_TOP_EN", set_cmd_vqps),
-	SHELL_CMD(MEDHA1_VQPS_TOP_EN, NULL, "MEDHA1_VQPS_TOP_EN", set_cmd_vqps),
-	SHELL_CMD(MEDHA0_VQPS_U_EN, NULL, "MEDHA0_VQPS_U_EN", set_cmd_vqps),
-	SHELL_CMD(MEDHA1_VQPS_U_EN, NULL, "MEDHA1_VQPS_U_EN", set_cmd_vqps),
-	SHELL_CMD(HAMSA_VQPS_EFUSE_USER, NULL, "HAMSA_VQPS_EFUSE_USER", set_cmd_vqps),
-	SHELL_SUBCMD_SET_END);
+static const cpld_pin_map_t *get_vqps_item(const char *name)
+{
+	for (int i = 0; i < ARRAY_SIZE(vqps_list); i++) {
+		if (!strcmp(name, vqps_list[i].name)) {
+			return &vqps_list[i];
+		}
+	}
+	return NULL;
+}
 
-SHELL_STATIC_SUBCMD_SET_CREATE(vqps_sub_cmds,
-			       SHELL_CMD(get, NULL, "get vqps status", vqps_get_cmds),
-			       SHELL_CMD(set, &vqps_set_cmds, "set vqps status", NULL),
+static int cmd_vqps_get(const struct shell *shell, size_t argc, char **argv)
+{
+	if (argc != 2) {
+		shell_print(shell, "Usage:");
+		shell_print(shell, "  vqps get all");
+		LOG_DBG("invalid argc in get: %d", (int)argc);
+		return -1;
+	}
+
+	if (!strcmp(argv[1], "all")) {
+		uint8_t reg_status = 0;
+		uint8_t reg_en = 0;
+		uint8_t en_offset = get_vqps_offset_by_board();
+
+		if (!plat_read_cpld(VQPS_STATUS_CPLD_OFFSET, &reg_status, 1)) {
+			LOG_DBG("plat_read_cpld failed: offset=0x%02x", VQPS_STATUS_CPLD_OFFSET);
+			shell_error(shell, "read VQPS status CPLD failed");
+			return -1;
+		}
+		shell_print(shell, "VQPS status raw [0x%02X] = 0x%02X", VQPS_STATUS_CPLD_OFFSET,
+			    reg_status);
+
+		for (int i = 0; i < ARRAY_SIZE(vqps_list); i++) {
+			const cpld_pin_map_t *item = &vqps_list[i];
+
+			if (item->offset != VQPS_STATUS_CPLD_OFFSET) {
+				continue;
+			}
+
+			uint8_t bit_val = (reg_status >> item->bit) & 0x1;
+			shell_print(shell, "%s : %d", item->name, bit_val);
+		}
+
+		if (!plat_read_cpld(en_offset, &reg_en, 1)) {
+			LOG_DBG("plat_read_cpld failed: offset=0x%02x", en_offset);
+			shell_error(shell, "read VQPS enable CPLD failed");
+			return -1;
+		}
+		shell_print(shell, "VQPS enable raw [0x%02X] = 0x%02X", en_offset, reg_en);
+
+		for (int i = 0; i < ARRAY_SIZE(vqps_list); i++) {
+			const cpld_pin_map_t *item = &vqps_list[i];
+
+			if (item->offset != 0) {
+				continue;
+			}
+
+			uint8_t bit_val = (reg_en >> item->bit) & 0x1;
+			shell_print(shell, "%s : %d", item->name, bit_val);
+		}
+
+		return 0;
+	}
+	return 0;
+}
+
+static int cmd_vqps_set(const struct shell *shell, size_t argc, char **argv)
+{
+	if (argc != 3) {
+		shell_print(shell, "Usage: vqps set <NAME> <0|1>");
+		LOG_DBG("invalid argc in set: %d", (int)argc);
+		return -1;
+	}
+
+	const char *name = argv[1];
+	long set_val = strtol(argv[2], NULL, 10);
+
+	if (set_val != 0 && set_val != 1) {
+		shell_error(shell, "Value must be 0 or 1");
+		LOG_DBG("invalid value in set: %ld", set_val);
+		return -1;
+	}
+
+	const cpld_pin_map_t *item = get_vqps_item(name);
+	if (!item) {
+		shell_error(shell, "Unknown name: %s", name);
+		LOG_DBG("unknown name in set: %s", name);
+		return -1;
+	}
+
+	uint8_t offset = get_vqps_offset_for_item(item);
+	uint8_t reg_val = 0;
+
+	if (!plat_read_cpld(offset, &reg_val, 1)) {
+		LOG_DBG("plat_read_cpld failed: offset=0x%02x", offset);
+		shell_error(shell, "read CPLD failed");
+		return -1;
+	}
+
+	if (set_val == 1) {
+		reg_val = VQPS_SET_BIT(reg_val, item->bit);
+	} else {
+		reg_val = VQPS_CLR_BIT(reg_val, item->bit);
+	}
+
+	if (!plat_write_cpld(offset, &reg_val)) {
+		LOG_DBG("plat_write_cpld failed: offset=0x%02x val=0x%02x", offset, reg_val);
+		shell_error(shell, "write CPLD failed");
+		return -1;
+	}
+
+	shell_print(shell, "set %s to %ld done", name, set_val);
+	return 0;
+}
+
+SHELL_STATIC_SUBCMD_SET_CREATE(vqps_subcmds,
+			       SHELL_CMD(get, NULL, "vqps get all | get <NAME>", cmd_vqps_get),
+			       SHELL_CMD(set, NULL, "vqps set <NAME> <0|1>", cmd_vqps_set),
 			       SHELL_SUBCMD_SET_END);
 
-/* Root of command test */
-SHELL_CMD_REGISTER(vqps, &vqps_sub_cmds, "vqps commands", NULL);
+SHELL_CMD_REGISTER(vqps, &vqps_subcmds, "VQPS control via CPLD", NULL);
