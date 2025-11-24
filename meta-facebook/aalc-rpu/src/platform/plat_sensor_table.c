@@ -430,9 +430,9 @@ sensor_cfg plat_sensor_config[] = {
 	  pre_PCA9546A_read, &bus_9_PCA9546A_configs[0], post_ads112c_read, &ads112c_post_args[4],
 	  &ads112c_init_args[0] },
 	{ SENSOR_NUM_SB_TTV_COOLANT_LEAKAGE_3_VOLT_V, sensor_dev_ads112c, I2C_BUS9,
-	  SB_ADS112C_2_ADDR, ADS112C_READ_OUTPUT_RAW, stby_access, ENABLE_RESET_CFG_REG, 0, SAMPLE_COUNT_DEFAULT,
-	  POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_PCA9546A_read,
-	  &bus_9_PCA9546A_configs[0], post_ads112c_read, &ads112c_post_args[4],
+	  SB_ADS112C_2_ADDR, ADS112C_READ_OUTPUT_RAW, stby_access, ENABLE_RESET_CFG_REG, 0,
+	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
+	  pre_PCA9546A_read, &bus_9_PCA9546A_configs[0], post_ads112c_read, &ads112c_post_args[4],
 	  &ads112c_init_args[7] },
 	// ADC
 	{ SENSOR_NUM_V_12_AUX, sensor_dev_ast_adc, ADC_PORT0, NONE, NONE, stby_access, 676, 100,
