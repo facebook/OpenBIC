@@ -30,6 +30,23 @@ LOG_MODULE_REGISTER(plat_isr);
 
 K_TIMER_DEFINE(check_ubc_delayed_timer, check_ubc_delayed_timer_handler, NULL);
 
+uint8_t pwr_steps_on_flag = 0;
+
+void set_pwr_steps_on_flag(uint8_t flag_value)
+{
+	pwr_steps_on_flag = flag_value;
+	LOG_DBG("set pwr_steps_on_flag = %d", pwr_steps_on_flag);
+	//check value
+	if (pwr_steps_on_flag != flag_value)
+		LOG_ERR("set pwr_steps_on_flag failed, now pwr_steps_on_flag = %d",
+			pwr_steps_on_flag);
+}
+
+uint8_t get_pwr_steps_on_flag(void)
+{
+	return pwr_steps_on_flag;
+}
+
 void ISR_GPIO_ALL_VR_PM_ALERT_R_N()
 {
 	LOG_DBG("gpio_%d_isr called, val=%d , dir= %d", ALL_VR_PM_ALERT_R_N,
@@ -43,6 +60,10 @@ void ISR_GPIO_ALL_VR_PM_ALERT_R_N()
 
 void ISR_GPIO_FM_PLD_UBC_EN_R()
 {
+	// check step on setting flag
+	if (get_pwr_steps_on_flag() == 1)
+		return;
+
 	LOG_DBG("gpio_%d_isr called, val=%d , dir= %d", FM_PLD_UBC_EN_R, gpio_get(FM_PLD_UBC_EN_R),
 		gpio_get_direction(FM_PLD_UBC_EN_R));
 

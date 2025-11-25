@@ -41,8 +41,8 @@ LOG_MODULE_REGISTER(plat_user_setting);
 #define EEPROM_MAX_WRITE_TIME 5 // the BR24G512 eeprom max write time is 3.5 ms
 #define TMP75_ALERT_CPLD_OFFSET 0x2F
 
-int32_t alert_level_mA_default = 110000;
-int32_t alert_level_mA_user_setting = 110000;
+int32_t alert_level_mA_default = 180000;
+int32_t alert_level_mA_user_setting = 180000;
 static bool uart_pwr_event_is_enable = true;
 bool alert_level_is_assert = false;
 static struct k_mutex pwrlevel_mutex;
