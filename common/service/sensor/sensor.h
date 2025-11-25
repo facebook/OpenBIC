@@ -195,6 +195,7 @@ enum SENSOR_DEV {
 	sensor_dev_ads7830 = 0x4D,
 	sensor_dev_s54ss4p180pmdafc = 0x4E,
 	sensor_dev_pex90144 = 0x4F,
+	sensor_dev_octeon = 0x50,
 	sensor_dev_max
 };
 
@@ -284,6 +285,7 @@ typedef struct _sensor_cfg_ {
 	uint8_t retry;
 	uint8_t (*init)(uint8_t, int *);
 	uint8_t (*read)(struct _sensor_cfg_ *, int *);
+	bool is_initialized;
 } sensor_cfg;
 
 typedef struct _sensor_monitor_table_info {

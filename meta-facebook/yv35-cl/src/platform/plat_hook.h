@@ -88,5 +88,4 @@ bool post_intel_dimm_i3c_read(sensor_cfg *cfg, void *args, int *reading);
 bool pre_ifx_vr_cache_crc(sensor_cfg *cfg, uint8_t index);
 bool pre_hsm_read(sensor_cfg *cfg, void *args);
 bool post_hsm_read(sensor_cfg *cfg, void *args, int *reading);
-
 #endif

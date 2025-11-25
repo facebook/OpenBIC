@@ -41,6 +41,8 @@
 #define ADS7830_I2C_ADDR (0x90 >> 1)
 #define PEX90144_I2C_ADDR (0xD4 >> 1)
 
+#define PEX90144_CFG_ID 2
+
 /* Define the sensor numbers used in this platform */
 enum SENSOR_NUM_LIST {
 	SENSOR_NUM_THERMAL_SENSOR_1_TEMP_C = 0x01,

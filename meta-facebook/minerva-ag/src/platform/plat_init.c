@@ -51,6 +51,7 @@ void pal_pre_init()
 				1);
 	}
 	init_platform_config();
+	init_worker(); // init util_worker
 	plat_led_init();
 	vr_mutex_init();
 	pwr_level_mutex_init();
@@ -73,7 +74,6 @@ void pal_post_init()
 	pldm_load_state_effecter_table(MAX_STATE_EFFECTER_IDX);
 	pldm_assign_gpio_effecter_id(PLAT_EFFECTER_ID_GPIO_HIGH_BYTE);
 	init_fru_info();
-	rtc_init_once();
 	init_load_eeprom_log();
 	plat_set_ac_on_log();
 	init_cpld_polling();

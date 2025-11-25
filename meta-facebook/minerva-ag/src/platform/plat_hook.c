@@ -56,9 +56,14 @@ uint16_t ath_vdd_power = 0;
 int ath_vdd_polling_counter = 0;
 int comparator_counter_max = 0;
 void power_capping_comparator_handler();
+bool get_power_capping_average_power(uint32_t *milliwatt);
 
 static uint8_t power_index[UBC_VR_RAIL_E_MAX] = { 0 };
 static uint8_t power_count[UBC_VR_RAIL_E_MAX] = { 0 };
+static uint8_t power_capping_power_history_index = 0;
+static uint8_t power_capping_power_history_count = 0;
+int power_capping_average_time_counter_max = 0;
+static uint32_t power_capping_power_history[POWER_CAPPING_HISTORY_SIZE] = { 0 };
 
 // clang-format off
 ubc_vr_power_mapping_sensor ubc_vr_power_table[] = {
@@ -631,10 +636,27 @@ bool post_vr_read(sensor_cfg *cfg, void *args, int *const reading)
 
 		if (cfg->num == VR_ASIC_P0V85_PVDD_PWR_W) {
 			update_plat_power_capping_table();
-			ath_vdd_power = (int)tmp_reading;
 			ath_vdd_polling_counter++;
-			// LOG_INF("counter:%d/%d", ath_vdd_polling_counter, comparator_counter_max);
+			power_capping_power_history[power_capping_power_history_index] =
+				decoded_reading;
+			// LOG_INF("power[%d]:%d", power_capping_power_history_index,
+			// 	power_capping_power_history[power_capping_power_history_index]);
+			power_capping_power_history_index =
+				(power_capping_power_history_index + 1) %
+				power_capping_average_time_counter_max;
+			if (power_capping_power_history_count <
+			    power_capping_average_time_counter_max) {
+				power_capping_power_history_count++;
+			}
 			if (ath_vdd_polling_counter >= comparator_counter_max) {
+				uint32_t tmp_power_capping_average_power = 0;
+				if (!get_power_capping_average_power(
+					    &tmp_power_capping_average_power)) {
+					LOG_ERR("get_power_capping_average_power fail");
+				}
+				ath_vdd_power = (int)tmp_power_capping_average_power;
+				// LOG_INF("counter:%d/%d, ath_vdd_power:%d", ath_vdd_polling_counter,
+				// 	comparator_counter_max, ath_vdd_power);
 				ath_vdd_polling_counter = 0;
 				power_capping_comparator_handler();
 			}
@@ -831,6 +853,7 @@ bool vr_status_name_get(uint8_t rail, uint8_t **name)
 #define SOC_PCIE_PERST_USER_SETTINGS_OFFSET 0x8300
 #define BOOTSTRAP_USER_SETTINGS_OFFSET 0x8400
 #define THERMALTRIP_USER_SETTINGS_OFFSET 0x8500
+#define ATH_GPIO_USER_SETTINGS_OFFSET 0x8550
 #define THROTTLE_USER_SETTINGS_OFFSET 0x8600
 #define POWER_CAPPING_USER_SETTINGS_OFFSET 0x8650
 
@@ -1428,15 +1451,16 @@ bool set_user_settings_thermaltrip_to_eeprom(void *thermaltrip_user_settings, ui
 	return true;
 }
 
-bool set_thermaltrip_user_settings(bool thermaltrip_enable, bool is_perm)
+bool set_thermaltrip_user_settings(uint8_t *thermaltrip_status_reg, bool is_perm)
 {
-	I2C_MSG msg = { 0 };
+	CHECK_NULL_ARG_WITH_RETURN(thermaltrip_status_reg, false);
 
+	I2C_MSG msg = { 0 };
 	msg.bus = I2C_BUS5;
 	msg.target_addr = AEGIS_CPLD_ADDR;
 	msg.tx_len = 2;
 	msg.data[0] = CPLD_THERMALTRIP_SWITCH_ADDR;
-	msg.data[1] = (thermaltrip_enable) ? 1 : 0;
+	msg.data[1] = *thermaltrip_status_reg;
 
 	if (i2c_master_write(&msg, 3)) {
 		LOG_ERR("Failed to write to bus %d device: %x", msg.bus, msg.target_addr);
@@ -1444,12 +1468,96 @@ bool set_thermaltrip_user_settings(bool thermaltrip_enable, bool is_perm)
 	}
 
 	if (is_perm) {
-		thermaltrip_user_settings.thermaltrip_user_setting_value =
-			(thermaltrip_enable ? 0x01 : 0x00);
+		uint8_t masked_value = *thermaltrip_status_reg & THERMALTRIP_BIT;
+		thermaltrip_user_settings.thermaltrip_user_setting_value = masked_value;
 
 		if (!set_user_settings_thermaltrip_to_eeprom(&thermaltrip_user_settings,
 							     sizeof(thermaltrip_user_settings))) {
 			LOG_ERR("Failed to write thermaltrip to eeprom error");
+			return false;
+		}
+	}
+	return true;
+}
+
+ath_gpio_user_settings_struct ath_gpio_user_settings = { 0xFF };
+#define CPLD_ATH_GPIO_SWITCH_ADDR 0x3D
+
+bool get_user_settings_ath_gpio_from_eeprom(void *user_settings, uint8_t data_length)
+{
+	CHECK_NULL_ARG_WITH_RETURN(user_settings, false);
+
+	I2C_MSG msg = { 0 };
+	uint8_t retry = 5;
+	msg.bus = I2C_BUS12;
+	msg.target_addr = 0xA0 >> 1;
+	msg.tx_len = 2;
+	msg.data[0] = ATH_GPIO_USER_SETTINGS_OFFSET >> 8;
+	msg.data[1] = ATH_GPIO_USER_SETTINGS_OFFSET & 0xff;
+	msg.rx_len = data_length;
+
+	if (i2c_master_read(&msg, retry)) {
+		LOG_ERR("Failed to read eeprom, bus: %d, addr: 0x%x, reg: 0x%x%x", msg.bus,
+			msg.target_addr, msg.data[0], msg.data[1]);
+		return false;
+	}
+	memcpy(user_settings, msg.data, data_length);
+
+	LOG_HEXDUMP_DBG(msg.data, data_length, "EEPROM data read ath_gpio");
+
+	return true;
+}
+
+bool set_user_settings_ath_gpio_to_eeprom(void *ath_gpio_user_settings, uint8_t data_length)
+{
+	CHECK_NULL_ARG_WITH_RETURN(ath_gpio_user_settings, false);
+
+	/* write the ath_gpio_user_settings to eeprom */
+	I2C_MSG msg = { 0 };
+	uint8_t retry = 5;
+	msg.bus = I2C_BUS12;
+	msg.target_addr = 0xA0 >> 1;
+	msg.tx_len = data_length + 2;
+	msg.data[0] = ATH_GPIO_USER_SETTINGS_OFFSET >> 8;
+	msg.data[1] = ATH_GPIO_USER_SETTINGS_OFFSET & 0xff;
+
+	memcpy(&msg.data[2], ath_gpio_user_settings, data_length);
+	LOG_DBG("Ath_gpio user settings write into eeprom, bus: %d, addr: 0x%x, reg: 0x%x 0x%x, tx_len: %d",
+		msg.bus, msg.target_addr, msg.data[0], msg.data[1], msg.tx_len);
+
+	if (i2c_master_write(&msg, retry)) {
+		LOG_ERR("Ath_gpio user settings failed to write into eeprom, bus: %d, addr: 0x%x, reg: 0x%x 0x%x, tx_len: %d",
+			msg.bus, msg.target_addr, msg.data[0], msg.data[1], msg.tx_len);
+		return false;
+	}
+	k_msleep(EEPROM_MAX_WRITE_TIME);
+
+	return true;
+}
+
+bool set_ath_gpio_user_settings(uint8_t *ath_gpio_status_reg, bool is_perm)
+{
+	CHECK_NULL_ARG_WITH_RETURN(ath_gpio_status_reg, false);
+
+	I2C_MSG msg = { 0 };
+	msg.bus = I2C_BUS5;
+	msg.target_addr = AEGIS_CPLD_ADDR;
+	msg.tx_len = 2;
+	msg.data[0] = CPLD_ATH_GPIO_SWITCH_ADDR;
+	msg.data[1] = *ath_gpio_status_reg;
+
+	if (i2c_master_write(&msg, 3)) {
+		LOG_ERR("Failed to write to bus %d device: %x", msg.bus, msg.target_addr);
+		return false;
+	}
+
+	if (is_perm) {
+		uint8_t masked_value = *ath_gpio_status_reg & (ATH_GPIO_3_BIT | ATH_GPIO_4_BIT);
+		ath_gpio_user_settings.ath_gpio_user_setting_value = masked_value;
+
+		if (!set_user_settings_ath_gpio_to_eeprom(&ath_gpio_user_settings,
+							  sizeof(ath_gpio_user_settings))) {
+			LOG_ERR("Failed to save ATH_GPIO settings to EEPROM");
 			return false;
 		}
 	}
@@ -1626,11 +1734,53 @@ static bool thermaltrip_user_settings_init(void)
 	}
 
 	if (setting_data != 0xFF) {
-		if (!plat_i2c_write(I2C_BUS5, AEGIS_CPLD_ADDR, CPLD_THERMALTRIP_SWITCH_ADDR,
-				    &setting_data, sizeof(setting_data))) {
-			LOG_ERR("Can't set thermaltrip=%d by user settings", setting_data);
+		uint8_t data = 0;
+		if (!plat_i2c_read(I2C_BUS5, AEGIS_CPLD_ADDR, CPLD_THERMALTRIP_SWITCH_ADDR, &data,
+				   1)) {
+			LOG_ERR("Can't find thermaltrip from cpld: 0x%02x",
+				CPLD_THERMALTRIP_SWITCH_ADDR);
 			return false;
 		}
+		data = (data & ~THERMALTRIP_BIT) | (setting_data & THERMALTRIP_BIT);
+
+		if (!plat_i2c_write(I2C_BUS5, AEGIS_CPLD_ADDR, CPLD_THERMALTRIP_SWITCH_ADDR, &data,
+				    sizeof(data))) {
+			LOG_ERR("Can't set thermaltrip=%d by user settings", data);
+			return false;
+		}
+
+		LOG_INF("set thermaltrip=0x%02x by user settings", setting_data);
+	}
+
+	return true;
+}
+
+static bool ath_gpio_user_settings_init(void)
+{
+	uint8_t setting_data = 0xFF;
+
+	if (!get_user_settings_ath_gpio_from_eeprom(&setting_data, sizeof(setting_data))) {
+		LOG_ERR("get ath_gpio user settings fail");
+		return false;
+	}
+
+	if (setting_data != 0xFF) {
+		uint8_t data = 0;
+		if (!plat_i2c_read(I2C_BUS5, AEGIS_CPLD_ADDR, CPLD_ATH_GPIO_SWITCH_ADDR, &data,
+				   1)) {
+			LOG_ERR("Can't find ATH_GPIO from CPLD: 0x%02x", CPLD_ATH_GPIO_SWITCH_ADDR);
+			return false;
+		}
+		data = (data & ~(ATH_GPIO_3_BIT | ATH_GPIO_4_BIT)) |
+		       (setting_data & (ATH_GPIO_3_BIT | ATH_GPIO_4_BIT));
+
+		if (!plat_i2c_write(I2C_BUS5, AEGIS_CPLD_ADDR, CPLD_ATH_GPIO_SWITCH_ADDR, &data,
+				    sizeof(data))) {
+			LOG_ERR("Can't set ATH_GPIO user settings to CPLD (data=0x%02x)", data);
+			return false;
+		}
+
+		LOG_INF("set ATH_GPIO=0x%02x by user settings", setting_data);
 	}
 
 	return true;
@@ -2283,8 +2433,8 @@ bool plat_set_temp_threshold(uint8_t temp_index_threshold_type, uint32_t *millid
 	return true;
 }
 
-#define PLAT_TMP432_THERM_HYSTERESIS_VAL 0x5A //90
-#define PLAT_EMC1413_THERM_HYSTERESIS_VAL 0x5A //90
+#define PLAT_TMP432_THERM_HYSTERESIS_VAL 0x64 //90
+#define PLAT_EMC1413_THERM_HYSTERESIS_VAL 0x64 //90
 
 void init_temp_alert_mode(void)
 {
@@ -2368,7 +2518,7 @@ void init_temp_limit(void)
 			temp_index_threshold_type_table[followed_ucr_lcr_limit_temp[i]].sensor_id;
 		get_pdr_table_critical_high_and_low_with_sensor_id(sensor_id, &critical_high,
 								   &critical_low);
-
+		critical_high = 100.0; // fatal_high = 100.0
 		uint32_t high_threshold = (uint32_t)(critical_high * 1000);
 		uint32_t low_threshold = (uint32_t)(critical_low * 1000);
 		LOG_INF("set %s: %d",
@@ -2480,6 +2630,7 @@ power_capping_mapping_sensor power_capping_rail_table[] = {
 	{ POWER_CAPPING_INDEX_LC, "LC", 0x00 },
 	{ POWER_CAPPING_INDEX_INTERVAL, "interval_ms", 0x00 },
 	{ POWER_CAPPING_INDEX_SWITCH, "switch", 0x00 },
+	{ POWER_CAPPING_INDEX_AVERAGE, "average_time_ms", 0x00 },
 };
 
 power_capping_user_settings_struct power_capping_user_settings = { 0 };
@@ -2523,6 +2674,20 @@ void update_comparator_counter_max(void)
 		comparator_counter_max = 1;
 	}
 	ath_vdd_polling_counter = 0;
+}
+
+void update_power_capping_average_time_max(void)
+{
+	uint16_t power_capping_average_time_ms =
+		power_capping_rail_table[POWER_CAPPING_INDEX_AVERAGE].change_setting_value;
+
+	power_capping_average_time_counter_max =
+		power_capping_average_time_ms / ATH_VDD_INTERVAL_MS;
+
+	if (power_capping_power_history_count >= power_capping_average_time_counter_max) {
+		power_capping_power_history_count = 0;
+		power_capping_power_history_index = 0;
+	}
 }
 
 bool get_user_settings_power_capping_from_eeprom(void *user_settings)
@@ -2636,6 +2801,10 @@ bool plat_set_power_capping_command(uint8_t rail, uint16_t *set_value, bool is_p
 		}
 	}
 
+	if (rail == POWER_CAPPING_INDEX_AVERAGE) {
+		update_power_capping_average_time_max();
+	}
+
 	return true;
 }
 
@@ -2670,6 +2839,9 @@ bool power_capping_default_settings_init(void)
 		case POWER_CAPPING_INDEX_SWITCH:
 			set_value = MTIA_HC_LC_DISENABLE;
 			break;
+		case POWER_CAPPING_INDEX_AVERAGE:
+			set_value = POWER_CAPPING_AVERAGE_TIME_MS_DEFAULT;
+			break;
 		default:
 			break;
 		}
@@ -2687,6 +2859,7 @@ bool power_capping_default_settings_init(void)
 		return false;
 	}
 	update_comparator_counter_max();
+	update_power_capping_average_time_max();
 
 	return true;
 }
@@ -2716,6 +2889,7 @@ bool power_capping_user_settings_init(void)
 		return false;
 	}
 	update_comparator_counter_max();
+	update_power_capping_average_time_max();
 
 	return true;
 }
@@ -2734,7 +2908,8 @@ void check_power_capping_user_setting_status(void)
 {
 	if (power_capping_rail_table[POWER_CAPPING_INDEX_HC].change_setting_value == 0 ||
 	    power_capping_rail_table[POWER_CAPPING_INDEX_LC].change_setting_value == 0 ||
-	    power_capping_rail_table[POWER_CAPPING_INDEX_INTERVAL].change_setting_value == 0) {
+	    power_capping_rail_table[POWER_CAPPING_INDEX_INTERVAL].change_setting_value == 0 ||
+	    power_capping_rail_table[POWER_CAPPING_INDEX_AVERAGE].change_setting_value == 0) {
 		power_capping_user_setting_flag = false;
 	} else {
 		power_capping_user_setting_flag = true;
@@ -2781,6 +2956,52 @@ void power_capping_comparator_handler()
 		}
 	}
 	return;
+}
+
+bool get_power_capping_average_power(uint32_t *milliwatt)
+{
+	CHECK_NULL_ARG_WITH_RETURN(milliwatt, false);
+
+	int sum = 0;
+	for (int i = 0; i < power_capping_power_history_count; i++) {
+		sum += power_capping_power_history[i];
+	}
+
+	float avg_sensor_value = sum / (float)power_capping_power_history_count;
+	if (avg_sensor_value < 0) {
+		LOG_ERR("avg_sensor_value is negative: %f", avg_sensor_value);
+		*milliwatt = 0;
+		return false;
+	}
+
+	uint8_t sensor_id = VR_ASIC_P0V85_PVDD_PWR_W;
+	float resolution = 0, offset = 0;
+	int cache_reading = 0;
+	int8_t unit_modifier = 0;
+	uint8_t sensor_operational_state = PLDM_SENSOR_STATUSUNKOWN;
+	pldm_sensor_get_info_via_sensor_id(sensor_id, &resolution, &offset, &unit_modifier,
+					   &cache_reading, &sensor_operational_state);
+	if (resolution == 0) {
+		*milliwatt = 0;
+		LOG_ERR("resolution is 0");
+		return false;
+	}
+
+	float real_power = (avg_sensor_value * resolution + offset) / power(10, -unit_modifier);
+
+	int16_t integer_part = (int16_t)real_power;
+	int16_t fraction_part = (int16_t)((real_power - integer_part) * 1000.0);
+
+	if (integer_part < 0 && fraction_part > 0) {
+		fraction_part = -fraction_part;
+	}
+
+	*milliwatt = ((uint16_t)fraction_part << 16) | (uint16_t)integer_part;
+
+	// LOG_INF("real_power = %5d.%03dW, milliwatt = 0x%x", integer_part, fraction_part,
+	// 		*milliwatt);
+
+	return true;
 }
 
 /* If any perm parameter are added, remember to update this function accordingly.　*/
@@ -2833,6 +3054,14 @@ bool perm_config_clear(void)
 		return false;
 	}
 
+	/* clear ath_gpio perm parameter */
+	uint8_t setting_value_for_ath_gpio = 0xFF;
+	if (!set_user_settings_ath_gpio_to_eeprom(&setting_value_for_ath_gpio,
+						  sizeof(setting_value_for_ath_gpio))) {
+		LOG_ERR("The perm_config clear failed");
+		return false;
+	}
+
 	/* clear throttle perm parameter */
 	uint8_t setting_value_for_throttle = 0xFF;
 	if (!set_user_settings_throttle_to_eeprom(&setting_value_for_throttle,
@@ -2862,6 +3091,7 @@ void user_settings_init(void)
 	bootstrap_user_settings_init();
 	vr_vout_range_user_settings_init();
 	thermaltrip_user_settings_init();
+	ath_gpio_user_settings_init();
 	throttle_user_settings_init();
 	power_capping_default_settings_init();
 	power_capping_user_settings_init();

@@ -220,6 +220,9 @@ bool pump_setting_set_pump_redundant(pump_reset_struct *data, uint8_t bit_val)
 {
 	CHECK_NULL_ARG_WITH_RETURN(data, false);
 
+	if (bit_val)
+		set_redundant_transform_phase(REDUNDANCY_TRANSFORM_DISABLE);
+
 	pump_redundant_enable(bit_val);
 
 	return true;
@@ -362,8 +365,8 @@ void pump_redundant_enable(uint8_t onoff)
 	if (onoff) {
 		if (get_status_flag(STATUS_FLAG_PUMP_REDUNDANT) == PUMP_REDUNDANT_DISABLE)
 			k_timer_start(&pump_redundant_timer, K_NO_WAIT,
-				      K_HOURS(pump_redundant_switch_time *
-					      (pump_redundant_switch_time_type ? 1 : 24)));
+				      K_MINUTES(pump_redundant_switch_time *
+						(pump_redundant_switch_time_type ? 1 : 1440)));
 	} else {
 		k_timer_stop(&pump_redundant_timer);
 	}
@@ -430,19 +433,11 @@ uint8_t pwm_control(uint8_t group, uint8_t duty)
 
 	switch (group) {
 	case PWM_GROUP_E_PUMP:
+		abnormal_pump_redundant_transform();
 		if (get_manual_pwm_flag(MANUAL_PWM_E_PUMP)) {
-			plat_pwm_ctrl(PWM_DEVICE_E_PB_PUMB_1,
-				      (redundant_check == PUMP_REDUNDANT_23) ?
-					      0 :
-					      get_manual_pwm_cache(MANUAL_PWM_E_PUMP_1));
-			plat_pwm_ctrl(PWM_DEVICE_E_PB_PUMB_2,
-				      (redundant_check == PUMP_REDUNDANT_13) ?
-					      0 :
-					      get_manual_pwm_cache(MANUAL_PWM_E_PUMP_2));
-			plat_pwm_ctrl(PWM_DEVICE_E_PB_PUMB_3,
-				      (redundant_check == PUMP_REDUNDANT_12) ?
-					      0 :
-					      get_manual_pwm_cache(MANUAL_PWM_E_PUMP_3));
+			ctl_pwm_pump(get_manual_pwm_cache(MANUAL_PWM_E_PUMP_1),
+				     get_manual_pwm_cache(MANUAL_PWM_E_PUMP_2),
+				     get_manual_pwm_cache(MANUAL_PWM_E_PUMP_3));
 			return 0;
 		}
 		break;

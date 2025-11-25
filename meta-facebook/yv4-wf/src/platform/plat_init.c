@@ -29,6 +29,7 @@
 #include "libutil.h"
 #include "plat_class.h"
 #include <logging/log.h>
+#include "plat_dimm.h"
 
 #define DEF_PLAT_CONFIG_PRIORITY 77
 #define DEF_PROJ_GPIO_PRIORITY 78
@@ -60,6 +61,7 @@ void pal_set_sys_status()
 	set_DC_status(PG_CARD_OK);
 	set_DC_on_delayed_status();
 	init_ioe_config();
+
 	if (gpio_get(PG_CARD_OK) == POWER_ON) {
 		if (get_board_revision() == BOARD_POC) {
 			set_P3V3_E1S_power_status(POC_PWRGD_P3V3_E1S_0_R);
@@ -69,6 +71,10 @@ void pal_set_sys_status()
 		set_P12V_E1S_power_status(PWRGD_P12V_E1S_0_R);
 		create_check_cxl_ready_thread();
 	}
+	else {
+		LOG_ERR("PG_CARD_OK not ready, skip set_sys_status");
+	}
+	create_init_ddr_slot_info_thread();
 	set_sys_ready_pin(BIC_READY_R);
 }
 

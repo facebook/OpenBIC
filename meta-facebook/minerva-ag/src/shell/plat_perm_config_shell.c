@@ -100,8 +100,31 @@ static int cmd_perm_config_get(const struct shell *shell, size_t argc, char **ar
 		LOG_ERR("get thermaltrip user settings failed");
 	} else {
 		if (setting_data_for_thermaltrip != 0xFF) {
-			shell_print(shell, "thermaltrip                            val=%s",
-				    (setting_data_for_thermaltrip ? "enable" : "disable"));
+			shell_print(shell, "thermaltrip                            %s",
+				    ((setting_data_for_thermaltrip == 0x00) ?
+					     "thermaltrip disable" :
+				     (setting_data_for_thermaltrip == 0x01) ? "thermaltrip enable" :
+									      "unknown"));
+			config_count++;
+		}
+	}
+
+	uint8_t setting_data_for_ath_gpio = 0xFF;
+	if (!get_user_settings_ath_gpio_from_eeprom(&setting_data_for_ath_gpio,
+						    sizeof(setting_data_for_ath_gpio))) {
+		LOG_ERR("get ath_gpio user settings failed");
+	} else {
+		if (setting_data_for_ath_gpio != 0xFF) {
+			shell_print(shell, "ath_gpio                            %s",
+				    ((setting_data_for_ath_gpio == 0x00) ?
+					     "ATH_GPIO_3 disable, ATH_GPIO_4 disable" :
+				     (setting_data_for_ath_gpio == 0x10) ?
+					     "ATH_GPIO_3 enable, ATH_GPIO_4 disable" :
+				     (setting_data_for_ath_gpio == 0x20) ?
+					     "ATH_GPIO_3 disable, ATH_GPIO_4 enable" :
+				     (setting_data_for_ath_gpio == 0x30) ?
+					     "ATH_GPIO_3 enable, ATH_GPIO_4 enable" :
+					     "unknown"));
 			config_count++;
 		}
 	}

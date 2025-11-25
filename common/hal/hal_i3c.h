@@ -92,7 +92,7 @@
 #define I3C_DEBUG 0
 #define I3C_SMQ_SUCCESS 0
 #define I3C_MAX_BUFFER_COUNT 2
-#define IBI_PAYLOAD_SIZE 128
+#define IBI_PAYLOAD_SIZE 256
 
 #define I3C_DEV_STR_LEN 8
 #define I3C_BUS_STR_LEN 4

@@ -216,7 +216,7 @@ bool get_abr(void)
 
 void set_abr(uint8_t onoff)
 {
-	char cmd[32];
+	char cmd[25];
 
 	sprintf(cmd, "otp pb strap o 0x2b %d", (onoff ? 1 : 0));
 	shell_execute_cmd(shell_backend_uart_get_ptr(), cmd);

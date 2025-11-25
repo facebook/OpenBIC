@@ -29,6 +29,7 @@
 #include "plat_isr.h"
 #include <pmbus.h>
 #include "pldm_oem.h"
+#include "util_worker.h"
 
 LOG_MODULE_REGISTER(plat_event);
 
@@ -43,7 +44,6 @@ LOG_MODULE_REGISTER(plat_event);
 #endif
 
 void check_cpld_handler();
-K_WORK_DELAYABLE_DEFINE(check_cpld_work, check_cpld_handler);
 
 K_TIMER_DEFINE(init_ubc_delayed_timer, check_ubc_delayed_timer_handler, NULL);
 
@@ -52,6 +52,11 @@ K_WORK_DEFINE(check_ubc_delayed_work, check_ubc_delayed);
 void check_ubc_delayed_timer_handler(struct k_timer *timer)
 {
 	k_work_submit(&check_ubc_delayed_work);
+}
+
+void cancel_ubc_delayed_timer_handler()
+{
+	k_work_cancel(&check_ubc_delayed_work);
 }
 
 K_THREAD_STACK_DEFINE(cpld_polling_stack, POLLING_CPLD_STACK_SIZE);
@@ -81,11 +86,11 @@ void process_mtia_vr_power_fault_sel(aegis_cpld_info *cpld_info, uint8_t *curren
 
 // clang-format off
 aegis_cpld_info aegis_cpld_info_table[] = {
-	{ VR_POWER_FAULT_1_REG, 			0x00, 0x00, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS, .event_type = VR_POWER_FAULT },
-	{ VR_POWER_FAULT_2_REG, 			0x00, 0x00, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS, .event_type = VR_POWER_FAULT  },
-	{ VR_POWER_FAULT_3_REG, 			0x00, 0x00, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS, .event_type = VR_POWER_FAULT  },
-	{ VR_POWER_FAULT_4_REG, 			0x00, 0x00, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS, .event_type = VR_POWER_FAULT  },
-	{ VR_POWER_FAULT_5_REG, 			0x00, 0x00, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS, .event_type = VR_POWER_FAULT  },
+	{ VR_POWER_FAULT_1_REG, 			0x00, 0x00, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS, .event_type = 0x7E },
+	{ VR_POWER_FAULT_2_REG, 			0x00, 0x00, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS, .event_type = 0xFF  },
+	{ VR_POWER_FAULT_3_REG, 			0x00, 0x00, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS, .event_type = 0xFF  },
+	{ VR_POWER_FAULT_4_REG, 			0x00, 0x00, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS, .event_type = 0xFF  },
+	{ VR_POWER_FAULT_5_REG, 			0x00, 0x00, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS, .event_type = 0xFE  },
 	{ VR_SMBUS_ALERT_1_REG, 			0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
 	{ VR_SMBUS_ALERT_2_REG, 			0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
 	{ ASIC_OC_WARN_REG, 				0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
@@ -93,8 +98,8 @@ aegis_cpld_info aegis_cpld_info_table[] = {
 	{ TEMPERATURE_IC_OVERT_FAULT_REG, 	0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
 	{ LEAK_DETCTION_REG, 				0xDF, 0xDF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_BIT_6_ONLY},
 
-	{ TEMPERATURE_IC_OVERT_FAULT_2_REG, 0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
-	{ ASIC_OC_WARN_2_REG, 				0x1F, 0x1F, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
+	{ TEMPERATURE_IC_OVERT_FAULT_2_REG, 0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS, .event_type = 0x80  },
+	{ ASIC_OC_WARN_2_REG, 				0x1C, 0x1C, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS, .event_type = 0x23  },
 	{ SYSTEM_ALERT_FAULT_2_REG, 		0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_BIT_7_ONLY },
 	{ VR_SMBUS_ALERT_3_REG, 			0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
 	{ VR_SMBUS_ALERT_4_REG, 			0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },	
@@ -235,7 +240,7 @@ const cpld_bit_name_table_t cpld_bit_name_table[] = {
 		  "RSVD",
 	  } },
 	{ TEMPERATURE_IC_OVERT_FAULT_2_REG,
-	  "Temperature IC OVERT Fault Status",
+	  "THERMTRIP_N(POWER DOWN): TEMP_IC_OVERT Status/ATH_SOC_CATTRIP/ATH_HBM_CATTRIP",
 	  {
 		  "RSVD",
 		  "RSVD",
@@ -249,8 +254,8 @@ const cpld_bit_name_table_t cpld_bit_name_table[] = {
 	{ ASIC_OC_WARN_2_REG,
 	  "ASIC OC WARN ,HBM CATTRIP and ASIC Alert to BMC/MMC Status",
 	  {
-		  "RSVD",
-		  "RSVD",
+		  "ATH_GPIO_3_SOC_THERMAL_INTERRUP (high active)",
+		  "ATH_GPIO_4_SOC_THERMAL_CATTRIP (high active)",
 		  "RSVD",
 		  "RSVD",
 		  "RSVD",
@@ -359,14 +364,16 @@ void check_ubc_delayed(struct k_work *work)
 			sel_msg.assert_type = LOG_ASSERT;
 			sel_msg.event_type = MTIA_FAULT;
 			sel_msg.event_data_1 = MTIA_POWER_ON_SEQUENCE_FAIL;
-			if (PLDM_SUCCESS != send_event_log_to_bmc(sel_msg)) {
-				LOG_ERR("Failed to send MTIA FAULT assert SEL, event data: 0x%x 0x%x 0x%x",
-					sel_msg.event_data_1, sel_msg.event_data_2,
-					sel_msg.event_data_3);
-			} else {
-				LOG_INF("send MTIA FAULT assert SEL, event data: 0x%x 0x%x 0x%x",
-					sel_msg.event_data_1, sel_msg.event_data_2,
-					sel_msg.event_data_3);
+			if (get_mb_type() == MB_PRESENT) {
+				if (PLDM_SUCCESS != send_event_log_to_bmc(sel_msg)) {
+					LOG_ERR("Failed to send MTIA FAULT assert SEL, event data: 0x%x 0x%x 0x%x",
+						sel_msg.event_data_1, sel_msg.event_data_2,
+						sel_msg.event_data_3);
+				} else {
+					LOG_INF("send MTIA FAULT assert SEL, event data: 0x%x 0x%x 0x%x",
+						sel_msg.event_data_1, sel_msg.event_data_2,
+						sel_msg.event_data_3);
+				}
 			}
 		}
 	}
@@ -399,6 +406,27 @@ void plat_set_dc_on_log(bool is_assert)
 	}
 }
 
+void plat_set_power_down_log()
+{
+	uint16_t error_code = (POWER_DOWN_TRIGGER_CAUSE << 13);
+	error_log_event(error_code, LOG_ASSERT);
+	LOG_INF("Generated power down error code: 0x%x", error_code);
+
+	struct pldm_addsel_data sel_msg = { 0 };
+	sel_msg.assert_type = LOG_ASSERT;
+	sel_msg.event_type = MTIA_FAULT;
+	sel_msg.event_data_1 = MTIA_VR_FAULT_CAUSE_POWER_DOWN;
+	if (get_mb_type() == MB_PRESENT) {
+		if (PLDM_SUCCESS != send_event_log_to_bmc(sel_msg)) {
+			LOG_ERR("Failed to send MTIA FAULT assert SEL, event data: 0x%x 0x%x 0x%x",
+				sel_msg.event_data_1, sel_msg.event_data_2, sel_msg.event_data_3);
+		} else {
+			LOG_INF("send MTIA FAULT assert SEL, event data: 0x%x 0x%x 0x%x",
+				sel_msg.event_data_1, sel_msg.event_data_2, sel_msg.event_data_3);
+		}
+	}
+}
+
 void get_vr_vout_handler(struct k_work *work)
 {
 	vr_vout_default_settings_init();
@@ -408,6 +436,11 @@ void get_vr_vout_handler(struct k_work *work)
 bool is_ubc_enabled_delayed_enabled(void)
 {
 	return ubc_enabled_delayed_status;
+}
+
+void set_ubc_enabled_delayed_enabled(bool status)
+{
+	ubc_enabled_delayed_status = status;
 }
 
 void reset_error_log_states(uint8_t err_type)
@@ -535,10 +568,22 @@ void poll_cpld_registers()
 					aegis_cpld_info_table[i].status_changed_cb(
 						&aegis_cpld_info_table[i], &data);
 				}
-				if (aegis_cpld_info_table[i].event_type == VR_POWER_FAULT) {
-					process_mtia_vr_power_fault_sel(&aegis_cpld_info_table[i],
-									&data);
+
+				if (aegis_cpld_info_table[i].event_type) {
+					uint8_t event_trigger_bits =
+						is_status_changed &
+						aegis_cpld_info_table[i].event_type;
+					if (event_trigger_bits) {
+						LOG_INF("CPLD offset 0x%02X triggered event (mask=0x%02X, changed=0x%02X)",
+							aegis_cpld_info_table[i].cpld_offset,
+							aegis_cpld_info_table[i].event_type,
+							event_trigger_bits);
+
+						process_mtia_vr_power_fault_sel(
+							&aegis_cpld_info_table[i], &data);
+					}
 				}
+
 				// update map
 				aegis_cpld_info_table[i].is_fault_bit_map = new_fault_map;
 				aegis_cpld_info_table[i].last_polling_value = data;
@@ -593,6 +638,9 @@ const vr_fault_info vr_fault_table[] = {
 	{ MTIA_PLL_VDDA15_MAX_CORE_S, VR_POWER_FAULT_5_REG, BIT(7), false, 0x00 },
 
 	{ MTIA_FM_ASIC_0_THERMTRIP_N, TEMPERATURE_IC_OVERT_FAULT_2_REG, BIT(7), false, 0x00 },
+
+	{ MTIA_ATH_GPIO_3, ASIC_OC_WARN_2_REG, BIT(0), false, 0x00 },
+	{ MTIA_ATH_GPIO_4, ASIC_OC_WARN_2_REG, BIT(1), false, 0x00 },
 	{ MTIA_FM_ATH_PLD_HBM3_CATTRIP_ALARM, ASIC_OC_WARN_2_REG, BIT(5), false, 0x00 },
 };
 // clang-format on
@@ -646,15 +694,18 @@ void process_mtia_vr_power_fault_sel(aegis_cpld_info *cpld_info, uint8_t *curren
 			sel_msg.assert_type = is_assert ? LOG_ASSERT : LOG_DEASSERT;
 			sel_msg.event_type = MTIA_FAULT;
 			sel_msg.event_data_1 = vr_fault_table[i].mtia_event_source;
-
-			if (PLDM_SUCCESS != send_event_log_to_bmc(sel_msg)) {
-				LOG_ERR("Failed to send MTIA FAULT %s SEL, event data: 0x%x 0x%x 0x%x",
-					is_assert ? "ASSERT" : "DEASSERT", sel_msg.event_data_1,
-					sel_msg.event_data_2, sel_msg.event_data_3);
-			} else {
-				LOG_INF("Send MTIA FAULT %s SEL, event data: 0x%x 0x%x 0x%x",
-					is_assert ? "ASSERT" : "DEASSERT", sel_msg.event_data_1,
-					sel_msg.event_data_2, sel_msg.event_data_3);
+			if (get_mb_type() == MB_PRESENT) {
+				if (PLDM_SUCCESS != send_event_log_to_bmc(sel_msg)) {
+					LOG_ERR("Failed to send MTIA FAULT %s SEL, event data: 0x%x 0x%x 0x%x",
+						is_assert ? "ASSERT" : "DEASSERT",
+						sel_msg.event_data_1, sel_msg.event_data_2,
+						sel_msg.event_data_3);
+				} else {
+					LOG_INF("Send MTIA FAULT %s SEL, event data: 0x%x 0x%x 0x%x",
+						is_assert ? "ASSERT" : "DEASSERT",
+						sel_msg.event_data_1, sel_msg.event_data_2,
+						sel_msg.event_data_3);
+				}
 			}
 			continue;
 		} else {
@@ -707,16 +758,20 @@ void process_mtia_vr_power_fault_sel(aegis_cpld_info *cpld_info, uint8_t *curren
 			set_plat_sensor_polling_enable_flag(true);
 			// Send SEL to BMC
 			for (int k = 0; k < sel_msg_idx; k++) {
-				if (PLDM_SUCCESS != send_event_log_to_bmc(sel_msg[k])) {
-					LOG_ERR("Failed to send MTIA FAULT %s SEL, event data: 0x%x 0x%x 0x%x",
-						is_assert ? "ASSERT" : "DEASSERT",
-						sel_msg[k].event_data_1, sel_msg[k].event_data_2,
-						sel_msg[k].event_data_3);
-				} else {
-					LOG_INF("Send MTIA FAULT %s SEL, event data: 0x%x 0x%x 0x%x",
-						is_assert ? "ASSERT" : "DEASSERT",
-						sel_msg[k].event_data_1, sel_msg[k].event_data_2,
-						sel_msg[k].event_data_3);
+				if (get_mb_type() == MB_PRESENT) {
+					if (PLDM_SUCCESS != send_event_log_to_bmc(sel_msg[k])) {
+						LOG_ERR("Failed to send MTIA FAULT %s SEL, event data: 0x%x 0x%x 0x%x",
+							is_assert ? "ASSERT" : "DEASSERT",
+							sel_msg[k].event_data_1,
+							sel_msg[k].event_data_2,
+							sel_msg[k].event_data_3);
+					} else {
+						LOG_INF("Send MTIA FAULT %s SEL, event data: 0x%x 0x%x 0x%x",
+							is_assert ? "ASSERT" : "DEASSERT",
+							sel_msg[k].event_data_1,
+							sel_msg[k].event_data_2,
+							sel_msg[k].event_data_3);
+					}
 				}
 			}
 			continue;
@@ -734,7 +789,10 @@ void check_cpld_handler()
 	version = (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | data[3];
 	LOG_DBG("The cpld version: %08x", version);
 
-	k_work_schedule(&check_cpld_work, K_MSEC(5000));
+	worker_job job = { 0 };
+	job.delay_ms = 5000;
+	job.fn = check_cpld_handler;
+	add_work(&job);
 }
 
 void init_cpld_polling(void)
@@ -752,5 +810,8 @@ void init_cpld_polling(void)
 
 	k_timer_start(&init_ubc_delayed_timer, K_MSEC(1000), K_NO_WAIT);
 
-	k_work_schedule(&check_cpld_work, K_MSEC(100));
+	worker_job job = { 0 };
+	job.delay_ms = 15000; // 15 seconds
+	job.fn = check_cpld_handler;
+	add_work(&job);
 }

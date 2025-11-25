@@ -23,6 +23,7 @@
 #define ENABLE_PLDM
 #define ENABLE_OEM_PLDM
 #define ENABLE_MCTP_I3C
+#define ENABLE_OCTEON
 
 #define BMC_USB_PORT "CDC_ACM_0"
 

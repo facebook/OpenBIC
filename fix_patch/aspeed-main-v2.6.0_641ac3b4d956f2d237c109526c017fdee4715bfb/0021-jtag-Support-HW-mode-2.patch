@@ -1,0 +1,767 @@
+From cd52aaa387cf74b1b2fea3b4bb55ef24e76f7ffa Mon Sep 17 00:00:00 2001
+From: Billy Tsai <billy_tsai@aspeedtech.com>
+Date: Sun, 10 Aug 2025 14:21:38 +0800
+Subject: [PATCH 1/2] jtag: Support HW mode 2
+
+Add the JTAG_ASPEED_HW_MODE2 option to allow our JTAG driver to execute
+transfers using hardware mode 2 instead of the default hardware mode 1.
+
+Signed-off-by: Billy Tsai <billy_tsai@aspeedtech.com>
+Change-Id: I9f371ca5646ce9d60c9764d5122684088b936b3e
+---
+ drivers/jtag/Kconfig.aspeed |   8 +-
+ drivers/jtag/jtag_aspeed.c  | 586 ++++++++++++++++++++++++++++++++----
+ drivers/jtag/jtag_aspeed.h  |   4 +
+ 3 files changed, 531 insertions(+), 67 deletions(-)
+
+diff --git a/drivers/jtag/Kconfig.aspeed b/drivers/jtag/Kconfig.aspeed
+index 34bbdf18015..29790382b78 100644
+--- a/drivers/jtag/Kconfig.aspeed
++++ b/drivers/jtag/Kconfig.aspeed
+@@ -9,4 +9,10 @@ config JTAG_ASPEED
+ 	help
+ 	  This option enables the JTAG driver for ASPEED family of
+ 	  processors.
+-	  Say y if you wish to use JTAG channels on ASPEED MCU.
+\ No newline at end of file
++	  Say y if you wish to use JTAG channels on ASPEED MCU.
++
++config JTAG_ASPEED_HW_MODE2
++	bool "ASPEED JTAG HW Mode 2"
++	depends on JTAG_ASPEED
++	help
++	  This option enables the JTAG HW Mode 2 for ASPEED JTAG controller
+\ No newline at end of file
+diff --git a/drivers/jtag/jtag_aspeed.c b/drivers/jtag/jtag_aspeed.c
+index 7f960f39ce4..3400eddc3fc 100644
+--- a/drivers/jtag/jtag_aspeed.c
++++ b/drivers/jtag/jtag_aspeed.c
+@@ -108,6 +108,153 @@ static const struct name_mapping tap_name_mapping[] = {
+ 	},
+ };
+ 
++/**
++ * struct tms_cycle - This structure represents a tms cycle state.
++ *
++ * @tmsbits: is the bitwise representation of the needed tms transitions to
++ *           move from one state to another.
++ * @count:   number of jumps needed to move to the needed state.
++ *
++ */
++struct tms_cycle {
++	unsigned char tmsbits;
++	unsigned char count;
++};
++
++/*
++ * This is the complete set TMS cycles for going from any TAP state to any
++ * other TAP state, following a "shortest path" rule.
++ */
++static const struct tms_cycle _tms_cycle_lookup[][16] = {
++/* Row  0  Ex2DR -> */
++/*		Ex2DR   Ex1DR     SDR     PDR   SelIR   UpdDR */
++/* Ex2DR*/{{0x00, 0}, {0x02, 2}, {0x00, 1}, {0x02, 3}, {0x07, 3}, {0x01, 1},
++/*		CapDR   SelDR   Ex2IR   Ex1IR     SIR     PIR */
++		{0x03, 3}, {0x03, 2}, {0x57, 7}, {0x17, 5}, {0x07, 5}, {0x17, 6},
++/*		  RTI   UpdIR   CapIR     TLR */
++		{0x01, 2}, {0x37, 6}, {0x07, 4}, {0x0f, 4} },
++
++/* Row  1  Ex1DR -> */
++/*		Ex2DR   Ex1DR     SDR     PDR   SelIR   UpdDR */
++/* Ex1DR*/{{0x02, 2}, {0x00, 0}, {0x02, 3}, {0x00, 1}, {0x07, 3}, {0x01, 1},
++/*		CapDR   SelDR   Ex2IR   Ex1IR     SIR     PIR */
++		{0x03, 3}, {0x03, 2}, {0x57, 7}, {0x17, 5}, {0x07, 5}, {0x17, 6},
++/*		  RTI   UpdIR   CapIR     TLR */
++		{0x01, 2}, {0x37, 6}, {0x07, 4}, {0x0f, 4} },
++
++/* Row  2    SDR -> */
++/*		Ex2DR   Ex1DR     SDR     PDR   SelIR   UpdDR */
++/*   SDR*/{{0x05, 3}, {0x01, 1}, {0x00, 0}, {0x01, 2}, {0x0f, 4}, {0x03, 2},
++/*		CapDR   SelDR   Ex2IR   Ex1IR     SIR     PIR */
++		{0x07, 4}, {0x07, 3}, {0xaf, 8}, {0x2f, 6}, {0x0f, 6}, {0x2f, 7},
++/*		  RTI   UpdIR   CapIR     TLR */
++		{0x03, 3}, {0x6f, 7}, {0x0f, 5}, {0x1f, 5} },
++
++/* Row  3    PDR -> */
++/*		Ex2DR   Ex1DR     SDR     PDR   SelIR   UpdDR */
++/*   PDR*/{{0x01, 1}, {0x05, 3}, {0x01, 2}, {0x00, 0}, {0x0f, 4}, {0x03, 2},
++/*		CapDR   SelDR   Ex2IR   Ex1IR     SIR     PIR */
++		{0x07, 4}, {0x07, 3}, {0xaf, 8}, {0x2f, 6}, {0x0f, 6}, {0x2f, 7},
++/*		  RTI   UpdIR   CapIR     TLR */
++		{0x03, 3}, {0x6f, 7}, {0x0f, 5}, {0x1f, 5} },
++
++/* Row  4  SelIR -> */
++/*		Ex2DR   Ex1DR     SDR     PDR   SelIR   UpdDR */
++/* SelIR*/{{0x55, 7}, {0x15, 5}, {0x05, 5}, {0x15, 6}, {0x00, 0}, {0x35, 6},
++/*		CapDR   SelDR   Ex2IR   Ex1IR     SIR     PIR */
++		{0x05, 4}, {0x05, 3}, {0x0a, 4}, {0x02, 2}, {0x00, 2}, {0x02, 3},
++/*		  RTI   UpdIR   CapIR     TLR */
++		{0x01, 2}, {0x06, 3}, {0x00, 1}, {0x01, 1} },
++
++/* Row  5  UpdDR -> */
++/*		Ex2DR   Ex1DR     SDR     PDR   SelIR   UpdDR */
++/* UpdDR*/{{0x15, 5}, {0x05, 3}, {0x01, 3}, {0x05, 4}, {0x03, 2}, {0x00, 0},
++/*		CapDR   SelDR   Ex2IR   Ex1IR     SIR     PIR */
++		{0x01, 2}, {0x01, 1}, {0x2b, 6}, {0x0b, 4}, {0x03, 4}, {0x0b, 5},
++/*		  RTI   UpdIR   CapIR     TLR */
++		{0x00, 1}, {0x1b, 5}, {0x03, 3}, {0x07, 3} },
++
++/* Row  6  CapDR -> */
++/*		Ex2DR   Ex1DR     SDR     PDR   SelIR   UpdDR */
++/* CapDR*/{{0x05, 3}, {0x01, 1}, {0x00, 1}, {0x01, 2}, {0x0f, 4}, {0x03, 2},
++/*		CapDR   SelDR   Ex2IR   Ex1IR     SIR     PIR */
++		{0x00, 0}, {0x07, 3}, {0xaf, 8}, {0x2f, 6}, {0x0f, 6}, {0x2f, 7},
++/*		  RTI   UpdIR   CapIR     TLR */
++		{0x03, 3}, {0x6f, 7}, {0x0f, 5}, {0x1f, 5} },
++
++/* Row  7  SelDR -> */
++/*		Ex2DR   Ex1DR     SDR     PDR   SelIR   UpdDR */
++/* SelDR*/{{0x0a, 4}, {0x02, 2}, {0x00, 2}, {0x02, 3}, {0x01, 1}, {0x06, 3},
++/*		CapDR   SelDR   Ex2IR   Ex1IR     SIR     PIR */
++		{0x00, 1}, {0x00, 0}, {0x15, 5}, {0x05, 3}, {0x01, 3}, {0x05, 4},
++/*		  RTI   UpdIR   CapIR     TLR */
++		{0x03, 3}, {0x0d, 4}, {0x01, 2}, {0x03, 2} },
++
++/* Row  8  Ex2IR -> */
++/*		Ex2DR   Ex1DR     SDR     PDR   SelIR   UpdDR */
++/* Ex2IR*/{{0x2b, 6}, {0x0b, 4}, {0x03, 4}, {0x0b, 5}, {0x07, 3}, {0x1b, 5},
++/*		CapDR   SelDR   Ex2IR   Ex1IR     SIR     PIR */
++		{0x03, 3}, {0x03, 2}, {0x00, 0}, {0x02, 2}, {0x00, 1}, {0x02, 3},
++/*		  RTI   UpdIR   CapIR     TLR */
++		{0x01, 2}, {0x01, 1}, {0x07, 4}, {0x0f, 4} },
++
++/* Row  9  Ex1IR -> */
++/*		Ex2DR   Ex1DR     SDR     PDR   SelIR   UpdDR */
++/* Ex1IR*/{{0x2b, 6}, {0x0b, 4}, {0x03, 4}, {0x0b, 5}, {0x07, 3}, {0x1b, 5},
++/*		CapDR   SelDR   Ex2IR   Ex1IR     SIR     PIR */
++		{0x03, 3}, {0x03, 2}, {0x02, 2}, {0x00, 0}, {0x02, 3}, {0x00, 1},
++/*		  RTI   UpdIR   CapIR     TLR */
++		{0x01, 2}, {0x01, 1}, {0x07, 4}, {0x0f, 4} },
++
++/* Row 10    SIR -> */
++/*		Ex2DR   Ex1DR     SDR     PDR   SelIR   UpdDR */
++/*   SIR*/{{0x57, 7}, {0x17, 5}, {0x07, 5}, {0x17, 6}, {0x0f, 4}, {0x37, 6},
++/*		CapDR   SelDR   Ex2IR   Ex1IR     SIR     PIR */
++		{0x07, 4}, {0x07, 3}, {0x05, 3}, {0x01, 1}, {0x00, 0}, {0x01, 2},
++/*		  RTI   UpdIR   CapIR     TLR */
++		{0x03, 3}, {0x03, 2}, {0x0f, 5}, {0x1f, 5} },
++
++/* Row 11    PIR -> */
++/*		Ex2DR   Ex1DR     SDR     PDR   SelIR   UpdDR */
++/*   PIR*/{{0x57, 7}, {0x17, 5}, {0x07, 5}, {0x17, 6}, {0x0f, 4}, {0x37, 6},
++/*		CapDR   SelDR   Ex2IR   Ex1IR     SIR     PIR */
++		{0x07, 4}, {0x07, 3}, {0x01, 1}, {0x05, 3}, {0x01, 2}, {0x00, 0},
++/*		  RTI   UpdIR   CapIR     TLR */
++		{0x03, 3}, {0x03, 2}, {0x0f, 5}, {0x1f, 5} },
++
++/* Row 12    RTI -> */
++/*		Ex2DR   Ex1DR     SDR     PDR   SelIR   UpdDR */
++/*   RTI*/{{0x15, 5}, {0x05, 3}, {0x01, 3}, {0x05, 4}, {0x03, 2}, {0x0d, 4},
++/*		CapDR   SelDR   Ex2IR   Ex1IR     SIR     PIR */
++		{0x01, 2}, {0x01, 1}, {0x2b, 6}, {0x0b, 4}, {0x03, 4}, {0x0b, 5},
++/*		  RTI   UpdIR   CapIR     TLR */
++		{0x00, 0}, {0x1b, 5}, {0x03, 3}, {0x07, 3} },
++
++/* Row 13  UpdIR -> */
++/*		Ex2DR   Ex1DR     SDR     PDR   SelIR   UpdDR */
++/* UpdIR*/{{0x15, 5}, {0x05, 3}, {0x01, 3}, {0x05, 4}, {0x03, 2}, {0x0d, 4},
++/*		CapDR   SelDR   Ex2IR   Ex1IR     SIR     PIR */
++		{0x01, 2}, {0x01, 1}, {0x2b, 6}, {0x0b, 4}, {0x03, 4}, {0x0b, 5},
++/*		  RTI   UpdIR   CapIR     TLR */
++		{0x00, 1}, {0x00, 0}, {0x03, 3}, {0x07, 3} },
++
++/* Row 14  CapIR -> */
++/*		Ex2DR   Ex1DR     SDR     PDR   SelIR   UpdDR */
++/* CapIR*/{{0x57, 7}, {0x17, 5}, {0x07, 5}, {0x17, 6}, {0x0f, 4}, {0x37, 6},
++/*		CapDR   SelDR   Ex2IR   Ex1IR     SIR     PIR */
++		{0x07, 4}, {0x07, 3}, {0x05, 3}, {0x01, 1}, {0x00, 1}, {0x01, 2},
++/*		  RTI   UpdIR   CapIR     TLR */
++		{0x03, 3}, {0x03, 2}, {0x00, 0}, {0x1f, 5} },
++
++/* Row 15    TLR -> */
++/*		Ex2DR   Ex1DR     SDR     PDR   SelIR   UpdDR */
++/*   TLR*/{{0x2a, 6}, {0x0a, 4}, {0x02, 4}, {0x0a, 5}, {0x06, 3}, {0x1a, 5},
++/*		CapDR   SelDR   Ex2IR   Ex1IR     SIR     PIR */
++		{0x02, 3}, {0x02, 2}, {0x56, 7}, {0x16, 5}, {0x06, 5}, {0x16, 6},
++/*		  RTI   UpdIR   CapIR     TLR */
++		{0x00, 1}, {0x36, 6}, {0x06, 4}, {0x00, 0} },
++};
++
+ struct jtag_aspeed_data {
+ 	uint32_t fifo_length;
+ 	enum tap_state state;
+@@ -144,6 +291,9 @@ static int jtag_aspeed_tap_state_check(const struct device *dev)
+ 	const struct jtag_aspeed_cfg *config = DEV_CFG(dev);
+ 	struct jtag_register_s *jtag_register = config->base;
+ 
++	LOG_DBG("%s: state = %s, status = 0x%08x\n", __func__, tap_state_name(priv->state),
++		jtag_register->software_mode_and_status.value);
++
+ 	if ((jtag_register->software_mode_and_status.fields.instr_xfer_pause &&
+ 	     priv->state != TAP_IRPAUSE) ||
+ 	    (jtag_register->software_mode_and_status.fields.data_xfer_pause &&
+@@ -155,6 +305,13 @@ static int jtag_aspeed_tap_state_check(const struct device *dev)
+ 	return 0;
+ }
+ 
++#ifdef CONFIG_JTAG_ASPEED_HW_MODE2
++static void jtag_aspeed_wait_shift_complete(struct jtag_aspeed_data *priv)
++{
++	osEventFlagsWait(priv->evt_id, JTAG_ASPEED_HW2_IRQ_STAT, osFlagsWaitAll,
++			 osWaitForever);
++}
++#else
+ static void jtag_aspeed_wait_ir_pause_complete(struct jtag_aspeed_data *priv)
+ {
+ 	osEventFlagsWait(priv->evt_id, JTAG_ASPEED_INST_PAUSE, osFlagsWaitAll,
+@@ -178,12 +335,22 @@ static inline void jtag_aspeed_wait_dr_complete(struct jtag_aspeed_data *priv)
+ 	osEventFlagsWait(priv->evt_id, JTAG_ASPEED_DATA_COMPLETE,
+ 			 osFlagsWaitAll, osWaitForever);
+ }
++#endif
+ 
+ static void jtag_aspeed_isr(const struct device *dev)
+ {
+ 	struct jtag_aspeed_data *priv = DEV_DATA(dev);
+ 	const struct jtag_aspeed_cfg *config = DEV_CFG(dev);
+ 	struct jtag_register_s *jtag_register = config->base;
++#ifdef CONFIG_JTAG_ASPEED_HW_MODE2
++	uint32_t int_pending = jtag_register->mode_2_int_ctrl.value &
++			       JTAG_ASPEED_HW2_IRQ_STAT;
++
++	osEventFlagsSet(priv->evt_id, int_pending);
++	/* W1C interrupt pending */
++	jtag_register->mode_2_int_ctrl.value =
++		jtag_register->mode_2_int_ctrl.value;
++#else
+ 	uint32_t int_pending = jtag_register->mode_1_int_ctrl.value &
+ 			       JTAG_ASPEED_INT_PEND_MASK;
+ 
+@@ -191,68 +358,7 @@ static void jtag_aspeed_isr(const struct device *dev)
+ 	/* W1C interrupt pending */
+ 	jtag_register->mode_1_int_ctrl.value =
+ 		jtag_register->mode_1_int_ctrl.value;
+-}
+-
+-static int jtag_aspeed_tap_idle(const struct device *dev)
+-{
+-	struct jtag_aspeed_data *priv = DEV_DATA(dev);
+-	const struct jtag_aspeed_cfg *config = DEV_CFG(dev);
+-	struct jtag_register_s *jtag_register = config->base;
+-	union mode_1_control_s mode_1_control;
+-	int ret;
+-
+-	ret = jtag_aspeed_tap_state_check(dev);
+-	if (ret) {
+-		return ret;
+-	}
+-	if (priv->state == TAP_IDLE) {
+-		return 0;
+-	}
+-	mode_1_control.value = jtag_register->mode_1_control.value;
+-	mode_1_control.fields.xfer_len = 0;
+-	mode_1_control.fields.terminating_xfer = 1;
+-	mode_1_control.fields.last_xfer = 1;
+-	LOG_DBG("mode_1_ctrl = 0x%08x, status = 0x%08x\n",
+-		jtag_register->mode_1_control.value,
+-		jtag_register->software_mode_and_status.value);
+-	if (priv->state == TAP_IRPAUSE) {
+-		mode_1_control.fields.ir_xfer_en = 1;
+-		jtag_register->mode_1_control.value = mode_1_control.value;
+-		jtag_aspeed_wait_ir_complete(priv);
+-		mode_1_control.fields.ir_xfer_en = 0;
+-		jtag_register->mode_1_control.value = mode_1_control.value;
+-	} else if (priv->state == TAP_DRPAUSE) {
+-		mode_1_control.fields.dr_xfer_en = 1;
+-		jtag_register->mode_1_control.value = mode_1_control.value;
+-		jtag_aspeed_wait_dr_complete(priv);
+-		mode_1_control.fields.dr_xfer_en = 0;
+-		jtag_register->mode_1_control.value = mode_1_control.value;
+-	}
+-	mode_1_control.fields.terminating_xfer = 0;
+-	jtag_register->mode_1_control.value = mode_1_control.value;
+-	priv->state = TAP_IDLE;
+-	return 0;
+-}
+-
+-static int jtag_aspeed_tap_reset(const struct device *dev)
+-{
+-	struct jtag_aspeed_data *priv = DEV_DATA(dev);
+-	const struct jtag_aspeed_cfg *config = DEV_CFG(dev);
+-	struct jtag_register_s *jtag_register = config->base;
+-	union mode_1_control_s mode_1_control;
+-
+-	/* Disable SW mode */
+-	jtag_register->software_mode_and_status.value = 0;
+-	mode_1_control.value = jtag_register->mode_1_control.value;
+-	/* Enable HW mode 1 */
+-	mode_1_control.fields.engine_enable = 1;
+-	/* Reset target tap */
+-	mode_1_control.fields.reset_to_tlr = 1;
+-	jtag_register->mode_1_control.value = mode_1_control.value;
+-	while (jtag_register->mode_1_control.fields.reset_to_tlr)
+-		;
+-	priv->state = TAP_IDLE;
+-	return 0;
++#endif
+ }
+ 
+ static int jtag_aspeed_sw_xfer(const struct device *dev, enum jtag_pin pin,
+@@ -347,7 +453,11 @@ int jtag_aspeed_freq_get(const struct device *dev, uint32_t *freq)
+ 	uint32_t src_clk, div;
+ 
+ 	clock_control_get_rate(config->clock_dev, config->clk_id, &src_clk);
++#ifdef CONFIG_JTAG_ASPEED_HW_MODE2
++	div = jtag_register->mode_2_control.fields.clock_divisor;
++#else
+ 	div = jtag_register->tck_control.fields.tck_divisor;
++#endif
+ 	*freq = src_clk / (div + 1);
+ 	return 0;
+ }
+@@ -356,7 +466,6 @@ int jtag_aspeed_freq_set(const struct device *dev, uint32_t freq)
+ 	const struct jtag_aspeed_cfg *config = DEV_CFG(dev);
+ 	struct jtag_register_s *jtag_register = config->base;
+ 	uint32_t src_clk, div, diff;
+-	union tck_control_s tck_control;
+ 
+ 	if (freq > JTAG_ASPEED_MAX_FREQUENCY) {
+ 		return -EINVAL;
+@@ -372,21 +481,125 @@ int jtag_aspeed_freq_set(const struct device *dev, uint32_t freq)
+ 		div = div - 1;
+ 	}
+ 	LOG_DBG("tck divisor = %d, tck freq = %d\n", div, src_clk / (div + 1));
++#ifdef CONFIG_JTAG_ASPEED_HW_MODE2
++	union mode_2_control_s mode_2_control;
++
++	mode_2_control.value = jtag_register->mode_2_control.value;
++	mode_2_control.fields.clock_divisor = div;
++	jtag_register->mode_2_control.value = mode_2_control.value;
++#else
++	union tck_control_s tck_control;
++
+ 	tck_control.value = jtag_register->tck_control.value;
+ 	tck_control.fields.tck_divisor = div;
+ 	jtag_register->tck_control.value = tck_control.value;
++#endif
++	return 0;
++}
++
++static int jtag_aspeed_set_tap_state_sw(const struct device *dev, enum tap_state from_state,
++					enum tap_state end_state)
++{
++	int i = 0;
++	enum tap_state from, to;
++	struct jtag_aspeed_data *priv = DEV_DATA(dev);
++	uint8_t dummy;
++
++	from = from_state;
++	to = end_state;
++
++	for (i = 0; i < _tms_cycle_lookup[from][to].count; i++)
++		jtag_aspeed_tck_cycle(dev,
++				      ((_tms_cycle_lookup[from][to].tmsbits
++				      >> i) & 0x1), 0, &dummy);
++	priv->state = end_state;
++	return 0;
++}
++
++#ifdef CONFIG_JTAG_ASPEED_HW_MODE2
++int jtag_aspeed_tap_set(const struct device *dev, enum tap_state state)
++{
++	struct jtag_aspeed_data *priv = DEV_DATA(dev);
++
++	jtag_aspeed_set_tap_state_sw(dev, priv->state, state);
++	LOG_DBG("Move tap state to %s\n", tap_state_name(state));
++	return 0;
++}
++
++#else
++static int jtag_aspeed_tap_idle(const struct device *dev)
++{
++	struct jtag_aspeed_data *priv = DEV_DATA(dev);
++	const struct jtag_aspeed_cfg *config = DEV_CFG(dev);
++	struct jtag_register_s *jtag_register = config->base;
++	union mode_1_control_s mode_1_control;
++	int ret;
++
++	ret = jtag_aspeed_tap_state_check(dev);
++	if (ret) {
++		return ret;
++	}
++	if (priv->state == TAP_IDLE) {
++		return 0;
++	}
++	mode_1_control.value = jtag_register->mode_1_control.value;
++	mode_1_control.fields.xfer_len = 0;
++	mode_1_control.fields.terminating_xfer = 1;
++	mode_1_control.fields.last_xfer = 1;
++	LOG_DBG("mode_1_ctrl = 0x%08x, status = 0x%08x\n",
++		jtag_register->mode_1_control.value,
++		jtag_register->software_mode_and_status.value);
++	if (priv->state == TAP_IRPAUSE) {
++		mode_1_control.fields.ir_xfer_en = 1;
++		jtag_register->mode_1_control.value = mode_1_control.value;
++		jtag_aspeed_wait_ir_complete(priv);
++		mode_1_control.fields.ir_xfer_en = 0;
++		jtag_register->mode_1_control.value = mode_1_control.value;
++	} else if (priv->state == TAP_DRPAUSE) {
++		mode_1_control.fields.dr_xfer_en = 1;
++		jtag_register->mode_1_control.value = mode_1_control.value;
++		jtag_aspeed_wait_dr_complete(priv);
++		mode_1_control.fields.dr_xfer_en = 0;
++		jtag_register->mode_1_control.value = mode_1_control.value;
++	}
++	mode_1_control.fields.terminating_xfer = 0;
++	jtag_register->mode_1_control.value = mode_1_control.value;
++	priv->state = TAP_IDLE;
+ 	return 0;
+ }
++
++static int jtag_aspeed_tap_reset(const struct device *dev)
++{
++	struct jtag_aspeed_data *priv = DEV_DATA(dev);
++	const struct jtag_aspeed_cfg *config = DEV_CFG(dev);
++	struct jtag_register_s *jtag_register = config->base;
++	union mode_1_control_s mode_1_control;
++
++	/* Disable SW mode */
++	jtag_register->software_mode_and_status.value = 0;
++	mode_1_control.value = jtag_register->mode_1_control.value;
++	/* Enable HW mode 1 */
++	mode_1_control.fields.engine_enable = 1;
++	/* Reset target tap */
++	mode_1_control.fields.reset_to_tlr = 1;
++	jtag_register->mode_1_control.value = mode_1_control.value;
++	while (jtag_register->mode_1_control.fields.reset_to_tlr)
++		;
++	priv->state = TAP_IDLE;
++	return 0;
++}
++
+ int jtag_aspeed_tap_set(const struct device *dev, enum tap_state state)
+ {
+ 	int ret;
++	struct jtag_aspeed_data *priv = DEV_DATA(dev);
+ 
+ 	if (state == TAP_IDLE) {
+ 		ret = jtag_aspeed_tap_idle(dev);
+ 	} else if (state == TAP_RESET) {
+ 		ret = jtag_aspeed_tap_reset(dev);
+ 	} else {
+-		ret = -ENOTSUP;
++		ret = jtag_aspeed_set_tap_state_sw(dev, priv->state, state);
+ 	}
+ 	if (ret) {
+ 		LOG_ERR("Move tap state to %s fail\n", tap_state_name(state));
+@@ -395,6 +608,8 @@ int jtag_aspeed_tap_set(const struct device *dev, enum tap_state state)
+ 	}
+ 	return ret;
+ }
++#endif
++
+ int jtag_aspeed_tap_get(const struct device *dev, enum tap_state *state)
+ {
+ 	struct jtag_aspeed_data *priv = DEV_DATA(dev);
+@@ -409,13 +624,232 @@ int jtag_aspeed_tap_get(const struct device *dev, enum tap_state *state)
+ }
+ int jtag_aspeed_tck_run(const struct device *dev, uint32_t run_count)
+ {
++#ifdef CONFIG_JTAG_ASPEED_HW_MODE2
++	uint32_t execute_tck;
++	struct jtag_aspeed_data *priv = DEV_DATA(dev);
++	const struct jtag_aspeed_cfg *config = DEV_CFG(dev);
++	struct jtag_register_s *jtag_register = config->base;
++	union mode_2_control_s mode_2_control;
++	union shift_control_s shift_control;
++
++	while (run_count) {
++		execute_tck = run_count > GENMASK(9, 0) ? GENMASK(9, 0) : run_count;
++		/* Disable sw mode */
++		jtag_register->software_mode_and_status.value = 0;
++		jtag_register->padding_control_0.value = 0;
++		mode_2_control.value = jtag_register->mode_2_control.value;
++		mode_2_control.fields.static_shift_value = 0;
++		mode_2_control.fields.upper_data_shift_number = execute_tck >> 7;
++		jtag_register->mode_2_control.value = mode_2_control.value;
++
++		shift_control.value = 0;
++		shift_control.fields.enable_static_shift = 1;
++		shift_control.fields.lower_data_shift_number = execute_tck & GENMASK(6, 0);
++		jtag_register->shift_control.value = shift_control.value;
++
++		jtag_aspeed_wait_shift_complete(priv);
++		run_count -= execute_tck;
++	}
++#else
+ 	uint32_t i;
+ 	uint8_t dummy;
+ 
+ 	for (i = 0; i < run_count; i++)
+ 		jtag_aspeed_tck_cycle(dev, 0, 0, &dummy);
++#endif
++	return 0;
++}
++
++#ifdef CONFIG_JTAG_ASPEED_HW_MODE2
++
++static int jtag_aspeed_shctrl_tms_mask(enum tap_state from,
++				       enum tap_state to,
++				       enum tap_state there,
++				       enum tap_state endstate,
++				       bool start_shift, bool end_shift,
++				       uint32_t *tms_mask)
++{
++	uint32_t pre_tms = start_shift ? _tms_cycle_lookup[from][to].count : 0;
++	uint32_t post_tms = end_shift ? _tms_cycle_lookup[there][endstate].count : 0;
++	uint32_t tms_value = start_shift ? _tms_cycle_lookup[from][to].tmsbits : 0;
++	union shift_control_s *shift_control = tms_mask;
++
++	tms_value |= end_shift ? _tms_cycle_lookup[there][endstate].tmsbits
++					 << pre_tms :
++				 0;
++	if (pre_tms > GENMASK(2, 0) || post_tms > GENMASK(2, 0)) {
++		LOG_ERR("pre/port tms count is greater than hw limit");
++		return -EINVAL;
++	}
++	LOG_DBG("from: %s, to: %s, there: %s, endstate: %s, "
++		"start_shift: %d, end_shift: %d, pre_tms: %d, post_tms: %d, "
++		"tms_value: 0x%08x\n",
++		tap_state_name(from), tap_state_name(to),
++		tap_state_name(there), tap_state_name(endstate),
++		start_shift, end_shift, pre_tms, post_tms, tms_value);
++
++	shift_control->fields.start_of_shift = start_shift;
++	shift_control->fields.end_of_shift = end_shift;
++	shift_control->fields.pre_tms_shift_number = pre_tms;
++	shift_control->fields.post_tms_shift_number = post_tms;
++	shift_control->fields.tms_value = tms_value;
+ 	return 0;
+ }
++
++static int jtag_aspeed_xfer(const struct device *dev, struct scan_command_s *scan)
++{
++	struct jtag_aspeed_data *priv = DEV_DATA(dev);
++	const struct jtag_aspeed_cfg *config = DEV_CFG(dev);
++	struct jtag_register_s *jtag_register = config->base;
++	uint32_t remain_xfer = scan->fields.num_bits;
++	uint32_t xfer_size;
++	uint32_t shift_index = 0, curr_out_index = 0, curr_in_index = 0;
++	uint8_t end_xfer;
++	const uint32_t *out_value = (const uint32_t *)scan->fields.out_value;
++	uint32_t *in_value = (uint32_t *)scan->fields.in_value;
++	union mode_2_control_s mode_2_control;
++	union shift_control_s shift_control;
++	enum tap_state shift;
++	enum tap_state exit;
++	enum tap_state pause;
++	enum tap_state endstate;
++	bool start_shift;
++	bool end_shift;
++	uint32_t shift_control_val;
++
++	/* Disable SW mode */
++	jtag_register->software_mode_and_status.value = 0;
++	/* Clear internal FIFO */
++	mode_2_control.value = jtag_register->mode_2_control.value;
++	mode_2_control.fields.reset_internal_fifo = 1;
++	jtag_register->mode_2_control.value = mode_2_control.value;
++	while (jtag_register->mode_2_control.fields.reset_internal_fifo)
++		;
++	/* Enable HW mode 2 */
++	mode_2_control.value = jtag_register->mode_2_control.value;
++	mode_2_control.fields.engine_enable = 1;
++	mode_2_control.fields.engine_output_enable = 1;
++	jtag_register->mode_2_control.value = mode_2_control.value;
++
++	if (scan->ir_scan) {
++		shift = TAP_IRSHIFT;
++		exit = TAP_IREXIT1;
++		pause = TAP_IRPAUSE;
++	} else {
++		shift = TAP_DRSHIFT;
++		exit = TAP_DREXIT1;
++		pause = TAP_DRPAUSE;
++	}
++
++	LOG_DBG("scan info: %sScan size:%d status from %s to end_state:%s\n",
++		scan->ir_scan ? "IR" : "DR", scan->fields.num_bits, tap_state_name(priv->state),
++		tap_state_name(scan->end_state));
++
++	start_shift = (priv->state == shift) ? false : true;
++
++	if (scan->end_state == shift) {
++		if (scan->fields.num_bits == 1) {
++			end_shift = true;
++			endstate = pause;
++		} else {
++			end_shift = false;
++			endstate = shift;
++		}
++	} else {
++		endstate = scan->end_state;
++		end_shift = true;
++	}
++
++	while (remain_xfer) {
++		if (remain_xfer > priv->fifo_length) {
++			end_xfer = 0;
++			xfer_size = priv->fifo_length;
++			shift_index += priv->fifo_length >> 5;
++		} else {
++			end_xfer = 1;
++			xfer_size = remain_xfer;
++			shift_index += remain_xfer >> 5;
++			if (remain_xfer & 0x1f) {
++				shift_index++;
++			}
++		}
++
++		/* Clear internal FIFO */
++		mode_2_control.value = jtag_register->mode_2_control.value;
++		mode_2_control.fields.reset_internal_fifo = 1;
++		jtag_register->mode_2_control.value = mode_2_control.value;
++		while (jtag_register->mode_2_control.fields.reset_internal_fifo)
++			;
++
++		/* Wait internal FIFO clear to CPU mode */
++		while (jtag_register->mode_2_control.fields.internal_fifo_mode)
++			;
++
++		/* Write out data to FIFO */
++		for (; curr_out_index < shift_index; curr_out_index++) {
++			if (xfer_size < 32) {
++				jtag_register->data_for_hw_mode_2[0].value =
++					out_value[curr_out_index] &
++					(uint32_t)GENMASK(xfer_size - 1, 0);
++			} else {
++				jtag_register->data_for_hw_mode_2[0].value =
++					out_value[curr_out_index];
++			}
++		}
++
++		/*
++		 * Set shift length: upper 3 bits in mode_2_control,
++		 * lower 7 bits in shift_control
++		 */
++		mode_2_control.value = jtag_register->mode_2_control.value;
++		mode_2_control.fields.upper_data_shift_number = xfer_size >> 7;
++		jtag_register->mode_2_control.value = mode_2_control.value;
++		shift_control_val = 0;
++		if (remain_xfer > priv->fifo_length)
++			jtag_aspeed_shctrl_tms_mask(priv->state, shift, exit, endstate, start_shift,
++						    0, &shift_control_val);
++		else
++			jtag_aspeed_shctrl_tms_mask(priv->state, shift, exit, endstate, start_shift,
++						    end_shift, &shift_control_val);
++		shift_control.value = shift_control_val;
++		shift_control.fields.lower_data_shift_number = xfer_size & GENMASK(6, 0);
++		shift_control.fields.start_of_shift = 1;
++		LOG_DBG("Transfer ctrl: 0x%08x, shift ctrl: 0x%08x\n", mode_2_control.value,
++			shift_control.value);
++		jtag_register->shift_control.value = shift_control.value;
++
++		/* Wait for transfer complete */
++		jtag_aspeed_wait_shift_complete(priv);
++		if (remain_xfer > priv->fifo_length)
++			priv->state = shift;
++		else
++			priv->state = endstate;
++		remain_xfer -= xfer_size;
++
++		/* Read in data from FIFO */
++		if (in_value) {
++			for (; curr_in_index < shift_index; curr_in_index++) {
++				uint32_t temp_in_value = jtag_register->data_for_hw_mode_2[0].value;
++
++				LOG_DBG("in_value[%d] = %08x\n", curr_in_index, temp_in_value);
++				if (xfer_size < 32) {
++					in_value[curr_in_index] =
++						temp_in_value & ((1 << xfer_size) - 1);
++				} else {
++					in_value[curr_in_index] = temp_in_value;
++				}
++				xfer_size -= 32;
++			}
++		} else {
++			for (; curr_in_index < shift_index; curr_in_index++) {
++				(void)jtag_register->data_for_hw_mode_2[0].value;
++			}
++		}
++	}
++	LOG_DBG("Transfer complete, end state: %s\n", tap_state_name(priv->state));
++	return 0;
++}
++#else
+ int jtag_aspeed_xfer(const struct device *dev, struct scan_command_s *scan)
+ {
+ 	struct jtag_aspeed_data *priv = DEV_DATA(dev);
+@@ -549,14 +983,13 @@ int jtag_aspeed_xfer(const struct device *dev, struct scan_command_s *scan)
+ 	priv->state = scan->end_state;
+ 	return 0;
+ }
++#endif
+ 
+ static int jtag_aspeed_init(const struct device *dev)
+ {
+ 	struct jtag_aspeed_data *priv = DEV_DATA(dev);
+ 	const struct jtag_aspeed_cfg *config = DEV_CFG(dev);
+ 	struct jtag_register_s *jtag_register = config->base;
+-	union mode_1_int_ctrl_s mode_1_int_ctrl;
+-	union mode_1_control_s mode_1_control;
+ 	const struct device *reset_dev =
+ 		device_get_binding(ASPEED_RST_CTRL_NAME);
+ 
+@@ -566,6 +999,26 @@ static int jtag_aspeed_init(const struct device *dev)
+ 	priv->state = TAP_IDLE;
+ 	priv->evt_id = osEventFlagsNew(NULL);
+ 	config->irq_config_func(dev);
++#ifdef CONFIG_JTAG_ASPEED_HW_MODE2
++	union mode_2_control_s mode_2_control;
++	union mode_2_int_ctrl_s mode_2_int_ctrl;
++
++	/* Enable all of the interrupt */
++	mode_2_int_ctrl.value = jtag_register->mode_2_int_ctrl.value;
++	mode_2_int_ctrl.fields.shift_complete_interrupt_status = 1;
++	mode_2_int_ctrl.fields.shift_complete_interrupt_enable = 1;
++	jtag_register->mode_2_int_ctrl.value = mode_2_int_ctrl.value;
++	jtag_aspeed_freq_set(dev, DEFAULT_JTAG_FREQ);
++	/* Output enable */
++	mode_2_control.value = jtag_register->mode_2_control.value;
++	mode_2_control.fields.engine_enable = 1;
++	mode_2_control.fields.engine_output_enable = 1;
++	mode_2_control.fields.trst_value = 1;
++	jtag_register->mode_2_control.value = mode_2_control.value;
++#else
++	union mode_1_int_ctrl_s mode_1_int_ctrl;
++	union mode_1_control_s mode_1_control;
++
+ 	/* Enable all of the interrupt */
+ 	mode_1_int_ctrl.value = jtag_register->mode_1_int_ctrl.value;
+ 	mode_1_int_ctrl.fields.enable_of_data_xfer_completed = 1;
+@@ -578,6 +1031,7 @@ static int jtag_aspeed_init(const struct device *dev)
+ 	mode_1_control.value = jtag_register->mode_1_control.value;
+ 	mode_1_control.fields.engine_output_enable = 1;
+ 	jtag_register->mode_1_control.value = mode_1_control.value;
++#endif
+ 	return 0;
+ }
+ 
+diff --git a/drivers/jtag/jtag_aspeed.h b/drivers/jtag/jtag_aspeed.h
+index 031e7e9ddb8..7daebb1faab 100644
+--- a/drivers/jtag/jtag_aspeed.h
++++ b/drivers/jtag/jtag_aspeed.h
+@@ -206,6 +206,10 @@ struct jtag_register_s {
+ #define JTAG_ASPEED_DATA_COMPLETE               BIT(16)
+ #define JTAG_ASPEED_INT_PEND_MASK               GENMASK(19, 16)
+ 
++/* Hareware mode 2: Interrupt Control */
++#define JTAG_ASPEED_HW2_IRQ_EN BIT(16)
++#define JTAG_ASPEED_HW2_IRQ_STAT BIT(0)
++
+ #define JTAG_ASPEED_MAX_FREQUENCY 10000000
+ 
+ #endif /* end of "#ifndef _JTAG_ASPEED_H_" */
+-- 
+2.25.1
+

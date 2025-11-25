@@ -73,12 +73,19 @@ typedef enum {
 	BOARD_TYPE_UNKNOWN,
 } ag_board_type_t;
 
+typedef enum {
+	MB_NOT_PRESENT,
+	MB_PRESENT,
+	MB_TYPE_UNKNOWN,
+} ag_mb_type_t;
+
 void init_platform_config();
 uint8_t get_vr_type();
 uint8_t get_ubc_type();
 uint8_t get_board_stage();
 uint8_t get_board_type();
 uint8_t get_tmp_type();
+uint8_t get_mb_type();
 bool plat_read_cpld(uint8_t offset, uint8_t *data);
 
 #endif

@@ -26,7 +26,7 @@ extern "C" {
 
 #define IANA_LEN 0x03
 /* define for pldm oem event */
-#define OEM_EVENT_LEN 0x05
+#define OEM_EVENT_LEN 0x09
 #define EVENT_ASSERTED 0x01
 #define EVENT_DEASSERTED 0x00
 
@@ -36,6 +36,7 @@ extern "C" {
 #define PLDM_OEM_WRITE_FILE_IO 0x02
 #define PLDM_OEM_READ_FILE_IO 0x03
 #define PLDM_OEM_SENSOR_POLLING_CMD 0x04
+#define PLDM_OEM_WF_READ_SPD_CHUNK 0x05
 
 #define POWER_CONTROL_LEN 0x01
 
@@ -181,7 +182,9 @@ enum mtia_event_source {
 	MTIA_POWER_ON_SEQUENCE_FAIL = 0x50,
 	MTIA_FM_ASIC_0_THERMTRIP_N,
 	MTIA_FM_ATH_PLD_HBM3_CATTRIP_ALARM,
-
+	MTIA_VR_FAULT_CAUSE_POWER_DOWN,
+	MTIA_ATH_GPIO_3,
+	MTIA_ATH_GPIO_4
 };
 
 enum READ_FILE_OPTION { READ_FILE_ATTR, READ_FILE_DATA };
@@ -270,6 +273,7 @@ struct pldm_addsel_data {
 	uint8_t event_data_1;
 	uint8_t event_data_2;
 	uint8_t event_data_3;
+	uint32_t timestamp;
 } __attribute__((packed));
 
 struct _sensor_polling_cmd_req {

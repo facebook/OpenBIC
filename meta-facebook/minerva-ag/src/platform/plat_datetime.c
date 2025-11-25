@@ -23,15 +23,25 @@
 #include "pldm_firmware_update.h"
 #include "mctp.h"
 #include "pldm.h"
+#include "plat_class.h"
 
 LOG_MODULE_REGISTER(plat_datetime);
 
+#define BMC_EID 0x08
+#define RTC_SYNC_INTERVAL_SEC 10
+#define RTC_WORKQ_STACK_SIZE 2048
+#define RTC_WORKQ_PRIORITY CONFIG_MAIN_THREAD_PRIORITY + 2
+
 static struct tm base_tm;
 static int64_t base_uptime_ms;
-static bool rtc_synced;
+static bool rtc_synced = false;
+static bool rtc_workq_initialized = false;
+
+static struct k_work_q rtc_workq;
+K_THREAD_STACK_DEFINE(rtc_workq_stack, RTC_WORKQ_STACK_SIZE);
 
 static void rtc_sync_work_handler(struct k_work *work);
-K_WORK_DEFINE(rtc_sync_work, rtc_sync_work_handler);
+K_WORK_DELAYABLE_DEFINE(rtc_sync_work, rtc_sync_work_handler);
 
 static uint8_t bcd_to_dec(uint8_t bcd)
 {
@@ -43,8 +53,8 @@ int get_datetime_from_bmc(struct tm *tm_now)
 	if (!tm_now)
 		return -1;
 
-	const uint8_t eid = 0x08;
-	uint8_t resp_buf[PLDM_MAX_DATA_SIZE] = { 0 };
+	static uint8_t resp_buf[PLDM_MAX_DATA_SIZE];
+	memset(resp_buf, 0, sizeof(resp_buf));
 	pldm_msg pmsg = {
 		.hdr = {
 			.msg_type = MCTP_MSG_TYPE_PLDM,
@@ -57,8 +67,8 @@ int get_datetime_from_bmc(struct tm *tm_now)
 	};
 
 	mctp *mctp_inst;
-	if (!get_mctp_info_by_eid(eid, &mctp_inst, &pmsg.ext_params)) {
-		LOG_ERR("Failed to get mctp info by eid 0x%x", eid);
+	if (!get_mctp_info_by_eid(BMC_EID, &mctp_inst, &pmsg.ext_params)) {
+		LOG_ERR("Failed to get mctp info by eid 0x%x", BMC_EID);
 		return -1;
 	}
 
@@ -95,25 +105,30 @@ static void rtc_sync_from_bmc(void)
 	}
 }
 
-static void rtc_sync_timer_handler(struct k_timer *timer_id)
-{
-	if (is_update_state_idle() == false) {
-		return;
-	}
-	k_work_submit(&rtc_sync_work);
-}
-
-K_TIMER_DEFINE(rtc_sync_timer, rtc_sync_timer_handler, NULL);
-
 static void rtc_sync_work_handler(struct k_work *work)
 {
+	if (is_update_state_idle() == false) {
+		k_work_schedule_for_queue(&rtc_workq, &rtc_sync_work,
+					  K_SECONDS(RTC_SYNC_INTERVAL_SEC));
+		return;
+	}
 	rtc_sync_from_bmc();
+
+	k_work_schedule_for_queue(&rtc_workq, &rtc_sync_work, K_SECONDS(RTC_SYNC_INTERVAL_SEC));
 }
 
 void rtc_init_once(void)
 {
-	rtc_sync_from_bmc();
-	k_timer_start(&rtc_sync_timer, K_SECONDS(10), K_SECONDS(10));
+	if (rtc_workq_initialized) {
+		LOG_DBG("RTC work queue already initialized");
+		return;
+	}
+	k_work_queue_start(&rtc_workq, rtc_workq_stack, K_THREAD_STACK_SIZEOF(rtc_workq_stack),
+			   RTC_WORKQ_PRIORITY, NULL);
+
+	k_work_schedule_for_queue(&rtc_workq, &rtc_sync_work, K_SECONDS(RTC_SYNC_INTERVAL_SEC));
+	rtc_workq_initialized = true;
+	LOG_INF("RTC work queue initialized");
 }
 
 time_t rtc_time(time_t *tloc)
@@ -138,4 +153,12 @@ void rtc_get_tm(struct tm *tm_now)
 	time_t now = rtc_time(NULL);
 	if (tm_now)
 		*tm_now = *gmtime(&now);
+}
+
+void plat_mctp_get_message_type_support_received()
+{
+	if (get_mb_type() == MB_PRESENT)
+		rtc_init_once();
+	LOG_INF("plat_mctp_get_message_type_support_received() completed");
+	return;
 }

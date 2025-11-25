@@ -22,6 +22,8 @@
 #define MONITOR_PMIC_ERROR_STACK_SIZE 1536
 #define MONITOR_PMIC_ERROR_TIME_MS (3 * 1000) // 3s
 #define CLEAR_MTP_DELAY_MS 200
+// The PMIC needs a total of 200ms from CAMP signal assertion to complete the write operation
+#define READ_PMIC_CRITICAL_ERROR_MS 200
 
 #define CLEAR_MTP_RETRY_MAX 5
 #define MAX_COUNT_PMIC_ERROR_OFFSET 7

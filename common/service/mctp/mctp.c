@@ -23,7 +23,6 @@
 #include <sys/printk.h>
 #include <zephyr.h>
 #include "libutil.h"
-#include "plat_def.h"
 
 LOG_MODULE_REGISTER(mctp);
 
@@ -442,6 +441,7 @@ mctp *mctp_init(void)
 	mctp_inst->max_msg_size = MCTP_DEFAULT_MSG_MAX_SIZE;
 	mctp_inst->endpoint = plat_get_eid();
 
+	LOG_INF("MCTP_DEFAULT_MSG_MAX_SIZE: %d", MCTP_DEFAULT_MSG_MAX_SIZE);
 	LOG_DBG("mctp_inst = %p", mctp_inst);
 	return mctp_inst;
 }

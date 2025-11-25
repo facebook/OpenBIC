@@ -26,6 +26,11 @@
 #define POWER_CAPPING_LC_DEFAULT 800
 #define POWER_CAPPING_ENABLE 1
 #define POWER_CAPPING_DISABLE 0
+#define POWER_CAPPING_AVERAGE_TIME_MS_DEFAULT 50 // 50ms
+#define POWER_CAPPING_HISTORY_SIZE 10
+#define THERMALTRIP_BIT BIT(0)
+#define ATH_GPIO_3_BIT BIT(4)
+#define ATH_GPIO_4_BIT BIT(5)
 
 #include "plat_pldm_sensor.h"
 
@@ -169,6 +174,7 @@ enum POWER_CAPPING_INDEX_E {
 	POWER_CAPPING_INDEX_LC,
 	POWER_CAPPING_INDEX_INTERVAL,
 	POWER_CAPPING_INDEX_SWITCH,
+	POWER_CAPPING_INDEX_AVERAGE,
 	POWER_CAPPING_INDEX_MAX,
 };
 
@@ -210,6 +216,12 @@ typedef struct throttle_user_settings_struct {
 } throttle_user_settings_struct;
 
 extern throttle_user_settings_struct throttle_user_settings;
+
+typedef struct ath_gpio_user_settings_struct {
+	uint8_t ath_gpio_user_setting_value;
+} ath_gpio_user_settings_struct;
+
+extern ath_gpio_user_settings_struct ath_gpio_user_settings;
 
 typedef struct vr_mapping_sensor {
 	uint8_t index;
@@ -340,9 +352,11 @@ bool vr_status_enum_get(uint8_t *name, uint8_t *num);
 bool vr_vout_default_settings_init(void);
 bool vr_vout_user_settings_init(void);
 bool get_user_settings_thermaltrip_from_eeprom(void *user_settings, uint8_t data_length);
-bool set_thermaltrip_user_settings(bool thermaltrip_enable, bool is_perm);
+bool set_thermaltrip_user_settings(uint8_t *thermaltrip_status_reg, bool is_perm);
 bool get_user_settings_throttle_from_eeprom(void *user_settings, uint8_t data_length);
 bool set_throttle_user_settings(uint8_t *throttle_status_reg, bool is_perm);
+bool get_user_settings_ath_gpio_from_eeprom(void *user_settings, uint8_t data_length);
+bool set_ath_gpio_user_settings(uint8_t *ath_gpio_status_reg, bool is_perm);
 bool strap_name_get(uint8_t rail, uint8_t **name);
 bool strap_enum_get(uint8_t *name, uint8_t *num);
 void init_temp_alert_mode(void);

@@ -1091,6 +1091,16 @@ bool mp2971_direct_to_vid(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt)
 	return ret;
 }
 
+static int8_t get_vout_cal_offset(uint16_t VID)
+{
+	uint8_t offset_byte = (uint8_t)(VID & 0x00FF); // bits[7:0]
+
+	if (offset_byte & 0x80)
+		return (int8_t)(offset_byte - 0x100); // negative
+	else
+		return (int8_t)offset_byte;
+}
+
 bool mp2971_get_vout_command(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
@@ -1101,15 +1111,25 @@ bool mp2971_get_vout_command(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt)
 		return false;
 	}
 
-	uint16_t val = data[0] | (data[1] << 8);
+	uint8_t data_cal_offset[2] = { 0 };
+	if (!mp2971_i2c_read(cfg->port, cfg->target_addr, PMBUS_VOUT_CAL_OFFSET, data_cal_offset,
+			     sizeof(data_cal_offset))) {
+		return false;
+	}
 
-	if (!mp2971_vid_to_direct(cfg, rail, &val)) {
+	uint16_t val = data[0] | (data[1] << 8);
+	uint16_t val_cal_offset = data_cal_offset[0] | (data_cal_offset[1] << 8);
+
+	int8_t signed_offset = get_vout_cal_offset(val_cal_offset);
+	int16_t adjusted_val = (int16_t)val + signed_offset;
+
+	if (!mp2971_vid_to_direct(cfg, rail, &adjusted_val)) {
 		LOG_ERR("bus:%x addr:%x mp2971_vid_to_direct failed \n", cfg->port,
 			cfg->target_addr);
 		return false;
 	}
 
-	*millivolt = val;
+	*millivolt = (uint16_t)adjusted_val;
 	return true;
 }
 
@@ -1118,15 +1138,29 @@ bool mp2971_set_vout_command(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt)
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	CHECK_NULL_ARG_WITH_RETURN(millivolt, false);
 
-	if (!mp2971_direct_to_vid(cfg, rail, millivolt)) {
+	uint8_t data_cal_offset[2] = { 0 };
+	if (!mp2971_i2c_read(cfg->port, cfg->target_addr, PMBUS_VOUT_CAL_OFFSET, data_cal_offset,
+			     sizeof(data_cal_offset))) {
+		return false;
+	}
+
+	uint16_t val_cal_offset = data_cal_offset[0] | (data_cal_offset[1] << 8);
+	int8_t signed_offset = get_vout_cal_offset(val_cal_offset);
+
+	uint16_t adjusted_val = *millivolt;
+
+	if (!mp2971_direct_to_vid(cfg, rail, &adjusted_val)) {
 		LOG_ERR("bus:%x addr:%x mp2971_direct_to_vid failed \n", cfg->port,
 			cfg->target_addr);
 		return false;
 	}
 
+	int16_t signed_val = (int16_t)adjusted_val - signed_offset;
+	uint16_t final_val = (uint16_t)signed_val;
+
 	uint8_t data[2] = { 0 };
-	data[0] = *millivolt & 0xFF;
-	data[1] = (*millivolt >> 8) & 0xFF;
+	data[0] = final_val & 0xFF;
+	data[1] = (final_val >> 8) & 0xFF;
 
 	if (!mp2971_i2c_write(cfg->port, cfg->target_addr, PMBUS_VOUT_COMMAND, data,
 			      sizeof(data))) {

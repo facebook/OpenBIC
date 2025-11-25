@@ -581,6 +581,13 @@ float mp29816a_get_resolution(sensor_cfg *cfg, bool is_vout_max_or_min)
 	return reso;
 }
 
+static float get_vout_cal_offset(uint16_t reg_value, float vid_step)
+{
+	int8_t raw = (int8_t)(reg_value & 0xFF); // bits[7:0]
+
+	return (float)raw * vid_step;
+}
+
 bool mp29816a_get_vout_command(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
@@ -592,12 +599,21 @@ bool mp29816a_get_vout_command(sensor_cfg *cfg, uint8_t rail, uint16_t *millivol
 		return false;
 	}
 
-	uint16_t read_value = data[0] | (data[1] << 8);
-
-	float resolution = mp29816a_get_resolution(cfg, false);
-	if (resolution == 0)
+	uint8_t data_cal_offset[2] = { 0 };
+	if (!mp29816a_i2c_read(cfg->port, cfg->target_addr, PMBUS_VOUT_TRIM, data_cal_offset,
+			       sizeof(data_cal_offset))) {
 		return false;
-	float val = read_value * resolution * 1000;
+	}
+
+	uint16_t read_value = data[0] | (data[1] << 8);
+	uint16_t val_cal_offset = data_cal_offset[0] | (data_cal_offset[1] << 8);
+
+	float vid_step = mp29816a_get_resolution(cfg, false);
+	if (vid_step == 0)
+		return false;
+
+	float offset_mv = get_vout_cal_offset(val_cal_offset, vid_step);
+	float val = (read_value * 1000.0f) * vid_step + offset_mv;
 	*millivolt = (int)val;
 	return true;
 }
@@ -607,10 +623,20 @@ bool mp29816a_set_vout_command(sensor_cfg *cfg, uint8_t rail, uint16_t *millivol
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	CHECK_NULL_ARG_WITH_RETURN(millivolt, false);
 
-	float resolution = mp29816a_get_resolution(cfg, false);
-	if (resolution == 0)
+	float vid_step = mp29816a_get_resolution(cfg, false);
+	if (vid_step == 0)
 		return false;
-	uint16_t read_value = (*millivolt / resolution) / 1000;
+
+	uint8_t data_cal_offset[2] = { 0 };
+	if (!mp29816a_i2c_read(cfg->port, cfg->target_addr, PMBUS_VOUT_TRIM, data_cal_offset,
+			       sizeof(data_cal_offset))) {
+		return false;
+	}
+
+	uint16_t val_cal_offset = data_cal_offset[0] | (data_cal_offset[1] << 8);
+	float offset_mv = get_vout_cal_offset(val_cal_offset, vid_step);
+
+	uint16_t read_value = (uint16_t)(((*millivolt - offset_mv) / 1000.0f) / vid_step);
 	read_value = read_value & READ_VOUT_MASK;
 
 	uint8_t data[2] = { 0 };

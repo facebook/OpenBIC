@@ -33,6 +33,7 @@
 #include "power_status.h"
 #include "pmbus.h"
 #include "tmp431.h"
+#include "octeon.h"
 #include "libutil.h"
 #include "xdpe15284.h"
 
@@ -376,6 +377,10 @@ sensor_cfg DPV2_sensor_config_table[] = {
 	{ SENSOR_NUM_TEMP_DPV2_HSM, sensor_dev_tmp431, I2C_BUS9, DPV2_HSM_TEMP_ADDR,
 	  TMP431_LOCAL_TEMPERATRUE, hsm_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_hsm_read, NULL, post_hsm_read, NULL,
+	  NULL },
+	{ SENSOR_NUM_TEMP_HSM_SOC, sensor_dev_octeon, I2C_BUS9, HSM_SOC_ADDR,
+	  OCTEON_DIE_JUNCTION_TEMPERATRUE, hsm_access, 0, 0, SAMPLE_COUNT_DEFAULT,
+	  POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
 	  NULL },
 };
 

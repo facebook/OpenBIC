@@ -61,7 +61,7 @@
 #define THRESHOLD_ARG0_TABLE_INDEX 0xFFFFFFFF
 
 #define HEX_FAN_NUM 14
-static void fb_prsnt_handle(uint32_t thres_tbl_idx, uint32_t changed_status);
+//static void fb_prsnt_handle(uint32_t thres_tbl_idx, uint32_t changed_status);
 void pump_failure_do(uint32_t thres_tbl_idx, uint32_t status);
 void abnormal_flow_do(uint32_t thres_tbl_idx, uint32_t status);
 
@@ -140,7 +140,7 @@ bool pump_fail_check()
 {
 	uint8_t fail_num = 0;
 	for (uint8_t i = 0; i < ARRAY_SIZE(pump_sensor_array); i++) {
-		if (get_threshold_status(pump_sensor_array[i]))
+		if (get_threshold_status(pump_sensor_array[i]) == THRESHOLD_STATUS_LCR)
 			fail_num++;
 	}
 
@@ -620,7 +620,7 @@ void sensor_log(uint32_t sensor_num, uint32_t status)
 }
 
 sensor_threshold threshold_tbl[] = {
-	{ SENSOR_NUM_BPB_RPU_COOLANT_INLET_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 55, abnormal_temp_do,
+	/*{ SENSOR_NUM_BPB_RPU_COOLANT_INLET_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 55, abnormal_temp_do,
 	  SENSOR_NUM_BPB_RPU_COOLANT_INLET_TEMP_C, 1 },
 	{ SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_TEMP_C, THRESHOLD_ENABLE_UCR, 0, 55, abnormal_temp_do,
 	  SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_TEMP_C, 1 },
@@ -674,14 +674,14 @@ sensor_threshold threshold_tbl[] = {
 	{ SENSOR_NUM_FB_13_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 200, 0, hex_fan_failure_do,
 	  SENSOR_NUM_FB_13_FAN_TACH_RPM, 1 },
 	{ SENSOR_NUM_FB_14_FAN_TACH_RPM, THRESHOLD_ENABLE_LCR, 200, 0, hex_fan_failure_do,
-	  SENSOR_NUM_FB_14_FAN_TACH_RPM, 1 },
+	  SENSOR_NUM_FB_14_FAN_TACH_RPM, 1 },*/
 	{ SENSOR_NUM_PB_1_PUMP_TACH_RPM, THRESHOLD_ENABLE_BOTH, 0, 0, pump_failure_do,
 	  THRESHOLD_ARG0_TABLE_INDEX, 40 },
 	{ SENSOR_NUM_PB_2_PUMP_TACH_RPM, THRESHOLD_ENABLE_BOTH, 0, 0, pump_failure_do,
 	  THRESHOLD_ARG0_TABLE_INDEX, 40 },
 	{ SENSOR_NUM_PB_3_PUMP_TACH_RPM, THRESHOLD_ENABLE_BOTH, 0, 0, pump_failure_do,
 	  THRESHOLD_ARG0_TABLE_INDEX, 40 },
-	{ SENSOR_NUM_PB_1_FAN_1_TACH_RPM, THRESHOLD_ENABLE_LCR, 500, 0, rpu_internal_fan_failure_do,
+	/*{ SENSOR_NUM_PB_1_FAN_1_TACH_RPM, THRESHOLD_ENABLE_LCR, 500, 0, rpu_internal_fan_failure_do,
 	  SENSOR_NUM_PB_1_FAN_1_TACH_RPM, 1 },
 	{ SENSOR_NUM_PB_1_FAN_2_TACH_RPM, THRESHOLD_ENABLE_LCR, 500, 0, rpu_internal_fan_failure_do,
 	  SENSOR_NUM_PB_1_FAN_2_TACH_RPM, 1 },
@@ -737,7 +737,7 @@ sensor_threshold threshold_tbl[] = {
 	{ SENSOR_NUM_SB_HEX_PRESSURE_2_P_KPA, THRESHOLD_ENABLE_UCR, 0, 200, sensor_log,
 	  SENSOR_NUM_SB_HEX_PRESSURE_2_P_KPA, 3 },
 	{ SENSOR_NUM_SB_HEX_AIR_INLET_AVG_TEMP_C, THRESHOLD_ENABLE_BOTH, -20, 100, sensor_log,
-	  SENSOR_NUM_SB_HEX_AIR_INLET_AVG_TEMP_C, 1 },
+	  SENSOR_NUM_SB_HEX_AIR_INLET_AVG_TEMP_C, 1 },*/
 
 };
 
@@ -865,7 +865,7 @@ struct fb_sen_entry {
 		   FB_SEN_ENTRY(5),  FB_SEN_ENTRY(6),  FB_SEN_ENTRY(7),	 FB_SEN_ENTRY(8),
 		   FB_SEN_ENTRY(9),  FB_SEN_ENTRY(10), FB_SEN_ENTRY(11), FB_SEN_ENTRY(12),
 		   FB_SEN_ENTRY(13), FB_SEN_ENTRY(14) };
-
+/*
 static uint8_t fb_uninit(uint8_t idx)
 {
 	LOG_ERR("fb_uninit %d", idx + 1);
@@ -941,7 +941,7 @@ static void fb_prsnt_handle(uint32_t thres_tbl_idx, uint32_t changed_status)
 		LOG_ERR("Fan board %d is present", i + 1);
 		fb_reinit(i);
 	}
-}
+}*/
 
 /*
 	return 0 is hsc power ok
