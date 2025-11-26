@@ -18,7 +18,7 @@
 #define PLAT_DEF_H
 
 #define BMC_USB_PORT "CDC_ACM_0"
-#define ADC_CALIBRATION 1
+#define ADC_CALIBRATION 0
 #define ENABLE_NCSI
 
 #define PLDM_MSG_TIMEOUT_MS 5000
