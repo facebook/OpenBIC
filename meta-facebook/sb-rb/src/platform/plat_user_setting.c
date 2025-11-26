@@ -344,7 +344,7 @@ bool set_plat_temp_threshold(uint8_t temp_index_threshold_type, uint32_t *millid
 	return true;
 }
 
-bool get_plat_temp_threshold(uint8_t temp_index_threshold_type, uint32_t *millidegree_celsius)
+bool get_plat_temp_threshold(uint8_t temp_index_threshold_type, int32_t *millidegree_celsius)
 {
 	CHECK_NULL_ARG_WITH_RETURN(millidegree_celsius, false);
 

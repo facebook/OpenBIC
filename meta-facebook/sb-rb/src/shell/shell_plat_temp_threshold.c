@@ -49,7 +49,7 @@ static int cmd_temp_threshold_get_all(const struct shell *shell, size_t argc, ch
 		shell,
 		"  id|              temp_threshold_name               |temperature(millidegree C)");
 	for (int i = 0; i < PLAT_TEMP_INDEX_THRESHOLD_TYPE_MAX; i++) {
-		uint32_t temperature = 0;
+		int32_t temperature = 0;
 		uint8_t *temp_index_threshold_name = NULL;
 		if (!get_temp_index_threshold_type_name((uint8_t)i, &temp_index_threshold_name)) {
 			shell_print(shell, "Can't find type name by index: %d", i);

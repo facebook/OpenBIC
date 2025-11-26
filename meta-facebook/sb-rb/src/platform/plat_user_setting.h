@@ -119,7 +119,7 @@ bool plat_get_temp_status(uint8_t rail, uint8_t *temp_status);
 bool get_temp_sensor_rail_name(uint8_t rail, uint8_t **name);
 bool get_temp_threshold_type_enum(uint8_t *name, uint8_t *num);
 bool get_temp_index_threshold_type_name(uint8_t type, uint8_t **name);
-bool get_plat_temp_threshold(uint8_t temp_index_threshold_type, uint32_t *millidegree_celsius);
+bool get_plat_temp_threshold(uint8_t temp_index_threshold_type, int32_t *millidegree_celsius);
 bool set_plat_temp_threshold(uint8_t temp_index_threshold_type, uint32_t *millidegree_celsius,
 			     bool is_default, bool is_perm);
 bool plat_clear_temp_status(uint8_t rail);
