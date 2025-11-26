@@ -200,9 +200,9 @@ static steps_on_struct steps_on[] = {
 	{ 1, VR_AND_CLK_EN, 4, "FM_OWL_W_TRVDD0P9_EN",
 	  PWRGD_OWL_W_TRVDD0P9_R }, //FM_OWL_W_TRVDD0P9_EN
 	{ 1, VR_3_EN, 3, "FM_PVDD0P9_EN",
-	  NO_DEFINED }, //FM_PVDD0P9_EN (OWL_E_PVDD0P9, OWL_W_PVDD0P9)
+	  PWRGD_P0V9_OWL_E_PVDD }, //FM_PVDD0P9_EN (OWL_E_PVDD0P9, OWL_W_PVDD0P9)
 	{ 1, VR_3_EN, 1, "FM_P1V5_RVDD_EN",
-	  NO_DEFINED }, //FM_P1V5_RVDD_EN (OWL_E_RVDD1P5, OWL_W_RVDD1P5)
+	  PWRGD_P1V5_E_RVDD }, //FM_P1V5_RVDD_EN (OWL_E_RVDD1P5, OWL_W_RVDD1P5)
 	{ 1, VR_AND_CLK_EN, 0, "FM_HAMSA_VDDHRXTX_PCIE_EN",
 	  PWRGD_HAMSA_VDDHRXTX_PCIE_R }, //FM_HAMSA_VDDHRXTX_PCIE_EN
 	{ 1, VR_3_EN, 2, "FM_PVDD1P5_EN", PWRGD_PVDD1P5 }, //FM_PVDD1P5_EN
@@ -334,6 +334,43 @@ void cmd_iris_steps_on(const struct shell *shell, size_t argc, char **argv)
 		shell_print(shell, "%-20s %d",
 			    power_good_status_table_for_steps_on[PWRGD_P1V5_PLL_VDDA_OWL_W]
 				    .power_rail_name,
+			    value);
+	} else if (pwrgd_idx == PWRGD_P0V9_OWL_E_PVDD) {
+		offset = power_good_status_table_for_steps_on[PWRGD_P0V9_OWL_E_PVDD].cpld_offsets;
+		bit = power_good_status_table_for_steps_on[PWRGD_P0V9_OWL_E_PVDD].bit_loc;
+		if (!plat_read_cpld(offset, &reg_data, 1))
+			shell_error(shell, "Read CPLD offset 0x%x failed", offset);
+		value = (reg_data >> bit) & 0x01;
+		shell_print(
+			shell, "%-20s %d",
+			power_good_status_table_for_steps_on[PWRGD_P0V9_OWL_E_PVDD].power_rail_name,
+			value);
+		offset = power_good_status_table_for_steps_on[PWRGD_P0V9_OWL_W_PVDD].cpld_offsets;
+		bit = power_good_status_table_for_steps_on[PWRGD_P0V9_OWL_W_PVDD].bit_loc;
+		if (!plat_read_cpld(offset, &reg_data, 1))
+			shell_error(shell, "Read CPLD offset 0x%x failed", offset);
+		value = (reg_data >> bit) & 0x01;
+		shell_print(
+			shell, "%-20s %d",
+			power_good_status_table_for_steps_on[PWRGD_P0V9_OWL_W_PVDD].power_rail_name,
+			value);
+
+	} else if (pwrgd_idx == PWRGD_P1V5_E_RVDD) {
+		offset = power_good_status_table_for_steps_on[PWRGD_P1V5_E_RVDD].cpld_offsets;
+		bit = power_good_status_table_for_steps_on[PWRGD_P1V5_E_RVDD].bit_loc;
+		if (!plat_read_cpld(offset, &reg_data, 1))
+			shell_error(shell, "Read CPLD offset 0x%x failed", offset);
+		value = (reg_data >> bit) & 0x01;
+		shell_print(shell, "%-20s %d",
+			    power_good_status_table_for_steps_on[PWRGD_P1V5_E_RVDD].power_rail_name,
+			    value);
+		offset = power_good_status_table_for_steps_on[PWRGD_P1V5_W_RVDD].cpld_offsets;
+		bit = power_good_status_table_for_steps_on[PWRGD_P1V5_W_RVDD].bit_loc;
+		if (!plat_read_cpld(offset, &reg_data, 1))
+			shell_error(shell, "Read CPLD offset 0x%x failed", offset);
+		value = (reg_data >> bit) & 0x01;
+		shell_print(shell, "%-20s %d",
+			    power_good_status_table_for_steps_on[PWRGD_P1V5_W_RVDD].power_rail_name,
 			    value);
 	} else {
 		//read from CPLD
