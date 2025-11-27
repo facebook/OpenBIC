@@ -19,6 +19,8 @@
 #include <stdint.h>
 #include "plat_cpld.h"
 
+#define HAMSA_SMB_ERR_EVENT_HEADER 0x60
+
 typedef struct _vr_fault_info {
 	uint8_t mtia_event_source;
 	uint8_t cpld_reg_offset;
@@ -27,7 +29,10 @@ typedef struct _vr_fault_info {
 	uint8_t sensor_id;
 } vr_fault_info;
 
-enum event_type { VR_POWER_FAULT = 0x01 };
+enum event_type {
+	VR_POWER_FAULT = 0x01,
+	ASIC_MODULE_ERROR = 0x29,
+};
 
 void process_mtia_vr_power_fault_sel(cpld_info *cpld_info, uint8_t *current_cpld_value);
 void plat_set_dc_on_log(bool is_assert);

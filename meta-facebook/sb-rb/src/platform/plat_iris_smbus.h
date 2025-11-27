@@ -64,7 +64,14 @@
 
 #define MAX_DATA_PKT_SIZE 24
 #define STATUS_RETRY_CNT 2
+#define ERROR_CODE_LEN 8
 
+// smbus error code
+#define SMBUS_ERROR 122
+// asic_error_code
+#define ASIC_ERROR 123
+// module_error_code
+#define MODULE_ERROR 124
 // smbus/firmware protocol error
 #define FW_SMBUS_ERROR 130
 // custom device error report
@@ -75,7 +82,6 @@
 #define FW_CTRL_READ 137
 // firmware block write
 #define FW_DATA_WRITE 138
-
 
 int iris_smbus_fast_boot(uint8_t *image_buff, uint32_t img_dest_addr, uint32_t img_size);
 #endif

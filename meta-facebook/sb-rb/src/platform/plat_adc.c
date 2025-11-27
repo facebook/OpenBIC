@@ -44,7 +44,7 @@ K_THREAD_STACK_DEFINE(adc_rainbow_thread_stack, ADC_STACK_SIZE);
 struct k_thread adc_rainbow_poll_thread;
 
 static bool adc_poll_flag = true;
-uint8_t adc_idx = 0;
+uint8_t adc_idx_read = 0;
 float ad4058_val_0 = 0;
 float ad4058_val_1 = 0;
 float ads7066_val_0 = 0;
@@ -267,12 +267,14 @@ void adc_set_poll_flag(uint8_t onoff)
 
 void read_adc_info()
 {
-	adc_idx = plat_read_cpld(CPLD_OFFSET_ADC_IDX, &adc_idx, 1);
+	uint8_t adc_idx = 0;
+	plat_read_cpld(CPLD_OFFSET_ADC_IDX, &adc_idx, 1);
+	adc_idx_read = adc_idx;
 }
 
 uint8_t get_adc_type()
 {
-	return adc_idx;
+	return adc_idx_read;
 }
 
 float get_adc_vr_pwr(uint8_t idx)
@@ -706,17 +708,18 @@ void ad4058_mode_init()
 void adc_rainbow_polling_handler(void *p1, void *p2, void *p3)
 {
 	read_adc_info();
-	LOG_INF("adc index is %d", adc_idx);
-	if (adc_idx == ADI_AD4058)
+	LOG_INF("adc index is %d", adc_idx_read);
+	adc_idx_read = ADI_AD4058;
+	if (adc_idx_read == ADI_AD4058)
 		ad4058_mode_init();
-	else if (adc_idx == TIC_ADS7066)
+	else if (adc_idx_read == TIC_ADS7066)
 		ads7066_mode_init();
 	else
-		LOG_ERR("Invalid ADC index %d", adc_idx);
+		LOG_ERR("Invalid ADC index %d", adc_idx_read);
 
 	while (1) {
 		if (adc_poll_flag) {
-			switch (adc_idx) {
+			switch (adc_idx_read) {
 			case ADI_AD4058:
 				ad4058_read_voltage(ADC_RB_IDX_MEDHA0);
 				ad4058_read_voltage(ADC_RB_IDX_MEDHA1);
@@ -726,7 +729,7 @@ void adc_rainbow_polling_handler(void *p1, void *p2, void *p3)
 				ads7066_read_voltage(ADC_RB_IDX_MEDHA1);
 				break;
 			default:
-				LOG_ERR("Invalid ADC index %d", adc_idx);
+				LOG_ERR("Invalid ADC index %d", adc_idx_read);
 				break;
 			}
 		}

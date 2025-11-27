@@ -41,8 +41,8 @@ LOG_MODULE_REGISTER(vqps, LOG_LEVEL_DBG);
 /* Board-dependent VQPS enable bits (EVB / RAINBOW) */
 #define MEDHA1_VQPS_W_EN_BIT 3
 #define MEDHA0_VQPS_W_EN_BIT 2
-#define MEDHA0_VQPS_E_EN_BIT 1
-#define MEDHA1_VQPS_E_EN_BIT 0
+#define MEDHA1_VQPS_E_EN_BIT 1
+#define MEDHA0_VQPS_E_EN_BIT 0
 
 #define VQPS_SET_BIT(orig, bit) ((uint8_t)((orig) | (1u << (bit))))
 #define VQPS_CLR_BIT(orig, bit) ((uint8_t)((orig) & ~(1u << (bit))))
@@ -119,12 +119,16 @@ static int cmd_vqps_get(const struct shell *shell, size_t argc, char **argv)
 		shell_print(shell, "VQPS status raw [0x%02X] = 0x%02X", VQPS_STATUS_CPLD_OFFSET,
 			    reg_status);
 
-		for (int i = 0; i < ARRAY_SIZE(vqps_list); i++) {
-			const cpld_pin_map_t *item = &vqps_list[i];
+		uint8_t max_step_count;
+		if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
+			max_step_count = ARRAY_SIZE(vqps_list); // EVB use all
+			shell_print(shell, "VQPS enable raw [0x%02X] = 0x%02X", en_offset, reg_en);
+		} else {
+			max_step_count = 5; // not EVB use first 5
+		}
 
-			if (item->offset != VQPS_STATUS_CPLD_OFFSET) {
-				continue;
-			}
+		for (int i = 0; i < max_step_count; i++) {
+			const cpld_pin_map_t *item = &vqps_list[i];
 
 			uint8_t bit_val = (reg_status >> item->bit) & 0x1;
 			shell_print(shell, "%s : %d", item->name, bit_val);
@@ -135,11 +139,9 @@ static int cmd_vqps_get(const struct shell *shell, size_t argc, char **argv)
 			shell_error(shell, "read VQPS enable CPLD failed");
 			return -1;
 		}
-		shell_print(shell, "VQPS enable raw [0x%02X] = 0x%02X", en_offset, reg_en);
 
-		for (int i = 0; i < ARRAY_SIZE(vqps_list); i++) {
+		for (int i = 0; i < max_step_count; i++) {
 			const cpld_pin_map_t *item = &vqps_list[i];
-
 			if (item->offset != 0) {
 				continue;
 			}
@@ -174,6 +176,14 @@ static int cmd_vqps_set(const struct shell *shell, size_t argc, char **argv)
 	if (!item) {
 		shell_error(shell, "Unknown name: %s", name);
 		LOG_DBG("unknown name in set: %s", name);
+		return -1;
+	}
+	/* calculate item index */
+	ptrdiff_t idx = item - vqps_list;
+
+	/* if not EVB cannot set index >= 5 */
+	if (get_asic_board_id() != ASIC_BOARD_ID_EVB && idx >= 5) {
+		shell_error(shell, "%s is not supported on this board", name);
 		return -1;
 	}
 

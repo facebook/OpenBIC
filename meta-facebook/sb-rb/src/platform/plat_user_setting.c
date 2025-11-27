@@ -509,6 +509,16 @@ bool temp_threshold_default_settings_init(void)
 			return false;
 		}
 		temp_threshold_default_settings.temperature_reg_val[i] = temp_threshold;
+		// these temp_threshold is 100 degree
+		if (i == ASIC_MEDHA0_SENSOR0_HIGH_LIMIT || i == ASIC_MEDHA0_SENSOR1_HIGH_LIMIT ||
+		    i == ASIC_MEDHA1_SENSOR0_HIGH_LIMIT || i == ASIC_MEDHA1_SENSOR1_HIGH_LIMIT ||
+		    i == ASIC_OWL_W_HIGH_LIMIT || i == ASIC_OWL_E_HIGH_LIMIT) {
+			uint32_t temperature = 100000;
+			if (!set_plat_temp_threshold(i, &temperature, false, false)) {
+				LOG_ERR("Can't set temp threshold index: 0x%x to 100", i);
+				return false;
+			}
+		}
 	}
 
 	return true;

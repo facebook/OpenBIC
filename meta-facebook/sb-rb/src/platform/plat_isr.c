@@ -25,6 +25,9 @@
 #include "plat_event.h"
 #include "plat_ioexp.h"
 #include "plat_hook.h"
+#include "plat_iris_smbus.h"
+#include "plat_util.h"
+#include "plat_i2c.h"
 
 LOG_MODULE_REGISTER(plat_isr);
 
@@ -90,6 +93,31 @@ void ISR_GPIO_RST_IRIS_PWR_ON_PLD_R1_N()
 	} else {
 		LOG_INF("dc off, clear io expander init flag");
 		set_ioe_init_flag(0);
+	}
+}
+
+void ISR_GPIO_SMB_HAMSA_MMC_LVC33_ALERT_N()
+{
+	uint8_t data[8] = { 0 };
+	LOG_INF("smb hamsa mmc lvc33 alert triggered");
+	//i2c_burst_read(smb_hamsa_i2c_dev, HAMSA_BOOT1_TEST_ADDR, SMBUS_ERROR, data, ERROR_CODE_LEN);
+
+	// bus, uint8_t addr, uint8_t offset, uint8_t *data, uint8_t len
+	plat_i2c_read(I2C_BUS12, 0xc, SMBUS_ERROR, data, ERROR_CODE_LEN);
+	struct pldm_addsel_data smb_hamsa_sel_msg = { 0 };
+	smb_hamsa_sel_msg.assert_type = LOG_ASSERT;
+	smb_hamsa_sel_msg.event_type = ASIC_MODULE_ERROR; //ASIC_MODULE_ERROR;
+	smb_hamsa_sel_msg.event_data_1 = HAMSA_SMB_ERR_EVENT_HEADER;
+	smb_hamsa_sel_msg.event_data_2 = data[1]; // 123
+	smb_hamsa_sel_msg.event_data_3 = data[2]; // 124
+	if (send_event_log_to_bmc(smb_hamsa_sel_msg) != PLDM_SUCCESS) {
+		printk("Failed to send hamsa smb error code to bmc, event data: 0x%x 0x%x 0x%x\n",
+		       smb_hamsa_sel_msg.event_data_1, smb_hamsa_sel_msg.event_data_2,
+		       smb_hamsa_sel_msg.event_data_3);
+	}
+	// print all data received
+	for (int i = 0; i < ERROR_CODE_LEN; i++) {
+		LOG_DBG("data[%d] = 0x%x", i, data[i]);
 	}
 }
 

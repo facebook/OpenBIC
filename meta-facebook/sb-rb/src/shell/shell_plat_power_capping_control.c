@@ -27,18 +27,19 @@ LOG_MODULE_REGISTER(power_capping_control, LOG_LEVEL_DBG);
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 #endif
 
-#define POWER_CAPPING_LV1_CPLD_OFFSET     0xA6
+#define POWER_CAPPING_LV1_CPLD_OFFSET 0xA6
 #define POWER_CAPPING_LV2_LV3_CPLD_OFFSET 0x25
 
 /* Bit mapping */
-#define MEDHA0_PWR_CAP_LV1_BIT 0
-#define MEDHA1_PWR_CAP_LV1_BIT 1
+#define MEDHA0_PWR_CAP_LV1_BIT 1
+#define MEDHA1_PWR_CAP_LV1_BIT 0
 #define MEDHA0_PWR_CAP_LV2_BIT 7
 #define MEDHA1_PWR_CAP_LV2_BIT 6
 #define MEDHA0_PWR_CAP_LV3_BIT 5
 #define MEDHA1_PWR_CAP_LV3_BIT 4
+#define VR_HOT_BIT 0
 
-#define POWER_CAPPING_SET_BIT(orig, bit) ((uint8_t)((orig) |  (1u << (bit))))
+#define POWER_CAPPING_SET_BIT(orig, bit) ((uint8_t)((orig) | (1u << (bit))))
 #define POWER_CAPPING_CLR_BIT(orig, bit) ((uint8_t)((orig) & ~(1u << (bit))))
 
 static const cpld_pin_map_t pwr_cap_list[] = {
@@ -48,6 +49,7 @@ static const cpld_pin_map_t pwr_cap_list[] = {
 	{ "MEDHA1_PWR_CAP_LV2_CPLD", MEDHA1_PWR_CAP_LV2_BIT, POWER_CAPPING_LV2_LV3_CPLD_OFFSET },
 	{ "MEDHA0_PWR_CAP_LV3_CPLD", MEDHA0_PWR_CAP_LV3_BIT, POWER_CAPPING_LV2_LV3_CPLD_OFFSET },
 	{ "MEDHA1_PWR_CAP_LV3_CPLD", MEDHA1_PWR_CAP_LV3_BIT, POWER_CAPPING_LV2_LV3_CPLD_OFFSET },
+	{ "VR_HOT", VR_HOT_BIT, ASIC_VR_HOT_SWITCH },
 };
 
 static const cpld_pin_map_t *get_power_capping_item(const char *name)
@@ -58,83 +60,6 @@ static const cpld_pin_map_t *get_power_capping_item(const char *name)
 		}
 	}
 	return NULL;
-}
-
-static int cmd_power_capping_override(const struct shell *shell, size_t argc, char **argv)
-{
-	if (argc != 2) {
-		shell_print(shell, "Usage: power_capping_control override <0|1>");
-		return -1;
-	}
-
-	long set_val = strtol(argv[1], NULL, 10);
-	if (set_val != 0 && set_val != 1) {
-		shell_error(shell, "Value must be 0 or 1");
-		return -1;
-	}
-
-	/*
-	 * Bit-level override:
-	 *   - LV1 offset: modify LV1-related bits (0, 1)
-	 *   - LV2/LV3 offset: modify bits 7, 6, 5, 4
-	 */
-
-	uint8_t reg_val = 0;
-
-	/* Handle LV1 */
-	if (!plat_read_cpld(POWER_CAPPING_LV1_CPLD_OFFSET, &reg_val, 1)) {
-		shell_error(shell, "read LV1 CPLD failed");
-		return -1;
-	}
-
-	for (int i = 0; i < ARRAY_SIZE(pwr_cap_list); i++) {
-		const cpld_pin_map_t *item = &pwr_cap_list[i];
-
-		if (item->offset != POWER_CAPPING_LV1_CPLD_OFFSET) {
-			continue;
-		}
-
-		if (set_val == 1) {
-			reg_val = POWER_CAPPING_SET_BIT(reg_val, item->bit);
-		} else {
-			reg_val = POWER_CAPPING_CLR_BIT(reg_val, item->bit);
-		}
-	}
-
-	if (!plat_write_cpld(POWER_CAPPING_LV1_CPLD_OFFSET, &reg_val)) {
-		shell_error(shell, "write LV1 CPLD failed");
-		return -1;
-	}
-
-	/* Handle LV2 / LV3 */
-	reg_val = 0;
-
-	if (!plat_read_cpld(POWER_CAPPING_LV2_LV3_CPLD_OFFSET, &reg_val, 1)) {
-		shell_error(shell, "read LV2/LV3 CPLD failed");
-		return -1;
-	}
-
-	for (int i = 0; i < ARRAY_SIZE(pwr_cap_list); i++) {
-		const cpld_pin_map_t *item = &pwr_cap_list[i];
-
-		if (item->offset != POWER_CAPPING_LV2_LV3_CPLD_OFFSET) {
-			continue;
-		}
-
-		if (set_val == 1) {
-			reg_val = POWER_CAPPING_SET_BIT(reg_val, item->bit);
-		} else {
-			reg_val = POWER_CAPPING_CLR_BIT(reg_val, item->bit);
-		}
-	}
-
-	if (!plat_write_cpld(POWER_CAPPING_LV2_LV3_CPLD_OFFSET, &reg_val)) {
-		shell_error(shell, "write LV2/LV3 CPLD failed");
-		return -1;
-	}
-
-	shell_print(shell, "override all power capping bits to %ld done", set_val);
-	return 0;
 }
 
 static int cmd_power_capping_get(const struct shell *shell, size_t argc, char **argv)
@@ -223,8 +148,7 @@ static int cmd_power_capping_set(const struct shell *shell, size_t argc, char **
 	}
 
 	if (!plat_write_cpld(item->offset, &reg_val)) {
-		LOG_DBG("plat_write_cpld failed: offset=0x%02x val=0x%02x",
-			item->offset, reg_val);
+		LOG_DBG("plat_write_cpld failed: offset=0x%02x val=0x%02x", item->offset, reg_val);
 		shell_error(shell, "write CPLD failed");
 		return -1;
 	}
@@ -233,18 +157,12 @@ static int cmd_power_capping_set(const struct shell *shell, size_t argc, char **
 	return 0;
 }
 
-SHELL_STATIC_SUBCMD_SET_CREATE(
-	power_capping_subcmds,
-	SHELL_CMD(override, NULL,
-		  "power_capping_control override <0|1>",
-		  cmd_power_capping_override),
-	SHELL_CMD(get, NULL,
-		  "power_capping_control get all | get <NAME>",
-		  cmd_power_capping_get),
-	SHELL_CMD(set, NULL,
-		  "power_capping_control set <NAME> <0|1>",
-		  cmd_power_capping_set),
-	SHELL_SUBCMD_SET_END);
+SHELL_STATIC_SUBCMD_SET_CREATE(power_capping_subcmds,
+			       SHELL_CMD(get, NULL, "power_capping_control get all | get <NAME>",
+					 cmd_power_capping_get),
+			       SHELL_CMD(set, NULL, "power_capping_control set <NAME> <0|1>",
+					 cmd_power_capping_set),
+			       SHELL_SUBCMD_SET_END);
 
-SHELL_CMD_REGISTER(power_capping_control, &power_capping_subcmds,
-		   "Power capping control via CPLD", NULL);
+SHELL_CMD_REGISTER(power_capping_control, &power_capping_subcmds, "Power capping control via CPLD",
+		   NULL);

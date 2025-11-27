@@ -50,5 +50,5 @@ enum FIRMWARE_COMPONENT {
 bool find_sensor_id_and_name_by_firmware_comp_id(uint8_t comp_identifier, uint8_t *sensor_id,
 						 char *sensor_name);
 uint32_t plat_get_image_crc_checksum(uint8_t index);
-
+int sb_read_block(uint8_t slv_id, uint8_t cmd, uint8_t *data, uint32_t len);
 #endif /* _PLAT_FWUPDATE_H_ */

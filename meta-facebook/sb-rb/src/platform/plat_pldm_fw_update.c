@@ -33,6 +33,8 @@
 #include "plat_gpio.h"
 #include "plat_cpld.h"
 #include "plat_iris_smbus.h"
+#include "plat_util.h"
+#include "plat_i2c.h"
 
 #define RESET_CPLD_ON 0x3F
 #define RESET_CPLD_OFF 0x00
@@ -284,7 +286,8 @@ static int word_to_i2c_pkt(uint8_t *dst, uint32_t src)
 }
 int sb_write_block(uint8_t slv_id, uint8_t cmd, uint8_t *data, uint32_t len)
 {
-	return i2c_burst_write(i2c_dev, slv_id, cmd, data, len);
+	//return i2c_burst_write(i2c_dev, slv_id, cmd, data, len);
+	return plat_i2c_write(I2C_BUS12, slave_id, cmd, data, len);
 }
 int sb_read_byte(uint8_t cmd, uint8_t *data)
 {
@@ -317,9 +320,8 @@ int sb_write_fwblock(uint32_t addr, uint32_t *data, uint32_t data_len)
 
 	// if data length is multples of word size, packetize each word first
 	while (data_len > 0) {
-		word_to_i2c_pkt(
-			&buf[MSG_RDWR_DATA_START + words * BYTES_PER_WORD],
-			*(data + words));
+		word_to_i2c_pkt(&buf[MSG_RDWR_DATA_START + words * BYTES_PER_WORD],
+				*(data + words));
 		data_len -= BYTES_PER_WORD;
 		words++;
 	}
@@ -356,10 +358,10 @@ uint8_t pldm_pre_iris_boot_update(void *fw_update_param)
 	}
 	// send: send the firmware image to IRIS
 	err = sb_write_fwblock(HAMSA_BOOT1_TEST_ADDR, &fw_update_cfg.image_size, 4);
-	if (err < 0) {
+	if (err == false) {
 		LOG_ERR("sending fw addr-size failed");
 		goto err_i2c;
-    }
+	}
 
 	LOG_INF("Waiting for Slave to get ready");
 	// Wait for the slave firmware to get into download mode
@@ -392,11 +394,9 @@ err_i2c:
 		LOG_ERR("cmd status read failed, %d", err);
 	}
 	if (rd & FW_DL_SLV_ABRTD) {
-		LOG_WRN("SMBus device 0x%x aborted download",
-				slave_id);
+		LOG_WRN("SMBus device 0x%x aborted download", slave_id);
 	} else {
-		LOG_ERR("SMBus device 0x%x failed to abort(0x%x)",
-				slave_id, rd);
+		LOG_ERR("SMBus device 0x%x failed to abort(0x%x)", slave_id, rd);
 	}
 	// check what smbus error occurred
 	err = smbus_read_byte(FW_SMBUS_ERROR, &rd);
@@ -406,7 +406,6 @@ err_i2c:
 		LOG_ERR("smbus error status = 0x%x\n", rd);
 	update_flag = 1;
 	return 1;
-
 }
 int iris_data_write(uint8_t *data, uint32_t data_size)
 {
@@ -429,22 +428,21 @@ int iris_data_write(uint8_t *data, uint32_t data_size)
 			write_size = size;
 			size = 0;
 			idx++;
-        }
-       	// if error,  retry up to MAX_RETRIES
+		}
+		// if error,  retry up to MAX_RETRIES
 		int tries = MAX_RETRIES;
 		while (tries) {
-			err = sb_write_fwblock(write_addr,
-					       (uint32_t *)(data_buf + offset),
+			err = sb_write_fwblock(write_addr, (uint32_t *)(data_buf + offset),
 					       write_size);
-			if (err == 0)
+			if (err == true)
 				break;
 			tries--;
 			LOG_INF("t%d ", tries);
 		}
 		// if fails after all retries, abort the download cmd
 		if (tries == 0) {
-			LOG_ERR("fw write fail at addr:0x%x,%dB, remaining:%dB",
-				write_addr, write_size, size);
+			LOG_ERR("fw write fail at addr:0x%x,%dB, remaining:%dB", write_addr,
+				write_size, size);
 			LOG_WRN("aborting the firmware download\n");
 			goto err_i2c_write_img;
 		}
@@ -466,7 +464,7 @@ int iris_data_write(uint8_t *data, uint32_t data_size)
 		}
 
 		write_addr += write_size;
-    }
+	}
 	return 0;
 
 err_i2c_write_img:
@@ -484,47 +482,46 @@ uint8_t pldm_iris_boot_update(void *fw_update_param)
 	LOG_DBG("data len: %d", p->data_len);
 
 	uint8_t *data = p->data;
-    uint32_t len = p->data_len;
-    uint32_t sent = 0;
+	uint32_t len = p->data_len;
+	uint32_t sent = 0;
 
-    while (sent < len) {
-        uint32_t chunk = MAX_DATA_PKT_SIZE;
-        if (sent + chunk > len)
-            chunk = len - sent;  // last chunk can be < 24 bytes
+	while (sent < len) {
+		uint32_t chunk = MAX_DATA_PKT_SIZE;
+		if (sent + chunk > len)
+			chunk = len - sent; // last chunk can be < 24 bytes
 
-        bool ok = false;
-        for (int retry = 0; retry < STATUS_RETRY_CNT; retry++) {
-            if (!iris_data_write(data + sent, chunk)) {
-                ok = true;
-                break;
-            }
-        }
+		bool ok = false;
+		for (int retry = 0; retry < STATUS_RETRY_CNT; retry++) {
+			if (!iris_data_write(data + sent, chunk)) {
+				ok = true;
+				break;
+			}
+		}
 
-        if (!ok) {
-            LOG_ERR("IRIS block transfer failed at PLDM offset %u", p->data_ofs + sent);
-            return 1;
-        }
+		if (!ok) {
+			LOG_ERR("IRIS block transfer failed at PLDM offset %u", p->data_ofs + sent);
+			return 1;
+		}
 
-        sent += chunk;
-    }
+		sent += chunk;
+	}
 	// update next PLDM offset / length
-    p->next_ofs = p->data_ofs + len;
-    if (p->next_ofs < fw_update_cfg.image_size) {
-        uint32_t remain = fw_update_cfg.image_size - p->next_ofs;
-        p->next_len = (remain > fw_update_cfg.max_buff_size) ?
-                      fw_update_cfg.max_buff_size : remain;
-    } else {
-        p->next_len = 0;
-    }
+	p->next_ofs = p->data_ofs + len;
+	if (p->next_ofs < fw_update_cfg.image_size) {
+		uint32_t remain = fw_update_cfg.image_size - p->next_ofs;
+		p->next_len = (remain > fw_update_cfg.max_buff_size) ? fw_update_cfg.max_buff_size :
+								       remain;
+	} else {
+		p->next_len = 0;
+	}
 
-    return 0;
+	return 0;
 }
 
 uint8_t pldm_post_iris_boot_update(void *fw_update_param)
 {
 	ARG_UNUSED(fw_update_param);
-	if (update_flag == 1)
-	{
+	if (update_flag == 1) {
 		LOG_WRN("FW pre update failed, skip post update");
 		return 0;
 	}
@@ -577,11 +574,9 @@ err_i2c:
 		LOG_ERR("cmd status read failed, %d", err);
 	}
 	if (rd & FW_DL_SLV_ABRTD) {
-		LOG_WRN("SMBus device 0x%x aborted download",
-				slave_id);
+		LOG_WRN("SMBus device 0x%x aborted download", slave_id);
 	} else {
-		LOG_ERR("SMBus device 0x%x failed to abort(0x%x)",
-				slave_id, rd);
+		LOG_ERR("SMBus device 0x%x failed to abort(0x%x)", slave_id, rd);
 	}
 	// check what smbus error occurred
 	err = smbus_read_byte(FW_SMBUS_ERROR, &rd);

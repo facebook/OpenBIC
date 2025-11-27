@@ -262,22 +262,23 @@ void cmd_iris_power_cycle(const struct shell *shell, size_t argc, char **argv)
 
 void cmd_iris_steps_on(const struct shell *shell, size_t argc, char **argv)
 {
-	if (gpio_get(RST_IRIS_PWR_ON_PLD_R1_N) == GPIO_HIGH) {
-		shell_warn(shell, "iris power is already on, skip steps on operation.");
-		set_pwr_steps_on_flag(0);
-		return;
-	}
-
 	if (power_steps >= MAX_STEPS) {
 		LOG_WRN("no more steps");
 		return;
 	}
+
+	// need to set VR_1STEP_FUNC_EN_REG to 0
+	if (power_steps == 0) {
+		if (gpio_get(RST_IRIS_PWR_ON_PLD_R1_N) == GPIO_HIGH) {
+			shell_warn(shell, "iris power is already on, skip steps on operation.");
+			set_pwr_steps_on_flag(0);
+			return;
+		}
+		set_cpld_bit(VR_1STEP_FUNC_EN_REG, 0, 1);
+	}
+
 	// set pwr_steps_on_flag to void send event log to BMC
 	set_pwr_steps_on_flag(1);
-	// need to set VR_1STEP_FUNC_EN_REG to 0
-	set_cpld_bit(VR_1STEP_FUNC_EN_REG, 0, 0);
-	set_cpld_bit(VR_1STEP_FUNC_EN_REG, 0, 1);
-
 	// turn on the steps on bit
 	if (set_cpld_bit(steps_on[power_steps].cpld_offset, steps_on[power_steps].bit,
 			 steps_on[power_steps].power_on_value) == false) {

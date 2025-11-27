@@ -207,6 +207,30 @@ static int cmd_soc_pwron_reset_set(const struct shell *shell, size_t argc, char 
 	return 0;
 }
 
+bool soc_pwron_reset_name_get(uint8_t idx, uint8_t **name)
+{
+	if (idx >= SOC_PWRON_RESET_MAX_ID) {
+		*name = NULL;
+		return false;
+	}
+
+	*name = (uint8_t *)soc_pwron_reset_list[idx].name;
+	return true;
+}
+
+static void soc_pwron_reset_rname_get_(size_t idx, struct shell_static_entry *entry)
+{
+	uint8_t *name = NULL;
+	soc_pwron_reset_name_get((uint8_t)idx, &name);
+
+	entry->syntax = (name) ? (const char *)name : NULL;
+	entry->handler = NULL;
+	entry->help = NULL;
+	entry->subcmd = NULL;
+}
+
+SHELL_DYNAMIC_CMD_CREATE(oc_pwron_reset_name, soc_pwron_reset_rname_get_);
+
 /* level 1 */
 SHELL_STATIC_SUBCMD_SET_CREATE(
 	sub_soc_pwron_reset_cmds,
@@ -214,7 +238,8 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
 		      cmd_soc_pwron_reset_override, 2, 1),
 	SHELL_CMD(passthru, NULL, "soc_pwron_reset passthru", cmd_soc_pwron_reset_override),
 	SHELL_CMD(get, NULL, "soc_pwron_reset get all | get <NAME>", cmd_soc_pwron_reset_get),
-	SHELL_CMD(set, NULL, "soc_pwron_reset set <NAME> <0|1>", cmd_soc_pwron_reset_set),
+	SHELL_CMD(set, &oc_pwron_reset_name, "soc_pwron_reset set <NAME> <0|1>",
+		  cmd_soc_pwron_reset_set),
 	SHELL_SUBCMD_SET_END);
 
 /* Root of command soc_pwron_reset */
