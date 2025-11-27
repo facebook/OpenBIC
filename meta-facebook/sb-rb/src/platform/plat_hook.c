@@ -837,7 +837,7 @@ bool set_bootstrap_table_val_to_ioexp(void)
 	data[0] = bootstrap_table[STRAP_INDEX_OWL_E_BOOT_SOURCE_0_7].change_setting_value;
 	data[1] = bootstrap_table[STRAP_INDEX_OWL_W_BOOT_SOURCE_0_7].change_setting_value;
 	if (!pca6416a_i2c_write(PCA6414A_OUTPUT_PORT_0, data, 2)) {
-		LOG_ERR("Can't set ioexp val from bootstrap_table");
+		LOG_ERR("Can't set pca6416a from bootstrap_table");
 		return false;
 	}
 
@@ -850,7 +850,11 @@ bool set_bootstrap_table_val_to_ioexp(void)
 					 STRAP_INDEX_MEDHA1_MFIO10 };
 	data[1] = 0;
 	for (uint8_t i = 0; i < ARRAY_SIZE(straps_port2); i++)
-		data[1] |= GET_VAL_FROM_STRAP_INDEX(i);
+		data[1] |= GET_VAL_FROM_STRAP_INDEX(straps_port2[i]);
+	if (!tca6424a_i2c_write(TCA6424A_OUTPUT_PORT_1, data, 2)) {
+		LOG_ERR("Can't set tca6424a from bootstrap_table");
+		return false;
+	}
 
 	return true;
 }
