@@ -33,8 +33,8 @@
 #define CMD_DIMM_LOCATION 0x01
 #define KCS_TASK_NAME_LEN 32
 
-#define MAX_KCS_WORK_COUNT 5
-#define KCS_WORKER_STACK_SIZE 2048
+#define MAX_KCS_WORK_COUNT 50
+#define KCS_WORKER_STACK_SIZE 4096
 #define ADD_SEL_EVENT_DATA_MAX_LEN 18
 
 typedef struct _kcs_dev {
