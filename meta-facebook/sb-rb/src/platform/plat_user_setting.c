@@ -718,7 +718,8 @@ static int delay_asic_rst_user_settings_init(void)
 {
 	uint8_t setting_value = 0;
 
-	if (get_user_settings_delay_asic_rst_from_eeprom(&setting_value, sizeof(setting_value)) == false) {
+	if (get_user_settings_delay_asic_rst_from_eeprom(&setting_value, sizeof(setting_value)) ==
+	    false) {
 		LOG_ERR("get alert level user settings failed");
 		return -1;
 	}
@@ -736,7 +737,8 @@ static int delay_module_pg_user_settings_init(void)
 {
 	uint8_t setting_value = 0;
 
-	if (get_user_settings_delay_module_pg_from_eeprom(&setting_value, sizeof(setting_value)) == false) {
+	if (get_user_settings_delay_module_pg_from_eeprom(&setting_value, sizeof(setting_value)) ==
+	    false) {
 		LOG_ERR("get alert level user settings failed");
 		return -1;
 	}
@@ -852,7 +854,7 @@ bool perm_config_clear(void)
 	/* clear all bootstrap perm parameters */
 	memset(bootstrap_user_settings.user_setting_value, 0xFF,
 	       sizeof(bootstrap_user_settings.user_setting_value));
-	if (!set_temp_threshold_user_settings(&bootstrap_user_settings)) {
+	if (!bootstrap_user_settings_set(&bootstrap_user_settings)) {
 		LOG_ERR("The perm_config clear failed");
 		return false;
 	}

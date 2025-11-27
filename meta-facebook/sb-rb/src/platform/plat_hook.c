@@ -220,8 +220,10 @@ vr_mapping_status vr_status_table[] = {
 };
 bootstrap_mapping_register bootstrap_table[] = {
 	{ STRAP_INDEX_HAMSA_TEST_STRAP_R, 0x16, "HAMSA_TEST_STRAP_R", 4, 1, 0x0, 0x0, false },
-	{ STRAP_INDEX_HAMSA_LS_STRAP_0_1, 0x16, "HAMSA_LS_STRAP_0_1", 2, 2, 0x0, 0x0, true },
-	{ STRAP_INDEX_HAMSA_CRM_STRAP_0_1, 0x16, "HAMSA_CRM_STRAP_0_1", 0, 2, 0x0, 0x0, true },
+	{ STRAP_INDEX_HAMSA_LS_STRAP_0, 0x16, "HAMSA_LS_STRAP_0", 3, 1, 0x0, 0x0, true },
+	{ STRAP_INDEX_HAMSA_LS_STRAP_1, 0x16, "HAMSA_LS_STRAP_1", 2, 1, 0x0, 0x0, true },
+	{ STRAP_INDEX_HAMSA_CRM_STRAP_0, 0x16, "HAMSA_CRM_STRAP_0", 1, 1, 0x0, 0x0, true },
+	{ STRAP_INDEX_HAMSA_CRM_STRAP_1, 0x16, "HAMSA_CRM_STRAP_1", 0, 1, 0x0, 0x0, true },
 	{ STRAP_INDEX_HAMSA_MFIO12, 0x17, "HAMSA_MFIO12", 7, 1, 0x0, 0x0, false },
 	{ STRAP_INDEX_HAMSA_MFIO13, 0x17, "HAMSA_MFIO13", 6, 1, 0x0, 0x0, false },
 	{ STRAP_INDEX_HAMSA_MFIO14, 0x17, "HAMSA_MFIO14", 5, 1, 0x0, 0x0, false },
@@ -237,8 +239,10 @@ bootstrap_mapping_register bootstrap_table[] = {
 	{ STRAP_INDEX_HAMSA_DFT_TAP_EN_L, 0x18, "HAMSA_DFT_TAP_EN_L", 0, 1, 0x01, 0x01, false },
 	{ STRAP_INDEX_FM_JTAG_HAMSA_JTCE_0_3, 0x19, "HAMSA_JTCE_0_3", 0, 4, 0x01, 0x01, false },
 	{ STRAP_INDEX_MEDHA0_TEST_STRAP, 0x1a, "MEDHA0_TEST_STRAP", 7, 1, 0x0, 0x0, false },
-	{ STRAP_INDEX_MEDHA0_CRM_STRAP_0_1, 0x1a, "MEDHA0_CRM_STRAP_0_1", 2, 2, 0x0, 0x0, true },
-	{ STRAP_INDEX_MEDHA0_CHIP_STRAP_0_1, 0x1a, "MEDHA0_CHIP_STRAP_0_1", 0, 2, 0x0, 0x0, true },
+	{ STRAP_INDEX_MEDHA0_CRM_STRAP_0, 0x1a, "MEDHA0_CRM_STRAP_0", 3, 1, 0x0, 0x0, true },
+	{ STRAP_INDEX_MEDHA0_CRM_STRAP_1, 0x1a, "MEDHA0_CRM_STRAP_1", 2, 1, 0x0, 0x0, true },
+	{ STRAP_INDEX_MEDHA0_CHIP_STRAP_0, 0x1a, "MEDHA0_CHIP_STRAP_0", 1, 1, 0x0, 0x0, true },
+	{ STRAP_INDEX_MEDHA0_CHIP_STRAP_1, 0x1a, "MEDHA0_CHIP_STRAP_1", 0, 1, 0x0, 0x0, true },
 	{ STRAP_INDEX_MEDHA0_CORE_TAP_CTRL_PLD_L, 0x1b, "MEDHA0_CORE_TAP_CTRL_PLD_L", 3, 1, 0x01,
 	  0x01, false },
 	{ STRAP_INDEX_MEDHA0_TRI_L, 0x1b, "MEDHA0_TRI_L", 2, 1, 0x0, 0x0, false },
@@ -246,16 +250,22 @@ bootstrap_mapping_register bootstrap_table[] = {
 	{ STRAP_INDEX_MEDHA0_DFT_TAP_EN_PLD_L, 0x1b, "MEDHA0_DFT_TAP_EN_PLD_L", 0, 1, 0x01, 0x01,
 	  false },
 	{ STRAP_INDEX_MEDHA1_TEST_STRAP, 0x1c, "MEDHA1_TEST_STRAP", 4, 1, 0x0, 0x0, false },
-	{ STRAP_INDEX_MEDHA1_CRM_STRAP_0_1, 0x1c, "MEDHA1_CRM_STRAP_0_1", 2, 2, 0x0, 0x0, true },
-	{ STRAP_INDEX_MEDHA1_CHIP_STRAP_0_1, 0x1c, "MEDHA1_CHIP_STRAP_0_1", 0, 2, 0x0, 0x0, true },
+	{ STRAP_INDEX_MEDHA1_CRM_STRAP_0, 0x1c, "MEDHA1_CRM_STRAP_0", 3, 1, 0x0, 0x0, true },
+	{ STRAP_INDEX_MEDHA1_CRM_STRAP_1, 0x1c, "MEDHA1_CRM_STRAP_1", 2, 1, 0x0, 0x0, true },
+	{ STRAP_INDEX_MEDHA1_CHIP_STRAP_0, 0x1c, "MEDHA1_CHIP_STRAP_0", 1, 1, 0x0, 0x0, true },
+	{ STRAP_INDEX_MEDHA1_CHIP_STRAP_1, 0x1c, "MEDHA1_CHIP_STRAP_1", 0, 1, 0x0, 0x0, true },
 	{ STRAP_INDEX_MEDHA1_CORE_TAP_CTRL_PLD_L, 0x1d, "MEDHA1_CORE_TAP_CTRL_PLD_L", 3, 1, 0x01,
 	  0x01, false },
 	{ STRAP_INDEX_MEDHA1_TRI_L, 0x1d, "MEDHA1_TRI_L", 2, 1, 0x0, 0x0, false },
 	{ STRAP_INDEX_MEDHA1_ATPG_MODE_L, 0x1d, "MEDHA1_ATPG_MODE_L", 1, 1, 0x0, 0x0, false },
 	{ STRAP_INDEX_MEDHA1_DFT_TAP_EN_PLD_L, 0x1d, "MEDHA1_DFT_TAP_EN_PLD_L", 0, 1, 0x01, 0x01,
 	  false },
-	{ STRAP_INDEX_MEDHA0_MFIO_12_14, 0x1e, "MEDHA0_MFIO_12_14", 3, 3, 0x0, 0x0, true },
-	{ STRAP_INDEX_MEDHA1_MFIO_12_14, 0x1e, "MEDHA1_MFIO_12_14", 0, 3, 0x0, 0x0, true },
+	{ STRAP_INDEX_MEDHA0_MFIO_12, 0x1e, "MEDHA0_MFIO_12", 5, 1, 0x0, 0x0, true },
+	{ STRAP_INDEX_MEDHA0_MFIO_13, 0x1e, "MEDHA0_MFIO_13", 4, 1, 0x0, 0x0, true },
+	{ STRAP_INDEX_MEDHA0_MFIO_14, 0x1e, "MEDHA0_MFIO_14", 3, 1, 0x0, 0x0, true },
+	{ STRAP_INDEX_MEDHA1_MFIO_12, 0x1e, "MEDHA1_MFIO_12", 2, 1, 0x0, 0x0, true },
+	{ STRAP_INDEX_MEDHA1_MFIO_13, 0x1e, "MEDHA1_MFIO_13", 1, 1, 0x0, 0x0, true },
+	{ STRAP_INDEX_MEDHA1_MFIO_14, 0x1e, "MEDHA1_MFIO_14", 0, 1, 0x0, 0x0, true },
 	{ STRAP_INDEX_FM_JTAG_MEDHA0_JTCE_0_2, 0x1f, "MEDHA0_JTCE_0_2", 3, 3, 0x0, 0x0, true },
 	{ STRAP_INDEX_FM_JTAG_MEDHA1_JTCE_0_2, 0x1f, "MEDHA1_JTCE_0_2", 0, 3, 0x0, 0x0, true },
 	{ STRAP_INDEX_PLD_OWL_E_DFT_TAP_EN_L, 0x20, "PLD_OWL_E_DFT_TAP_EN_L", 7, 1, 0x01, 0x01,
@@ -283,8 +293,30 @@ bootstrap_mapping_register bootstrap_table[] = {
 
 	{ STRAP_INDEX_OWL_E_DVT_ENABLE, 0x9E, "OWL_E_DVT_ENABLE", 1, 1, 0x0, 0x0, false },
 	{ STRAP_INDEX_OWL_W_DVT_ENABLE, 0x9E, "OWL_W_DVT_ENABLE", 0, 1, 0x0, 0x0, false },
-	{ STRAP_INDEX_OWL_E_BOOT_SOURCE_0_7, 0xFF, "OWL_E_BOOT_SOURCE_0_7", 0, 8, 0x0, 0x0, false },
-	{ STRAP_INDEX_OWL_W_BOOT_SOURCE_0_7, 0xFF, "OWL_W_BOOT_SOURCE_0_7", 0, 8, 0x0, 0x0, false },
+	{ STRAP_INDEX_OWL_E_BOOT_SOURCE_0_7, (STRAP_IOEXP_PREFIX | PCA6414A_OUTPUT_PORT_0),
+	  "OWL_E_BOOT_SOURCE_0_7", 0, 8, 0x0, 0x0, false },
+	{ STRAP_INDEX_OWL_W_BOOT_SOURCE_0_7, (STRAP_IOEXP_PREFIX | PCA6414A_OUTPUT_PORT_1),
+	  "OWL_W_BOOT_SOURCE_0_7", 0, 8, 0x0, 0x0, false },
+
+	{ STRAP_INDEX_HAMSA_MFIO6, (STRAP_IOEXP_PREFIX | TCA6424A_OUTPUT_PORT_2), "HAMSA_MFIO6", 7,
+	  1, 0x0, 0x0, false },
+	{ STRAP_INDEX_HAMSA_MFIO8, (STRAP_IOEXP_PREFIX | TCA6424A_OUTPUT_PORT_2), "HAMSA_MFIO8", 6,
+	  1, 0x0, 0x0, false },
+	{ STRAP_INDEX_HAMSA_MFIO10, (STRAP_IOEXP_PREFIX | TCA6424A_OUTPUT_PORT_2), "HAMSA_MFIO10",
+	  5, 1, 0x0, 0x0, false },
+	{ STRAP_INDEX_MEDHA0_MFIO6, (STRAP_IOEXP_PREFIX | TCA6424A_OUTPUT_PORT_2), "MEDHA0_MFIO6",
+	  4, 1, 0x0, 0x0, false },
+	{ STRAP_INDEX_MEDHA0_MFIO8, (STRAP_IOEXP_PREFIX | TCA6424A_OUTPUT_PORT_2), "MEDHA0_MFIO8",
+	  3, 1, 0x0, 0x0, false },
+	{ STRAP_INDEX_MEDHA0_MFIO10, (STRAP_IOEXP_PREFIX | TCA6424A_OUTPUT_PORT_2), "MEDHA0_MFIO10",
+	  2, 1, 0x0, 0x0, false },
+	{ STRAP_INDEX_MEDHA1_MFIO6, (STRAP_IOEXP_PREFIX | TCA6424A_OUTPUT_PORT_1), "MEDHA1_MFIO6",
+	  6, 1, 0x0, 0x0, false },
+	{ STRAP_INDEX_MEDHA1_MFIO8, (STRAP_IOEXP_PREFIX | TCA6424A_OUTPUT_PORT_1), "MEDHA1_MFIO8",
+	  7, 1, 0x0, 0x0, false },
+	{ STRAP_INDEX_MEDHA1_MFIO10, (STRAP_IOEXP_PREFIX | TCA6424A_OUTPUT_PORT_2), "MEDHA1_MFIO10",
+	  0, 1, 0x0, 0x0, false },
+
 };
 bool vr_rail_name_get(uint8_t rail, uint8_t **name)
 {
@@ -794,6 +826,59 @@ static uint8_t reverse_bits(uint8_t byte, uint8_t bit_cnt)
 	}
 	return reversed_byte;
 }
+
+bool set_bootstrap_table_val_to_ioexp(void)
+{
+#define GET_VAL_FROM_STRAP_INDEX(STRAP_INDEX)                                                      \
+	((bootstrap_table[STRAP_INDEX].change_setting_value & 0x01)                                \
+	 << bootstrap_table[STRAP_INDEX].bit_offset)
+
+	uint8_t data[2] = { 0 };
+	data[0] = bootstrap_table[STRAP_INDEX_OWL_E_BOOT_SOURCE_0_7].change_setting_value;
+	data[1] = bootstrap_table[STRAP_INDEX_OWL_W_BOOT_SOURCE_0_7].change_setting_value;
+	if (!pca6416a_i2c_write(PCA6414A_OUTPUT_PORT_0, data, 2)) {
+		LOG_ERR("Can't set ioexp val from bootstrap_table");
+		return false;
+	}
+
+	data[0] = GET_VAL_FROM_STRAP_INDEX(STRAP_INDEX_MEDHA1_MFIO6) |
+		  GET_VAL_FROM_STRAP_INDEX(STRAP_INDEX_MEDHA1_MFIO8);
+
+	const uint8_t straps_port2[] = { STRAP_INDEX_HAMSA_MFIO6,  STRAP_INDEX_HAMSA_MFIO8,
+					 STRAP_INDEX_HAMSA_MFIO10, STRAP_INDEX_MEDHA0_MFIO6,
+					 STRAP_INDEX_MEDHA0_MFIO8, STRAP_INDEX_MEDHA0_MFIO10,
+					 STRAP_INDEX_MEDHA1_MFIO10 };
+	data[1] = 0;
+	for (uint8_t i = 0; i < ARRAY_SIZE(straps_port2); i++)
+		data[1] |= GET_VAL_FROM_STRAP_INDEX(i);
+
+	return true;
+}
+bool set_ioexp_val_to_bootstrap_table(void)
+{
+	uint8_t data[2] = { 0x00, 0x00 };
+	if (!pca6416a_i2c_read(PCA6414A_OUTPUT_PORT_0, data, 2)) {
+		LOG_ERR("Can't find bootstrap default from pca6416a");
+		return false;
+	}
+	bootstrap_table[STRAP_INDEX_OWL_E_BOOT_SOURCE_0_7].change_setting_value = data[0];
+	bootstrap_table[STRAP_INDEX_OWL_W_BOOT_SOURCE_0_7].change_setting_value = data[1];
+
+	if (!tca6424a_i2c_read(TCA6424A_OUTPUT_PORT_1, data, 2)) {
+		LOG_ERR("Can't find bootstrap default from tca6424a");
+		return false;
+	}
+	for (uint8_t i = STRAP_INDEX_HAMSA_MFIO6; i <= STRAP_INDEX_MEDHA1_MFIO10; i++) {
+		// check data from port1 or port2
+		uint8_t tmp = ((i == STRAP_INDEX_MEDHA1_MFIO6) || (i == STRAP_INDEX_MEDHA1_MFIO8)) ?
+				      data[0] :
+				      data[1];
+		bootstrap_table[i].change_setting_value =
+			(tmp >> bootstrap_table[i].bit_offset) & 0x01;
+	}
+
+	return true;
+}
 bool bootstrap_default_settings_init(void)
 {
 	// read cpld value and write to bootstrap_table
@@ -815,27 +900,9 @@ bool bootstrap_default_settings_init(void)
 	}
 
 	// read io-exp value and write to bootstrap_table
-	uint8_t data[2] = { 0x00, 0x00 };
-	if (!pca6416a_i2c_read(PCA6414A_OUTPUT_PORT_0, data, 2)) {
-		LOG_ERR("Can't find bootstrap default from ioexp");
-		return false;
-	}
-	bootstrap_table[STRAP_INDEX_OWL_E_BOOT_SOURCE_0_7].change_setting_value = data[0];
-	bootstrap_table[STRAP_INDEX_OWL_W_BOOT_SOURCE_0_7].change_setting_value = data[1];
+	return set_ioexp_val_to_bootstrap_table();
+}
 
-	return true;
-}
-bool set_bootstrap_ioexp_val(void)
-{
-	uint8_t data[2] = { 0 };
-	data[0] = bootstrap_table[STRAP_INDEX_OWL_E_BOOT_SOURCE_0_7].change_setting_value;
-	data[1] = bootstrap_table[STRAP_INDEX_OWL_W_BOOT_SOURCE_0_7].change_setting_value;
-	if (!pca6416a_i2c_write(PCA6414A_OUTPUT_PORT_0, data, 2)) {
-		LOG_ERR("Can't set ioexp val from bootstrap_table");
-		return false;
-	}
-	return true;
-}
 bootstrap_user_settings_struct bootstrap_user_settings = { 0 };
 bool bootstrap_user_settings_get(void *bootstrap_user_settings)
 {
@@ -932,12 +999,6 @@ bool set_bootstrap_table_and_user_settings(uint8_t rail, uint8_t *change_setting
 			for (int j = 0; j < STRAP_INDEX_MAX; j++) {
 				if (bootstrap_table[j].cpld_offsets ==
 				    bootstrap_table[i].cpld_offsets) {
-					//if not cpld register
-					if (bootstrap_table[j].cpld_offsets == 0xFF) {
-						*change_setting_value =
-							bootstrap_table[i].change_setting_value;
-						break;
-					}
 					uint8_t tmp_reverse = 0;
 					if (bootstrap_table[j].reverse)
 						tmp_reverse = reverse_bits(
@@ -986,6 +1047,38 @@ bool set_bootstrap_table_and_user_settings(uint8_t rail, uint8_t *change_setting
 
 	return false;
 }
+
+bool set_bootstrap_val_to_device(uint8_t strap, uint8_t val)
+{
+	switch (strap) {
+	case STRAP_INDEX_OWL_E_BOOT_SOURCE_0_7:
+	case STRAP_INDEX_OWL_W_BOOT_SOURCE_0_7:
+		if (!pca6416a_i2c_write((bootstrap_table[strap].cpld_offsets & STRAP_IOEXP_POSTFIX),
+					&val, 1))
+			return false;
+		break;
+	case STRAP_INDEX_HAMSA_MFIO6:
+	case STRAP_INDEX_HAMSA_MFIO8:
+	case STRAP_INDEX_HAMSA_MFIO10:
+	case STRAP_INDEX_MEDHA0_MFIO6:
+	case STRAP_INDEX_MEDHA0_MFIO8:
+	case STRAP_INDEX_MEDHA0_MFIO10:
+	case STRAP_INDEX_MEDHA1_MFIO6:
+	case STRAP_INDEX_MEDHA1_MFIO8:
+	case STRAP_INDEX_MEDHA1_MFIO10:
+		if (!tca6424a_i2c_write_bit((bootstrap_table[strap].cpld_offsets &
+					     STRAP_IOEXP_POSTFIX),
+					    bootstrap_table[strap].bit_offset, val))
+			return false;
+		break;
+	default:
+		if (!plat_write_cpld(bootstrap_table[strap].cpld_offsets, &val))
+			return false;
+	}
+
+	return true;
+}
+
 bool bootstrap_user_settings_init(void)
 {
 	if (bootstrap_user_settings_get(&bootstrap_user_settings) == false) {
@@ -1009,28 +1102,9 @@ bool bootstrap_user_settings_init(void)
 			}
 
 			// write cpld or io-exp
-			if (i == STRAP_INDEX_OWL_E_BOOT_SOURCE_0_7) {
-				if (!pca6416a_i2c_write(PCA6414A_OUTPUT_PORT_0,
-							&change_setting_value, 1)) {
-					LOG_ERR("Can't set bootstrap[%2d]=%02x by user settings", i,
-						change_setting_value);
-					return false;
-				}
-			} else if (i == STRAP_INDEX_OWL_W_BOOT_SOURCE_0_7) {
-				if (!pca6416a_i2c_write(PCA6414A_OUTPUT_PORT_1,
-							&change_setting_value, 1)) {
-					LOG_ERR("Can't set bootstrap[%2d]=%02x by user settings", i,
-						change_setting_value);
-					return false;
-				}
-			} else {
-				if (!plat_write_cpld(bootstrap_table[i].cpld_offsets,
-						     &change_setting_value)) {
-					LOG_ERR("Can't set bootstrap[%2d]=%02x by user settings", i,
-						change_setting_value);
-					return false;
-				}
-			}
+			if (!set_bootstrap_val_to_device(i, change_setting_value))
+				LOG_ERR("Can't set bootstrap[%2d]=%02x by user settings", i,
+					change_setting_value);
 
 			LOG_INF("set [%2d]%s: %02x", i, bootstrap_table[i].strap_name,
 				change_setting_value);

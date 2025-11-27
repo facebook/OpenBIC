@@ -64,8 +64,8 @@ void ISR_GPIO_RST_IRIS_PWR_ON_PLD_R1_N()
 {
 	// dc on
 	if (gpio_get(RST_IRIS_PWR_ON_PLD_R1_N)) {
-		pca6416a_init();
-		set_bootstrap_ioexp_val();
+		ioexp_init();
+		set_bootstrap_table_val_to_ioexp();
 	} else {
 		LOG_INF("dc off, clear io expander init flag");
 		set_ioe_init_flag(0);

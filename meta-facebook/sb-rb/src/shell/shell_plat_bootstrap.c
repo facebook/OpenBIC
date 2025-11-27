@@ -91,23 +91,8 @@ static int bootstrap_set_all_default(const struct shell *shell)
 			continue;
 		}
 		// write change_setting_value to cpld or io-exp
-		if (i == STRAP_INDEX_OWL_E_BOOT_SOURCE_0_7) {
-			if (!pca6416a_i2c_write(PCA6414A_OUTPUT_PORT_0, &change_setting_value, 1)) {
-				LOG_ERR("Can't write bootstrap[0x%02x] to io-exp", i);
-				return false;
-			}
-		} else if (i == STRAP_INDEX_OWL_W_BOOT_SOURCE_0_7) {
-			if (!pca6416a_i2c_write(PCA6414A_OUTPUT_PORT_1, &change_setting_value, 1)) {
-				LOG_ERR("Can't write bootstrap[0x%02x] to io-exp", i);
-				return false;
-			}
-		} else {
-			if (!plat_write_cpld(bootstrap_item.cpld_offsets, &change_setting_value)) {
-				shell_print(shell, "Can't write bootstrap[%2d] to cpld 0x%02x ", i,
-					    bootstrap_item.cpld_offsets);
-				all_success = false;
-			}
-		}
+		if (!set_bootstrap_val_to_device(i, change_setting_value))
+			shell_print(shell, "Can't set bootstrap[0x%02x] to default", i);
 	}
 
 	if (all_success) {
@@ -165,22 +150,10 @@ static int cmd_bootstrap_set(const struct shell *shell, size_t argc, char **argv
 		return -1;
 	}
 	// write change_setting_value to cpld or io-exp
-	if (bootstrap_item.index == STRAP_INDEX_OWL_E_BOOT_SOURCE_0_7) {
-		if (!pca6416a_i2c_write(PCA6414A_OUTPUT_PORT_0, &change_setting_value, 1)) {
-			shell_error(shell, "Can't write bootstrap[%2d] to io-exp", rail);
-			return false;
-		}
-	} else if (bootstrap_item.index == STRAP_INDEX_OWL_W_BOOT_SOURCE_0_7) {
-		if (!pca6416a_i2c_write(PCA6414A_OUTPUT_PORT_1, &change_setting_value, 1)) {
-			shell_error(shell, "Can't write bootstrap[%2d] to io-exp", rail);
-			return false;
-		}
-	} else {
-		if (!plat_write_cpld(bootstrap_item.cpld_offsets, &change_setting_value)) {
-			shell_error(shell, "Can't write bootstrap[%2d] to cpld 0x%02x ", rail,
-				    bootstrap_item.cpld_offsets);
-			return -1;
-		}
+	if (!set_bootstrap_val_to_device(bootstrap_item.index, change_setting_value)) {
+		LOG_ERR("Can't set bootstrap[%2d]=%02x", bootstrap_item.index,
+			change_setting_value);
+		return -1;
 	}
 
 	shell_print(shell, "Set %s %s, %svolatile\n", argv[1], argv[2], (argc == 4) ? "non-" : "");

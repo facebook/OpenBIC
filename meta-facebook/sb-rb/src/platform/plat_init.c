@@ -78,7 +78,7 @@ void pal_post_init()
 
 	init_cpld_polling();
 	plat_telemetry_table_init();
-	pca6416a_init();
+	ioexp_init();
 }
 
 #define DEF_PROJ_GPIO_PRIORITY 78
