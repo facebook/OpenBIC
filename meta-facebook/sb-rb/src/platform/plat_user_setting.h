@@ -95,6 +95,8 @@ typedef struct temp_mapping_sensor {
 	uint8_t *sensor_name;
 } temp_mapping_sensor;
 
+extern temp_mapping_sensor temp_index_table[TEMP_INDEX_MAX];
+
 typedef struct temp_threshold_mapping_sensor {
 	uint8_t temp_index_threshold_type; //PLAT_TEMP_INDEX_THRESHOLD_TYPE_E
 	uint8_t temp_threshold_type;

@@ -32,23 +32,26 @@ static int cmd_temp_status_get(const struct shell *shell, size_t argc, char **ar
 		return -1;
 	}
 
-	enum PLAT_TEMP_INDEX_E rail;
-	if (get_temp_sensor_rail_enum(argv[1], &rail) == false) {
-		shell_error(shell, "Invalid rail name: %s", argv[1]);
-		return -1;
-	}
-
 	uint8_t temp_status = 0xFF;
-
-	if (!plat_get_temp_status(rail, &temp_status)) {
-		shell_error(shell, "Can't find temp status by rail index: %x", rail);
-		return -1;
-	}
-	if (rail == TEMP_INDEX_TOP_INLET || rail == TEMP_INDEX_BOT_INLET ||
-	    rail == TEMP_INDEX_BOT_OUTLET) {
-		shell_print(shell, "%s: 0x%02x (ALERT_N)", "TMP75", temp_status);
-	} else {
-		shell_print(shell, "%s: 0x%02x", "TMP432", temp_status);
+	uint8_t *name = argv[1];
+	uint8_t rail = 0;
+	for (int i = 0; i < TEMP_INDEX_MAX; i++) {
+		if (strcmp(name, temp_index_table[i].sensor_name) == 0 || strcmp(name,"all") == 0) {
+			rail = temp_index_table[i].index;
+			if (!plat_get_temp_status(rail, &temp_status)) {
+				shell_error(shell, "Can't find temp status by rail index: %x", rail);
+				return -1;
+			}
+			if (rail == TEMP_INDEX_TOP_INLET || rail == TEMP_INDEX_BOT_INLET ||
+				rail == TEMP_INDEX_BOT_OUTLET) {
+				shell_print(shell, "%s %s: 0x%02x (ALERT_N)", temp_index_table[i].sensor_name, "(TMP75)", temp_status);
+			} else {
+				shell_print(shell, "%s %s: 0x%02x", temp_index_table[i].sensor_name, "(TMP432)", temp_status);
+			}
+			if(strcmp(name,"all") != 0){
+				return 0;
+			}
+		}
 	}
 
 	return 0;
@@ -98,6 +101,9 @@ static void temp_sensor_rname_get_for_get_cmd(size_t idx, struct shell_static_en
 	uint8_t *name = NULL;
 	get_temp_sensor_rail_name((uint8_t)idx, &name);
 
+	if (idx == TEMP_INDEX_MAX)
+		name = (uint8_t *)"all";
+
 	entry->syntax = (name) ? (const char *)name : NULL;
 	entry->handler = NULL;
 	entry->help = NULL;
@@ -125,7 +131,7 @@ SHELL_DYNAMIC_CMD_CREATE(temp_sensor_rname_for_temp_status_clear,
 /* level 1 */
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_temp_status_cmds,
 			       SHELL_CMD(get, &temp_sensor_rname_for_temp_status_get,
-					 "get <sensor>", cmd_temp_status_get),
+					 "get all|<sensor>", cmd_temp_status_get),
 			       SHELL_CMD(clear, &temp_sensor_rname_for_temp_status_clear,
 					 "clear all|<sensor>", cmd_temp_status_clear),
 			       SHELL_SUBCMD_SET_END);
