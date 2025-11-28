@@ -48,7 +48,7 @@ static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len);
 
 static uint32_t crc_boot0[3] = { 0 };
 const struct device *i2c_dev;
-uint8_t slave_id = HAMSA_BOOT1_TEST_ADDR;
+uint8_t slave_id = HAMSA_BOOT1_ADDR;
 static uint32_t write_addr = HAMSA_BOOT1_ASIC_MEM_ADDR;
 bool update_flag = 0;
 typedef struct {
@@ -357,7 +357,7 @@ uint8_t pldm_pre_iris_boot_update(void *fw_update_param)
 		goto err_i2c;
 	}
 	// send: send the firmware image to IRIS
-	err = sb_write_fwblock(HAMSA_BOOT1_TEST_ADDR, &fw_update_cfg.image_size, 4);
+	err = sb_write_fwblock(HAMSA_BOOT1_ADDR, &fw_update_cfg.image_size, 4);
 	if (err == false) {
 		LOG_ERR("sending fw addr-size failed");
 		goto err_i2c;

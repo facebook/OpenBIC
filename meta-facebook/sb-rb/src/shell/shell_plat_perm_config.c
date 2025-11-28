@@ -30,7 +30,7 @@ static int cmd_perm_config_get(const struct shell *shell, size_t argc, char **ar
 	int config_count = 0;
 	for (int i = 0; i < VR_RAIL_E_MAX; i++) {
 		if (get_asic_board_id() != ASIC_BOARD_ID_EVB && (i == VR_RAIL_E_P3V3_OSFP_VOLT_V))
-			continue; // skip osfp p3v3 on AEGIS BD
+			continue; // skip osfp p3v3 on BD
 		if (user_settings.vout[i] != 0xffff) {
 			uint8_t *rail_name = NULL;
 			if (!vr_rail_name_get((uint8_t)i, &rail_name)) {
