@@ -39,10 +39,10 @@ LOG_MODULE_REGISTER(vqps, LOG_LEVEL_DBG);
 #define HAMSA_VQPS_EFUSE_USER_BIT 0
 
 /* Board-dependent VQPS enable bits (EVB / RAINBOW) */
-#define MEDHA1_VQPS_W_EN_BIT 3
-#define MEDHA0_VQPS_W_EN_BIT 2
-#define MEDHA1_VQPS_E_EN_BIT 1
-#define MEDHA0_VQPS_E_EN_BIT 0
+#define MEDHA0_VQPS_W_EN_BIT 3
+#define MEDHA1_VQPS_W_EN_BIT 2
+#define MEDHA0_VQPS_E_EN_BIT 1
+#define MEDHA1_VQPS_E_EN_BIT 0
 
 #define VQPS_SET_BIT(orig, bit) ((uint8_t)((orig) | (1u << (bit))))
 #define VQPS_CLR_BIT(orig, bit) ((uint8_t)((orig) & ~(1u << (bit))))
@@ -53,39 +53,11 @@ static const cpld_pin_map_t vqps_list[] = {
 	{ "MEDHA0_VQPS_U_EN", MEDHA0_VQPS_U_EN_BIT, VQPS_STATUS_CPLD_OFFSET },
 	{ "MEDHA1_VQPS_U_EN", MEDHA1_VQPS_U_EN_BIT, VQPS_STATUS_CPLD_OFFSET },
 	{ "HAMSA_VQPS_EFUSE_USER", HAMSA_VQPS_EFUSE_USER_BIT, VQPS_STATUS_CPLD_OFFSET },
-	{ "MEDHA1_VQPS_E_EN", MEDHA1_VQPS_E_EN_BIT, 0 },
-	{ "MEDHA0_VQPS_E_EN", MEDHA0_VQPS_E_EN_BIT, 0 },
 	{ "MEDHA0_VQPS_W_EN", MEDHA0_VQPS_W_EN_BIT, 0 },
 	{ "MEDHA1_VQPS_W_EN", MEDHA1_VQPS_W_EN_BIT, 0 },
+	{ "MEDHA0_VQPS_E_EN", MEDHA0_VQPS_E_EN_BIT, 0 },
+	{ "MEDHA1_VQPS_E_EN", MEDHA1_VQPS_E_EN_BIT, 0 },
 };
-
-static uint8_t get_vqps_offset_by_board(void)
-{
-	uint8_t board_id = get_asic_board_id();
-
-	switch (board_id) {
-	case ASIC_BOARD_ID_RAINBOW:
-		return RAINBOW_VQPS_CPLD_OFFSET;
-	case ASIC_BOARD_ID_EVB:
-		return EVB_VQPS_CPLD_OFFSET;
-	default:
-		LOG_DBG("unknown board id: 0x%02x, use EVB offset", board_id);
-		return EVB_VQPS_CPLD_OFFSET;
-	}
-}
-
-static uint8_t get_vqps_offset_for_item(const cpld_pin_map_t *item)
-{
-	if (!item) {
-		return 0;
-	}
-
-	if (item->offset != 0) {
-		return item->offset;
-	}
-
-	return get_vqps_offset_by_board();
-}
 
 static const cpld_pin_map_t *get_vqps_item(const char *name)
 {
@@ -106,52 +78,61 @@ static int cmd_vqps_get(const struct shell *shell, size_t argc, char **argv)
 		return -1;
 	}
 
-	if (!strcmp(argv[1], "all")) {
-		uint8_t reg_status = 0;
-		uint8_t reg_en = 0;
-		uint8_t en_offset = get_vqps_offset_by_board();
+	uint8_t board_id = get_asic_board_id();
+	uint8_t reg_status = 0;
+	uint8_t reg_en = 0;
 
-		if (!plat_read_cpld(VQPS_STATUS_CPLD_OFFSET, &reg_status, 1)) {
-			LOG_DBG("plat_read_cpld failed: offset=0x%02x", VQPS_STATUS_CPLD_OFFSET);
-			shell_error(shell, "read VQPS status CPLD failed");
-			return -1;
-		}
+	if (!plat_read_cpld(VQPS_STATUS_CPLD_OFFSET, &reg_status, 1)) {
+		LOG_DBG("plat_read_cpld failed: offset=0x%02x", VQPS_STATUS_CPLD_OFFSET);
+		shell_error(shell, "read VQPS status CPLD failed");
+		return -1;
+	}
+
+	if (!strcmp(argv[1], "all")) {
 		shell_print(shell, "VQPS status raw [0x%02X] = 0x%02X", VQPS_STATUS_CPLD_OFFSET,
 			    reg_status);
 
-		uint8_t max_step_count;
-		if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
-			max_step_count = ARRAY_SIZE(vqps_list); // EVB use all
-			shell_print(shell, "VQPS enable raw [0x%02X] = 0x%02X", en_offset, reg_en);
+		if (board_id == ASIC_BOARD_ID_EVB) {
+			if (!plat_read_cpld(EVB_VQPS_CPLD_OFFSET, &reg_en, 1)) {
+				LOG_DBG("plat_read_cpld failed: offset=0x%02x",
+					EVB_VQPS_CPLD_OFFSET);
+				shell_error(shell, "read VQPS platform CPLD failed");
+				return -1;
+			}
+			shell_print(shell, "VQPS platform raw [0x%02X] = 0x%02X",
+				    EVB_VQPS_CPLD_OFFSET, reg_en);
+		} else if (board_id == ASIC_BOARD_ID_RAINBOW) {
+			if (!plat_read_cpld(RAINBOW_VQPS_CPLD_OFFSET, &reg_en, 1)) {
+				LOG_DBG("plat_read_cpld failed: offset=0x%02x",
+					RAINBOW_VQPS_CPLD_OFFSET);
+				shell_error(shell, "read VQPS platform CPLD failed");
+				return -1;
+			}
+			shell_print(shell, "VQPS platform raw [0x%02X] = 0x%02X",
+				    RAINBOW_VQPS_CPLD_OFFSET, reg_en);
 		} else {
-			max_step_count = 5; // not EVB use first 5
+			shell_print(shell,
+				    "VQPS platform register not supported on this board (0x%02X)",
+				    board_id);
 		}
 
-		for (int i = 0; i < max_step_count; i++) {
+		for (int i = 0; i < 5; i++) {
 			const cpld_pin_map_t *item = &vqps_list[i];
-
 			uint8_t bit_val = (reg_status >> item->bit) & 0x1;
 			shell_print(shell, "%s : %d", item->name, bit_val);
 		}
 
-		if (!plat_read_cpld(en_offset, &reg_en, 1)) {
-			LOG_DBG("plat_read_cpld failed: offset=0x%02x", en_offset);
-			shell_error(shell, "read VQPS enable CPLD failed");
-			return -1;
-		}
-
-		for (int i = 0; i < max_step_count; i++) {
-			const cpld_pin_map_t *item = &vqps_list[i];
-			if (item->offset != 0) {
-				continue;
+		if (board_id == ASIC_BOARD_ID_EVB) {
+			for (int i = 5; i < ARRAY_SIZE(vqps_list); i++) {
+				const cpld_pin_map_t *item = &vqps_list[i];
+				uint8_t bit_val = (reg_en >> item->bit) & 0x1;
+				shell_print(shell, "%s : %d", item->name, bit_val);
 			}
-
-			uint8_t bit_val = (reg_en >> item->bit) & 0x1;
-			shell_print(shell, "%s : %d", item->name, bit_val);
 		}
 
 		return 0;
 	}
+
 	return 0;
 }
 
@@ -178,16 +159,24 @@ static int cmd_vqps_set(const struct shell *shell, size_t argc, char **argv)
 		LOG_DBG("unknown name in set: %s", name);
 		return -1;
 	}
-	/* calculate item index */
-	ptrdiff_t idx = item - vqps_list;
 
-	/* if not EVB cannot set index >= 5 */
-	if (get_asic_board_id() != ASIC_BOARD_ID_EVB && idx >= 5) {
-		shell_error(shell, "%s is not supported on this board", name);
-		return -1;
+	uint8_t board_id = get_asic_board_id();
+	ptrdiff_t idx = item - vqps_list;
+	uint8_t offset = 0;
+
+	if (idx < 5) {
+		/* Status bits always map to 0x13 */
+		offset = VQPS_STATUS_CPLD_OFFSET;
+	} else {
+		/* Enable bits only supported on EVB */
+		if (board_id != ASIC_BOARD_ID_EVB) {
+			shell_error(shell, "%s is not supported on this board (0x%02X)", name,
+				    board_id);
+			return -1;
+		}
+		offset = EVB_VQPS_CPLD_OFFSET;
 	}
 
-	uint8_t offset = get_vqps_offset_for_item(item);
 	uint8_t reg_val = 0;
 
 	if (!plat_read_cpld(offset, &reg_val, 1)) {
