@@ -98,6 +98,7 @@ typedef struct __attribute__((packed)) _plat_err_log_mapping {
 	uint64_t sys_time;
 	uint8_t error_data[20];
 	uint8_t cpld_dump[CPLD_REGISTER_MAX_NUM];
+	uint8_t reserved[24];
 } plat_err_log_mapping;
 
 enum LOG_ERROR_TRIGGER_CAUSE {
@@ -105,6 +106,7 @@ enum LOG_ERROR_TRIGGER_CAUSE {
 	POWER_ON_SEQUENCE_TRIGGER_CAUSE = 0b001,
 	AC_ON_TRIGGER_CAUSE = 0b010,
 	DC_ON_TRIGGER_CAUSE = 0b011,
+	TEMPERATURE_TRIGGER_CAUSE = 0b101,
 	MAX_TRIGGER_CAUSE = 0b1000, //trigger cause maxium 3 bit
 };
 

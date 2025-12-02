@@ -32,6 +32,7 @@
 #include "plat_pldm_monitor.h"
 #include "plat_hwmon.h"
 #include "plat_ioexp.h"
+#include "plat_thermal.h"
 
 LOG_MODULE_REGISTER(plat_init);
 
@@ -79,6 +80,7 @@ void pal_post_init()
 	init_cpld_polling();
 	plat_telemetry_table_init();
 	ioexp_init();
+	init_thermal_polling();
 }
 
 #define DEF_PROJ_GPIO_PRIORITY 78

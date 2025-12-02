@@ -48,7 +48,7 @@ static int cmd_soc_pcie_perst_set(const struct shell *shell, size_t argc, char *
 			shell_warn(shell, "Help: N range from 0 to 200");
 			return -1;
 		}
-		uint16_t delay_time = (setting_value * 10) + 100; // 100ms by default
+		uint16_t delay_time = (setting_value * 10);
 		shell_info(shell, "Set PERST delay to %d ms, %svolatile\n", delay_time,
 			   (argc == 3) ? "non-" : "");
 	}
