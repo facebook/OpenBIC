@@ -428,4 +428,3 @@ bool post_ltc4282_read(sensor_cfg *cfg, void *args, int *reading)
 	sval->fraction = (val - sval->integer) * 1000;
 	return true;
 }
-

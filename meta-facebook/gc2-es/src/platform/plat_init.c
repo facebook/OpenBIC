@@ -31,7 +31,7 @@ SCU_CFG scu_cfg[] = {
 	{ 0x7e6e2618, 0x30000000 },
 	{ 0x7e6e261c, 0x00000F04 },
 	// If not rework host console route uart1(HOST) <-> uart2, need to enable dts uart2 and plat_init.c need to setup register offset: 0x7e78909c to value: 0x00190021
-	
+
 };
 
 void pal_pre_init()

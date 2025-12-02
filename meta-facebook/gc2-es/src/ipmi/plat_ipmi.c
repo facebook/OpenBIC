@@ -35,8 +35,8 @@ int pal_record_bios_fw_version(uint8_t *buf, uint8_t size)
 	CHECK_NULL_ARG_WITH_RETURN(buf, -1);
 
 	int ret = -1;
-	EEPROM_ENTRY set_bios_ver = {0};
-	EEPROM_ENTRY get_bios_ver = {0};
+	EEPROM_ENTRY set_bios_ver = { 0 };
+	EEPROM_ENTRY get_bios_ver = { 0 };
 
 	const uint8_t block_index = buf[3];
 	if (block_index >= BIOS_FW_VERSION_BLOCK_NUM) {
@@ -55,10 +55,9 @@ int pal_record_bios_fw_version(uint8_t *buf, uint8_t size)
 
 	// Check the written BIOS version is the same with the stored
 	ret = memcmp(&get_bios_ver.data[0], &set_bios_ver.data[0],
-	             BIOS_FW_VERSION_BLOCK_MAX_SIZE * sizeof(uint8_t));
+		     BIOS_FW_VERSION_BLOCK_MAX_SIZE * sizeof(uint8_t));
 	if (ret == 0) {
-		LOG_DBG(
-		    "The Written bios version is the same with the stored bios version in EEPROM");
+		LOG_DBG("The Written bios version is the same with the stored bios version in EEPROM");
 	} else {
 		LOG_DBG("Set bios version");
 
@@ -84,7 +83,7 @@ void OEM_1S_GET_BIOS_VERSION(ipmi_msg *msg)
 	msg->data_len = 0;
 
 	for (uint8_t block_index = 0; block_index < BIOS_FW_VERSION_BLOCK_NUM; block_index++) {
-		EEPROM_ENTRY get_bios_ver = {0};
+		EEPROM_ENTRY get_bios_ver = { 0 };
 		int ret = get_bios_version(&get_bios_ver, block_index);
 		if (ret == -1) {
 			LOG_ERR("Get version fail");
@@ -185,7 +184,7 @@ void OEM_1S_GET_GPIO_CONFIG(ipmi_msg *msg)
 			cfg_byte |= (interrupt_type2 & 0x1u) << GPIO_CONF_SET_TRG_BOTH;
 		} else {
 			uint8_t interrupt_type0 =
-			    gpio_get_reg_value(gpio_num, REG_INTERRUPT_TYPE0_OFFSET);
+				gpio_get_reg_value(gpio_num, REG_INTERRUPT_TYPE0_OFFSET);
 			cfg_byte |= (interrupt_type0 & 0x1u) << GPIO_CONF_SET_TRG_EDGE;
 		}
 
@@ -250,7 +249,7 @@ void OEM_1S_SET_GPIO_CONFIG(ipmi_msg *msg)
 						gpio_interrupt_conf(gpio_num, GPIO_INT_EDGE_RISING);
 					} else {
 						gpio_interrupt_conf(gpio_num,
-						                    GPIO_INT_EDGE_FALLING);
+								    GPIO_INT_EDGE_FALLING);
 					}
 				}
 			}
@@ -292,7 +291,6 @@ void OEM_1S_GET_SET_GPIO(ipmi_msg *msg)
 	uint8_t completion_code = CC_INVALID_LENGTH;
 
 	switch (msg->data[0]) {
-
 	case CMD_GPIO_GET:
 		if (msg->data_len != 2) {
 			completion_code = CC_INVALID_LENGTH;

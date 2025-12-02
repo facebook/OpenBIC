@@ -35,7 +35,6 @@
 
 LOG_MODULE_REGISTER(plat_isr);
 
-
 void send_gpio_interrupt(uint8_t gpio_num)
 {
 	ipmb_error status;
@@ -110,7 +109,6 @@ void ISR_POST_COMPLETE()
 K_WORK_DELAYABLE_DEFINE(set_DC_on_5s_work, set_DC_on_delayed_status);
 
 #define DC_ON_5_SECOND 5
-
 
 void ISR_DC_ON()
 {
@@ -241,10 +239,10 @@ K_WORK_DELAYABLE_DEFINE(CAT_ERR_work, CAT_ERR_handler);
 static volatile uint32_t caterr_irq_cnt;
 void ISR_CATERR()
 {
-        caterr_irq_cnt++;
-        printf("[BRING_UP_DEBUG]CATERR IRQ #%u at %u us\n",
-               caterr_irq_cnt, k_cycle_get_32()/CONFIG_SYS_CLOCK_HW_CYCLES_PER_SEC);
-	
+	caterr_irq_cnt++;
+	printf("[BRING_UP_DEBUG]CATERR IRQ #%u at %u us\n", caterr_irq_cnt,
+	       k_cycle_get_32() / CONFIG_SYS_CLOCK_HW_CYCLES_PER_SEC);
+
 	if ((gpio_get(RST_PLTRST_BUF_N) == GPIO_HIGH)) {
 		if (k_work_cancel_delayable(&CAT_ERR_work) != 0) {
 			printf("Cancel caterr delay work fail\n");
@@ -353,14 +351,13 @@ K_WORK_DELAYABLE_DEFINE(mb_throttle_work, mb_throttle_handler);
 
 void ISR_MB_THROTTLE()
 {
-        if (gpio_get(RST_RSMRST_BMC_N) == GPIO_HIGH) {
-			if (k_work_cancel_delayable(&mb_throttle_work) != 0) {
-			}
-			/* start thread mb_throttle_handler after 4us */
-			k_work_schedule_for_queue(&plat_work_q, &mb_throttle_work,
-				K_USEC(MB_THROTTLE_DELAY_US));
-        }
-
+	if (gpio_get(RST_RSMRST_BMC_N) == GPIO_HIGH) {
+		if (k_work_cancel_delayable(&mb_throttle_work) != 0) {
+		}
+		/* start thread mb_throttle_handler after 4us */
+		k_work_schedule_for_queue(&plat_work_q, &mb_throttle_work,
+					  K_USEC(MB_THROTTLE_DELAY_US));
+	}
 }
 
 void ISR_SOC_THMALTRIP()
@@ -539,8 +536,6 @@ void ISR_RMCA()
 		}
 	}
 }
-
-
 
 void ISR_NMI()
 {
