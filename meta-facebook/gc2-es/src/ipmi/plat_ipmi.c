@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -16,16 +16,17 @@
 
 #include "plat_ipmi.h"
 
+#include "eeprom.h"
+#include "fru.h"
+#include "hal_gpio.h"
+#include "ipmi.h"
+#include "libutil.h"
+#include "plat_class.h"
+#include "plat_fru.h"
+#include "plat_ipmb.h"
+#include <logging/log.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <logging/log.h>
-#include "libutil.h"
-#include "ipmi.h"
-#include "fru.h"
-#include "eeprom.h"
-#include "plat_fru.h"
-#include "plat_class.h"
-#include "plat_ipmb.h"
 
 LOG_MODULE_REGISTER(plat_ipmi);
 
@@ -137,4 +138,128 @@ void OEM_1S_GET_CARD_TYPE(ipmi_msg *msg)
 	}
 
 	return;
+}
+
+void OEM_1S_GET_GPIO_CONFIG(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+	if (msg->data_len == 0) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		return;
+	}
+
+	uint8_t idx = 0;
+	uint8_t bitmap_len = msg->data_len;
+	uint8_t *gpio_bitmap = (uint8_t *)malloc(bitmap_len * sizeof(uint8_t));
+	if (gpio_bitmap == NULL) {
+		return;
+	}
+	memcpy(gpio_bitmap, &msg->data[0], bitmap_len);
+
+	for (uint8_t num = 0; num < gpio_ind_to_num_table_cnt; num++) {
+		if (num / BITS_PER_BYTE >= bitmap_len) {
+			break;
+		}
+
+		uint8_t byte = msg->data[num / BITS_PER_BYTE];
+		uint8_t pin_mask = (1 << (num % BITS_PER_BYTE));
+		if (!(byte & pin_mask)) {
+			continue;
+		}
+
+		uint8_t gpio_num = gpio_ind_to_num_table[num];
+		uint8_t cfg_byte = 0;
+
+		uint8_t dir = (uint8_t)gpio_get_direction(gpio_num);
+		cfg_byte |= (dir & 0x1u) << GPIO_CONF_SET_DIR;
+
+		uint8_t interrupt_en = gpio_get_reg_value(gpio_num, REG_INTERRUPT_ENABLE_OFFSET);
+		cfg_byte |= (interrupt_en & 0x1u) << GPIO_CONF_SET_INT;
+
+		uint8_t interrupt_type1 = gpio_get_reg_value(gpio_num, REG_INTERRUPT_TYPE1_OFFSET);
+		cfg_byte |= (interrupt_type1 & 0x1u) << GPIO_CONF_SET_TRG_TYPE;
+
+		uint8_t interrupt_type2 = gpio_get_reg_value(gpio_num, REG_INTERRUPT_TYPE2_OFFSET);
+		if (interrupt_type2) {
+			cfg_byte |= (interrupt_type2 & 0x1u) << GPIO_CONF_SET_TRG_BOTH;
+		} else {
+			uint8_t interrupt_type0 =
+				gpio_get_reg_value(gpio_num, REG_INTERRUPT_TYPE0_OFFSET);
+			cfg_byte |= (interrupt_type0 & 0x1u) << GPIO_CONF_SET_TRG_EDGE;
+		}
+
+		msg->data[idx++] = cfg_byte;
+	}
+	free(gpio_bitmap);
+	msg->data_len = idx;
+	msg->completion_code = CC_SUCCESS;
+}
+
+void OEM_1S_SET_GPIO_CONFIG(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+	uint8_t bitmap_len = (gpio_ind_to_num_table_cnt + BITS_PER_BYTE - 1) / BITS_PER_BYTE;
+	if (msg->data_len < bitmap_len + 1) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		msg->data_len = 0;
+		return;
+	}
+
+	uint8_t idx = bitmap_len;
+	for (uint8_t num = 0; num < gpio_ind_to_num_table_cnt; num++) {
+		if (num / BITS_PER_BYTE >= bitmap_len) {
+			break;
+		}
+
+		uint8_t byte = msg->data[num / BITS_PER_BYTE];
+		uint8_t pin_mask = (uint8_t)(1u << (num % BITS_PER_BYTE));
+		if (!(byte & pin_mask)) {
+			continue;
+		}
+
+		uint8_t cfg = msg->data[idx];
+		uint8_t gpio_num = gpio_ind_to_num_table[num];
+
+		if (gpio_cfg[gpio_num].is_init == DISABLE) {
+			msg->data_len = 0;
+			msg->completion_code = CC_INVALID_DATA_FIELD;
+			return;
+		}
+
+		if (cfg & BIT(GPIO_CONF_SET_DIR)) {
+			gpio_conf(gpio_num, GPIO_OUTPUT);
+		} else {
+			gpio_conf(gpio_num, GPIO_INPUT);
+		}
+
+		if (cfg & BIT(GPIO_CONF_SET_INT)) {
+			if (cfg & BIT(GPIO_CONF_SET_TRG_BOTH)) {
+				gpio_interrupt_conf(gpio_num, GPIO_INT_EDGE_BOTH);
+			} else {
+				if (cfg & BIT(GPIO_CONF_SET_TRG_TYPE)) {
+					// level
+					if (cfg & BIT(GPIO_CONF_SET_TRG_EDGE)) {
+						gpio_interrupt_conf(gpio_num, GPIO_INT_LEVEL_HIGH);
+					} else {
+						gpio_interrupt_conf(gpio_num, GPIO_INT_LEVEL_LOW);
+					}
+				} else {
+					// edge
+					if (cfg & BIT(GPIO_CONF_SET_TRG_EDGE)) {
+						gpio_interrupt_conf(gpio_num, GPIO_INT_EDGE_RISING);
+					} else {
+						gpio_interrupt_conf(gpio_num,
+								    GPIO_INT_EDGE_FALLING);
+					}
+				}
+			}
+		} else {
+			gpio_interrupt_conf(gpio_num, GPIO_INT_DISABLE);
+		}
+
+		idx++;
+	}
+
+	msg->data_len = 0;
+	msg->completion_code = CC_SUCCESS;
 }
