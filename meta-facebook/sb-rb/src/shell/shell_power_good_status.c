@@ -71,6 +71,7 @@ enum power_good_status_type {
 	PWRGD_PVDD1P5,
 	PWRGD_P0V75_AVDD_HCSL,
 	PWRGD_P1V5_PLL_VDDA_OWL_W,
+	PWRGD_P4V2,
 	PWRGD_MAX
 };
 typedef struct power_good_status {
@@ -140,6 +141,7 @@ power_good_status power_good_status_table[] = {
 	{ PWRGD_PVDD1P5, 7, VR_PWRGD_PIN_READING_6_REG, "PWRGD_PVDD1P5" },
 	{ PWRGD_P0V75_AVDD_HCSL, 6, VR_PWRGD_PIN_READING_6_REG, "PWRGD_P0V75_AVDD_HCSL" },
 	{ PWRGD_P1V5_PLL_VDDA_OWL_W, 5, VR_PWRGD_PIN_READING_6_REG, "PWRGD_P1V5_PLL_VDDA_OWL_W" },
+	{ PWRGD_P4V2, 4, VR_PWRGD_PIN_READING_6_REG, "PWRGD_P4V2" },
 };
 
 #define POWER_GOOD_STATUS_COUNT ARRAY_SIZE(power_good_status_table)

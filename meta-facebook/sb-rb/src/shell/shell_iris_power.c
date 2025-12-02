@@ -5,6 +5,7 @@
 #include <shell_plat_power_sequence.h>
 #include "plat_gpio.h"
 #include "plat_isr.h"
+#include "plat_i2c.h"
 // iris power command
 
 #define enable 0x01
@@ -69,6 +70,7 @@ enum power_good_status_type_for_steps_on {
 	PWRGD_PVDD1P5,
 	PWRGD_P0V75_AVDD_HCSL,
 	PWRGD_P1V5_PLL_VDDA_OWL_W,
+	PWRGD_P4V2,
 	PWRGD_MAX
 };
 power_good_status power_good_status_table_for_steps_on[] = {
@@ -130,6 +132,7 @@ power_good_status power_good_status_table_for_steps_on[] = {
 	{ PWRGD_PVDD1P5, 7, VR_PWRGD_PIN_READING_6_REG, "PWRGD_PVDD1P5" },
 	{ PWRGD_P0V75_AVDD_HCSL, 6, VR_PWRGD_PIN_READING_6_REG, "PWRGD_P0V75_AVDD_HCSL" },
 	{ PWRGD_P1V5_PLL_VDDA_OWL_W, 5, VR_PWRGD_PIN_READING_6_REG, "PWRGD_P1V5_PLL_VDDA_OWL_W" },
+	{ PWRGD_P4V2, 4, VR_PWRGD_PIN_READING_6_REG, "PWRGD_P4V2" },
 };
 typedef struct steps_on_struct {
 	uint8_t power_on_value;
@@ -143,7 +146,7 @@ static steps_on_struct steps_on[] = {
 	// follow pwr sequence order
 	{ 1, VR_AND_CLK_EN_PIN_CTRL, 1, "FM_PLD_UBC_EN", P12V_UBC1_PWRGD }, //p12V
 	{ 1, VR_4_EN, 6, "FM_P3V3_EN", PWRGD_P3V3_R }, //FM_P3V3_EN
-	{ 1, VR_AND_CLK_EN_PIN_CTRL, 3, "FM_P4V2_EN_R", NO_DEFINED }, //FM_P4V2_EN_R
+	{ 1, VR_AND_CLK_EN_PIN_CTRL, 3, "FM_P4V2_EN_R", PWRGD_P4V2 }, //FM_P4V2_EN_R
 	{ 1, VR_4_EN, 7, "FM_P5V_EN", PWRGD_P5V_R }, //FM_P5V_EN
 	{ 1, VR_4_EN, 5, "LDO_IN_1V2_EN_R", PWRGD_LDO_IN_1V2_R }, //LDO_IN_1V2_EN_R
 	{ 1, VR_4_EN, 4, "FM_P1V80_EN", PWRGD_P1V8_R }, //FM_P1V80_EN
@@ -204,15 +207,98 @@ static steps_on_struct steps_on[] = {
 	  PWRGD_P0V9_OWL_E_PVDD }, //FM_PVDD0P9_EN (OWL_E_PVDD0P9, OWL_W_PVDD0P9)
 	{ 1, VR_3_EN, 1, "FM_P1V5_RVDD_EN",
 	  PWRGD_P1V5_E_RVDD }, //FM_P1V5_RVDD_EN (OWL_E_RVDD1P5, OWL_W_RVDD1P5)
+	{ 1, VR_3_EN, 2, "FM_PVDD1P5_EN", PWRGD_PVDD1P5 }, //FM_PVDD1P5_EN
 	{ 1, VR_AND_CLK_EN, 0, "FM_HAMSA_VDDHRXTX_PCIE_EN",
 	  PWRGD_HAMSA_VDDHRXTX_PCIE_R }, //FM_HAMSA_VDDHRXTX_PCIE_EN
-	{ 1, VR_3_EN, 2, "FM_PVDD1P5_EN", PWRGD_PVDD1P5 }, //FM_PVDD1P5_EN
 	{ 1, VR_CLK_ENABLE_PIN_CTRL_REG, 6, "ASIC_POWER_ON_RESET_N",
 	  NO_DEFINED }, //ASIC_POWER_ON_RESET_N
 	{ 1, VR_CLK_ENABLE_PIN_CTRL_REG, 5, "ASIC_SYS_RST_N", NO_DEFINED }, //ASIC_SYS_RST_N
 	{ 1, VR_CLK_ENABLE_PIN_CTRL_REG, 4, "HAMSA_PCIE_PERST_B_PLD_N",
 	  NO_DEFINED }, //HAMSA_PCIE_PERST_B_PLD_N
 };
+enum PWR_CLOCK_COMPONENT {
+	CLK_BUF_100M_U85,
+	CLK_BUF_100M_U87,
+	CLK_BUF_100M_U88,
+	CLK_GEN_100M_U86,
+	CLK_COMPONENT_MAX
+};
+
+typedef struct pwr_clock_compnt_mapping {
+	uint8_t clock_name_index;
+	uint8_t addr;
+	uint8_t bus;
+	uint8_t *clock_name;
+} pwr_clock_compnt_mapping;
+
+#define CLK_BUF_U85_ADDR (0xCE >> 1)
+#define CLK_BUF_U87_ADDR (0xD8 >> 1)
+#define CLK_BUF_U88_ADDR (0xDE >> 1)
+#define CLK_GEN_100M_U86_ADDR 0x9
+#define CLK_BUF_100M_WRITE_LOCK_CLEAR_LOS_EVENT_OFFSET 0x27
+#define CLK_GEN_LOSMON_EVENT_OFFSET 0x5a
+
+pwr_clock_compnt_mapping pwr_clock_compnt_mapping_table[] = {
+	{ CLK_BUF_100M_U85, CLK_BUF_U85_ADDR, I2C_BUS1, "LOS_EVT_CLK_BUF_100M_U85" },
+	{ CLK_BUF_100M_U87, CLK_BUF_U87_ADDR, I2C_BUS1, "LOS_EVT_CLK_BUF_100M_U87" },
+	{ CLK_BUF_100M_U88, CLK_BUF_U88_ADDR, I2C_BUS3, "LOS_EVT_CLK_BUF_100M_U88" },
+	{ CLK_GEN_100M_U86, CLK_GEN_100M_U86_ADDR, I2C_BUS3, "LOS_EVT_CLK_GEN_100M_U86" },
+};
+
+void pwr_get_clock_status(const struct shell *shell, uint8_t clock_index)
+{
+	uint8_t addr = 0;
+	uint8_t bus = 0;
+	uint8_t *temp_clock_name = "";
+
+	for (int i = 0;
+	     i < sizeof(pwr_clock_compnt_mapping_table) / sizeof(pwr_clock_compnt_mapping_table[0]);
+	     i++) {
+		if (pwr_clock_compnt_mapping_table[i].clock_name_index == clock_index) {
+			addr = pwr_clock_compnt_mapping_table[i].addr;
+			bus = pwr_clock_compnt_mapping_table[i].bus;
+			temp_clock_name = pwr_clock_compnt_mapping_table[i].clock_name;
+			break;
+		}
+	}
+	//shell_info(shell, "clock index: %d, addr: 0x%x, bus: %d", clock_index, addr, bus); //dbg info
+
+	I2C_MSG i2c_msg = { 0 };
+	uint8_t retry = 5;
+	switch (clock_index) {
+	case CLK_BUF_100M_U85:
+	case CLK_BUF_100M_U87:
+	case CLK_BUF_100M_U88:
+		i2c_msg.bus = bus;
+		i2c_msg.target_addr = addr;
+		i2c_msg.tx_len = 1;
+		i2c_msg.rx_len = 2; //first byte is data length because it is block read
+		i2c_msg.data[0] = CLK_BUF_100M_WRITE_LOCK_CLEAR_LOS_EVENT_OFFSET;
+		if (i2c_master_read(&i2c_msg, retry)) {
+			shell_error(shell, "Failed to read reg, bus: %d, addr: 0x%x, reg: 0x%x",
+				    bus, addr, CLK_BUF_100M_WRITE_LOCK_CLEAR_LOS_EVENT_OFFSET);
+			return;
+		}
+		//print clock name and value
+		shell_print(shell, "%s : 0x%x", temp_clock_name, i2c_msg.data[1]);
+		break;
+	case CLK_GEN_100M_U86:
+		i2c_msg.bus = bus;
+		i2c_msg.target_addr = addr;
+		i2c_msg.tx_len = 1;
+		i2c_msg.rx_len = 2; //first byte is data length because it is block read
+		i2c_msg.data[0] = CLK_GEN_LOSMON_EVENT_OFFSET;
+		if (i2c_master_read(&i2c_msg, retry)) {
+			shell_error(shell, "Failed to read reg, bus: %d, addr: 0x%x, reg: 0x%x",
+				    bus, addr, CLK_GEN_LOSMON_EVENT_OFFSET);
+			return;
+		}
+		shell_print(shell, "%s : 0x%x", temp_clock_name, i2c_msg.data[1]);
+		break;
+	default:
+		shell_error(shell, "Type wrong clock index: %d", clock_index);
+	}
+}
 
 #define MAX_STEPS (sizeof(steps_on) / sizeof(steps_on[0]))
 int power_steps = 0;
@@ -290,6 +376,22 @@ void cmd_iris_steps_on(const struct shell *shell, size_t argc, char **argv)
 
 	uint8_t pwrgd_idx = steps_on[power_steps].pwrgd_idx;
 	if (pwrgd_idx == NO_DEFINED) {
+		// if steps on name == FM_P3V3_CLK_EN, do next steps immediately
+		if (strcmp(steps_on[power_steps].name, "FM_P3V3_CLK_EN") == 0) {
+			power_steps += 1;
+			// call self function
+			// turn on the steps on bit
+			if (set_cpld_bit(steps_on[power_steps].cpld_offset,
+					 steps_on[power_steps].bit,
+					 steps_on[power_steps].power_on_value) == false) {
+				shell_print(shell, "set %-35s fail", steps_on[power_steps].name);
+			} else {
+				shell_print(shell, "set %-35s success", steps_on[power_steps].name);
+			}
+			for (int i = 0; i < CLK_COMPONENT_MAX; i++) {
+				pwr_get_clock_status(shell, i);
+			}
+		}
 		power_steps += 1;
 		return;
 	}
