@@ -217,9 +217,6 @@ uint8_t send_event_log_to_bmc(struct pldm_addsel_data sel_msg)
 
 	ptr->cmd_code = EVENT_LOG;
 	ptr->data_length = OEM_EVENT_LEN;
-	uint32_t now_time = k_uptime_get();
-	sel_msg.timestamp = now_time;
-	
 	memcpy(ptr->messages, &sel_msg, sizeof(struct pldm_addsel_data));
 
 	msg.buf = (uint8_t *)ptr;
