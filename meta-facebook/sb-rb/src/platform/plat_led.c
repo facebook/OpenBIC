@@ -64,9 +64,9 @@ void heartbeat_led_handler(struct k_work *work)
 
 		uint16_t candidate_interval = 500;
 		if (cache_reading <= 70000) { //70 degree C
-			candidate_interval = 500;
+			candidate_interval = 500; // 1fps
 		} else if (cache_reading <= 100000) { //100 degree C
-			candidate_interval = 250;
+			candidate_interval = 250; // 0.5fps
 		} else {
 			candidate_interval = 50;
 		}

@@ -509,15 +509,28 @@ bool temp_threshold_default_settings_init(void)
 			return false;
 		}
 		temp_threshold_default_settings.temperature_reg_val[i] = temp_threshold;
+		uint32_t temperature = 0;
 		// these temp_threshold is 100 degree
 		if (i == ASIC_MEDHA0_SENSOR0_HIGH_LIMIT || i == ASIC_MEDHA0_SENSOR1_HIGH_LIMIT ||
 		    i == ASIC_MEDHA1_SENSOR0_HIGH_LIMIT || i == ASIC_MEDHA1_SENSOR1_HIGH_LIMIT ||
-		    i == ASIC_OWL_W_HIGH_LIMIT || i == ASIC_OWL_E_HIGH_LIMIT) {
-			uint32_t temperature = 100000;
-			if (!set_plat_temp_threshold(i, &temperature, false, false)) {
-				LOG_ERR("Can't set temp threshold index: 0x%x to 100", i);
-				return false;
-			}
+		    i == ASIC_OWL_W_HIGH_LIMIT || i == ASIC_OWL_E_HIGH_LIMIT ||
+		    i == ASIC_HAMSA_CRM_HIGH_LIMIT || i == ASIC_HAMSA_LS_HIGH_LIMIT) {
+			temperature = 100000;
+		}
+		// set board temp threshold low to 0 degree
+		if (i == TOP_INLET_LOW_LIMIT || i == BOT_INLET_LOW_LIMIT ||
+		    i == BOT_OUTLET_LOW_LIMIT) {
+			temperature = 0;
+		}
+		// set board temp threshold high to 85 degree
+		if (i == TOP_INLET_HIGH_LIMIT || i == BOT_INLET_HIGH_LIMIT ||
+		    i == BOT_OUTLET_HIGH_LIMIT) {
+			temperature = 85000;
+		}
+
+		if (!set_plat_temp_threshold(i, &temperature, false, false)) {
+			LOG_ERR("Can't set temp threshold index: 0x%x to 100", i);
+			return false;
 		}
 	}
 

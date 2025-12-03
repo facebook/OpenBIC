@@ -239,8 +239,8 @@ static void update_adc_info(uint16_t raw_data, uint8_t base_idx, float vref)
 		adc->vr_voltage_buf[adc->buf_idx] = voltage_packed;
 		adc->vr_sum += adc->vr_voltage_buf[adc->buf_idx];
 		// average pwr = average voltage * average current
-		adc->pwr_avg_val = (temp_voltage_value / adc->avg_times) *
-				   adc_raw_mv_to_apms(adc->avg_val, vref);
+		adc->pwr_avg_val =
+			(adc->vr_sum / adc->avg_times) * adc_raw_mv_to_apms(adc->avg_val, vref);
 
 		// decrease buffer idx
 		adc->buf_idx = (adc->buf_idx + 1) % adc->avg_times;
@@ -678,7 +678,12 @@ void ads7066_mode_init()
 	// medha0 & medha1
 	for (int i = 0; i < ADC_RB_IDX_MAX; i++) {
 		ads7066_write_reg(0, 0x1, i);
-		ads7066_write_reg(0x1, 0x82, i);
+		// if rainbow board revid >= EVT1B, disable internal Volt reference
+		if (get_asic_board_id() == ASIC_BOARD_ID_RAINBOW &&
+		    get_board_rev_id() >= REV_ID_EVT2)
+			ads7066_write_reg(0x1, 0x2, i);
+		else
+			ads7066_write_reg(0x1, 0x82, i);
 		ads7066_write_reg(0x12, 0x1, i);
 		ads7066_write_reg(0x3, 0x6, i);
 		ads7066_write_reg(0x4, 0x8, i);
@@ -709,7 +714,6 @@ void adc_rainbow_polling_handler(void *p1, void *p2, void *p3)
 {
 	read_adc_info();
 	LOG_INF("adc index is %d", adc_idx_read);
-	adc_idx_read = ADI_AD4058;
 	if (adc_idx_read == ADI_AD4058)
 		ad4058_mode_init();
 	else if (adc_idx_read == TIC_ADS7066)
