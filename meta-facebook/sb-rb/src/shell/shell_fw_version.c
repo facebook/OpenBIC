@@ -25,8 +25,24 @@
 #include "plat_pldm_sensor.h"
 #include "plat_hook.h"
 #include "plat_class.h"
+#include "plat_i2c.h"
 
 LOG_MODULE_REGISTER(shell_fw_version);
+
+#define ASIC_VERSION_BYTE 0x68
+#define I2C_MAX_RETRY 3
+typedef struct {
+	uint8_t id;
+	const char *name;
+	uint8_t bus;
+	uint8_t addr;
+} asic_item_t;
+
+static const asic_item_t asic_list[BOOT0_MAX] = {
+	{ BOOT0_HAMSA, "HAMSA",  I2C_BUS12, 0x32},
+	{ BOOT0_MEDHA0, "MEDHA0", I2C_BUS12, 0x32},
+	{ BOOT0_MEDHA1, "MEDHA1", I2C_BUS12, 0x32},
+};
 
 void cmd_get_fw_version_vr(const struct shell *shell, size_t argc, char **argv)
 {
@@ -129,9 +145,16 @@ void cmd_get_fw_version_cpld(const struct shell *shell, size_t argc, char **argv
 
 void cmd_get_fw_version_asic(const struct shell *shell, size_t argc, char **argv)
 {
-	shell_print(shell, "HAMSA boot0 CRC32 : %08x", plat_get_image_crc_checksum(BOOT0_HAMSA));
-	shell_print(shell, "MEDHA0 boot0 CRC32 : %08x", plat_get_image_crc_checksum(BOOT0_MEDHA0));
-	shell_print(shell, "MEDHA1 boot0 CRC32 : %08x", plat_get_image_crc_checksum(BOOT0_MEDHA1));
+	for(uint8_t idx=BOOT0_HAMSA; idx < BOOT0_MAX; idx++){
+		I2C_MSG i2c_msg = {.bus = asic_list[idx].bus, .target_addr = asic_list[idx].addr};
+		i2c_msg.tx_len = 1;
+		i2c_msg.rx_len = 11;
+		i2c_msg.data[0] = ASIC_VERSION_BYTE;
+		i2c_master_read(&i2c_msg, I2C_MAX_RETRY);
+		// get_version_from_asic(asic_list[idx].bus, asic_list[idx].addr, version);
+		shell_print(shell, "%s boot0 VER : %02d.%02d.%02d| CRC32 : %08x", asic_list[idx].name,
+			i2c_msg.data[9], i2c_msg.data[8], i2c_msg.data[7], plat_get_image_crc_checksum(asic_list[idx].id));
+	}
 	return;
 }
 
