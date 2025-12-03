@@ -230,7 +230,7 @@ ret:
 
 	memcpy(res_p->present_reading, &reading, sizeof(reading));
 	*resp_len = sizeof(struct pldm_get_sensor_reading_resp) +
-		    get_sensor_data_size(sensor_pdr.sensor_data_size) - 1;
+		    get_sensor_data_size(res_p->sensor_data_size) - 1;
 	return PLDM_SUCCESS;
 }
 
