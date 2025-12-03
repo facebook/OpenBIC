@@ -743,6 +743,41 @@ static int delay_asic_rst_user_settings_init(void)
 
 	return 0;
 }
+static int delay_pcie_perst_user_settings_init(void)
+{
+	uint32_t setting_values = 0;
+
+	if (get_user_settings_delay_pcie_perst_from_eeprom(&setting_values, sizeof(setting_values)) ==
+	    false) {
+		LOG_ERR("get delay pcie perst user settings failed");
+		return -1;
+	}
+	uint8_t setting_value = 0;
+	if (setting_values != 0xffffffff) {
+		setting_value = setting_values & 0xff;
+		if (!plat_write_cpld(CPLD_HAMSA_PCIE0_PERST_DELAY_REG, &setting_value)) {
+			LOG_ERR("plat delay_pcie_perst PCIE0 set failed");
+			return -1;
+		}
+		setting_value = (setting_values>>8) & 0xff;
+		if (!plat_write_cpld(CPLD_HAMSA_PCIE1_PERST_DELAY_REG, &setting_value)) {
+			LOG_ERR("plat delay_pcie_perst PCIE1 set failed");
+			return -1;
+		}
+		setting_value = (setting_values>>16) & 0xff;
+		if (!plat_write_cpld(CPLD_HAMSA_PCIE2_PERST_DELAY_REG, &setting_value)) {
+			LOG_ERR("plat delay_pcie_perst PCIE2 set failed");
+			return -1;
+		}
+		setting_value = (setting_values>>24) & 0xff;
+		if (!plat_write_cpld(CPLD_HAMSA_PCIE3_PERST_DELAY_REG, &setting_value)) {
+			LOG_ERR("plat delay_pcie_perst PCIE3 set failed");
+			return -1;
+		}
+	}
+
+	return 0;
+}
 static int delay_module_pg_user_settings_init(void)
 {
 	uint8_t setting_value = 0;
@@ -762,22 +797,22 @@ static int delay_module_pg_user_settings_init(void)
 
 	return 0;
 }
-bool get_user_settings_soc_pcie_perst_from_eeprom(void *user_settings, uint8_t data_length)
+bool get_user_settings_delay_pcie_perst_from_eeprom(void *user_settings, uint8_t data_length)
 {
 	CHECK_NULL_ARG_WITH_RETURN(user_settings, false);
 
-	if (!plat_eeprom_read(SOC_PCIE_PERST_USER_SETTINGS_OFFSET, user_settings, data_length)) {
-		LOG_ERR("Failed to read soc_pcie_perst from eeprom");
+	if (!plat_eeprom_read(DELAY_PCIE_PERST_USER_SETTINGS_OFFSET, user_settings, data_length)) {
+		LOG_ERR("Failed to read delay_pcie_perst from eeprom");
 		return false;
 	}
 	return true;
 }
-bool set_user_settings_soc_pcie_perst_to_eeprom(void *user_settings, uint8_t data_length)
+bool set_user_settings_delay_pcie_perst_to_eeprom(void *user_settings, uint8_t data_length, uint8_t user_settings_offset)
 {
 	CHECK_NULL_ARG_WITH_RETURN(user_settings, false);
 
-	if (!plat_eeprom_write(SOC_PCIE_PERST_USER_SETTINGS_OFFSET, user_settings, data_length)) {
-		LOG_ERR("soc_pcie_perst Failed to write eeprom");
+	if (!plat_eeprom_write(DELAY_PCIE_PERST_USER_SETTINGS_OFFSET+user_settings_offset, user_settings, data_length)) {
+		LOG_ERR("delay_pcie_perst Failed to write eeprom");
 		return false;
 	}
 	k_msleep(EEPROM_MAX_WRITE_TIME);
@@ -854,10 +889,11 @@ bool perm_config_clear(void)
 	}
 
 	/* clear soc_pcie_perst perm parameter */
-	uint8_t setting_value_for_soc_pcie_perst = 0xFF;
-	if (!set_user_settings_soc_pcie_perst_to_eeprom(&setting_value_for_soc_pcie_perst,
-							sizeof(setting_value_for_soc_pcie_perst))) {
-		LOG_ERR("The perm_config clear failed");
+	uint32_t setting_value_for_delay_pcie_perst = 0xFFFFFFFF;
+	if (!set_user_settings_delay_pcie_perst_to_eeprom(&setting_value_for_delay_pcie_perst,
+			sizeof(setting_value_for_delay_pcie_perst), 0) 
+		) {
+		LOG_ERR("The perm_config delay pcie perst clear failed");
 		return false;
 	}
 
@@ -1301,4 +1337,5 @@ void user_settings_init(void)
 	alert_level_user_settings_init();
 	delay_asic_rst_user_settings_init();
 	delay_module_pg_user_settings_init();
+	delay_pcie_perst_user_settings_init();
 }

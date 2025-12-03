@@ -70,14 +70,20 @@ static int cmd_perm_config_get(const struct shell *shell, size_t argc, char **ar
 		}
 	}
 
-	uint8_t setting_data_for_soc_pcie_perst = 0xFF;
-	if (!get_user_settings_soc_pcie_perst_from_eeprom(
-		    &setting_data_for_soc_pcie_perst, sizeof(setting_data_for_soc_pcie_perst))) {
-		LOG_ERR("get soc_pcie_perst user settings failed");
+	uint32_t setting_data_for_delay_pcie_perst = 0xffffffff;
+	if (!get_user_settings_delay_pcie_perst_from_eeprom(
+		    &setting_data_for_delay_pcie_perst, sizeof(setting_data_for_delay_pcie_perst))) {
+		LOG_ERR("get delay_pcie_perst user settings failed");
 	} else {
-		if (setting_data_for_soc_pcie_perst != 0xFF) {
-			shell_print(shell, "soc_pcie_perst                            val=%d",
-				    setting_data_for_soc_pcie_perst);
+		if (setting_data_for_delay_pcie_perst != 0xffffffff) {
+			shell_print(shell, "delay_pcie_perst PCIE0                      val=%d",
+				    setting_data_for_delay_pcie_perst&0xff);
+			shell_print(shell, "delay_pcie_perst PCIE1                      val=%d",
+				    (setting_data_for_delay_pcie_perst>>8)&0xff);
+			shell_print(shell, "delay_pcie_perst PCIE2                      val=%d",
+				    (setting_data_for_delay_pcie_perst>>16)&0xff);
+			shell_print(shell, "delay_pcie_perst PCIE3                      val=%d",
+				    (setting_data_for_delay_pcie_perst>>24)&0xff);
 			config_count++;
 		}
 	}
