@@ -349,6 +349,56 @@ uint8_t modbus_pump_setting(modbus_command_mapping *cmd)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
 	uint16_t check_error_flag = 0;
+
+	if (cmd->data[0] == 9) // enable auto mode, reset p0p1 error flag
+	{
+		set_is_rack_level_abnormal(false);
+		set_is_rpu_level_abnormal(false);
+		set_is_press_abnormal(false);
+		set_is_hsc_hsc_fail(false);
+		set_is_pump_not_access(0, false);
+		set_is_pump_not_access(1, false);
+		set_is_pump_not_access(2, false);
+		// restore leak led
+		led_ctrl(LED_IDX_E_LEAK, LED_STOP_BLINK);
+		set_status_flag(STATUS_FLAG_FAILURE, GPIO_FAIL_BPB_HSC, 0);
+		for (uint8_t i = PUMP_FAIL_EMERGENCY_BUTTON; i <= PUMP_FAIL_CLOSE_PUMP; i++) {
+			set_status_flag(STATUS_FLAG_FAILURE, i, 0);
+		}
+
+		if (!gpio_get(IT_LEAK_ALERT0_R))
+			set_status_flag(STATUS_FLAG_LEAK, AALC_STATUS_IT_LEAK_0, 0);
+		else
+			error_log_event(SENSOR_NUM_IT_LEAK_0_GPIO, IS_ABNORMAL_VAL);
+
+		if (!gpio_get(IT_LEAK_ALERT1_R))
+			set_status_flag(STATUS_FLAG_LEAK, AALC_STATUS_IT_LEAK_1, 0);
+		else
+			error_log_event(SENSOR_NUM_IT_LEAK_1_GPIO, IS_ABNORMAL_VAL);
+
+		if (!gpio_get(IT_LEAK_ALERT2_R))
+			set_status_flag(STATUS_FLAG_LEAK, AALC_STATUS_IT_LEAK_2, 0);
+		else
+			error_log_event(SENSOR_NUM_IT_LEAK_2_GPIO, IS_ABNORMAL_VAL);
+
+		if (!gpio_get(IT_LEAK_ALERT3_R))
+			set_status_flag(STATUS_FLAG_LEAK, AALC_STATUS_IT_LEAK_3, 0);
+		else
+			error_log_event(SENSOR_NUM_IT_LEAK_3_GPIO, IS_ABNORMAL_VAL);
+
+		for (uint8_t i = AALC_STATUS_CDU_LEAKAGE; i < AALC_STATUS_LEAK_E_MAX; i++) {
+			set_status_flag(STATUS_FLAG_LEAK, i, 0);
+		}
+
+		if (get_status_flag(STATUS_FLAG_LEAK))
+			set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_LEAK, 1);
+
+		for (uint8_t i = HSC_FAIL_BPB; i <= HSC_FAIL_PUMP_3; i++) {
+			set_status_flag(STATUS_FLAG_HSC_FAIL, i, 0);
+		}
+		set_threshold_status_to_normal();
+	}
+
 	for (int i = 0; i < ARRAY_SIZE(modbus_pump_setting_table); i++) {
 		uint8_t func_idx = modbus_pump_setting_table[i].function_index;
 		// check bit value is 0 or 1
