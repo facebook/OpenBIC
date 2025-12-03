@@ -150,8 +150,10 @@ void cmd_get_fw_version_asic(const struct shell *shell, size_t argc, char **argv
 		i2c_msg.tx_len = 1;
 		i2c_msg.rx_len = 11;
 		i2c_msg.data[0] = ASIC_VERSION_BYTE;
-		i2c_master_read(&i2c_msg, I2C_MAX_RETRY);
-		// get_version_from_asic(asic_list[idx].bus, asic_list[idx].addr, version);
+		if (i2c_master_read(&i2c_msg, I2C_MAX_RETRY)) {
+			LOG_ERR("Failed to get fw version from asic");
+			return;
+		}
 		shell_print(shell, "%s boot0 VER : %02d.%02d.%02d| CRC32 : %08x", asic_list[idx].name,
 			i2c_msg.data[9], i2c_msg.data[8], i2c_msg.data[7], plat_get_image_crc_checksum(asic_list[idx].id));
 	}
