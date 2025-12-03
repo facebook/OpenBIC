@@ -64,7 +64,7 @@ static const cpld_pin_map_t *get_power_capping_item(const char *name)
 
 static int cmd_power_capping_get(const struct shell *shell, size_t argc, char **argv)
 {
-	if (argc != 2) {
+	if (argc > 2) {
 		shell_print(shell, "Usage:");
 		shell_print(shell, "  power_capping_control get all");
 		shell_print(shell, "  power_capping_control get <NAME>");
@@ -72,7 +72,9 @@ static int cmd_power_capping_get(const struct shell *shell, size_t argc, char **
 		return -1;
 	}
 
-	if (!strcmp(argv[1], "all")) {
+	bool get_all = (argc == 1) || !strcmp(argv[1], "all");
+
+	if (get_all) {
 		for (int i = 0; i < ARRAY_SIZE(pwr_cap_list); i++) {
 			const cpld_pin_map_t *item = &pwr_cap_list[i];
 			uint8_t reg_val = 0;
@@ -111,14 +113,14 @@ static int cmd_power_capping_get(const struct shell *shell, size_t argc, char **
 
 static int cmd_power_capping_set(const struct shell *shell, size_t argc, char **argv)
 {
-	if (argc != 3) {
+	if (argc != 2) {
 		shell_print(shell, "Usage: power_capping_control set <NAME> <0|1>");
 		LOG_DBG("invalid argc in set: %d", (int)argc);
 		return -1;
 	}
 
-	const char *name = argv[1];
-	long set_val = strtol(argv[2], NULL, 10);
+	const char *name = argv[0];
+	long set_val = strtol(argv[1], NULL, 10);
 
 	if (set_val != 0 && set_val != 1) {
 		shell_error(shell, "Value must be 0 or 1");
@@ -157,11 +159,34 @@ static int cmd_power_capping_set(const struct shell *shell, size_t argc, char **
 	return 0;
 }
 
-SHELL_STATIC_SUBCMD_SET_CREATE(power_capping_subcmds,
-			       SHELL_CMD(get, NULL, "power_capping_control get all | get <NAME>",
+SHELL_STATIC_SUBCMD_SET_CREATE(get_subcmds,
+			       SHELL_CMD(all, NULL, "power_capping_control get all | get <NAME>",
 					 cmd_power_capping_get),
-			       SHELL_CMD(set, NULL, "power_capping_control set <NAME> <0|1>",
-					 cmd_power_capping_set),
+			       SHELL_SUBCMD_SET_END);
+
+static void power_capping_set_dynamic_get(size_t idx, struct shell_static_entry *entry)
+{
+	if (idx >= ARRAY_SIZE(pwr_cap_list)) {
+		entry->syntax = NULL;
+		entry->handler = NULL;
+		entry->subcmd = NULL;
+		entry->help = NULL;
+		return;
+	}
+
+	entry->syntax = pwr_cap_list[idx].name;
+	entry->handler = cmd_power_capping_set;
+	entry->subcmd = NULL;
+	entry->help = "set <0|1>";
+}
+
+SHELL_DYNAMIC_CMD_CREATE(set_dynamic, power_capping_set_dynamic_get);
+
+SHELL_STATIC_SUBCMD_SET_CREATE(power_capping_subcmds,
+			       SHELL_CMD(get, &get_subcmds,
+					 "power_capping_control get all | get <NAME>", NULL),
+			       SHELL_CMD(set, &set_dynamic,
+					 "power_capping_control set <NAME> <0|1>", NULL),
 			       SHELL_SUBCMD_SET_END);
 
 SHELL_CMD_REGISTER(power_capping_control, &power_capping_subcmds, "Power capping control via CPLD",
