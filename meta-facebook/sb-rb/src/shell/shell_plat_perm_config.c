@@ -88,7 +88,7 @@ static int cmd_perm_config_get(const struct shell *shell, size_t argc, char **ar
 		}
 	}
 
-	for (int i = 0; i < STRAP_INDEX_MAX; i++) {
+	for (int i = 0; i < get_strap_index_max(); i++) {
 		if (bootstrap_user_settings.user_setting_value[i] != 0xffff) {
 			uint8_t *rail_name = NULL;
 			if (!strap_name_get((uint8_t)i, &rail_name)) {

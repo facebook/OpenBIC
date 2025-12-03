@@ -3,6 +3,7 @@
 #include "plat_i2c.h"
 #include "plat_util.h"
 #include "plat_ioexp.h"
+#include "plat_class.h"
 
 LOG_MODULE_REGISTER(plat_ioexp);
 
@@ -81,6 +82,9 @@ void ioexp_init(void)
 {
 	if (!pca6416a_init())
 		LOG_ERR("pca6416a init fail");
-	if (!tca6424a_init())
-		LOG_ERR("tca6424a init fail");
+
+	if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
+		if (!tca6424a_init())
+			LOG_ERR("tca6424a init fail");
+	}
 }

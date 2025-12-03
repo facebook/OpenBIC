@@ -186,7 +186,8 @@ enum PLAT_STRAP_INDEX_E {
 	STRAP_INDEX_OWL_W_DVT_ENABLE,
 	STRAP_INDEX_OWL_E_BOOT_SOURCE_0_7,
 	STRAP_INDEX_OWL_W_BOOT_SOURCE_0_7,
-	STRAP_INDEX_HAMSA_MFIO6,
+	STRAP_INDEX_EXCEPT_EVB_MAX,
+	STRAP_INDEX_HAMSA_MFIO6 = STRAP_INDEX_EXCEPT_EVB_MAX,
 	STRAP_INDEX_HAMSA_MFIO8,
 	STRAP_INDEX_HAMSA_MFIO10,
 	STRAP_INDEX_MEDHA0_MFIO6,
@@ -198,8 +199,13 @@ enum PLAT_STRAP_INDEX_E {
 	STRAP_INDEX_MAX,
 };
 
-#define STRAP_IOEXP_PREFIX 0xF0
-#define STRAP_IOEXP_POSTFIX 0x0F
+enum STRAP_TYPE_E {
+	STRAP_TYPE_CPLD = 0,
+	STRAP_TYPE_IOEXP_PCA6416A,
+	STRAP_TYPE_IOEXP_TCA6424A,
+	STRAP_TYPE_MAX,
+};
+
 typedef struct vr_vout_range_user_settings_struct {
 	uint16_t default_vout_max[STRAP_INDEX_MAX];
 	uint16_t default_vout_min[STRAP_INDEX_MAX];
@@ -211,6 +217,7 @@ typedef struct vr_vout_user_settings {
 } vr_vout_user_settings;
 typedef struct bootstrap_mapping_register {
 	uint8_t index;
+	uint8_t type;
 	uint8_t cpld_offsets;
 	uint8_t *strap_name;
 	uint8_t bit_offset;
@@ -269,4 +276,5 @@ bool bootstrap_user_settings_set(void *bootstrap_user_settings);
 bool vr_vout_user_settings_set(void *user_settings_value);
 bool set_bootstrap_table_val_to_ioexp(void);
 bool set_bootstrap_val_to_device(uint8_t strap, uint8_t val);
+uint8_t get_strap_index_max();
 #endif

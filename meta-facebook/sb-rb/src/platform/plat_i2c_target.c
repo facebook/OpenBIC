@@ -268,7 +268,7 @@ bool initialize_strap_capability(telemetry_info *telemetry_info, uint8_t *buffer
 	if (table_index < 0 || table_index >= DATA_TABLE_LENGTH_1)
 		return false;
 
-	int num_idx = STRAP_INDEX_MAX;
+	int num_idx = get_strap_index_max();
 
 	size_t table_size = sizeof(plat_strap_capability) + num_idx * sizeof(strap_entry);
 	plat_strap_capability *sensor_data =
@@ -276,8 +276,8 @@ bool initialize_strap_capability(telemetry_info *telemetry_info, uint8_t *buffer
 	if (!sensor_data)
 		return false;
 
-	sensor_data->strap_data_length = STRAP_INDEX_MAX * 3; // strap_entry data length
-	for (int i = 0; i < STRAP_INDEX_MAX; i++) {
+	sensor_data->strap_data_length = get_strap_index_max() * 3; // strap_entry data length
+	for (int i = 0; i < get_strap_index_max(); i++) {
 		sensor_data->strap_set_format[i].strap_set_index = i;
 		sensor_data->strap_set_format[i].strap_set_type = STRAP_SET_TYPE;
 		int drive_level = 0;
@@ -302,7 +302,7 @@ void update_strap_capability_table()
 
 	plat_strap_capability *sensor_data = strap_capability_table[0];
 
-	for (int i = 0; i < STRAP_INDEX_MAX; i++) {
+	for (int i = 0; i < get_strap_index_max(); i++) {
 		int drive_level = 0;
 		if (!get_bootstrap_change_drive_level(i, &drive_level)) {
 			LOG_ERR("Can't get_bootstrap_change_drive_level by index: %x", i);
@@ -813,7 +813,7 @@ bool set_bootstrap_element(uint8_t bootstrap_pin, uint8_t user_setting_level)
 }
 void set_bootstrap_element_handler()
 {
-	if (bootstrap_pin >= STRAP_INDEX_MAX) {
+	if (bootstrap_pin >= get_strap_index_max()) {
 		LOG_ERR("bootstrap_pin[%02x] is out of range", bootstrap_pin);
 		return;
 	}

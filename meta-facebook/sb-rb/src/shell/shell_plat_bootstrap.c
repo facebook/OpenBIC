@@ -54,7 +54,7 @@ uint8_t read_bits(uint8_t data, uint8_t start_bit, uint8_t end_bit, bool reverse
 static int cmd_bootstrap_get_all(const struct shell *shell, size_t argc, char **argv)
 {
 	shell_print(shell, "%-4s|%-40s|%-25s", "id", "strap name", "hex-value");
-	for (int i = 0; i < STRAP_INDEX_MAX; i++) {
+	for (int i = 0; i < get_strap_index_max(); i++) {
 		uint8_t *rail_name = NULL;
 		if (!strap_name_get((uint8_t)i, &rail_name)) {
 			LOG_ERR("Can't find strap_rail_name by rail index: %x", i);
@@ -80,7 +80,7 @@ static int bootstrap_set_all_default(const struct shell *shell)
 	bootstrap_mapping_register bootstrap_item;
 	bool all_success = true;
 
-	for (int i = 0; i < STRAP_INDEX_MAX; i++) {
+	for (int i = 0; i < get_strap_index_max(); i++) {
 		if (!set_bootstrap_table_and_user_settings(i, &change_setting_value,
 							   drive_index_level, false, true)) {
 			shell_print(shell, "plat bootstrap[%2d] set failed", i);
@@ -165,7 +165,7 @@ static void strap_rname_get_(size_t idx, struct shell_static_entry *entry)
 	uint8_t *name = NULL;
 	strap_name_get((uint8_t)idx, &name);
 
-	if (idx == STRAP_INDEX_MAX)
+	if (idx == get_strap_index_max())
 		name = (uint8_t *)"all";
 
 	entry->syntax = (name) ? (const char *)name : NULL;
