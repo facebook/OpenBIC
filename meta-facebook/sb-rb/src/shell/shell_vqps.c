@@ -71,7 +71,7 @@ static const cpld_pin_map_t *get_vqps_item(const char *name)
 
 static int cmd_vqps_get(const struct shell *shell, size_t argc, char **argv)
 {
-	if (argc != 2) {
+	if (argc != 1) {
 		shell_print(shell, "Usage:");
 		shell_print(shell, "  vqps get all");
 		LOG_DBG("invalid argc in get: %d", (int)argc);
@@ -88,49 +88,42 @@ static int cmd_vqps_get(const struct shell *shell, size_t argc, char **argv)
 		return -1;
 	}
 
-	if (!strcmp(argv[1], "all")) {
-		shell_print(shell, "VQPS status raw [0x%02X] = 0x%02X", VQPS_STATUS_CPLD_OFFSET,
-			    reg_status);
+	shell_print(shell, "VQPS status raw [0x%02X] = 0x%02X", VQPS_STATUS_CPLD_OFFSET,
+		    reg_status);
 
-		if (board_id == ASIC_BOARD_ID_EVB) {
-			if (!plat_read_cpld(EVB_VQPS_CPLD_OFFSET, &reg_en, 1)) {
-				LOG_DBG("plat_read_cpld failed: offset=0x%02x",
-					EVB_VQPS_CPLD_OFFSET);
-				shell_error(shell, "read VQPS platform CPLD failed");
-				return -1;
-			}
-			shell_print(shell, "VQPS platform raw [0x%02X] = 0x%02X",
-				    EVB_VQPS_CPLD_OFFSET, reg_en);
-		} else if (board_id == ASIC_BOARD_ID_RAINBOW) {
-			if (!plat_read_cpld(RAINBOW_VQPS_CPLD_OFFSET, &reg_en, 1)) {
-				LOG_DBG("plat_read_cpld failed: offset=0x%02x",
-					RAINBOW_VQPS_CPLD_OFFSET);
-				shell_error(shell, "read VQPS platform CPLD failed");
-				return -1;
-			}
-			shell_print(shell, "VQPS platform raw [0x%02X] = 0x%02X",
-				    RAINBOW_VQPS_CPLD_OFFSET, reg_en);
-		} else {
-			shell_print(shell,
-				    "VQPS platform register not supported on this board (0x%02X)",
-				    board_id);
+	if (board_id == ASIC_BOARD_ID_EVB) {
+		if (!plat_read_cpld(EVB_VQPS_CPLD_OFFSET, &reg_en, 1)) {
+			LOG_DBG("plat_read_cpld failed: offset=0x%02x", EVB_VQPS_CPLD_OFFSET);
+			shell_error(shell, "read VQPS platform CPLD failed");
+			return -1;
 		}
+		shell_print(shell, "VQPS platform raw [0x%02X] = 0x%02X", EVB_VQPS_CPLD_OFFSET,
+			    reg_en);
+	} else if (board_id == ASIC_BOARD_ID_RAINBOW) {
+		if (!plat_read_cpld(RAINBOW_VQPS_CPLD_OFFSET, &reg_en, 1)) {
+			LOG_DBG("plat_read_cpld failed: offset=0x%02x", RAINBOW_VQPS_CPLD_OFFSET);
+			shell_error(shell, "read VQPS platform CPLD failed");
+			return -1;
+		}
+		shell_print(shell, "VQPS platform raw [0x%02X] = 0x%02X", RAINBOW_VQPS_CPLD_OFFSET,
+			    reg_en);
+	} else {
+		shell_print(shell, "VQPS platform register not supported on this board (0x%02X)",
+			    board_id);
+	}
 
-		for (int i = 0; i < 5; i++) {
+	for (int i = 0; i < 5; i++) {
+		const cpld_pin_map_t *item = &vqps_list[i];
+		uint8_t bit_val = (reg_status >> item->bit) & 0x1;
+		shell_print(shell, "%s : %d", item->name, bit_val);
+	}
+
+	if (board_id == ASIC_BOARD_ID_EVB) {
+		for (int i = 5; i < ARRAY_SIZE(vqps_list); i++) {
 			const cpld_pin_map_t *item = &vqps_list[i];
-			uint8_t bit_val = (reg_status >> item->bit) & 0x1;
+			uint8_t bit_val = (reg_en >> item->bit) & 0x1;
 			shell_print(shell, "%s : %d", item->name, bit_val);
 		}
-
-		if (board_id == ASIC_BOARD_ID_EVB) {
-			for (int i = 5; i < ARRAY_SIZE(vqps_list); i++) {
-				const cpld_pin_map_t *item = &vqps_list[i];
-				uint8_t bit_val = (reg_en >> item->bit) & 0x1;
-				shell_print(shell, "%s : %d", item->name, bit_val);
-			}
-		}
-
-		return 0;
 	}
 
 	return 0;
@@ -138,14 +131,13 @@ static int cmd_vqps_get(const struct shell *shell, size_t argc, char **argv)
 
 static int cmd_vqps_set(const struct shell *shell, size_t argc, char **argv)
 {
-	if (argc != 3) {
-		shell_print(shell, "Usage: vqps set <NAME> <0|1>");
-		LOG_DBG("invalid argc in set: %d", (int)argc);
+	if (argc != 2) {
+		shell_print(shell, "Usage: vqps set %s <0|1>", argv[0]);
 		return -1;
 	}
 
-	const char *name = argv[1];
-	long set_val = strtol(argv[2], NULL, 10);
+	const char *name = argv[0];
+	long set_val = strtol(argv[1], NULL, 10);
 
 	if (set_val != 0 && set_val != 1) {
 		shell_error(shell, "Value must be 0 or 1");
@@ -201,9 +193,36 @@ static int cmd_vqps_set(const struct shell *shell, size_t argc, char **argv)
 	return 0;
 }
 
-SHELL_STATIC_SUBCMD_SET_CREATE(vqps_subcmds,
-			       SHELL_CMD(get, NULL, "vqps get all | get <NAME>", cmd_vqps_get),
-			       SHELL_CMD(set, NULL, "vqps set <NAME> <0|1>", cmd_vqps_set),
+SHELL_STATIC_SUBCMD_SET_CREATE(get_subcmds, SHELL_CMD(all, NULL, "vqps get all", cmd_vqps_get),
+			       SHELL_SUBCMD_SET_END);
+
+static void vqps_set_dynamic_get(size_t idx, struct shell_static_entry *entry)
+{
+	uint8_t board_id = get_asic_board_id();
+
+	size_t max_cnt = ARRAY_SIZE(vqps_list);
+	if (board_id != ASIC_BOARD_ID_EVB) {
+		max_cnt = 5;
+	}
+
+	if (idx >= max_cnt) {
+		entry->syntax = NULL;
+		entry->handler = NULL;
+		entry->subcmd = NULL;
+		entry->help = NULL;
+		return;
+	}
+
+	entry->syntax = vqps_list[idx].name;
+	entry->handler = cmd_vqps_set;
+	entry->subcmd = NULL;
+	entry->help = "set <0|1>";
+}
+
+SHELL_DYNAMIC_CMD_CREATE(set_dynamic, vqps_set_dynamic_get);
+
+SHELL_STATIC_SUBCMD_SET_CREATE(vqps_subcmds, SHELL_CMD(get, &get_subcmds, "vqps get", NULL),
+			       SHELL_CMD(set, &set_dynamic, "vqps set <NAME> <0|1>", NULL),
 			       SHELL_SUBCMD_SET_END);
 
 SHELL_CMD_REGISTER(vqps, &vqps_subcmds, "VQPS control via CPLD", NULL);
