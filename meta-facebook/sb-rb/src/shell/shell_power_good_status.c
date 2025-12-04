@@ -22,64 +22,58 @@
 LOG_MODULE_REGISTER(shell_plat_power_good_status, LOG_LEVEL_INF);
 
 enum power_good_status_type {
-	//VR Power Good pin reading(0x07)
-	MODULE_PWRGD,
+	P12V_UBC1_PWRGD,
+	P12V_UBC2_PWRGD,
+	PWRGD_P3V3_R,
+	PWRGD_P4V2,
+	PWRGD_P5V_R,
+	PWRGD_LDO_IN_1V2_R,
 	PWRGD_P1V8_AUX,
-	PWRGD_OWL_E_TRVDD0P9_R,
-	PWRGD_OWL_W_TRVDD0P9_R,
-	PWRGD_OWL_E_TRVDD0P75_R,
-	PWRGD_OWL_W_TRVDD0P75_R,
-	PWRGD_HAMSA_AVDD_PCIE_R,
-	PWRGD_HAMSA_VDDHRXTX_PCIE_R,
-	//VR Power Good pin reading(0x08)
+	PWRGD_P1V8_R,
+	PWRGD_P0V75_AVDD_HCSL,
+	PWRGD_HAMSA_VDD_R,
 	PWRGD_MEDHA1_VDD,
 	PWRGD_MEDHA0_VDD,
 	PWRGD_OWL_E_VDD_R,
 	PWRGD_OWL_W_VDD_R,
-	PWRGD_HAMSA_VDD_R,
-	PWRGD_MAX_S_VDD_R,
 	PWRGD_MAX_M_VDD_R,
 	PWRGD_MAX_N_VDD_R,
-	//VR Power Good pin reading(0x09)
-	PWRGD_VDDQL_HBM0_HBM2_HBM4_HBM6_R,
-	PWRGD_VDDQC_HBM0_HBM2_HBM4_HBM6_R,
-	PWRGD_VPP_HBM0_HBM2_HBM4_HBM6_R,
+	PWRGD_MAX_S_VDD_R,
+	PWRGD_OWL_E_TRVDD0P75_R,
+	PWRGD_OWL_W_TRVDD0P75_R,
 	PWRGD_VDDPHY_HBM0_HBM2_HBM4_HBM6_R,
-	PWRGD_VDDQL_HBM1_HBM3_HBM5_HBM7_R,
-	PWRGD_VDDQC_HBM1_HBM3_HBM5_HBM7_R,
-	PWRGD_VPP_HBM1_HBM3_HBM5_HBM7_R,
 	PWRGD_VDDPHY_HBM1_HBM3_HBM5_HBM7_R,
-	//VR Power Good pin reading(0x0A)
+	PWRGD_P1V5_PLL_VDDA_OWL_E,
+	PWRGD_P1V5_PLL_VDDA_OWL_W,
+	PWRGD_P1V5_PLL_VDDA_SOC,
 	PWRGD_PLL_VDDA15_HBM0_HBM2,
-	PWRGD_PLL_VDDA15_HBM4_HBM6,
 	PWRGD_PLL_VDDA15_HBM1_HBM3,
+	PWRGD_PLL_VDDA15_HBM4_HBM6,
 	PWRGD_PLL_VDDA15_HBM5_HBM7,
+	PWRGD_VPP_HBM0_HBM2_HBM4_HBM6_R,
+	PWRGD_VPP_HBM1_HBM3_HBM5_HBM7_R,
+	PWRGD_VDDQC_HBM0_HBM2_HBM4_HBM6_R,
+	PWRGD_VDDQC_HBM1_HBM3_HBM5_HBM7_R,
+	PWRGD_VDDQL_HBM0_HBM2_HBM4_HBM6_R,
+	PWRGD_VDDQL_HBM1_HBM3_HBM5_HBM7_R,
+	PWRGD_HAMSA_AVDD_PCIE_R,
+	PWRGD_OWL_E_TRVDD0P9_R,
+	PWRGD_OWL_W_TRVDD0P9_R,
 	PWRGD_P0V9_OWL_E_PVDD,
 	PWRGD_P0V9_OWL_W_PVDD,
 	PWRGD_P1V5_E_RVDD,
 	PWRGD_P1V5_W_RVDD,
-	//VR Power Good pin reading(0x0B)
-	P12V_UBC1_PWRGD,
-	P12V_UBC2_PWRGD,
-	PWRGD_P5V_R,
-	PWRGD_P3V3_R,
-	PWRGD_P1V8_R,
-	PWRGD_LDO_IN_1V2_R,
-	PWRGD_P1V5_PLL_VDDA_OWL_E,
-	PWRGD_P1V5_PLL_VDDA_SOC,
-	//VR Power Good pin reading(0x0C)
 	PWRGD_PVDD1P5,
-	PWRGD_P0V75_AVDD_HCSL,
-	PWRGD_P1V5_PLL_VDDA_OWL_W,
-	PWRGD_P4V2,
+	PWRGD_HAMSA_VDDHRXTX_PCIE_R,
+	MODULE_PWRGD,
 	PWRGD_MAX
 };
+
 typedef struct power_good_status {
 	uint8_t index;
 	uint8_t bit_loc;
 	uint8_t cpld_offsets;
 	uint8_t *power_rail_name;
-
 } power_good_status;
 
 power_good_status power_good_status_table[] = {
@@ -150,22 +144,26 @@ void show_power_good_status(const struct shell *shell, size_t argc, char **argv)
 	uint8_t last_offset = 0xFF;
 	uint8_t reg_data = 0;
 
-	for (int i = 0; i < POWER_GOOD_STATUS_COUNT; i++) {
-		uint8_t offset = power_good_status_table[i].cpld_offsets;
-		uint8_t bit = power_good_status_table[i].bit_loc;
+	for (int index = 0; index < PWRGD_MAX; index++) {
+		for (int i = 0; i < POWER_GOOD_STATUS_COUNT; i++) {
+			if (index != power_good_status_table[i].index) continue;
+			uint8_t offset = power_good_status_table[i].cpld_offsets;
+			uint8_t bit = power_good_status_table[i].bit_loc;
 
-		// if offset is different, read from CPLD
-		if (offset != last_offset) {
-			if (!plat_read_cpld(offset, &reg_data, 1)) {
-				shell_error(shell, "Read CPLD offset 0x%x failed", offset);
-				continue;
+			// if offset is different, read from CPLD
+			if (offset != last_offset) {
+				if (!plat_read_cpld(offset, &reg_data, 1)) {
+					shell_error(shell, "Read CPLD offset 0x%x failed", offset);
+					continue;
+				}
+				last_offset = offset;
 			}
-			last_offset = offset;
+
+			uint8_t value = (reg_data >> bit) & 0x01;
+
+			shell_print(shell, "%-20s %d", power_good_status_table[i].power_rail_name, value);
+			break;
 		}
-
-		uint8_t value = (reg_data >> bit) & 0x01;
-
-		shell_print(shell, "%-20s %d", power_good_status_table[i].power_rail_name, value);
 	}
 }
 
