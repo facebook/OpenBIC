@@ -217,6 +217,7 @@ void poll_cpld_registers()
 {
 	uint8_t data = 0;
 	bool prev_alert_status = false;
+	uint8_t board_id = get_asic_board_id();
 
 	while (1) {
 		/* Sleep for the polling interval */
@@ -288,9 +289,6 @@ void poll_cpld_registers()
 					for (int j = 0; j < 8; j++) {
 						if (j == 0)
 							continue; // skip bit-0
-						
-						uint8_t board_id = get_asic_board_id();
-
 						// if temp data is changed
 						if ((temp_data & BIT(j)) == 0)
 						{
