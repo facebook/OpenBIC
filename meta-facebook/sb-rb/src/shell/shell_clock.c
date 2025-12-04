@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -35,6 +35,7 @@ bool clock_name_get(uint8_t index, uint8_t **name);
 #define CLK_BUF_100M_WRITE_LOCK_CLEAR_LOS_EVENT_OFFSET 0x27
 #define CLK_GEN_LOSMON_EVENT_OFFSET 0x5a
 #define CLK_BUF_100M_BYTE_COUNT 0x7
+#define CLK_DEFAULT_BYTE_VALUE 0x00
 #define REGISTER_BYTE_MAX 4
 
 enum CLOCK_COMPONENT {
@@ -313,7 +314,6 @@ void cmd_get_clock(const struct shell *shell, size_t argc, char **argv)
 
 void handle_single_clock_status(const struct shell *shell, enum CLOCK_COMPONENT clock_index)
 {
-
 	int result = 0;
 	uint8_t addr = 0;
 	uint8_t bus = 0;
@@ -324,41 +324,44 @@ void handle_single_clock_status(const struct shell *shell, enum CLOCK_COMPONENT 
 		return;
 	}
 
-	I2C_MSG i2c_msg = { 0 };
-	uint8_t retry = 5;
+	uint8_t status_reg_offset = 0;
+	const char *status_reg_name = NULL;
 
 	switch (clock_index) {
 	case CLK_BUF_100M_U85:
 	case CLK_BUF_100M_U87:
 	case CLK_BUF_100M_U88:
-		i2c_msg.bus = bus;
-		i2c_msg.target_addr = addr;
-		i2c_msg.tx_len = 1;
-		i2c_msg.rx_len = 2; //first byte is data length because it is block read
-		i2c_msg.data[0] = CLK_BUF_100M_WRITE_LOCK_CLEAR_LOS_EVENT_OFFSET;
-		if (i2c_master_read(&i2c_msg, retry)) {
-			shell_error(shell, "Failed to read reg, bus: %d, addr: 0x%x, reg: 0x%x",
-				    bus, addr, CLK_BUF_100M_WRITE_LOCK_CLEAR_LOS_EVENT_OFFSET);
-			return;
-		}
-		shell_print(shell, "WRITE_LOCK_CLEAR_LOS_EVENT Register = 0x%x", i2c_msg.data[1]);
+		status_reg_offset = CLK_BUF_100M_WRITE_LOCK_CLEAR_LOS_EVENT_OFFSET;
+		status_reg_name = "WRITE_LOCK_CLEAR_LOS_EVENT";
 		break;
 	case CLK_GEN_100M_U86:
-		i2c_msg.bus = bus;
-		i2c_msg.target_addr = addr;
-		i2c_msg.tx_len = 1;
-		i2c_msg.rx_len = 2; //first byte is data length because it is block read
-		i2c_msg.data[0] = CLK_GEN_LOSMON_EVENT_OFFSET;
-		if (i2c_master_read(&i2c_msg, retry)) {
-			shell_error(shell, "Failed to read reg, bus: %d, addr: 0x%x, reg: 0x%x",
-				    bus, addr, CLK_GEN_LOSMON_EVENT_OFFSET);
-			return;
-		}
-		shell_print(shell, "CLK_GEN_LOSMON_EVENT_OFFSET Register = 0x%x", i2c_msg.data[1]);
+		status_reg_offset = CLK_GEN_LOSMON_EVENT_OFFSET;
+		status_reg_name = "CLK_GEN_LOSMON_EVENT_OFFSET";
 		break;
 	default:
 		shell_error(shell, "Type wrong clock name");
+		return;
 	}
+
+	I2C_MSG i2c_msg = (I2C_MSG){ 0 };
+	uint8_t retry = 5;
+
+	i2c_msg.bus = bus;
+	i2c_msg.target_addr = addr;
+	i2c_msg.tx_len = 1;
+	i2c_msg.rx_len = 2; // first byte is data length because it is block read
+	i2c_msg.data[0] = status_reg_offset;
+
+	if (i2c_master_read(&i2c_msg, retry)) {
+		shell_error(shell, "Failed to read reg, bus: %d, addr: 0x%x, reg: 0x%x", bus, addr,
+			    status_reg_offset);
+		return;
+	}
+
+	uint8_t reg_val = i2c_msg.data[1];
+	const char *result_str = (reg_val == CLK_DEFAULT_BYTE_VALUE) ? "success!" : "fail!";
+
+	shell_print(shell, "%s Register = 0x%x %s", status_reg_name, reg_val, result_str);
 
 	return;
 }
@@ -515,7 +518,6 @@ static void dynamic_clock_name_get(size_t idx, struct shell_static_entry *entry)
 
 static void all_dynamic_clock_name_get(size_t idx, struct shell_static_entry *entry)
 {
-
 	uint8_t *name = NULL;
 
 	if (clock_name_get(idx, &name)) {
@@ -549,8 +551,8 @@ SHELL_CMD_REGISTER(clock, &sub_clock_cmds, "Clock commands for AG", NULL);
 
 /* Sub-command Level 1 of command clock_status */
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_clock_status_cmds,
-			       SHELL_CMD_ARG(get, &all_clock_name, "get <clock>", cmd_get_clock_status,
-					     2, 0),
+			       SHELL_CMD_ARG(get, &all_clock_name, "get <clock>",
+					     cmd_get_clock_status, 2, 0),
 			       SHELL_CMD_ARG(clear, &clock_name, "clear <clock>",
 					     cmd_clear_clock_status, 2, 0),
 			       SHELL_SUBCMD_SET_END);
