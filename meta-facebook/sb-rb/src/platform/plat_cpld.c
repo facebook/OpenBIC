@@ -23,6 +23,8 @@
 #include "plat_hook.h"
 #include "plat_event.h"
 #include <logging/log.h>
+#include "plat_class.h"
+#include "plat_ioexp.h"
 
 #define POLLING_CPLD_STACK_SIZE 2048
 #define CPLD_POLLING_INTERVAL_MS 1000 // 1 second polling interval
@@ -287,17 +289,35 @@ void poll_cpld_registers()
 						if (j == 0)
 							continue; // skip bit-0
 						
+						uint8_t board_id = get_asic_board_id();
+
 						// if temp data is changed
 						if ((temp_data & BIT(j)) == 0)
 						{
 							LOG_WRN("SMBUS_ALERT_REG changed, bit-%d is changed", j);
 							if(!check_temp_status_bit(j))
 							{
-								// write cpld register HAMSA_MFIO_REG, bit-7 to 1
-								plat_read_cpld(HAMSA_MFIO_REG, &data, 1);
-								data |= BIT(7);
-								plat_write_cpld(HAMSA_MFIO_REG, &data);
-								LOG_WRN("Temperature bit-2 is 1, write cpld register HAMSA_MFIO_REG, bit-7 to 1");
+
+								if (board_id == ASIC_BOARD_ID_EVB) {
+									// EVB board handles VR_HOT through IO expander
+									if (!tca6424a_i2c_write_bit(TCA6424A_OUTPUT_PORT_0,
+													HAMSA_MFIO19,
+													1)) {
+										LOG_ERR("Failed to set VR_HOT (HAMSA_MFIO19) via IO expander");
+									} else {
+										LOG_WRN("Temperature bit-%d is 1, set IO exp VR_HOT (HAMSA_MFIO19) to 1", j);
+									}
+								} else {
+									// Rainbow board uses CPLD to control VR_HOT
+									if (!plat_read_cpld(ASIC_VR_HOT_SWITCH, &data, 1)) {
+										LOG_ERR("Failed to read ASIC_VR_HOT_SWITCH");
+									}
+									data |= BIT(0);
+									if (!plat_write_cpld(ASIC_VR_HOT_SWITCH, &data)) {
+										LOG_ERR("Failed to write ASIC_VR_HOT_SWITCH");
+									}
+									LOG_WRN("Temperature bit-%d is 1, write CPLD ASIC_VR_HOT_SWITCH bit-0 to 1", j);
+								}
 								break;
 							}
 						}
