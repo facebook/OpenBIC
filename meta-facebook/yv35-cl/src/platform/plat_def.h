@@ -28,5 +28,6 @@
 #define BMC_USB_PORT "CDC_ACM_0"
 
 #define WORKER_STACK_SIZE 4096
+#define PLAT_MCTP_MSG_MAX_SIZE 64
 
 #endif
