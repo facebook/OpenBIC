@@ -39,6 +39,12 @@
 #include "pmbus.h"
 #include "plat_i2c_target.h"
 #include "pldm_sensor.h"
+#include "bmr313.h"
+#include "bmr316.h"
+#include "lx6301.h"
+#include "u50su4p180pmdafc.h"
+#include "s54ss4p180pmdafc.h"
+#include "mpc12109.h"
 
 LOG_MODULE_REGISTER(plat_hook);
 
@@ -809,6 +815,50 @@ vr_mapping_sensor vr_rail_table[] = {
 	{ VR_RAIL_E_P0V8_VDDA_PCIE, VR_ASIC_P0V8_VDDA_PCIE_VOLT_V,
 	  "MINERVA_AEGIS_VR_ASIC_P0V8_VDDA_PCIE", 0xffffffff },
 	{ VR_RAIL_E_P1V2_VDDHTX_PCIE, VR_ASIC_P1V2_VDDHTX_PCIE_VOLT_V,
+	  "MINERVA_AEGIS_VR_ASIC_P1V2_VDDHTX_PCIE", 0xffffffff },
+};
+
+vr_mapping_sensor ubc_vr_rail_table[] = {
+	{ UBC_VR_RAIL_E_UBC1, UBC1_P12V_OUTPUT_VOLT_V, "MINERVA_AEGIS_UBC1_P12V", 0xffffffff },
+	{ UBC_VR_RAIL_E_UBC2, UBC2_P12V_OUTPUT_VOLT_V, "MINERVA_AEGIS_UBC2_P12V", 0xffffffff },
+	{ UBC_VR_RAIL_E_P3V3, VR_P3V3_VOLT_V, "MINERVA_AEGIS_VR_ASIC_P3V3", 0xffffffff },
+	{ UBC_VR_RAIL_E_P0V85_PVDD, VR_ASIC_P0V85_PVDD_VOLT_V, "MINERVA_AEGIS_VR_ASIC_P0V85_PVDD",
+	  0xffffffff },
+	{ UBC_VR_RAIL_E_P0V75_PVDD_CH_N, VR_ASIC_P0V75_PVDD_CH_N_VOLT_V,
+	  "MINERVA_AEGIS_VR_ASIC_P0V75_PVDD_CH_N", 0xffffffff },
+	{ UBC_VR_RAIL_E_P0V75_MAX_PHY_N, VR_ASIC_P0V75_MAX_PHY_N_VOLT_V,
+	  "MINERVA_AEGIS_VR_ASIC_P0V75_MAX_PHY_N", 0xffffffff },
+	{ UBC_VR_RAIL_E_P0V75_PVDD_CH_S, VR_ASIC_P0V75_PVDD_CH_S_VOLT_V,
+	  "MINERVA_AEGIS_VR_ASIC_P0V75_PVDD_CH_S", 0xffffffff },
+	{ UBC_VR_RAIL_E_P0V75_MAX_PHY_S, VR_ASIC_P0V75_MAX_PHY_S_VOLT_V,
+	  "MINERVA_AEGIS_VR_ASIC_P0V75_MAX_PHY_S", 0xffffffff },
+	{ UBC_VR_RAIL_E_P0V75_TRVDD_ZONEA, VR_ASIC_P0V75_TRVDD_ZONEA_VOLT_V,
+	  "MINERVA_AEGIS_VR_ASIC_P0V75_TRVDD_ZONEA", 0xffffffff },
+	{ UBC_VR_RAIL_E_P1V8_VPP_HBM0_HBM2_HBM4, VR_ASIC_P1V8_VPP_HBM0_HBM2_HBM4_VOLT_V,
+	  "MINERVA_AEGIS_VR_ASIC_P1V8_VPP_HBM0_HBM2_HBM4", 0xffffffff },
+	{ UBC_VR_RAIL_E_P0V75_TRVDD_ZONEB, VR_ASIC_P0V75_TRVDD_ZONEB_VOLT_V,
+	  "MINERVA_AEGIS_VR_ASIC_P0V75_TRVDD_ZONEB", 0xffffffff },
+	{ UBC_VR_RAIL_E_P0V4_VDDQL_HBM0_HBM2_HBM4, VR_ASIC_P0V4_VDDQL_HBM0_HBM2_HBM4_VOLT_V,
+	  "MINERVA_AEGIS_VR_ASIC_P0V4_VDDQL_HBM0_HBM2_HBM4", 0xffffffff },
+	{ UBC_VR_RAIL_E_P1V1_VDDC_HBM0_HBM2_HBM4, VR_ASIC_P1V1_VDDC_HBM0_HBM2_HBM4_VOLT_V,
+	  "MINERVA_AEGIS_VR_ASIC_P1V1_VDDC_HBM0_HBM2_HBM4", 0xffffffff },
+	{ UBC_VR_RAIL_E_P0V75_VDDPHY_HBM0_HBM2_HBM4, VR_ASIC_P0V75_VDDPHY_HBM0_HBM2_HBM4_VOLT_V,
+	  "MINERVA_AEGIS_VR_ASIC_P0V75_VDDPHY_HBM0_HBM2_HBM4", 0xffffffff },
+	{ UBC_VR_RAIL_E_P0V9_TRVDD_ZONEA, VR_ASIC_P0V9_TRVDD_ZONEA_VOLT_V,
+	  "MINERVA_AEGIS_VR_ASIC_P0V9_TRVDD_ZONEA", 0xffffffff },
+	{ UBC_VR_RAIL_E_P1V8_VPP_HBM1_HBM3_HBM5, VR_ASIC_P1V8_VPP_HBM1_HBM3_HBM5_VOLT_V,
+	  "MINERVA_AEGIS_VR_ASIC_P1V8_VPP_HBM1_HBM3_HBM5", 0xffffffff },
+	{ UBC_VR_RAIL_E_P0V9_TRVDD_ZONEB, VR_ASIC_P0V9_TRVDD_ZONEB_VOLT_V,
+	  "MINERVA_AEGIS_VR_ASIC_P0V9_TRVDD_ZONEB", 0xffffffff },
+	{ UBC_VR_RAIL_E_P0V4_VDDQL_HBM1_HBM3_HBM5, VR_ASIC_P0V4_VDDQL_HBM1_HBM3_HBM5_VOLT_V,
+	  "MINERVA_AEGIS_VR_ASIC_P0V4_VDDQL_HBM1_HBM3_HBM5", 0xffffffff },
+	{ UBC_VR_RAIL_E_P1V1_VDDC_HBM1_HBM3_HBM5, VR_ASIC_P1V1_VDDC_HBM1_HBM3_HBM5_VOLT_V,
+	  "MINERVA_AEGIS_VR_ASIC_P1V1_VDDC_HBM1_HBM3_HBM5", 0xffffffff },
+	{ UBC_VR_RAIL_E_P0V75_VDDPHY_HBM1_HBM3_HBM5, VR_ASIC_P0V75_VDDPHY_HBM1_HBM3_HBM5_VOLT_V,
+	  "MINERVA_AEGIS_VR_ASIC_P0V75_VDDPHY_HBM1_HBM3_HBM5", 0xffffffff },
+	{ UBC_VR_RAIL_E_P0V8_VDDA_PCIE, VR_ASIC_P0V8_VDDA_PCIE_VOLT_V,
+	  "MINERVA_AEGIS_VR_ASIC_P0V8_VDDA_PCIE", 0xffffffff },
+	{ UBC_VR_RAIL_E_P1V2_VDDHTX_PCIE, VR_ASIC_P1V2_VDDHTX_PCIE_VOLT_V,
 	  "MINERVA_AEGIS_VR_ASIC_P1V2_VDDHTX_PCIE", 0xffffffff },
 };
 
@@ -1966,7 +2016,7 @@ bool plat_get_vr_status(uint8_t rail, uint8_t vr_status_rail, uint16_t *vr_statu
 	CHECK_NULL_ARG_WITH_RETURN(vr_status, false);
 
 	bool ret = false;
-	uint8_t sensor_id = vr_rail_table[rail].sensor_id;
+	uint8_t sensor_id = ubc_vr_rail_table[rail].sensor_id;
 	sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
 
 	if (cfg == NULL) {
@@ -2011,6 +2061,44 @@ bool plat_get_vr_status(uint8_t rail, uint8_t vr_status_rail, uint16_t *vr_statu
 			goto err;
 		}
 		break;
+	case sensor_dev_u50su4p180pmdafc:
+		if (!u50su4p180pmdafc_get_vr_status(cfg, pre_proc_args->vr_page, pmbus_reg_id,
+						    vr_status)) {
+			LOG_ERR("The VR U50SU4P180PMDAFC vr status reading failed");
+			goto err;
+		}
+		break;
+	case sensor_dev_bmr313:
+		if (!bmr313_get_vr_status(cfg, pre_proc_args->vr_page, pmbus_reg_id, vr_status)) {
+			LOG_ERR("The VR BMR313 vr status reading failed");
+			goto err;
+		}
+		break;
+	case sensor_dev_mpc12109:
+		if (!mpc12109_get_vr_status(cfg, pre_proc_args->vr_page, pmbus_reg_id, vr_status)) {
+			LOG_ERR("The VR MPC12109 vr status reading failed");
+			goto err;
+		}
+		break;
+	case sensor_dev_bmr316:
+		if (!bmr316_get_vr_status(cfg, pre_proc_args->vr_page, pmbus_reg_id, vr_status)) {
+			LOG_ERR("The VR BMR316 vr status reading failed");
+			goto err;
+		}
+		break;
+	case sensor_dev_lx6301:
+		if (!lx6301_get_vr_status(cfg, pre_proc_args->vr_page, pmbus_reg_id, vr_status)) {
+			LOG_ERR("The VR LX6301 vr status reading failed");
+			goto err;
+		}
+		break;
+	case sensor_dev_s54ss4p180pmdafc:
+		if (!s54ss4p180pmdafc_get_vr_status(cfg, pre_proc_args->vr_page, pmbus_reg_id,
+						    vr_status)) {
+			LOG_ERR("The VR S54SS4P180PMDAFC vr status reading failed");
+			goto err;
+		}
+		break;
 	default:
 		LOG_ERR("Unsupport VR type(%x)", cfg->type);
 		goto err;
@@ -2029,7 +2117,7 @@ err:
 bool plat_clear_vr_status(uint8_t rail)
 {
 	bool ret = false;
-	uint8_t sensor_id = vr_rail_table[rail].sensor_id;
+	uint8_t sensor_id = ubc_vr_rail_table[rail].sensor_id;
 	sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
 
 	if (cfg == NULL) {
@@ -2068,6 +2156,42 @@ bool plat_clear_vr_status(uint8_t rail)
 	case sensor_dev_raa228249:
 		if (!raa228249_clear_vr_status(cfg, pre_proc_args->vr_page)) {
 			LOG_ERR("The VR RAA228249 vr status clear failed");
+			goto err;
+		}
+		break;
+	case sensor_dev_u50su4p180pmdafc:
+		if (!u50su4p180pmdafc_clear_vr_status(cfg, pre_proc_args->vr_page)) {
+			LOG_ERR("The VR U50SU4P180PMDAFC vr status clear failed");
+			goto err;
+		}
+		break;
+	case sensor_dev_bmr313:
+		if (!bmr313_clear_vr_status(cfg, pre_proc_args->vr_page)) {
+			LOG_ERR("The VR BMR313 vr status clear failed");
+			goto err;
+		}
+		break;
+	case sensor_dev_mpc12109:
+		if (!mpc12109_clear_vr_status(cfg, pre_proc_args->vr_page)) {
+			LOG_ERR("The VR MPC12109 vr status clear failed");
+			goto err;
+		}
+		break;
+	case sensor_dev_bmr316:
+		if (!bmr316_clear_vr_status(cfg, pre_proc_args->vr_page)) {
+			LOG_ERR("The VR BMR316 vr status clear failed");
+			goto err;
+		}
+		break;
+	case sensor_dev_lx6301:
+		if (!lx6301_clear_vr_status(cfg, pre_proc_args->vr_page)) {
+			LOG_ERR("The VR LX6301 vr status clear failed");
+			goto err;
+		}
+		break;
+	case sensor_dev_s54ss4p180pmdafc:
+		if (!s54ss4p180pmdafc_clear_vr_status(cfg, pre_proc_args->vr_page)) {
+			LOG_ERR("The VR S54SS4P180PMDAFC vr status clear failed");
 			goto err;
 		}
 		break;
