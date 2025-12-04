@@ -41,10 +41,10 @@ typedef struct {
 } hamsa_pcie_item_t;
 
 static const hamsa_pcie_item_t hamsa_pcie_list[HAMSA_PCIE_MAX_ID] = {
-	{ HAMSA_PCIE0, "HAMSA_PCIE0_PERST_B_PLD_N", 0x9D , 0},
-	{ HAMSA_PCIE1, "HAMSA_PCIE1_PERST_B_PLD_N", 0xB3 , 1},
-	{ HAMSA_PCIE2, "HAMSA_PCIE2_PERST_B_PLD_N", 0xB4 , 2},
-	{ HAMSA_PCIE3, "HAMSA_PCIE3_PERST_B_PLD_N", 0xB5 , 3},
+	{ HAMSA_PCIE0, "HAMSA_PCIE0_PERST_B_PLD_N", 0x9D, 0 },
+	{ HAMSA_PCIE1, "HAMSA_PCIE1_PERST_B_PLD_N", 0xB3, 4 },
+	{ HAMSA_PCIE2, "HAMSA_PCIE2_PERST_B_PLD_N", 0xB4, 8 },
+	{ HAMSA_PCIE3, "HAMSA_PCIE3_PERST_B_PLD_N", 0xB5, 12 },
 };
 
 static int cmd_delay_pcie_perst_set(const struct shell *shell, size_t argc, char **argv)
@@ -61,14 +61,14 @@ static int cmd_delay_pcie_perst_set(const struct shell *shell, size_t argc, char
 	}
 
 	uint8_t idx = 0xff;
-	for (hamsa_pcie_id_t id = 0; id < HAMSA_PCIE_MAX_ID; id++){
-		if (!strcmp(argv[1], hamsa_pcie_list[id].name)){
+	for (hamsa_pcie_id_t id = 0; id < HAMSA_PCIE_MAX_ID; id++) {
+		if (!strcmp(argv[1], hamsa_pcie_list[id].name)) {
 			idx = id;
 			break;
 		}
 	}
 
-	if (idx == 0xff){
+	if (idx == 0xff) {
 		shell_error(shell, "only support HAMSA_PCIE[X]_PERST_B_PLD_N, x should be 0 to 3");
 		return -1;
 	}
@@ -95,9 +95,13 @@ static int cmd_delay_pcie_perst_set(const struct shell *shell, size_t argc, char
 
 	//write to eeprom
 	if (is_perm) {
-		if (!set_user_settings_delay_pcie_perst_to_eeprom(&setting_value,
-								sizeof(setting_value), hamsa_pcie_list[idx].user_setting_offset)) {
-			shell_error(shell, "write %s delay to eeprom error", hamsa_pcie_list[idx].name);
+		uint8_t perm_value[4] = { 0xff, 0xff, 0xff, 0xff };
+		perm_value[0] = setting_value;
+		if (!set_user_settings_delay_pcie_perst_to_eeprom(
+			    &perm_value[0], sizeof(perm_value),
+			    hamsa_pcie_list[idx].user_setting_offset)) {
+			shell_error(shell, "write %s delay to eeprom error",
+				    hamsa_pcie_list[idx].name);
 			return -1;
 		}
 	}
@@ -115,7 +119,7 @@ static int cmd_delay_pcie_perst_get(const struct shell *shell, size_t argc, char
 	for (int id = 0; id < HAMSA_PCIE_MAX_ID; id++) {
 		uint8_t setting_value = 0;
 		plat_read_cpld(hamsa_pcie_list[id].cpld_offset, &setting_value, 1);
-		shell_print(shell, "%s : %d ms", hamsa_pcie_list[id].name, setting_value*10, 1);
+		shell_print(shell, "%s : %d ms", hamsa_pcie_list[id].name, setting_value * 10, 1);
 	}
 	return 0;
 }
@@ -126,7 +130,7 @@ static void hamsa_pcie_rname_get_for_set_cmd(size_t idx, struct shell_static_ent
 	entry->help = NULL;
 	entry->subcmd = NULL;
 
-	if(idx < HAMSA_PCIE_MAX_ID){
+	if (idx < HAMSA_PCIE_MAX_ID) {
 		entry->syntax = hamsa_pcie_list[idx].name;
 	}
 }
@@ -134,17 +138,17 @@ static void hamsa_pcie_rname_get_for_set_cmd(size_t idx, struct shell_static_ent
 SHELL_DYNAMIC_CMD_CREATE(hamsa_pcie_name_set, hamsa_pcie_rname_get_for_set_cmd);
 
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_delay_pcie_perst_get_cmds,
-					SHELL_CMD(all, NULL,
-					 "get all", cmd_delay_pcie_perst_get),
-					SHELL_SUBCMD_SET_END);
-
-SHELL_STATIC_SUBCMD_SET_CREATE(sub_delay_pcie_perst_cmds,
-			       SHELL_CMD_ARG(set, &hamsa_pcie_name_set,
-					 "set <HAMSA_PCIE[X]_PERST_B_PLD_N > [N (* 10ms)]|default [perm]", cmd_delay_pcie_perst_set, 3, 1),
-					SHELL_CMD(get, &sub_delay_pcie_perst_get_cmds,
-					 "get all", NULL),
+			       SHELL_CMD(all, NULL, "get all", cmd_delay_pcie_perst_get),
 			       SHELL_SUBCMD_SET_END);
 
+SHELL_STATIC_SUBCMD_SET_CREATE(
+	sub_delay_pcie_perst_cmds,
+	SHELL_CMD_ARG(set, &hamsa_pcie_name_set,
+		      "set <HAMSA_PCIE[X]_PERST_B_PLD_N > [N (* 10ms)]|default [perm]",
+		      cmd_delay_pcie_perst_set, 3, 1),
+	SHELL_CMD(get, &sub_delay_pcie_perst_get_cmds, "get all", NULL), SHELL_SUBCMD_SET_END);
+
 /* Root of command delay_pcie_perst */
-SHELL_CMD_REGISTER(delay_pcie_perst, &sub_delay_pcie_perst_cmds, "delay_pcie_perst set <HAMSA_PCIE[X]_PERST_B_PLD_N > [N (* 10ms)]|default [perm]",
-		       NULL);
+SHELL_CMD_REGISTER(delay_pcie_perst, &sub_delay_pcie_perst_cmds,
+		   "delay_pcie_perst set <HAMSA_PCIE[X]_PERST_B_PLD_N > [N (* 10ms)]|default [perm]",
+		   NULL);

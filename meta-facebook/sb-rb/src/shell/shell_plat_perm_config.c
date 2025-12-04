@@ -70,20 +70,30 @@ static int cmd_perm_config_get(const struct shell *shell, size_t argc, char **ar
 		}
 	}
 
-	uint32_t setting_data_for_delay_pcie_perst = 0xffffffff;
+	uint32_t setting_data_for_delay_pcie_perst[4] = { 0 };
 	if (!get_user_settings_delay_pcie_perst_from_eeprom(
-		    &setting_data_for_delay_pcie_perst, sizeof(setting_data_for_delay_pcie_perst))) {
+		    &setting_data_for_delay_pcie_perst[0],
+		    sizeof(setting_data_for_delay_pcie_perst))) {
 		LOG_ERR("get delay_pcie_perst user settings failed");
 	} else {
-		if (setting_data_for_delay_pcie_perst != 0xffffffff) {
+		if (setting_data_for_delay_pcie_perst[0] != 0xffffffff) {
 			shell_print(shell, "delay_pcie_perst PCIE0                      val=%d",
-				    setting_data_for_delay_pcie_perst&0xff);
+				    setting_data_for_delay_pcie_perst[0] & 0xff);
+			config_count++;
+		}
+		if (setting_data_for_delay_pcie_perst[1] != 0xffffffff) {
 			shell_print(shell, "delay_pcie_perst PCIE1                      val=%d",
-				    (setting_data_for_delay_pcie_perst>>8)&0xff);
+				    setting_data_for_delay_pcie_perst[1] & 0xff);
+			config_count++;
+		}
+		if (setting_data_for_delay_pcie_perst[2] != 0xffffffff) {
 			shell_print(shell, "delay_pcie_perst PCIE2                      val=%d",
-				    (setting_data_for_delay_pcie_perst>>16)&0xff);
+				    setting_data_for_delay_pcie_perst[2] & 0xff);
+			config_count++;
+		}
+		if (setting_data_for_delay_pcie_perst[3] != 0xffffffff) {
 			shell_print(shell, "delay_pcie_perst PCIE3                      val=%d",
-				    (setting_data_for_delay_pcie_perst>>24)&0xff);
+				    setting_data_for_delay_pcie_perst[3] & 0xff);
 			config_count++;
 		}
 	}
@@ -122,11 +132,11 @@ static int cmd_perm_config_get(const struct shell *shell, size_t argc, char **ar
 			shell_print(shell, "throttle                            %s",
 				    ((setting_data_for_throttle == 0x00) ?
 					     "sense0 disable, sense1 disable" :
-				     (setting_data_for_throttle == 0x40) ?
+					     (setting_data_for_throttle == 0x40) ?
 					     "sense0 disable, sense1 enable" :
-				     (setting_data_for_throttle == 0x80) ?
+					     (setting_data_for_throttle == 0x80) ?
 					     "sense0 enable, sense1 disable" :
-				     (setting_data_for_throttle == 0xC0) ?
+					     (setting_data_for_throttle == 0xC0) ?
 					     "sense0 enable, sense1 enable" :
 					     "unknown"));
 			config_count++;
