@@ -36,7 +36,7 @@ typedef enum {
 typedef struct {
 	hamsa_pcie_id_t id;
 	const char *name;
-	uint8_t cpld_address;
+	uint8_t cpld_offset;
 	uint8_t user_setting_offset;
 } hamsa_pcie_item_t;
 
@@ -88,7 +88,7 @@ static int cmd_delay_pcie_perst_set(const struct shell *shell, size_t argc, char
 			   delay_time, (argc == 4) ? "non-" : "");
 	}
 
-	if (!plat_write_cpld(hamsa_pcie_list[idx].cpld_address, &setting_value)) {
+	if (!plat_write_cpld(hamsa_pcie_list[idx].cpld_offset, &setting_value)) {
 		shell_error(shell, "plat delay_pcie_perst set failed");
 		return -1;
 	}
@@ -114,7 +114,7 @@ static int cmd_delay_pcie_perst_get(const struct shell *shell, size_t argc, char
 
 	for (int id = 0; id < HAMSA_PCIE_MAX_ID; id++) {
 		uint8_t setting_value = 0;
-		plat_read_cpld(hamsa_pcie_list[id].cpld_address, &setting_value, 1);
+		plat_read_cpld(hamsa_pcie_list[id].cpld_offset, &setting_value, 1);
 		shell_print(shell, "%s : %d ms", hamsa_pcie_list[id].name, setting_value*10, 1);
 	}
 	return 0;
