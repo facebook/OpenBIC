@@ -1,0 +1,13 @@
+<map id="satmc_status_update" name="satmc_status_update">
+<area shape="rect" id="node1" title=" " alt="" coords="5,238,152,265"/>
+<area shape="rect" id="node2" href="$mctp__ctrl_8c.html#a549f1e09a9cd14a821530dd0b15a377f" title=" " alt="" coords="221,107,329,134"/>
+<area shape="rect" id="node6" href="$mctp_8c.html#a5282477d38fe149b431e64bbd0f2d97e" title=" " alt="" coords="200,238,351,265"/>
+<area shape="rect" id="node10" href="$yv35-ji_2src_2platform_2plat__power__status_8c.html#a3ed965eee06f5b7dc5a9822f888d0e38" title=" " alt="" coords="212,322,339,349"/>
+<area shape="rect" id="node3" href="$mctp__ctrl_8c.html#a61fa4cc6545d4c42644c127683ec30bb" title=" " alt="" coords="417,5,557,47"/>
+<area shape="rect" id="node4" href="$mctp__ctrl_8c.html#af9efdd02256abf9bb1cb122e536c5182" title=" " alt="" coords="407,71,566,112"/>
+<area shape="rect" id="node5" href="$mctp__ctrl_8c.html#ac289b0cf2e567e3612900cf392b7fbff" title=" " alt="" coords="415,137,558,163"/>
+<area shape="rect" id="node7" href="$mctp_8c.html#a752227fc47b360aa40ef1cf681a383ca" title=" " alt="" coords="399,187,575,214"/>
+<area shape="rect" id="node8" href="$mctp_8c.html#a4c9ae739f05c8e45397f9d5863e504e0" title=" " alt="" coords="420,238,553,265"/>
+<area shape="rect" id="node9" href="$mctp_8c.html#a674999be3a58cb0d9b19893abb92d65f" title=" " alt="" coords="420,289,553,331"/>
+<area shape="rect" id="node11" href="$hal__gpio_8c.html#ab1b576cbfd9eddaaf57a5aa5fc383dd1" title=" " alt="" coords="451,355,522,382"/>
+</map>

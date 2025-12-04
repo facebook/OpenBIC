@@ -1,0 +1,9 @@
+<map id="poll_cpld_registers" name="poll_cpld_registers">
+<area shape="rect" id="node1" title=" " alt="" coords="5,31,136,57"/>
+<area shape="rect" id="node2" href="$plat__cpld_8c.html#ae2158527dc59da6acbe7d119b1602f98" title=" " alt="" coords="206,5,313,32"/>
+<area shape="rect" id="node6" href="$plat__cpld_8c.html#acf22c22a160ed0b73ab13eb76f2c2103" title=" " alt="" coords="184,56,335,83"/>
+<area shape="rect" id="node3" href="$minerva-ag_2src_2platform_2plat__isr_8c.html#ad8887b1d0c4bbc7a6f1c25870a6d9051" title=" " alt="" coords="407,5,505,32"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="577,5,696,32"/>
+<area shape="rect" id="node5" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="744,5,887,32"/>
+<area shape="rect" id="node7" href="$minerva-ag_2src_2platform_2plat__log_8c.html#acfadcc5aa2d8d414259f6928a0271d61" title=" " alt="" coords="383,56,529,83"/>
+</map>
