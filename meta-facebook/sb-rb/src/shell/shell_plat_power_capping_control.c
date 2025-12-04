@@ -41,7 +41,7 @@ LOG_MODULE_REGISTER(power_capping_control, LOG_LEVEL_DBG);
 #define MEDHA0_PWR_CAP_LV3_BIT 5
 #define MEDHA1_PWR_CAP_LV3_BIT 4
 #define VR_HOT_RAINBOW_BIT 0
-#define VR_HOT_EVB_BIT 1
+#define VR_HOT_EVB_BIT  HAMSA_MFIO19
 
 #define POWER_CAPPING_SET_BIT(orig, bit) ((uint8_t)((orig) | (1u << (bit))))
 #define POWER_CAPPING_CLR_BIT(orig, bit) ((uint8_t)((orig) & ~(1u << (bit))))

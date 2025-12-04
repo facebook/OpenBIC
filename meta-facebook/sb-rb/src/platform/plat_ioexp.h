@@ -34,6 +34,8 @@
 #define TCA6424A_CONFIG_1 0x0D
 #define TCA6424A_CONFIG_2 0x0E
 
+#define HAMSA_MFIO19 1
+
 bool pca6416a_i2c_read(uint8_t offset, uint8_t *data, uint8_t len);
 bool pca6416a_i2c_write(uint8_t offset, uint8_t *data, uint8_t len);
 bool tca6424a_i2c_read(uint8_t offset, uint8_t *data, uint8_t len);

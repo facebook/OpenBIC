@@ -30,6 +30,10 @@ bool pca6416a_init(void)
 	uint8_t data[2] = { 0x00, 0x00 }; // all output
 	if (!pca6416a_i2c_write(PCA6414A_CONFIG_0, data, 2))
 		return false;
+	//set HAMSA_MFIO19(VR_HOT_EVB_BIT) to default 0
+	if (!tca6424a_i2c_write_bit(TCA6424A_OUTPUT_PORT_0, HAMSA_MFIO19, 0)) {
+		return false;
+	}
 
 	return true;
 }
