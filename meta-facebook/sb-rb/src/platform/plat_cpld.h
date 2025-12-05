@@ -42,6 +42,8 @@
 #define CPLD_HAMSA_PCIE1_PERST_DELAY_REG 0xB3
 #define CPLD_HAMSA_PCIE2_PERST_DELAY_REG 0xB4
 #define CPLD_HAMSA_PCIE3_PERST_DELAY_REG 0xB5
+#define CPLD_POWER_INFO_0_REG 0xB6
+#define CPLD_POWER_INFO_1_REG 0xB7
 #define PREST_DELAY_REG 0x9D
 #define VR_SMBUS_ALERT_EVENT_LOG_REG 0x26
 #define HAMSA_MFIO_REG 0x17
@@ -101,4 +103,5 @@ void check_cpld_polling_alert_status(void);
 void check_ubc_delayed_timer_handler(struct k_timer *timer);
 bool set_cpld_bit(uint8_t cpld_offset, uint8_t bit, uint8_t value);
 void give_all_vr_pm_alert_sem();
+void get_cpld_polling_power_info(int* reading);
 #endif

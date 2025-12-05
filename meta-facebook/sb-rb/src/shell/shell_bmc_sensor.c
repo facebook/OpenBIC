@@ -24,9 +24,6 @@
 
 LOG_MODULE_REGISTER(plat_bmc_sensor_shell, LOG_LEVEL_DBG);
 
-#define POWER_INFO_0 0xB6
-#define POWER_INFO_1 0xB7
-
 static int cmd_get_bmc_sensor(const struct shell *shell, size_t argc, char **argv)
 {
 	if (argc != 1) {
@@ -36,11 +33,11 @@ static int cmd_get_bmc_sensor(const struct shell *shell, size_t argc, char **arg
 
 	uint8_t pwr_value_lsb = 0;
 	uint8_t pwr_value_msb = 0;
-	if (!plat_read_cpld(POWER_INFO_0, &pwr_value_lsb, 1)){
+	if (!plat_read_cpld(CPLD_POWER_INFO_0_REG, &pwr_value_lsb, 1)){
 		shell_error(shell, "LSB read from CPLD fail");
 		return -1;
 	}
-	if (!plat_read_cpld(POWER_INFO_1, &pwr_value_msb, 1)){
+	if (!plat_read_cpld(CPLD_POWER_INFO_1_REG, &pwr_value_msb, 1)){
 		shell_error(shell, "MSB read from CPLD fail");
 		return -1;
 	}

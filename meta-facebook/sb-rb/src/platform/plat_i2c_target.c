@@ -54,7 +54,7 @@ LOG_MODULE_REGISTER(plat_i2c_target);
 #define CPLD_VERSION_GET_REG 0x32
 #define CPLD_VERSION_GET_REG_LEN 4
 #define STRAP_SET_TYPE 0x44 // 01000100
-#define VR_PWR_BUF_SIZE 22
+#define VR_PWR_BUF_SIZE 38
 #define I2C_TARGET_BUS_ASIC I2C_BUS7 // asic bus is I2C_BUS7, I2C_BUS6 is only for test
 
 static bool command_reply_data_handle(void *arg);
@@ -373,6 +373,14 @@ void vr_power_reading(uint8_t *buffer, size_t buf_size)
 	[16:17] - P0V75_VDDPHY_HBM1357 (Unit: W)
 	[18:19] - P0V75_MAX_N_VDD (Unit: W)
 	[20:21] - P0V75_MAX_S_VDD (Unit: W)
+	[22:23] - P0V4_VDDQL_HBM0246 (Unit: W)
+	[24:25] - P0V4_VDDQL_HBM1357 (Unit: W)
+	[26:27] - P1V8_VPP_HBM0246 (Unit: W)
+	[28:29] - P1V8_VPP_HBM1357 (Unit: W)
+	[30:31] - P0V75_MAX_M_VDD (Unit: W)
+	[32:33] - P0V75_OWL_E_VDD (Unit: W)
+	[34:35] - P0V75_OWL_W_VDD (Unit: W)
+	[36:37] - PDB1_P52V_ASIC_SENSE_PWR (Unit: W) (Need BMC support)
 	each data is 2 bytes
 	*/
 	float x = 0;
@@ -424,6 +432,27 @@ void vr_power_reading(uint8_t *buffer, size_t buf_size)
 		case SENSOR_NUM_ASIC_P0V75_MAX_S_VDD_PWR_W:
 			memcpy(&buffer[20], &val, 2);
 			break;
+		case SENSOR_NUM_ASIC_P0V4_VDDQL_HBM0246_PWR_W:
+			memcpy(&buffer[22], &val, 2);
+			break;
+		case SENSOR_NUM_ASIC_P0V4_VDDQL_HBM1357_PWR_W:
+			memcpy(&buffer[24], &val, 2);
+			break;
+		case SENSOR_NUM_ASIC_P1V8_VPP_HBM0246_PWR_W:
+			memcpy(&buffer[26], &val, 2);
+			break;
+		case SENSOR_NUM_ASIC_P1V8_VPP_HBM1357_PWR_W:
+			memcpy(&buffer[28], &val, 2);
+			break;
+		case SENSOR_NUM_ASIC_P0V75_MAX_M_VDD_PWR_W:
+			memcpy(&buffer[30], &val, 2);
+			break;
+		case SENSOR_NUM_ASIC_P0V75_OWL_E_VDD_PWR_W:
+			memcpy(&buffer[32], &val, 2);
+			break;
+		case SENSOR_NUM_ASIC_P0V75_OWL_W_VDD_PWR_W:
+			memcpy(&buffer[34], &val, 2);
+			break;
 		default:
 			// do nothing
 			break;
@@ -436,6 +465,12 @@ void vr_power_reading(uint8_t *buffer, size_t buf_size)
 			x += reading;
 		}
 	}
+	int reading;
+	get_cpld_polling_power_info(&reading);
+	reading = (reading + 500) / 1000;
+	uint16_t val = (uint16_t)reading;
+	memcpy(&buffer[36], &val, 2);
+	x += reading;
 
 	chiplet0 = medha0 + 0.5 * x;
 	chiplet1 = medha1 + 0.5 * x;

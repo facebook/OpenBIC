@@ -91,8 +91,15 @@ cpld_info cpld_info_table[] = {
 	{ VR_SMBUS_ALERT_EVENT_LOG_REG, 	0xFF, 0xFF, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
 };
 
+int power_info = 0;
+
 bool cpld_polling_alert_status = false; // only polling cpld when alert status is true
 bool cpld_polling_enable_flag = true;
+
+void get_cpld_polling_power_info(int* reading)
+{
+	*reading = power_info;
+}
 
 void check_cpld_polling_alert_status(void)
 {
@@ -245,6 +252,16 @@ void poll_cpld_registers()
 			continue;
 
 		LOG_DBG("Polling CPLD registers");
+
+		uint8_t pwr_value_lsb = 0;
+		uint8_t pwr_value_msb = 0;
+		if (!plat_read_cpld(CPLD_POWER_INFO_0_REG, &pwr_value_lsb, 1)){
+			LOG_ERR("LSB read from CPLD fail");
+		}
+		if (!plat_read_cpld(CPLD_POWER_INFO_1_REG, &pwr_value_msb, 1)){
+			LOG_ERR("MSB read from CPLD fail");
+		}
+		power_info = (pwr_value_msb<<8)|pwr_value_lsb;
 
 		for (size_t i = 0; i < ARRAY_SIZE(cpld_info_table); i++) {
 			uint8_t expected_val = ubc_enabled_delayed_status ?
