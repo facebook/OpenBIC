@@ -22,6 +22,7 @@
 #define MANUAL_CONTROL_STRAP_CPLD_OFFSET 0xb2
 
 #define MANUAL_CONTROL_STRAP_BIT 0
+#define MANUAL_CONTROL_STRAP_BIT_MASK 0x01
 #define ENABLE_MANUAL_CONTROL_STRAP 0
 #define DISABLE_MANUAL_CONTROL_STRAP 1
 
@@ -39,12 +40,12 @@ static int cmd_enable_manual_control_strap(const struct shell *shell, size_t arg
 		return -1;
 	}
 	
-	if (reg_status != ENABLE_MANUAL_CONTROL_STRAP){
+	if ((reg_status &MANUAL_CONTROL_STRAP_BIT_MASK) != ENABLE_MANUAL_CONTROL_STRAP){
 		shell_error(shell, "enable manual control strap failed");
 		return -1;
 	}
 	
-	shell_print(shell, "STRAP_HIZ_EN : %d (low active)", reg_status);
+	shell_print(shell, "STRAP_HIZ_EN : %d (low active)", reg_status & MANUAL_CONTROL_STRAP_BIT_MASK);
 	return 0;	
 }
 
@@ -62,13 +63,23 @@ static int cmd_disable_manual_control_strap(const struct shell *shell, size_t ar
 		return -1;
 	}
 	
-	if (reg_status != DISABLE_MANUAL_CONTROL_STRAP){
+	if ((reg_status & MANUAL_CONTROL_STRAP_BIT_MASK) != DISABLE_MANUAL_CONTROL_STRAP){
 		shell_error(shell, "disable manual control strap failed");
 		return -1;
 	}
 	
-	shell_print(shell, "STRAP_HIZ_EN : %d (low active)", reg_status);
+	shell_print(shell, "STRAP_HIZ_EN : %d (low active)", reg_status & MANUAL_CONTROL_STRAP_BIT_MASK);
 	return 0;	
+}
+static int cmd_get_manual_control_strap_status(const struct shell *shell, size_t argc, char **argv)
+{
+	uint8_t reg_status = 0;
+		if (!plat_read_cpld(MANUAL_CONTROL_STRAP_CPLD_OFFSET, &reg_status, 1)) {
+		shell_error(shell, "read manual control strap from CPLD failed");
+		return -1;
+	}
+	shell_print(shell, "STRAP_HIZ_EN : %d (low active)", reg_status & MANUAL_CONTROL_STRAP_BIT_MASK);
+	return 0;
 }
 
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_set_strap_control_cmds,
@@ -76,7 +87,9 @@ SHELL_STATIC_SUBCMD_SET_CREATE(sub_set_strap_control_cmds,
 					 cmd_enable_manual_control_strap, 1, 0),
 				   SHELL_CMD_ARG(disable, NULL, "disable manual control strap",
 					 cmd_disable_manual_control_strap, 1, 0),
+					SHELL_CMD_ARG(get, NULL, "get manual control strap status",
+					 cmd_get_manual_control_strap_status, 1, 0),
 			       SHELL_SUBCMD_SET_END);
 
 /* Root of command spi test */
-SHELL_CMD_REGISTER(strap_control_manual, &sub_set_strap_control_cmds, "strap_control_manual <enable | disable>", NULL);
+SHELL_CMD_REGISTER(strap_control_manual, &sub_set_strap_control_cmds, "strap_control_manual <enable | disable | get>", NULL);
