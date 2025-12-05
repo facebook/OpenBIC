@@ -695,6 +695,22 @@ static bool command_reply_data_handle(void *arg)
 				LOG_HEXDUMP_DBG(data->target_rd_msg.msg,
 						data->target_rd_msg.msg_length, "vr power reading");
 			} break;
+			case TRAY_INFO_REG: {
+				/* TRAY_INFO_REG:
+				 * Byte0: MMC slot
+				 * Byte1: tray location
+				 */
+				uint8_t slot = get_mmc_slot();
+				uint8_t tray = get_tray_location();
+
+				data->target_rd_msg.msg[0] = slot;
+				data->target_rd_msg.msg[1] = tray;
+				data->target_rd_msg.msg_length = 2;
+
+				LOG_DBG("TRAY_INFO_REG: slot=0x%02x, tray=0x%02x", slot, tray);
+				LOG_HEXDUMP_DBG(data->target_rd_msg.msg,
+						data->target_rd_msg.msg_length, "tray info");
+			} break;
 			default:
 				LOG_ERR("Unknown reg offset: 0x%02x", reg_offset);
 				data->target_rd_msg.msg_length = 1;

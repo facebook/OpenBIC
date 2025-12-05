@@ -31,6 +31,7 @@ static uint8_t vr_module = 0;
 static uint8_t ubc_module = 0;
 static uint8_t mmc_slot = 0;
 static uint8_t asic_board_id = 0;
+static uint8_t tray_location = 0;
 uint8_t board_rev_id = 0;
 
 bool plat_cpld_eerprom_read(uint8_t *data, uint16_t offset, uint8_t len)
@@ -76,6 +77,8 @@ void init_plat_config()
 	// mmc slot 1-4 * 0x0A
 	uint8_t init_plat_eid = ((get_mmc_slot() + 1) * MCTP_DEFAULT_ENDPOINT);
 	plat_set_eid(init_plat_eid);
+	// cpld fru offset 0x3FF: tray location
+	plat_cpld_eerprom_read(&tray_location, 1023, 1);
 	LOG_INF("init_plat_eid: 0x%x", init_plat_eid);
 }
 
@@ -102,4 +105,9 @@ uint8_t get_asic_board_id()
 uint8_t get_board_rev_id()
 {
 	return board_rev_id;
+}
+
+uint8_t get_tray_location()
+{
+	return tray_location;
 }
