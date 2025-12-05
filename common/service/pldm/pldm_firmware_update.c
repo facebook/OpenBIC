@@ -90,6 +90,13 @@ __weak uint16_t plat_find_update_info_work(uint16_t comp_id)
 	return comp_id;
 }
 
+__weak uint8_t plat_pldm_pass_component_table_check(uint16_t num_of_comp,
+						    const uint8_t *comp_image_version_str,
+						    uint8_t comp_image_version_str_len)
+{
+	return PLDM_SUCCESS;
+}
+
 int get_descriptor_type_length(uint16_t type)
 {
 	switch (type) {
@@ -649,7 +656,7 @@ static void state_update(uint8_t state)
 	}
 }
 
-static void pldm_status_reset()
+void pldm_status_reset()
 {
 	state_update(STATE_IDLE);
 	cur_aux_state = STATE_AUX_NOT_IN_UPDATE;
@@ -662,7 +669,7 @@ static void pldm_status_reset()
 
 static void exit_update_mode()
 {
-	printk("PLDM update mode timeout, exiting update mode...\n");
+	LOG_WRN("PLDM update mode timeout, exiting update mode...");
 	pldm_status_reset();
 }
 
@@ -1085,6 +1092,14 @@ static uint8_t pass_component_table(void *mctp_inst, uint8_t *buf, uint16_t len,
 		req_p->comp_identifier);
 	LOG_HEXDUMP_INF(buf + sizeof(struct pldm_pass_component_table_req), req_p->comp_ver_str_len,
 			"");
+
+	uint8_t check_result = plat_pldm_pass_component_table_check(
+		req_p->comp_identifier, buf + sizeof(struct pldm_pass_component_table_req),
+		req_p->comp_ver_str_len);
+	if (check_result != PLDM_SUCCESS) {
+		resp_p->completion_code = check_result;
+		goto exit;
+	}
 
 	if (current_state != STATE_LEARN_COMP) {
 		LOG_ERR("Firmware update failed because current state %d is not %d", current_state,

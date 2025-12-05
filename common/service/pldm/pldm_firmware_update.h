@@ -65,10 +65,7 @@ static const char hex_to_ascii[] = { '0', '1', '2', '3', '4', '5', '6', '7',
 
 #define PLDM_COMMON_ERR_STR 'E', 'R', 'R', 'O', 'R', ':'
 #define PLDM_COMMON_ERR_CODE 0
-#define PLDM_CREATE_ERR_STR_ARRAY(code)                                                            \
-	{                                                                                          \
-		PLDM_COMMON_ERR_STR, hex_to_ascii[code]                                            \
-	}
+#define PLDM_CREATE_ERR_STR_ARRAY(code) { PLDM_COMMON_ERR_STR, hex_to_ascii[code] }
 
 #define CHECK_PLDM_FW_UPDATE_RESULT_WITH_RETURN(component_id, offset, length, val, ret_val)                \
 	if (val != 0) {                                                                                    \
@@ -727,6 +724,10 @@ uint8_t fill_descriptor_into_buf(struct pldm_descriptor_string *descriptor, uint
 bool is_update_state_download_phase();
 bool is_update_state_idle();
 uint8_t pldm_fw_update(void *fw_update_param, const int flash_position);
+void pldm_status_reset();
+uint8_t plat_pldm_pass_component_table_check(uint16_t num_of_comp,
+					     const uint8_t *comp_image_version_str,
+					     uint8_t comp_image_version_str_len);
 
 #ifdef __cplusplus
 }
