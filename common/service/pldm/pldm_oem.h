@@ -37,6 +37,8 @@ extern "C" {
 #define PLDM_OEM_READ_FILE_IO 0x03
 #define PLDM_OEM_SENSOR_POLLING_CMD 0x04
 #define PLDM_OEM_WF_READ_SPD_CHUNK 0x05
+#define PLDM_OEM_FORCE_UPDATE_SETTING_CMD 0x06
+#define PLDM_OEM_FORCE_UPDATE_GETTING_CMD 0x07
 
 #define POWER_CONTROL_LEN 0x01
 
@@ -284,6 +286,27 @@ struct _sensor_polling_cmd_resp {
 	uint8_t completion_code;
 	uint8_t iana[IANA_LEN];
 	uint8_t set_value;
+} __attribute__((packed));
+
+struct _force_update_flag_set_cmd_req {
+	uint8_t iana[IANA_LEN];
+	uint8_t set_value;
+} __attribute__((packed));
+
+struct _force_update_flag_set_cmd_resp {
+	uint8_t completion_code;
+	uint8_t iana[IANA_LEN];
+	uint8_t set_value;
+} __attribute__((packed));
+
+struct _force_update_flag_get_cmd_req {
+	uint8_t iana[IANA_LEN];
+} __attribute__((packed));
+
+struct _force_update_flag_get_cmd_resp {
+	uint8_t completion_code;
+	uint8_t iana[IANA_LEN];
+	uint8_t get_value;
 } __attribute__((packed));
 
 uint8_t check_iana(const uint8_t *iana);
