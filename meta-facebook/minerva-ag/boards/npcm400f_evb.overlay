@@ -1,5 +1,5 @@
 &twd0 {
-	status = "disabled";
+	status = "okay";
 };
 
 &adc0 {
