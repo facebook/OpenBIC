@@ -31,6 +31,9 @@ LOG_MODULE_REGISTER(shell_fw_version);
 
 #define ASIC_VERSION_BYTE 0x68
 #define I2C_MAX_RETRY 3
+
+bool temp_polling_flag = false;
+
 typedef struct {
 	uint8_t id;
 	const char *name;
@@ -44,13 +47,32 @@ static const asic_item_t asic_list[BOOT0_MAX] = {
 	{ BOOT0_MEDHA1, "MEDHA1", I2C_BUS12, 0x32 },
 };
 
+bool check_p3v3_p5v_pwrgd(void)
+{
+	// read p3v3_pwrgf and p5v_pwrgf
+	// PWRGD_P3V3_R, bit-4, VR_PWRGD_PIN_READING_5_REG
+	uint8_t offset = VR_PWRGD_PIN_READING_5_REG;
+	uint8_t reg_data = 0;
+	if (!plat_read_cpld(offset, &reg_data, 1)) {
+		LOG_ERR("Read CPLD offset 0x%x failed", offset);
+	}
+	uint8_t p3v3_value = (reg_data >> 4) & 0x01;
+	// PWRGD_P5V_R, bit-5, VR_PWRGD_PIN_READING_5_REG
+	uint8_t p5v_value = (reg_data >> 5) & 0x01;
+	//if both p3v3 and p5v are all 1, return true
+	if (p3v3_value == 1 && p5v_value == 1)
+		return true;
+	return false;
+} 
+
 void cmd_get_fw_version_vr(const struct shell *shell, size_t argc, char **argv)
 {
 	if (argc != 1) {
 		shell_warn(shell, "Help: test get_fw_version vr");
 		return;
 	}
-
+	// get polling flag and save it
+	temp_polling_flag = get_plat_sensor_polling_enable_flag();
 	/* Stop sensor polling */
 	set_plat_sensor_polling_enable_flag(false);
 
@@ -59,8 +81,12 @@ void cmd_get_fw_version_vr(const struct shell *shell, size_t argc, char **argv)
 		uint8_t sensor_id = 0;
 		char sensor_name[MAX_AUX_SENSOR_NAME_LEN] = { 0 };
 
-		if (is_mb_dc_on() == false)
+		if (check_p3v3_p5v_pwrgd() == false)
+		{
+			shell_warn(shell, "PWRGD_P3V3_R and PWRGD_P5V_R is not on, skip get VR version");
 			continue;
+		}
+			
 
 		if (i == COMPNT_HAMSA || i == COMPNT_MEDHA0 || i == COMPNT_MEDHA1)
 			continue;
@@ -122,8 +148,8 @@ void cmd_get_fw_version_vr(const struct shell *shell, size_t argc, char **argv)
 			shell_print(shell, "not support sensor_dev: %d", cfg->type);
 	}
 
-	/* Start sensor polling */
-	set_plat_sensor_polling_enable_flag(true);
+	/* set back to the polling flag */
+	set_plat_sensor_polling_enable_flag(temp_polling_flag);
 
 	return;
 }

@@ -127,11 +127,6 @@ void set_cpld_reset_reg(uint8_t value)
 	// check cpld reset reg
 	plat_read_cpld(RESET, &temp_data, 1);
 	LOG_DBG("check cpld reset reg: 0x%x", temp_data);
-	if (temp_data == value) {
-		LOG_INF("set cpld reset reg success");
-	} else {
-		LOG_INF("set cpld reset reg failed");
-	}
 }
 
 static uint8_t pldm_pre_mtia_flash_update(void *fw_update_param)
@@ -293,17 +288,17 @@ bool plat_get_image_crc_checksum_from_flash(uint8_t index, uint8_t data_type, ui
 		switch (spi_node) {
 		case COMPNT_HAMSA:
 			change_spi_node_to_hamsa();
-			LOG_INF("change spi node to hamsa");
+			LOG_DBG("change spi node to hamsa");
 			flash_index = BOOT0_HAMSA;
 			break;
 		case COMPNT_MEDHA0:
 			change_spi_node_to_medha0();
-			LOG_INF("change spi node to medha0");
+			LOG_DBG("change spi node to medha0");
 			flash_index = BOOT0_MEDHA0;
 			break;
 		case COMPNT_MEDHA1:
 			change_spi_node_to_medha1();
-			LOG_INF("change spi node to medha1");
+			LOG_DBG("change spi node to medha1");
 			flash_index = BOOT0_MEDHA1;
 			break;
 		default:
