@@ -726,6 +726,10 @@ uint8_t fill_descriptor_into_buf(struct pldm_descriptor_string *descriptor, uint
 				 uint8_t *fill_length, uint16_t current_length);
 bool is_update_state_download_phase();
 bool is_update_state_idle();
+void pldm_status_reset();
+uint8_t plat_pldm_pass_component_table_check(uint16_t num_of_comp,
+					     const uint8_t *comp_image_version_str,
+					     uint8_t comp_image_version_str_len);
 
 #ifdef __cplusplus
 }

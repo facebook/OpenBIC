@@ -39,8 +39,11 @@
 #include "plat_hook.h"
 #include "plat_event.h"
 #include "drivers/i2c_npcm4xx.h"
+#include <ctype.h>
 
 LOG_MODULE_REGISTER(plat_fwupdate);
+
+static bool plat_force_update_flag = false;
 
 static uint8_t pldm_pre_vr_update(void *fw_update_param);
 static uint8_t pldm_post_vr_update(void *fw_update_param);
@@ -697,4 +700,245 @@ void pal_warm_reset_prepare()
 {
 	LOG_INF("cmd platform warm reset prepare");
 	plat_reset_prepare();
+}
+
+uint8_t force_update_flag_set_cmd(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t instance_id,
+				  uint8_t *resp, uint16_t *resp_len, void *ext_params)
+{
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp_len, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(ext_params, PLDM_ERROR);
+
+	struct _force_update_flag_set_cmd_req *req_p = (struct _force_update_flag_set_cmd_req *)buf;
+	struct _force_update_flag_set_cmd_resp *resp_p =
+		(struct _force_update_flag_set_cmd_resp *)resp;
+
+	if (len < (sizeof(*req_p) - 1)) {
+		LOG_WRN("request len %d is invalid", len);
+		resp_p->completion_code = PLDM_ERROR_INVALID_LENGTH;
+		set_iana(resp_p->iana, sizeof(resp_p->iana));
+		goto exit;
+	}
+
+	if (check_iana(req_p->iana) == PLDM_ERROR) {
+		resp_p->completion_code = PLDM_ERROR_INVALID_DATA;
+		set_iana(resp_p->iana, sizeof(resp_p->iana));
+		goto exit;
+	}
+
+	if (!(req_p->set_value == 1 || req_p->set_value == 0)) {
+		LOG_ERR("set force_update_flag:%x is out of range", req_p->set_value);
+		resp_p->completion_code = PLDM_ERROR_INVALID_DATA;
+		set_iana(resp_p->iana, sizeof(resp_p->iana));
+		goto exit;
+	}
+
+	plat_force_update_flag = req_p->set_value;
+
+	LOG_INF("set force_update_flag:%x success", req_p->set_value);
+	resp_p->completion_code = PLDM_SUCCESS;
+	set_iana(resp_p->iana, sizeof(resp_p->iana));
+	resp_p->set_value = req_p->set_value;
+
+exit:
+	*resp_len = sizeof(struct _force_update_flag_set_cmd_resp);
+	return PLDM_SUCCESS;
+}
+
+uint8_t force_update_flag_get_cmd(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t instance_id,
+				  uint8_t *resp, uint16_t *resp_len, void *ext_params)
+{
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp_len, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(ext_params, PLDM_ERROR);
+
+	struct _force_update_flag_get_cmd_req *req_p = (struct _force_update_flag_get_cmd_req *)buf;
+	struct _force_update_flag_get_cmd_resp *resp_p =
+		(struct _force_update_flag_get_cmd_resp *)resp;
+
+	if (len < (sizeof(*req_p) - 1)) {
+		LOG_WRN("request len %d is invalid", len);
+		resp_p->completion_code = PLDM_ERROR_INVALID_LENGTH;
+		set_iana(resp_p->iana, sizeof(resp_p->iana));
+		goto exit;
+	}
+
+	if (check_iana(req_p->iana) == PLDM_ERROR) {
+		resp_p->completion_code = PLDM_ERROR_INVALID_DATA;
+		set_iana(resp_p->iana, sizeof(resp_p->iana));
+		goto exit;
+	}
+
+	resp_p->completion_code = PLDM_SUCCESS;
+	set_iana(resp_p->iana, sizeof(resp_p->iana));
+	resp_p->get_value = plat_force_update_flag;
+
+exit:
+	*resp_len = sizeof(struct _sensor_polling_cmd_resp);
+	return PLDM_SUCCESS;
+}
+
+bool pal_vr_update_check_allowable(uint16_t comp_identifier, const char *new_version_hex)
+{
+	if (comp_identifier == AG_COMPNT_BIC)
+		return false;
+	if (!new_version_hex) {
+		LOG_ERR("VR update check failed: Invalid new_version_hex");
+		return false;
+	}
+
+	pldm_fw_update_info_t info = { 0 };
+	uint8_t buf[64] = { 0 };
+	uint8_t len = 0;
+	info.comp_identifier = comp_identifier;
+
+	if (!get_vr_fw_version(&info, buf, &len)) {
+		LOG_ERR("VR update check failed: comp_identifier 0x%x not found", comp_identifier);
+		return false;
+	}
+
+	char vr_version_info[64] = { 0 };
+	memcpy(vr_version_info, buf, len);
+
+	char *p = strchr(vr_version_info, ' ');
+	if (!p) {
+		LOG_ERR("VR update check failed: Failed to parse version from VR string");
+		return false;
+	}
+	p++;
+
+	char current_version[16] = { 0 };
+	int i = 0;
+	while (*p && *p != ',' && i < sizeof(current_version) - 1) {
+		current_version[i++] = *p++;
+	}
+	current_version[i] = '\0';
+
+	char *remain_p = strstr(vr_version_info, "Remaining Write:");
+	if (!remain_p) {
+		LOG_ERR("VR update check failed: remain not found");
+		return false;
+	}
+
+	remain_p += strlen("Remaining Write:");
+
+	// Skip any spaces after "Remaining Write:"
+	while (*remain_p == ' ') {
+		remain_p++;
+	}
+
+	char remain_hex[8] = { 0 };
+	strncpy(remain_hex, remain_p, 4);
+
+	uint16_t remain_val = (uint16_t)strtol(remain_hex, NULL, 16);
+
+	// Convert both versions to uppercase for case-insensitive comparison
+	char current_version_upper[16] = { 0 };
+	char new_version_upper[16] = { 0 };
+
+	// Convert current_version to uppercase
+	for (int j = 0; j < sizeof(current_version_upper) - 1 && current_version[j]; j++) {
+		current_version_upper[j] = toupper(current_version[j]);
+	}
+
+	// Convert new_version_hex to uppercase
+	for (int j = 0; j < sizeof(new_version_upper) - 1 && new_version_hex[j]; j++) {
+		new_version_upper[j] = toupper(new_version_hex[j]);
+	}
+
+	if (remain_val != 0xffff) {
+		if (remain_val < 10) {
+			LOG_INF("VR update check blocked: Remaining write cycles (%d) < 10",
+				remain_val);
+			return false;
+		}
+	}
+
+	if (strcmp(current_version_upper, new_version_upper) == 0) {
+		LOG_INF("VR update check blocked: Version same for comp_identifier=0x%x",
+			comp_identifier);
+		LOG_INF("  Current version: %s", log_strdup(current_version));
+		LOG_INF("  New version: %s", log_strdup(new_version_hex));
+		return false;
+	}
+
+	LOG_INF("VR update check allowable: comp_identifier=0x%x, version=%s, remain=%d",
+		comp_identifier, log_strdup(current_version), remain_val);
+	return true;
+}
+
+uint8_t plat_pldm_pass_component_table_check(uint16_t num_of_comp,
+					     const uint8_t *comp_image_version_str,
+					     uint8_t comp_image_version_str_len)
+{
+	if (plat_force_update_flag == 1) {
+		LOG_INF("Force update is set, skip the update check");
+		return PLDM_SUCCESS;
+	}
+
+	if (num_of_comp == AG_COMPNT_BIC) {
+		LOG_INF("BIC component, no need to check for update");
+		return PLDM_SUCCESS;
+	}
+
+	const char *comp_ver_str = (const char *)comp_image_version_str;
+	size_t comp_ver_len = comp_image_version_str_len;
+
+	char comp_ver_str_buf[256] = { 0 };
+	if (comp_ver_len >= sizeof(comp_ver_str_buf))
+		comp_ver_len = sizeof(comp_ver_str_buf) - 1;
+
+	memcpy(comp_ver_str_buf, comp_ver_str, comp_ver_len);
+	comp_ver_str_buf[comp_ver_len] = '\0';
+
+	LOG_INF("ComponentVersionString (len=%d):", comp_ver_len);
+
+	const int chunk_size = 30;
+	for (int offset = 0; offset < comp_ver_len; offset += chunk_size) {
+		int remaining = comp_ver_len - offset;
+		int current_chunk = (remaining < chunk_size) ? remaining : chunk_size;
+
+		char chunk_buf[32] = { 0 };
+		memcpy(chunk_buf, comp_ver_str_buf + offset, current_chunk);
+		chunk_buf[current_chunk] = '\0';
+
+		LOG_INF("  [%02d-%02d]: %s", offset, offset + current_chunk - 1,
+			log_strdup(chunk_buf));
+	}
+
+	char *ver_pos = strstr(comp_ver_str_buf, "ver: ");
+	if (!ver_pos) {
+		LOG_ERR("version not found in ComponentVersionString");
+		return PLDM_FW_UPDATE_CC_UNABLE_TO_INITIATE_UPDATE;
+	}
+
+	ver_pos += 5;
+
+	char new_version_hex[16] = { 0 };
+	int i = 0;
+
+	while (*ver_pos && !isspace((unsigned char)*ver_pos) && i < sizeof(new_version_hex) - 1) {
+		new_version_hex[i++] = *ver_pos++;
+	}
+	new_version_hex[i] = '\0';
+
+	LOG_INF("Parsed new version = %s", log_strdup(new_version_hex));
+
+	bool is_vr_update_check_allowable =
+		pal_vr_update_check_allowable(num_of_comp, new_version_hex);
+	if (is_vr_update_check_allowable) {
+		LOG_INF("VR update check allowable: version and remaining checks passed");
+		return PLDM_SUCCESS;
+	} else {
+		LOG_INF("VR update check blocked: protection mechanism activated (same version or low remaining writes)");
+
+		LOG_INF("Reset PLDM FW update state machine due to update not allowable");
+		pldm_status_reset();
+
+		return PLDM_FW_UPDATE_CC_UNABLE_TO_INITIATE_UPDATE;
+	}
 }
