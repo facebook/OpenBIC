@@ -87,6 +87,8 @@
 #define UBC1_ADDR (0x28 >> 1)
 #define UBC2_ADDR (0x34 >> 1)
 
+#define P3V3_OSFP_ADDR (0xFA >> 1)
+
 // sensor number
 /* Define sensors address(7 bit) */
 #define SENSOR_NUM_TOP_INLET_TEMP_C 0x01
@@ -223,7 +225,12 @@
 #define SENSOR_NUM_UBC2_P12V_PWR_W 0x6C
 #define SENSOR_NUM_UBC2_P52V_INPUT_VOLT_V 0x6D
 
-#define SENSOR_NUM_NUMBERS 0x6E
+#define SENSOR_NUM_P3V3_OSFP_TEMP_C 0x6E
+#define SENSOR_NUM_P3V3_OSFP_VOLT_V 0x6F
+#define SENSOR_NUM_P3V3_OSFP_CURR_A 0x70
+#define SENSOR_NUM_P3V3_OSFP_PWR_W 0x71
+
+#define SENSOR_NUM_NUMBERS 0x72
 
 #define TMP75_TEMP_OFFSET 0x00
 #define UPDATE_INTERVAL_1S 1
@@ -235,6 +242,7 @@ enum SENSOR_THREAD_LIST {
 	VR_SENSOR_THREAD_ID,
 	QUICK_VR_SENSOR_THREAD_ID,
 	UBC_SENSOR_THREAD_ID,
+	EVB_SENSOR_THREAD_ID,
 	MAX_SENSOR_THREAD_ID,
 };
 
@@ -259,6 +267,6 @@ char16_t *char16_strcpy(char16_t *dest, const char16_t *src);
 char16_t *char16_strcat_char(char16_t *dest, char16_t ch);
 
 bool get_raw_data_from_sensor_id(uint8_t sensor_id, uint8_t offset, uint8_t *val, uint8_t len);
-void change_sensor_cfg(uint8_t vr_module);
+void change_sensor_cfg(uint8_t vr_module, uint8_t ubc_module);
 uint8_t convert_addr_to_rns(uint8_t addr);
 #endif
