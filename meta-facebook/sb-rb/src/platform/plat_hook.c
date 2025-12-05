@@ -878,13 +878,13 @@ bool set_bootstrap_table_val_to_ioexp(void)
 
 	// tca6424a only in EVB
 	if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
-		data[0] = GET_VAL_FROM_STRAP_INDEX(STRAP_INDEX_MEDHA1_MFIO6) |
-			  GET_VAL_FROM_STRAP_INDEX(STRAP_INDEX_MEDHA1_MFIO8);
+		data[0] = GET_VAL_FROM_STRAP_INDEX(STRAP_INDEX_HAMSA_MFIO6) |
+			  GET_VAL_FROM_STRAP_INDEX(STRAP_INDEX_HAMSA_MFIO8);
 
 		const uint8_t straps_port2[] = {
-			STRAP_INDEX_HAMSA_MFIO6,  STRAP_INDEX_HAMSA_MFIO8,
 			STRAP_INDEX_HAMSA_MFIO10, STRAP_INDEX_MEDHA0_MFIO6,
 			STRAP_INDEX_MEDHA0_MFIO8, STRAP_INDEX_MEDHA0_MFIO10,
+			STRAP_INDEX_MEDHA1_MFIO6, STRAP_INDEX_MEDHA1_MFIO8,
 			STRAP_INDEX_MEDHA1_MFIO10
 		};
 		data[1] = 0;
@@ -916,10 +916,10 @@ bool set_ioexp_val_to_bootstrap_table(void)
 		}
 		for (uint8_t i = STRAP_INDEX_HAMSA_MFIO6; i <= STRAP_INDEX_MEDHA1_MFIO10; i++) {
 			// check data from port1 or port2
-			uint8_t tmp = ((i == STRAP_INDEX_MEDHA1_MFIO6) ||
-				       (i == STRAP_INDEX_MEDHA1_MFIO8)) ?
-					      data[0] :
-					      data[1];
+			uint8_t tmp =
+				((i == STRAP_INDEX_HAMSA_MFIO6) || (i == STRAP_INDEX_HAMSA_MFIO8)) ?
+					data[0] :
+					data[1];
 			bootstrap_table[i].change_setting_value =
 				(tmp >> bootstrap_table[i].bit_offset) & 0x01;
 		}
