@@ -4,6 +4,7 @@
 #include "plat_util.h"
 #include "plat_ioexp.h"
 #include "plat_class.h"
+#include "plat_pldm_sensor.h"
 
 LOG_MODULE_REGISTER(plat_ioexp);
 
@@ -92,4 +93,57 @@ void ioexp_init(void)
 		if (!tca6424a_init())
 			LOG_ERR("tca6424a init fail");
 	}
+}
+void set_pca6554apw_ioe_value(uint8_t ioe_bus, uint8_t ioe_addr, uint8_t ioe_reg, uint8_t value)
+{
+	uint8_t retry = 5;
+	I2C_MSG msg = { 0 };
+	int ret = 0;
+	msg.bus = ioe_bus;
+	msg.target_addr = ioe_addr;
+	msg.tx_len = 2;
+	msg.data[0] = ioe_reg;
+	msg.data[1] = value;
+
+	ret = i2c_master_write(&msg, retry);
+
+	if (ret != 0) {
+		LOG_ERR("Failed to write IOE(0x%02X). The register is 0x%02X.", ioe_addr, ioe_reg);
+		k_msleep(1000);
+	}
+}
+
+int get_pca6554apw_ioe_value(uint8_t ioe_bus, uint8_t ioe_addr, uint8_t ioe_reg, uint8_t *value)
+{
+	int ret = 0;
+	uint8_t retry = 5;
+	I2C_MSG msg = { 0 };
+
+	msg.bus = ioe_bus;
+	msg.target_addr = ioe_addr;
+	msg.tx_len = 1;
+	msg.rx_len = 1;
+	msg.data[0] = ioe_reg;
+
+	ret = i2c_master_read(&msg, retry);
+
+	if (ret != 0) {
+		LOG_ERR("Failed to read IOE(0x%02X). The register is 0x%02X.", ioe_addr, ioe_reg);
+		k_msleep(1000);
+		return -1;
+	}
+
+	*value = msg.data[0];
+
+	return 0;
+}
+
+//evb only
+void init_U200052_IO()
+{
+	LOG_INF("init U200052 IO expander");
+	// bit0 to bit5 is input (1)
+	set_pca6554apw_ioe_value(U200052_IO_I2C_BUS, U200052_IO_ADDR, CONFIG, 0x3F);
+	// io6,io7 default output 0
+	set_pca6554apw_ioe_value(U200052_IO_I2C_BUS, U200052_IO_ADDR, OUTPUT_PORT, 0x0);
 }

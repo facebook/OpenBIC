@@ -19,6 +19,10 @@
 #include <stdio.h>
 #include "plat_fru.h"
 #include "plat_cpld.h"
+#include "plat_class.h"
+#include "shell_iris_power.h"
+#include "plat_gpio.h"
+
 LOG_MODULE_REGISTER(shell_plat_power_good_status, LOG_LEVEL_INF);
 
 enum power_good_status_type {
@@ -146,7 +150,8 @@ void show_power_good_status(const struct shell *shell, size_t argc, char **argv)
 
 	for (int index = 0; index < PWRGD_MAX; index++) {
 		for (int i = 0; i < POWER_GOOD_STATUS_COUNT; i++) {
-			if (index != power_good_status_table[i].index) continue;
+			if (index != power_good_status_table[i].index)
+				continue;
 			uint8_t offset = power_good_status_table[i].cpld_offsets;
 			uint8_t bit = power_good_status_table[i].bit_loc;
 
@@ -161,8 +166,18 @@ void show_power_good_status(const struct shell *shell, size_t argc, char **argv)
 
 			uint8_t value = (reg_data >> bit) & 0x01;
 
-			shell_print(shell, "%-20s %d", power_good_status_table[i].power_rail_name, value);
-			break;
+			shell_print(shell, "%-20s %d", power_good_status_table[i].power_rail_name,
+				    value);
+			if (get_asic_board_id() == ASIC_BOARD_ID_EVB &&
+			    power_good_status_table[i].index == PWRGD_P1V8_R) {
+				//check pwrgd PWRGD_P1V8_AUX status is on
+				if (!value) {
+					shell_print(
+						shell,
+						"P1V8 is off, skip p3v3_osfp power good status check.");
+				} else
+					pwer_gd_get_status(shell);
+			}
 		}
 	}
 }

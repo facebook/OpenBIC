@@ -26,6 +26,20 @@ enum ASIC_BOOT0_COMPONENT {
 	BOOT0_MAX,
 };
 
+enum ASIC_IMG_NUM {
+	IMG_BOOT1_HAMSA,
+	IMG_BOOT0_HAMSA,
+	IMG_BOOT0_MEDHA0,
+	IMG_BOOT0_MEDHA1,
+	IMG_UNKNOWN,
+};
+
+enum FLASH_VER_CRC {
+	VERSION,
+	CRC32,
+	MAX_VER_CRC,
+};
+
 enum FIRMWARE_COMPONENT {
 	COMPNT_BIC,
 	COMPNT_VR_1,
@@ -51,4 +65,6 @@ bool find_sensor_id_and_name_by_firmware_comp_id(uint8_t comp_identifier, uint8_
 						 char *sensor_name);
 uint32_t plat_get_image_crc_checksum(uint8_t index);
 int sb_read_block(uint8_t slv_id, uint8_t cmd, uint8_t *data, uint32_t len);
+bool plat_get_image_crc_checksum_from_flash(uint8_t index, uint8_t data_type, uint32_t *data);
+uint32_t plat_get_image_version(uint8_t index);
 #endif /* _PLAT_FWUPDATE_H_ */

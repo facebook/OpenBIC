@@ -25,6 +25,7 @@
 #include <pmbus.h>
 #include <plat_cpld.h>
 #include "pldm_oem.h"
+#include "plat_led.h"
 
 LOG_MODULE_REGISTER(plat_event);
 
@@ -229,5 +230,6 @@ void plat_set_iris_temp_error_log(bool is_assert, uint8_t sensor_id)
 	if (is_assert == LOG_ASSERT) {
 		LOG_INF("Generated IRIS temp error code: 0x%x", error_code);
 	}
+	set_led_flag(true);
 	k_msleep(500);
 }

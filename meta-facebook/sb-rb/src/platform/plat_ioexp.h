@@ -33,6 +33,9 @@
 #define TCA6424A_CONFIG_0 0x0C
 #define TCA6424A_CONFIG_1 0x0D
 #define TCA6424A_CONFIG_2 0x0E
+#define U200052_IO_ADDR 0x3A
+#define U200052_IO_I2C_BUS I2C_BUS1
+#define U200051_IO_I2C_BUS I2C_BUS1
 
 #define HAMSA_MFIO19 1
 
@@ -42,4 +45,8 @@ bool tca6424a_i2c_read(uint8_t offset, uint8_t *data, uint8_t len);
 bool tca6424a_i2c_write(uint8_t offset, uint8_t *data, uint8_t len);
 bool tca6424a_i2c_write_bit(uint8_t offset, uint8_t bit, uint8_t val);
 void ioexp_init(void);
+void init_U200052_IO();
+void set_pca6554apw_ioe_value(uint8_t ioe_bus, uint8_t ioe_addr, uint8_t ioe_reg, uint8_t value);
+int get_pca6554apw_ioe_value(uint8_t ioe_bus, uint8_t ioe_addr, uint8_t ioe_reg, uint8_t *value);
+
 #endif

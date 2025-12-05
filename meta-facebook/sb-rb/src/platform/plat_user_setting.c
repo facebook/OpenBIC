@@ -520,7 +520,7 @@ bool temp_threshold_default_settings_init(void)
 		// set board temp threshold low to 0 degree
 		if (i == TOP_INLET_LOW_LIMIT || i == BOT_INLET_LOW_LIMIT ||
 		    i == BOT_OUTLET_LOW_LIMIT) {
-			temperature = 0;
+			temperature = 75000;
 		}
 		// set board temp threshold high to 85 degree
 		if (i == TOP_INLET_HIGH_LIMIT || i == BOT_INLET_HIGH_LIMIT ||

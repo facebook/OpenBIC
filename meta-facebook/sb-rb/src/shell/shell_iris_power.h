@@ -13,12 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <shell/shell.h>
+#ifndef PLAT_IRIS_POWER_H
+#define PLAT_IRIS_POWER_H
 
-#ifndef _PLAT_LED_h
-#define _PLAT_LED_h
-
-void heartbeat_led_handler(struct k_work *work);
-void plat_led_init(void);
-bool get_led_flag(void);
-void set_led_flag(bool flag_value);
-#endif /* _PLAT_LED_h */
+void power_on_p3v3_osfp();
+void pwer_gd_get_status(const struct shell *shell);
+#endif

@@ -12516,7 +12516,6 @@ void set_ioe_init_flag(uint8_t flag)
 struct k_thread quick_sensor_poll;
 K_KERNEL_STACK_MEMBER(quick_sensor_poll_stack, 1024);
 k_tid_t quick_sensor_tid;
-#define U200051_IO_ADDR (0x72 >> 1)
 
 void init_U200051_IO()
 {

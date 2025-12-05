@@ -23,6 +23,7 @@
 #include "plat_hook.h"
 #include "plat_event.h"
 #include <logging/log.h>
+#include "plat_led.h"
 #include "plat_class.h"
 #include "plat_ioexp.h"
 
@@ -240,7 +241,7 @@ void poll_cpld_registers()
 		// Save current alert status for next loop comparison
 		prev_alert_status = cpld_polling_alert_status;
 
-		if (!cpld_polling_alert_status || !cpld_polling_enable_flag)
+		if (!cpld_polling_enable_flag)
 			continue;
 
 		LOG_DBG("Polling CPLD registers");
@@ -279,6 +280,7 @@ void poll_cpld_registers()
 				if (cpld_info_table[i].event_type == VR_POWER_FAULT) {
 					process_mtia_vr_power_fault_sel(&cpld_info_table[i],
 									&data);
+					set_led_flag(true);
 				}
 				if (cpld_info_table[i].cpld_offset == VR_SMBUS_ALERT_EVENT_LOG_REG) {
 					//get sensor pmbus alert status(if temperature bit-2 is 1)
@@ -316,6 +318,7 @@ void poll_cpld_registers()
 									}
 									LOG_WRN("Temperature bit-%d is 1, write CPLD ASIC_VR_HOT_SWITCH bit-0 to 1", j);
 								}
+								set_led_flag(true);
 								break;
 							}
 						}

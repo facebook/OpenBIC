@@ -28,6 +28,8 @@
 #include "plat_iris_smbus.h"
 #include "plat_util.h"
 #include "plat_i2c.h"
+#include "shell_iris_power.h"
+#include "plat_class.h"
 
 LOG_MODULE_REGISTER(plat_isr);
 
@@ -90,6 +92,10 @@ void ISR_GPIO_RST_IRIS_PWR_ON_PLD_R1_N()
 	if (gpio_get(RST_IRIS_PWR_ON_PLD_R1_N)) {
 		ioexp_init();
 		set_bootstrap_table_val_to_ioexp();
+		if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
+			init_U200052_IO();
+			power_on_p3v3_osfp();
+		}
 	} else {
 		LOG_INF("dc off, clear io expander init flag");
 		set_ioe_init_flag(0);

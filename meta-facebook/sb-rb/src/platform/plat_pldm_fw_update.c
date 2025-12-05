@@ -38,6 +38,7 @@
 
 #define RESET_CPLD_ON 0x3F
 #define RESET_CPLD_OFF 0x00
+#define IRIS_BOOT0_IMG_SIZE 0x1FFFFB
 
 LOG_MODULE_REGISTER(plat_fwupdate);
 
@@ -45,8 +46,12 @@ static uint8_t pldm_pre_vr_update(void *fw_update_param);
 static uint8_t pldm_post_vr_update(void *fw_update_param);
 static uint8_t pldm_pre_bic_update(void *fw_update_param);
 static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len);
+static bool get_boot0_hamsa_fw_version(void *info_p, uint8_t *buf, uint8_t *len);
+static bool get_boot0_medha0_fw_version(void *info_p, uint8_t *buf, uint8_t *len);
+static bool get_boot0_medha1_fw_version(void *info_p, uint8_t *buf, uint8_t *len);
 
 static uint32_t crc_boot0[3] = { 0 };
+static uint32_t version_boot0[3] = { 0 };
 const struct device *i2c_dev;
 uint8_t slave_id = HAMSA_BOOT1_ADDR;
 static uint32_t write_addr = HAMSA_BOOT1_ASIC_MEM_ADDR;
@@ -116,12 +121,17 @@ void set_cpld_reset_reg(uint8_t value)
 {
 	uint8_t temp_data = 0;
 	plat_read_cpld(RESET, &temp_data, 1);
-	LOG_INF("cpld reset reg: 0x%x", temp_data);
+	LOG_DBG("cpld reset reg: 0x%x", temp_data);
 	temp_data = value; // set cpld reset
 	plat_write_cpld(RESET, &temp_data);
 	// check cpld reset reg
 	plat_read_cpld(RESET, &temp_data, 1);
-	LOG_INF("check cpld reset reg: 0x%x", temp_data);
+	LOG_DBG("check cpld reset reg: 0x%x", temp_data);
+	if (temp_data == value) {
+		LOG_INF("set cpld reset reg success");
+	} else {
+		LOG_INF("set cpld reset reg failed");
+	}
 }
 
 static uint8_t pldm_pre_mtia_flash_update(void *fw_update_param)
@@ -131,7 +141,7 @@ static uint8_t pldm_pre_mtia_flash_update(void *fw_update_param)
 	pldm_fw_update_param_t *p = (pldm_fw_update_param_t *)fw_update_param;
 	set_cpld_reset_reg(RESET_CPLD_OFF);
 	uint16_t spi_node = p->comp_id;
-	LOG_INF("MTIA flash comp id: 0x%x", p->comp_id);
+	LOG_DBG("MTIA flash comp id: 0x%x", p->comp_id);
 	switch (spi_node) {
 	case COMPNT_HAMSA:
 		change_spi_node_to_hamsa();
@@ -181,6 +191,15 @@ uint32_t plat_get_image_crc_checksum(uint8_t index)
 	}
 }
 
+uint32_t plat_get_image_version(uint8_t index)
+{
+	if (index >= BOOT0_MAX) {
+		return 0;
+	} else {
+		return version_boot0[index];
+	}
+}
+
 static uint8_t pldm_post_mtia_flash_update(void *fw_update_param)
 {
 	CHECK_NULL_ARG_WITH_RETURN(fw_update_param, 1);
@@ -188,11 +207,14 @@ static uint8_t pldm_post_mtia_flash_update(void *fw_update_param)
 
 	//read data back to calculate CRC32
 	uint8_t *rxbuf = NULL;
-	int remain = fw_update_cfg.image_size;
+	uint8_t *version_rxbuf = NULL;
+	// image data is from 0x0 to 0x1FFFFB, 0x1FFFFC to 0x1FFFFF is CRC32
+	int remain = IRIS_BOOT0_IMG_SIZE + 1;
 	uint32_t offset = 0;
 	uint32_t crc32 = 0;
 
 	rxbuf = malloc(PLAT_CRC32_READ_SIZE);
+	version_rxbuf = malloc(PLAT_CRC32_READ_SIZE);
 	if (rxbuf == NULL) {
 		LOG_ERR("Fail to allocate size %d", PLAT_CRC32_READ_SIZE);
 	} else {
@@ -218,16 +240,36 @@ static uint8_t pldm_post_mtia_flash_update(void *fw_update_param)
 		}
 	}
 	SAFE_FREE(rxbuf);
+	if (read_fw_image(0x1FFFF8, 3, version_rxbuf, DEVSPI_SPI1_CS1)) {
+		LOG_ERR("read flash : read_fw_image fail");
+		set_cpld_reset_reg(RESET_CPLD_ON);
+		SAFE_FREE(version_rxbuf);
+		return 1;
+	}
+	uint32_t ver_value = version_rxbuf[0] << 16 | version_rxbuf[1] << 8 | version_rxbuf[2];
 
+	LOG_DBG("version: 0x%x, crc32: 0x%x", ver_value, crc32);
 	switch (p->comp_id) {
 	case COMPNT_HAMSA:
 		crc_boot0[BOOT0_HAMSA] = crc32;
+		version_boot0[BOOT0_HAMSA] = ver_value;
+		LOG_DBG("version: 0x%x, crc32: 0x%x", version_boot0[BOOT0_HAMSA],
+			crc_boot0[BOOT0_HAMSA]);
+		SAFE_FREE(version_rxbuf);
 		break;
 	case COMPNT_MEDHA0:
 		crc_boot0[BOOT0_MEDHA0] = crc32;
+		version_boot0[BOOT0_MEDHA0] = ver_value;
+		LOG_DBG("version: 0x%x, crc32: 0x%x", version_boot0[BOOT0_MEDHA0],
+			crc_boot0[BOOT0_MEDHA0]);
+		SAFE_FREE(version_rxbuf);
 		break;
 	case COMPNT_MEDHA1:
 		crc_boot0[BOOT0_MEDHA1] = crc32;
+		version_boot0[BOOT0_MEDHA1] = ver_value;
+		LOG_DBG("version: 0x%x, crc32: 0x%x", version_boot0[BOOT0_MEDHA1],
+			crc_boot0[BOOT0_MEDHA1]);
+		SAFE_FREE(version_rxbuf);
 		break;
 	default:
 		break;
@@ -239,6 +281,119 @@ static uint8_t pldm_post_mtia_flash_update(void *fw_update_param)
 	set_cpld_reset_reg(RESET_CPLD_ON);
 	return 0;
 }
+
+bool plat_get_image_crc_checksum_from_flash(uint8_t index, uint8_t data_type, uint32_t *data)
+{
+	if (index != COMPNT_HAMSA && index != COMPNT_MEDHA0 && index != COMPNT_MEDHA1) {
+		return false;
+	} else {
+		uint16_t spi_node = index;
+		uint8_t flash_index = 0;
+		LOG_DBG("Read flash comp id: 0x%x", index);
+		switch (spi_node) {
+		case COMPNT_HAMSA:
+			change_spi_node_to_hamsa();
+			LOG_INF("change spi node to hamsa");
+			flash_index = BOOT0_HAMSA;
+			break;
+		case COMPNT_MEDHA0:
+			change_spi_node_to_medha0();
+			LOG_INF("change spi node to medha0");
+			flash_index = BOOT0_MEDHA0;
+			break;
+		case COMPNT_MEDHA1:
+			change_spi_node_to_medha1();
+			LOG_INF("change spi node to medha1");
+			flash_index = BOOT0_MEDHA1;
+			break;
+		default:
+			LOG_ERR("Unsupported read flash comp id: 0x%x", index);
+			set_cpld_reset_reg(RESET_CPLD_ON);
+			return false;
+		}
+		// re-init flash
+		const struct device *flash_dev;
+		flash_dev = device_get_binding("spi_fiu0_cs1");
+		int rc = 0;
+		rc = spi_nor_re_init(flash_dev);
+		if (rc != 0) {
+			LOG_ERR("read flash : spi_nor_re_init fail");
+			set_cpld_reset_reg(RESET_CPLD_ON);
+			return false;
+		}
+		//read data back to combine in Ver and CRC32
+		uint8_t *ver_rxbuf = NULL;
+		uint8_t *crc32_rxbuf = NULL;
+		ver_rxbuf = malloc(128);
+		crc32_rxbuf = malloc(128);
+		/*
+		0x1FFFF8 (Byte 0): VERSION_PATCH = 0x00
+		0x1FFFF9 (Byte 1): VERSION_MINOR  = 0x06
+		0x1FFFFA (Byte 2): VERSION_MAJOR  = 0x01
+		
+		0x1FFFFC: CRC32 byte 0 (LSB)
+		0x1FFFFD: CRC32 byte 1      
+		0x1FFFFE: CRC32 byte 2      
+		0x1FFFFF: CRC32 byte 3 (MSB)
+		
+		VER : 01.06.00 | CRC32 : e9e2b0ba
+		*/
+		int test = read_fw_image(0x1FFFF8, 3, ver_rxbuf, DEVSPI_SPI1_CS1);
+		LOG_DBG("Read flash test: %d", test);
+		if (read_fw_image(0x1FFFF8, 3, ver_rxbuf, DEVSPI_SPI1_CS1)) {
+			LOG_ERR("read flash : read_fw_image fail");
+			set_cpld_reset_reg(RESET_CPLD_ON);
+			SAFE_FREE(ver_rxbuf);
+			SAFE_FREE(crc32_rxbuf);
+			return false;
+		}
+		if (read_fw_image(0x1FFFFC, 4, crc32_rxbuf, DEVSPI_SPI1_CS1)) {
+			LOG_ERR("read flash : read_fw_image fail");
+			set_cpld_reset_reg(RESET_CPLD_ON);
+			SAFE_FREE(ver_rxbuf);
+			SAFE_FREE(crc32_rxbuf);
+			return false;
+		}
+
+		uint32_t ver = 0;
+		ver = ver_rxbuf[0] << 16 | ver_rxbuf[1] << 8 | ver_rxbuf[2];
+		uint32_t crc32 = 0;
+		crc32 = crc32_rxbuf[0] << 24 | crc32_rxbuf[1] << 16 | crc32_rxbuf[2] << 8 |
+			crc32_rxbuf[3];
+		LOG_DBG("VER : 0x%x | CRC32 : 0x%x", ver, crc32);
+		switch (data_type) {
+		case VERSION:
+			set_cpld_reset_reg(RESET_CPLD_ON);
+			*data = ver;
+			LOG_DBG("version flash idx: %d", flash_index);
+			version_boot0[flash_index] = ver;
+			LOG_DBG("version: 0x%x", version_boot0[flash_index]);
+
+			break;
+		case CRC32:
+			set_cpld_reset_reg(RESET_CPLD_ON);
+			*data = crc32;
+			LOG_DBG("crc flash idx: %d", flash_index);
+			crc_boot0[flash_index] = crc32;
+			LOG_DBG("crc: 0x%x", crc_boot0[flash_index]);
+
+			break;
+		default:
+			LOG_ERR("Unsupported data type: 0x%x", data_type);
+			set_cpld_reset_reg(RESET_CPLD_ON);
+			SAFE_FREE(ver_rxbuf);
+			SAFE_FREE(crc32_rxbuf);
+			return false;
+			break;
+		}
+
+		SAFE_FREE(ver_rxbuf);
+		SAFE_FREE(crc32_rxbuf);
+		set_cpld_reset_reg(RESET_CPLD_ON);
+		return true;
+	}
+}
+
 int sb_write_byte(uint8_t cmd, uint8_t data)
 {
 	return i2c_reg_write_byte(i2c_dev, slave_id, cmd, data);
@@ -586,22 +741,151 @@ err_i2c:
 		LOG_ERR("smbus error status = 0x%x\n", rd);
 	return 1;
 }
+#define ASIC_VERSION_BYTE 0x68
+#define I2C_MAX_RETRY 3
+bool get_fw_version_from_asic(uint8_t *data)
+{
+	I2C_MSG i2c_msg = { .bus = I2C_BUS12, .target_addr = 0x32 };
+	i2c_msg.tx_len = 1;
+	i2c_msg.rx_len = 11;
+	i2c_msg.data[0] = ASIC_VERSION_BYTE;
+	i2c_master_read(&i2c_msg, I2C_MAX_RETRY);
 
-// clang-format off
+	LOG_INF(" boot0 VER : %02d.%02d.%02d", i2c_msg.data[9], i2c_msg.data[8], i2c_msg.data[7]);
+	uint32_t data_p = i2c_msg.data[9] << 16 | i2c_msg.data[8] << 8 | i2c_msg.data[7];
+	memcpy(data, &data_p, 4);
+	return true;
+}
+
+static bool get_boot1_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
+{
+	bool ret = false;
+	const char *remain_str_p = ", BOOT1: ";
+	uint8_t *buf_p = buf;
+	*len = 0;
+
+	memcpy(buf_p, remain_str_p, strlen(remain_str_p));
+	buf_p += strlen(remain_str_p);
+	*len += strlen(remain_str_p);
+	uint8_t *version_tmp = NULL;
+	uint32_t version = get_fw_version_from_asic(version_tmp);
+
+	*len += bin2hex((uint8_t *)&version, 4, buf_p, 4);
+	buf_p += 4;
+
+	ret = true;
+	return ret;
+}
+
+static bool get_boot0_hamsa_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
+{
+	CHECK_NULL_ARG_WITH_RETURN(info_p, false);
+	CHECK_NULL_ARG_WITH_RETURN(buf, false);
+	CHECK_NULL_ARG_WITH_RETURN(len, false);
+	bool ret = false;
+	const char *remain_str_p = "flash hamsa BOOT0: ";
+	uint8_t *buf_p = buf;
+	*len = 0;
+
+	memcpy(buf_p, remain_str_p, strlen(remain_str_p));
+	buf_p += strlen(remain_str_p);
+	*len += strlen(remain_str_p);
+	uint8_t *version = (uint8_t *)&version_boot0[BOOT0_HAMSA];
+	LOG_INF("version_boot0[BOOT0_HAMSA]: %x", version_boot0[BOOT0_HAMSA]);
+	// bin2hex: 3 bytes → 6 charsgit s
+	int hex_len = bin2hex(version, 3, buf_p, 6);
+
+	buf_p += hex_len;
+	*len += hex_len;
+
+	const char *space = " ";
+	memcpy(buf_p, space, strlen(space));
+	buf_p += strlen(space);
+	*len += strlen(space);
+
+	uint8_t *crc_checksum = (uint8_t *)&crc_boot0[BOOT0_HAMSA];
+	int crc_hex_len = bin2hex(crc_checksum, 4, buf_p, 8);
+	buf_p += crc_hex_len;
+	*len += crc_hex_len;
+
+	ret = true;
+	return ret;
+}
+static bool get_boot0_medha0_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
+{
+	CHECK_NULL_ARG_WITH_RETURN(info_p, false);
+	CHECK_NULL_ARG_WITH_RETURN(buf, false);
+	CHECK_NULL_ARG_WITH_RETURN(len, false);
+
+	bool ret = false;
+	const char *remain_str_p = "flash medha0 BOOT0: ";
+	uint8_t *buf_p = buf;
+	*len = 0;
+
+	memcpy(buf_p, remain_str_p, strlen(remain_str_p));
+	buf_p += strlen(remain_str_p);
+	*len += strlen(remain_str_p);
+	uint8_t *version = (uint8_t *)&version_boot0[BOOT0_MEDHA0];
+	LOG_INF("version_boot0[BOOT0_MEDHA0]: %x", version_boot0[BOOT0_MEDHA0]);
+	// bin2hex: 3 bytes → 6 chars
+	int hex_len = bin2hex(version, 3, buf_p, 6);
+	buf_p += hex_len;
+	*len += hex_len;
+
+	const char *space = " ";
+	memcpy(buf_p, space, strlen(space));
+	buf_p += strlen(space);
+	*len += strlen(space);
+
+	uint8_t *crc_checksum = (uint8_t *)&crc_boot0[BOOT0_MEDHA0];
+	int crc_hex_len = bin2hex(crc_checksum, 4, buf_p, 8);
+	buf_p += crc_hex_len;
+	*len += crc_hex_len;
+
+	ret = true;
+	return ret;
+}
+static bool get_boot0_medha1_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
+{
+	CHECK_NULL_ARG_WITH_RETURN(info_p, false);
+	CHECK_NULL_ARG_WITH_RETURN(buf, false);
+	CHECK_NULL_ARG_WITH_RETURN(len, false);
+	bool ret = false;
+	const char *remain_str_p = "flash medha1 BOOT0: ";
+	uint8_t *buf_p = buf;
+	*len = 0;
+	memcpy(buf_p, remain_str_p, strlen(remain_str_p));
+	buf_p += strlen(remain_str_p);
+	*len += strlen(remain_str_p);
+	uint8_t *version = (uint8_t *)&version_boot0[BOOT0_MEDHA1];
+	LOG_INF("version_boot0[BOOT0_MEDHA1]: %x", version_boot0[BOOT0_MEDHA1]);
+	// bin2hex: 3 bytes → 6 chars
+	int hex_len = bin2hex(version, 3, buf_p, 6);
+	buf_p += hex_len;
+	*len += hex_len;
+
+	const char *space = " ";
+	memcpy(buf_p, space, strlen(space));
+	buf_p += strlen(space);
+	*len += strlen(space);
+
+	uint8_t *crc_checksum = (uint8_t *)&crc_boot0[BOOT0_MEDHA1];
+	int crc_hex_len = bin2hex(crc_checksum, 4, buf_p, 8);
+	buf_p += crc_hex_len;
+	*len += crc_hex_len;
+
+	ret = true;
+	return ret;
+}
+//clang-format off
 #define VR_COMPONENT_DEF(comp_id)                                                                  \
 	{                                                                                          \
-		.enable = true,                                                                    \
-		.comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,                                 \
-		.comp_identifier = comp_id,                                                        \
-		.comp_classification_index = 0x00,                                                 \
-		.pre_update_func = pldm_pre_vr_update,                                             \
-		.update_func = pldm_vr_update,                                                     \
-		.pos_update_func = pldm_post_vr_update,                                            \
-		.inf = COMP_UPDATE_VIA_I2C,                                                        \
-		.activate_method = COMP_ACT_AC_PWR_CYCLE,                                          \
-		.self_act_func = NULL,                                                             \
-		.get_fw_version_fn = get_vr_fw_version,                                            \
-		.self_apply_work_func = NULL,                                                      \
+		.enable = true, .comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,                 \
+		.comp_identifier = comp_id, .comp_classification_index = 0x00,                     \
+		.pre_update_func = pldm_pre_vr_update, .update_func = pldm_vr_update,              \
+		.pos_update_func = pldm_post_vr_update, .inf = COMP_UPDATE_VIA_I2C,                \
+		.activate_method = COMP_ACT_AC_PWR_CYCLE, .self_act_func = NULL,                   \
+		.get_fw_version_fn = get_vr_fw_version, .self_apply_work_func = NULL,              \
 		.comp_version_str = NULL,                                                          \
 	}
 // clang-format on
@@ -646,7 +930,7 @@ pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
 		.inf = COMP_UPDATE_VIA_SPI,
 		.activate_method = COMP_ACT_SELF,
 		.self_act_func = NULL,
-		.get_fw_version_fn = NULL,
+		.get_fw_version_fn = get_boot0_hamsa_fw_version,
 		.self_apply_work_func = NULL,
 		.comp_version_str = NULL,
 	},
@@ -661,7 +945,7 @@ pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
 		.inf = COMP_UPDATE_VIA_SPI,
 		.activate_method = COMP_ACT_SELF,
 		.self_act_func = NULL,
-		.get_fw_version_fn = NULL,
+		.get_fw_version_fn = get_boot0_medha0_fw_version,
 		.self_apply_work_func = NULL,
 		.comp_version_str = NULL,
 	},
@@ -676,7 +960,7 @@ pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
 		.inf = COMP_UPDATE_VIA_SPI,
 		.activate_method = COMP_ACT_SELF,
 		.self_act_func = NULL,
-		.get_fw_version_fn = NULL,
+		.get_fw_version_fn = get_boot0_medha1_fw_version,
 		.self_apply_work_func = NULL,
 		.comp_version_str = NULL,
 	},
@@ -692,7 +976,7 @@ pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
 		.inf = COMP_UPDATE_VIA_I2C,
 		.activate_method = COMP_ACT_SELF,
 		.self_act_func = NULL,
-		.get_fw_version_fn = NULL,
+		.get_fw_version_fn = get_boot1_fw_version,
 		.self_apply_work_func = NULL,
 		.comp_version_str = NULL,
 	},
@@ -718,14 +1002,20 @@ uint8_t plat_pldm_query_device_identifiers(const uint8_t *buf, uint16_t len, uin
 	// Set the device id for sd bic
 	uint8_t deviceId[PLDM_PCI_DEVICE_ID_LENGTH] = { 0x00, 0x00 };
 
+	uint8_t slotNumber = plat_get_eid() / 10;
+	uint8_t slot[PLDM_ASCII_MODEL_NUMBER_SHORT_STRING_LENGTH] = { (char)(slotNumber + '0') };
+
 	uint8_t total_size_of_iana_descriptor =
 		sizeof(struct pldm_descriptor_tlv) + sizeof(iana) - 1;
 
 	uint8_t total_size_of_device_id_descriptor =
 		sizeof(struct pldm_descriptor_tlv) + sizeof(deviceId) - 1;
 
+	uint8_t total_size_of_slot_descriptor =
+		sizeof(struct pldm_descriptor_tlv) + sizeof(slot) - 1;
+
 	if (sizeof(struct pldm_query_device_identifiers_resp) + total_size_of_iana_descriptor +
-		    total_size_of_device_id_descriptor >
+		    total_size_of_device_id_descriptor + total_size_of_slot_descriptor >
 	    PLDM_MAX_DATA_SIZE) {
 		LOG_ERR("QueryDeviceIdentifiers data length is over PLDM_MAX_DATA_SIZE define size %d",
 			PLDM_MAX_DATA_SIZE);
@@ -764,11 +1054,27 @@ uint8_t plat_pldm_query_device_identifiers(const uint8_t *buf, uint16_t len, uin
 	memcpy(end_of_id_ptr, tlv_ptr, total_size_of_device_id_descriptor);
 	free(tlv_ptr);
 
-	resp_p->device_identifiers_len =
-		total_size_of_iana_descriptor + total_size_of_device_id_descriptor;
+	tlv_ptr = malloc(total_size_of_slot_descriptor);
+	if (tlv_ptr == NULL) {
+		LOG_ERR("Memory allocation failed!");
+		return PLDM_ERROR;
+	}
+
+	tlv_ptr->descriptor_type = PLDM_ASCII_MODEL_NUMBER_SHORT_STRING;
+	tlv_ptr->descriptor_length = PLDM_ASCII_MODEL_NUMBER_SHORT_STRING_LENGTH;
+	memcpy(tlv_ptr->descriptor_data, slot, sizeof(slot));
+
+	end_of_id_ptr += total_size_of_device_id_descriptor;
+	memcpy(end_of_id_ptr, tlv_ptr, total_size_of_slot_descriptor);
+	free(tlv_ptr);
+
+	resp_p->device_identifiers_len = total_size_of_iana_descriptor +
+					 total_size_of_device_id_descriptor +
+					 total_size_of_slot_descriptor;
 
 	*resp_len = sizeof(struct pldm_query_device_identifiers_resp) +
-		    total_size_of_iana_descriptor + total_size_of_device_id_descriptor;
+		    total_size_of_iana_descriptor + total_size_of_device_id_descriptor +
+		    total_size_of_slot_descriptor;
 
 	LOG_INF("pldm_query_device_identifiers done");
 	return PLDM_SUCCESS;

@@ -66,9 +66,10 @@ void pal_post_init()
 	init_fru_info();
 	plat_adc_rainbow_init();
 	init_load_eeprom_log();
-	// if board id >= EVB EVT2(FAB2)
+	// if board id >= EVB EVT1B(FAB2)
 	if (get_asic_board_id() == ASIC_BOARD_ID_EVB && get_board_rev_id() >= REV_ID_EVT1B) {
 		quick_sensor_poll_init();
+		init_U200052_IO();
 	}
 	// if board id == EVB
 	if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {

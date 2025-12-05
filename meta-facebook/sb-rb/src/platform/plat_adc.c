@@ -733,7 +733,7 @@ void adc_rainbow_polling_handler(void *p1, void *p2, void *p3)
 				ads7066_read_voltage(ADC_RB_IDX_MEDHA1);
 				break;
 			default:
-				LOG_ERR("Invalid ADC index %d", adc_idx_read);
+				LOG_DBG("Invalid ADC index %d", adc_idx_read);
 				break;
 			}
 		}

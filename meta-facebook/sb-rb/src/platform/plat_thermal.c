@@ -22,6 +22,7 @@
 #include "plat_util.h"
 #include "plat_i2c.h"
 #include "plat_pldm_sensor.h"
+#include "plat_led.h"
 
 LOG_MODULE_REGISTER(plat_thermal);
 

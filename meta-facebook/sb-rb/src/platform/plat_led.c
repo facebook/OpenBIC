@@ -26,6 +26,18 @@ LOG_MODULE_REGISTER(plat_led);
 
 K_WORK_DELAYABLE_DEFINE(heartbeat_led_work, heartbeat_led_handler);
 
+bool led_set_flag = false;
+
+void set_led_flag(bool flag_value)
+{
+	led_set_flag = flag_value;
+}
+
+bool get_led_flag(void)
+{
+	return led_set_flag;
+}
+
 void heartbeat_led_handler(struct k_work *work)
 {
 	/* Lit heartbeat LED */
@@ -64,9 +76,15 @@ void heartbeat_led_handler(struct k_work *work)
 
 		uint16_t candidate_interval = 500;
 		if (cache_reading <= 70000) { //70 degree C
-			candidate_interval = 500; // 1fps
+			if (led_set_flag) {
+				// event occurred, set the interval to 2s per sec
+				candidate_interval = 1000;
+			} else {
+				// normal, set the interval to 1s per sec
+				candidate_interval = 500;
+			}
 		} else if (cache_reading <= 100000) { //100 degree C
-			candidate_interval = 250; // 0.5fps
+			candidate_interval = 250; // 0.5 time per sec
 		} else {
 			candidate_interval = 50;
 		}
