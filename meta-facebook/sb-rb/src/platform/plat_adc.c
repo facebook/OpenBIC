@@ -235,9 +235,9 @@ static void update_adc_info(uint16_t raw_data, uint8_t base_idx, float vref)
 					     1000;
 		// transfer to uint16_t
 		uint16_t voltage_packed = float_voltage_transfer_to_uint16(temp_voltage_value);
-		adc->vr_sum -= adc->vr_voltage_buf[adc->buf_idx];
+		adc->vr_sum -= uint16_voltage_transfer_to_float(adc->vr_voltage_buf[adc->buf_idx]);
 		adc->vr_voltage_buf[adc->buf_idx] = voltage_packed;
-		adc->vr_sum += adc->vr_voltage_buf[adc->buf_idx];
+		adc->vr_sum += uint16_voltage_transfer_to_float(adc->vr_voltage_buf[adc->buf_idx]);
 		// average pwr = average voltage * average current
 		adc->pwr_avg_val =
 			(adc->vr_sum / adc->avg_times) * adc_raw_mv_to_apms(adc->avg_val, vref);
