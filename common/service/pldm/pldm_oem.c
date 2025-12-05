@@ -43,6 +43,42 @@ static uint8_t oem_wf_read_spd_chunk(void *mctp_inst, uint8_t *buf, uint16_t len
 				     void *ext_params);
 #endif
 
+__weak uint8_t force_update_flag_set_cmd(void *mctp_inst, uint8_t *buf, uint16_t len,
+					 uint8_t instance_id, uint8_t *resp, uint16_t *resp_len,
+					 void *ext_params)
+{
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp_len, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(ext_params, PLDM_ERROR);
+
+	uint8_t *completion_code_p = resp;
+
+	*completion_code_p = PLDM_ERROR_UNSUPPORTED_PLDM_CMD;
+	*resp_len = 1;
+
+	return PLDM_ERROR_UNSUPPORTED_PLDM_CMD;
+}
+
+__weak uint8_t force_update_flag_get_cmd(void *mctp_inst, uint8_t *buf, uint16_t len,
+					 uint8_t instance_id, uint8_t *resp, uint16_t *resp_len,
+					 void *ext_params)
+{
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp_len, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(ext_params, PLDM_ERROR);
+
+	uint8_t *completion_code_p = resp;
+
+	*completion_code_p = PLDM_ERROR_UNSUPPORTED_PLDM_CMD;
+	*resp_len = 1;
+
+	return PLDM_ERROR_UNSUPPORTED_PLDM_CMD;
+}
+
 __weak uint8_t sensor_polling_cmd(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t instance_id,
 				  uint8_t *resp, uint16_t *resp_len, void *ext_params)
 {
@@ -251,6 +287,8 @@ static pldm_cmd_handler pldm_oem_cmd_tbl[] = {
 #ifdef ENABLE_VISTARA
 	{ PLDM_OEM_WF_READ_SPD_CHUNK, oem_wf_read_spd_chunk },
 #endif
+	{ PLDM_OEM_FORCE_UPDATE_SETTING_CMD, force_update_flag_set_cmd },
+	{ PLDM_OEM_FORCE_UPDATE_GETTING_CMD, force_update_flag_get_cmd },
 };
 
 uint8_t pldm_oem_handler_query(uint8_t code, void **ret_fn)
