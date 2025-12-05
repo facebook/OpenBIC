@@ -862,12 +862,14 @@ static uint8_t reverse_bits(uint8_t byte, uint8_t bit_cnt)
 	return reversed_byte;
 }
 
+static inline uint8_t get_val_from_strap_index(uint8_t strap_index)
+{
+	return ((bootstrap_table[strap_index].change_setting_value & 0x01)
+		<< bootstrap_table[strap_index].bit_offset);
+}
+
 bool set_bootstrap_table_val_to_ioexp(void)
 {
-#define GET_VAL_FROM_STRAP_INDEX(STRAP_INDEX)                                                      \
-	((bootstrap_table[STRAP_INDEX].change_setting_value & 0x01)                                \
-	 << bootstrap_table[STRAP_INDEX].bit_offset)
-
 	uint8_t data[2] = { 0 };
 	data[0] = bootstrap_table[STRAP_INDEX_OWL_E_BOOT_SOURCE_0_7].change_setting_value;
 	data[1] = bootstrap_table[STRAP_INDEX_OWL_W_BOOT_SOURCE_0_7].change_setting_value;
@@ -878,18 +880,16 @@ bool set_bootstrap_table_val_to_ioexp(void)
 
 	// tca6424a only in EVB
 	if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
-		data[0] = GET_VAL_FROM_STRAP_INDEX(STRAP_INDEX_HAMSA_MFIO6) |
-			  GET_VAL_FROM_STRAP_INDEX(STRAP_INDEX_HAMSA_MFIO8);
-
-		const uint8_t straps_port2[] = {
-			STRAP_INDEX_HAMSA_MFIO10, STRAP_INDEX_MEDHA0_MFIO6,
-			STRAP_INDEX_MEDHA0_MFIO8, STRAP_INDEX_MEDHA0_MFIO10,
-			STRAP_INDEX_MEDHA1_MFIO6, STRAP_INDEX_MEDHA1_MFIO8,
-			STRAP_INDEX_MEDHA1_MFIO10
-		};
-		data[1] = 0;
-		for (uint8_t i = 0; i < ARRAY_SIZE(straps_port2); i++)
-			data[1] |= GET_VAL_FROM_STRAP_INDEX(straps_port2[i]);
+		uint8_t port1_data = 0;
+		uint8_t port2_data = 0;
+		for (uint8_t i = STRAP_INDEX_HAMSA_MFIO6; i <= STRAP_INDEX_MEDHA1_MFIO10; i++) {
+			if (bootstrap_table[i].cpld_offsets == TCA6424A_OUTPUT_PORT_1)
+				port1_data |= get_val_from_strap_index(i);
+			else
+				port2_data |= get_val_from_strap_index(i);
+		}
+		data[0] = port1_data;
+		data[1] = port2_data;
 		if (!tca6424a_i2c_write(TCA6424A_OUTPUT_PORT_1, data, 2)) {
 			LOG_ERR("Can't set tca6424a from bootstrap_table");
 			return false;
@@ -898,6 +898,7 @@ bool set_bootstrap_table_val_to_ioexp(void)
 
 	return true;
 }
+
 bool set_ioexp_val_to_bootstrap_table(void)
 {
 	uint8_t data[2] = { 0x00, 0x00 };
@@ -916,10 +917,9 @@ bool set_ioexp_val_to_bootstrap_table(void)
 		}
 		for (uint8_t i = STRAP_INDEX_HAMSA_MFIO6; i <= STRAP_INDEX_MEDHA1_MFIO10; i++) {
 			// check data from port1 or port2
-			uint8_t tmp =
-				((i == STRAP_INDEX_HAMSA_MFIO6) || (i == STRAP_INDEX_HAMSA_MFIO8)) ?
-					data[0] :
-					data[1];
+			uint8_t tmp = (bootstrap_table[i].cpld_offsets == TCA6424A_OUTPUT_PORT_1) ?
+					      data[0] :
+					      data[1];
 			bootstrap_table[i].change_setting_value =
 				(tmp >> bootstrap_table[i].bit_offset) & 0x01;
 		}
@@ -1113,8 +1113,7 @@ bool set_bootstrap_val_to_device(uint8_t strap, uint8_t val)
 	case STRAP_TYPE_IOEXP_TCA6424A:
 		// tca6424a only in EVB
 		if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
-			if (!tca6424a_i2c_write_bit(bootstrap_table[strap].cpld_offsets,
-						    bootstrap_table[strap].bit_offset, val))
+			if (!tca6424a_i2c_write(bootstrap_table[strap].cpld_offsets, &val, 1))
 				return false;
 		}
 		break;
