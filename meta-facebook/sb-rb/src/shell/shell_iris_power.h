@@ -17,6 +17,15 @@
 #ifndef PLAT_IRIS_POWER_H
 #define PLAT_IRIS_POWER_H
 
+enum PWR_CLOCK_COMPONENT {
+	CLK_BUF_100M_U85,
+	CLK_BUF_100M_U87,
+	CLK_BUF_100M_U88,
+	CLK_GEN_100M_U86,
+	CLK_COMPONENT_MAX
+};
+
 void power_on_p3v3_osfp();
 void pwer_gd_get_status(const struct shell *shell);
+void clear_clock_status(const struct shell *shell, uint8_t clock_index);
 #endif

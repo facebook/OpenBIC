@@ -96,6 +96,9 @@ void ISR_GPIO_RST_IRIS_PWR_ON_PLD_R1_N()
 			init_U200052_IO();
 			power_on_p3v3_osfp();
 		}
+		for (int i = 0; i < CLK_COMPONENT_MAX; i++) {
+			clear_clock_status(NULL, i);
+		}
 	} else {
 		LOG_INF("dc off, clear io expander init flag");
 		set_ioe_init_flag(0);
