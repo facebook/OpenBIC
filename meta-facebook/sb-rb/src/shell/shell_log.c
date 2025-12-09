@@ -32,8 +32,8 @@ const cpld_bit_name_table_t cpld_bit_name_table[] = {
 	{ VR_POWER_FAULT_1_REG,
 	  "VR Power Fault   (1:Power Fault, 0=Normal)",
 	  {
-		  "RSVD",
-		  "RSVD",
+		  "P0V75_AVDD_HCSL",
+		  "P4V2",
 		  "HAMSA_VDDHRXTX_PCIE",
 		  "HAMSA_AVDD_PCIE",
 		  "OWL_W_TRVDD0P75",
