@@ -2594,8 +2594,8 @@ bool get_plat_sensor_vr_polling_enable_flag()
 
 bool is_adc_access(uint8_t sensor_num)
 {
-	if (!is_pcie_switch_access(PEX90144_CFG_ID) || !get_plat_sensor_adc_polling_enable_flag() ||
-	    !get_plat_sensor_polling_enable_flag()) {
+	if (!get_plat_sensor_adc_polling_enable_flag() ||
+	    !get_plat_sensor_polling_enable_flag() || !is_pcie_switch_access(PEX90144_CFG_ID)) {
 		LOG_DBG("Polling disabled: ADC polling enable flag=%d, general polling enable flag=%d",
 			get_plat_sensor_adc_polling_enable_flag(),
 			get_plat_sensor_polling_enable_flag());
