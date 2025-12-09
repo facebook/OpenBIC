@@ -70,7 +70,7 @@ struct i2c_target_data *test_for_reading = NULL;
 /* I2C target init-enable table */
 const bool I2C_TARGET_ENABLE_TABLE[MAX_TARGET_NUM] = {
 	TARGET_DISABLE, TARGET_DISABLE, TARGET_DISABLE, TARGET_DISABLE,
-	TARGET_DISABLE, TARGET_ENABLE,	TARGET_ENABLE,	TARGET_DISABLE,
+	TARGET_DISABLE, TARGET_ENABLE,  TARGET_ENABLE,  TARGET_DISABLE,
 	TARGET_DISABLE, TARGET_DISABLE, TARGET_DISABLE, TARGET_DISABLE,
 };
 
@@ -396,23 +396,19 @@ void vr_power_reading(uint8_t *buffer, size_t buf_size)
 			continue;
 		}
 
-		uint8_t status = SENSOR_UNAVAILABLE;
-		int reading = 0;
-		uint8_t sensor_operational_state = PLDM_SENSOR_STATUSUNKOWN;
+		uint16_t val = 0;
+		float float_value = 0;
+		float_value = get_sensor_reading_cache_as_float(vr_pwr_sensor_table[i]);
+		val = (float_value + 500) / 1000;
 
-		status = pldm_sensor_get_reading_from_cache(vr_pwr_sensor_table[i], &reading,
-							    &sensor_operational_state);
-		// reading value unit is mW need to convert to W
-		reading = (reading + 500) / 1000;
-		uint16_t val = (uint16_t)reading;
 		switch (vr_pwr_sensor_table[i]) {
 		case SENSOR_NUM_ASIC_P0V85_MEDHA0_VDD_PWR_W:
 			memcpy(&buffer[6], &val, 2);
-			medha0 = reading;
+			medha0 = float_value;
 			break;
 		case SENSOR_NUM_ASIC_P0V85_MEDHA1_VDD_PWR_W:
 			memcpy(&buffer[8], &val, 2);
-			medha1 = reading;
+			medha1 = float_value;
 			break;
 		case SENSOR_NUM_ASIC_P1V1_VDDQC_HBM0246_PWR_W:
 			memcpy(&buffer[10], &val, 2);
@@ -457,24 +453,20 @@ void vr_power_reading(uint8_t *buffer, size_t buf_size)
 			// do nothing
 			break;
 		}
-		LOG_DBG("Sensor 0x%x: status = %d, reading = 0x%x", vr_pwr_sensor_table[i], status,
-			reading);
 
 		if (vr_pwr_sensor_table[i] != SENSOR_NUM_ASIC_P0V85_MEDHA0_VDD_PWR_W &&
 		    vr_pwr_sensor_table[i] != SENSOR_NUM_ASIC_P0V85_MEDHA1_VDD_PWR_W) {
-			x += reading;
+			x += float_value;
 		}
 	}
 	int reading;
 	get_cpld_polling_power_info(&reading);
-	reading = (reading + 500) / 1000;
 	uint16_t val = (uint16_t)reading;
 	memcpy(&buffer[36], &val, 2);
-	x += reading;
 
-	chiplet0 = medha0 + 0.5 * x;
-	chiplet1 = medha1 + 0.5 * x;
-	uint16_t val_x = (uint16_t)x;
+	chiplet0 = ((medha0 + 0.5 * x) + 500) / 1000;
+	chiplet1 = ((medha1 + 0.5 * x) + 500) / 1000;
+	uint16_t val_x = (uint16_t)(x + 500) / 1000;
 	uint16_t val_c0 = (uint16_t)chiplet0;
 	uint16_t val_c1 = (uint16_t)chiplet1;
 	memcpy(&buffer[0], &val_x, 2);
@@ -730,6 +722,23 @@ static bool command_reply_data_handle(void *arg)
 				LOG_HEXDUMP_DBG(data->target_rd_msg.msg,
 						data->target_rd_msg.msg_length, "vr power reading");
 			} break;
+			case MEDHA_SENSOR_VALUE_REG: {
+				data->target_rd_msg.msg_length = 4;
+				uint16_t sensor_value;
+				sensor_value = (get_sensor_reading_cache_as_float(
+							SENSOR_NUM_ASIC_P0V85_MEDHA0_VDD_PWR_W) +
+						500) /
+					       1000;
+				memcpy(&data->target_rd_msg.msg[0], &sensor_value,
+				       sizeof(sensor_value));
+				sensor_value = (get_sensor_reading_cache_as_float(
+							SENSOR_NUM_ASIC_P0V85_MEDHA1_VDD_PWR_W) +
+						500) /
+					       1000;
+				memcpy(&data->target_rd_msg.msg[2], &sensor_value,
+				       sizeof(sensor_value));
+
+			} break;
 			case TRAY_INFO_REG: {
 				/* TRAY_INFO_REG:
 				 * Byte0: MMC slot
@@ -874,10 +883,10 @@ void set_bootstrap_element_handler()
 	}
 }
 uint8_t vr_pwr_alert_table[] = {
-	SENSOR_NUM_ASIC_P0V85_MEDHA0_VDD_PWR_W,	  SENSOR_NUM_ASIC_P0V85_MEDHA1_VDD_PWR_W,
+	SENSOR_NUM_ASIC_P0V85_MEDHA0_VDD_PWR_W,   SENSOR_NUM_ASIC_P0V85_MEDHA1_VDD_PWR_W,
 	SENSOR_NUM_ASIC_P1V1_VDDQC_HBM0246_PWR_W, SENSOR_NUM_ASIC_P0V75_VDDPHY_HBM0246_PWR_W,
 	SENSOR_NUM_ASIC_P1V1_VDDQC_HBM1357_PWR_W, SENSOR_NUM_ASIC_P0V75_VDDPHY_HBM1357_PWR_W,
-	SENSOR_NUM_ASIC_P0V75_MAX_N_VDD_PWR_W,	  SENSOR_NUM_ASIC_P0V75_MAX_S_VDD_PWR_W,
+	SENSOR_NUM_ASIC_P0V75_MAX_N_VDD_PWR_W,    SENSOR_NUM_ASIC_P0V75_MAX_S_VDD_PWR_W,
 };
 
 void i2c_bridge_command_handler(struct k_work *work_item)
