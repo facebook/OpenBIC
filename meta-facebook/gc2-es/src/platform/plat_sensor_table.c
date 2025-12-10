@@ -46,10 +46,10 @@ sensor_poll_time_cfg diff_poll_time_sensor_table[] = {
 
 dimm_pmic_mapping_cfg dimm_pmic_map_table[] = {
 	// dimm_sensor_num, mapping_pmic_sensor_num
-	{ SENSOR_NUM_TEMP_DIMM_A0, SENSOR_NUM_PWR_DIMMA0_PMIC },
 	{ SENSOR_NUM_TEMP_DIMM_A2, SENSOR_NUM_PWR_DIMMA2_PMIC },
-	{ SENSOR_NUM_TEMP_DIMM_A4, SENSOR_NUM_PWR_DIMMA4_PMIC },
+	{ SENSOR_NUM_TEMP_DIMM_A3, SENSOR_NUM_PWR_DIMMA3_PMIC },
 	{ SENSOR_NUM_TEMP_DIMM_A6, SENSOR_NUM_PWR_DIMMA6_PMIC },
+	{ SENSOR_NUM_TEMP_DIMM_A7, SENSOR_NUM_PWR_DIMMA7_PMIC },
 };
 
 bool m2_access(uint8_t sensor_num)
@@ -71,10 +71,24 @@ sensor_cfg plat_sensor_config[] = {
 	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
 	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
 
+	// E1S_BOOT
+	{ MB_INA233_E1S_Boot_VOLT_V, sensor_dev_ina233, I2C_BUS2, ADDR_E1S_BOOT_INA233,
+	  PMBUS_READ_VOUT, vr_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, PLDM_SENSOR_INITIALIZING, NULL, NULL, NULL, NULL,
+	  &ina233_init_args[2] },
+	{ MB_INA233_E1S_Boot_CURR_A, sensor_dev_ina233, I2C_BUS2, ADDR_E1S_BOOT_INA233,
+	  PMBUS_READ_IOUT, vr_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, PLDM_SENSOR_INITIALIZING, NULL, NULL, NULL, NULL,
+	  &ina233_init_args[2] },
+	{ MB_INA233_E1S_Boot_PWR_W, sensor_dev_ina233, I2C_BUS2, ADDR_E1S_BOOT_INA233,
+	  PMBUS_READ_POUT, vr_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, PLDM_SENSOR_INITIALIZING, NULL, NULL, NULL, NULL,
+	  &ina233_init_args[2] },
+
 	// NVME
 	{ SENSOR_NUM_TEMP_SSD0, sensor_dev_nvme, I2C_BUS2, SSD0_ADDR, SSD0_OFFSET, m2_access, 0, 0,
 	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
-	  pre_nvme_read, &mux_conf_addr_0xe2[1], NULL, NULL, NULL },
+	  NULL, NULL, NULL, NULL, NULL },
 
 	// PECI
 	{ SENSOR_NUM_TEMP_CPU, sensor_dev_intel_peci, NONE, CPU_PECI_ADDR, PECI_TEMP_CPU,
@@ -92,22 +106,22 @@ sensor_cfg plat_sensor_config[] = {
 	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
 
 	// DIMM temp
-	{ SENSOR_NUM_TEMP_DIMM_A0, sensor_dev_intel_peci, NONE, CPU_PECI_ADDR,
-	  PECI_TEMP_CHANNEL0_DIMM0, post_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_intel_peci_dimm_read,
-	  &dimm_pre_proc_args[0], NULL, NULL, NULL },
 	{ SENSOR_NUM_TEMP_DIMM_A2, sensor_dev_intel_peci, NONE, CPU_PECI_ADDR,
 	  PECI_TEMP_CHANNEL2_DIMM0, post_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_intel_peci_dimm_read,
 	  &dimm_pre_proc_args[1], NULL, NULL, NULL },
-	{ SENSOR_NUM_TEMP_DIMM_A4, sensor_dev_intel_peci, NONE, CPU_PECI_ADDR,
-	  PECI_TEMP_CHANNEL4_DIMM0, post_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	{ SENSOR_NUM_TEMP_DIMM_A3, sensor_dev_intel_peci, NONE, CPU_PECI_ADDR,
+	  PECI_TEMP_CHANNEL3_DIMM0, post_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_intel_peci_dimm_read,
-	  &dimm_pre_proc_args[3], NULL, NULL, NULL },
+	  &dimm_pre_proc_args[2], NULL, NULL, NULL },
 	{ SENSOR_NUM_TEMP_DIMM_A6, sensor_dev_intel_peci, NONE, CPU_PECI_ADDR,
 	  PECI_TEMP_CHANNEL6_DIMM0, post_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_intel_peci_dimm_read,
 	  &dimm_pre_proc_args[4], NULL, NULL, NULL },
+	{ SENSOR_NUM_TEMP_DIMM_A7, sensor_dev_intel_peci, NONE, CPU_PECI_ADDR,
+	  PECI_TEMP_CHANNEL7_DIMM0, post_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_intel_peci_dimm_read,
+	  &dimm_pre_proc_args[5], NULL, NULL, NULL },
 
 	// adc voltage
 	{ SENSOR_NUM_VOL_STBY12V, sensor_dev_ast_adc, ADC_PORT0, NONE, NONE, stby_access, 667, 100,
@@ -213,18 +227,19 @@ sensor_cfg plat_sensor_config[] = {
 	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
 
 	// DIMM PMIC power
-	{ SENSOR_NUM_PWR_DIMMA0_PMIC, sensor_dev_pmic, I2C_BUS3, PCH_ADDR, NONE, me_access, 0, 0,
-	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
-	  NULL, NULL, NULL, NULL, &pmic_init_args[0] },
 	{ SENSOR_NUM_PWR_DIMMA2_PMIC, sensor_dev_pmic, I2C_BUS3, PCH_ADDR, NONE, me_access, 0, 0,
 	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
 	  NULL, NULL, NULL, NULL, &pmic_init_args[1] },
-	{ SENSOR_NUM_PWR_DIMMA4_PMIC, sensor_dev_pmic, I2C_BUS3, PCH_ADDR, NONE, me_access, 0, 0,
+	{ SENSOR_NUM_PWR_DIMMA3_PMIC, sensor_dev_pmic, I2C_BUS3, PCH_ADDR, NONE, me_access, 0, 0,
 	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
-	  NULL, NULL, NULL, NULL, &pmic_init_args[3] },
+	  NULL, NULL, NULL, NULL, &pmic_init_args[2] },
 	{ SENSOR_NUM_PWR_DIMMA6_PMIC, sensor_dev_pmic, I2C_BUS3, PCH_ADDR, NONE, me_access, 0, 0,
 	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
 	  NULL, NULL, NULL, NULL, &pmic_init_args[4] },
+	{ SENSOR_NUM_PWR_DIMMA7_PMIC, sensor_dev_pmic, I2C_BUS3, PCH_ADDR, NONE, me_access, 0, 0,
+	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
+	  NULL, NULL, NULL, NULL, &pmic_init_args[5] },
+
 };
 
 sensor_cfg mp5990_sensor_config_table[] = {

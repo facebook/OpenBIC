@@ -110,6 +110,40 @@ dimm_pre_proc_arg dimm_pre_proc_args[] = {
 	[4] = { .is_present_checked = false }, [5] = { .is_present_checked = false }
 };
 
+ina233_init_arg ina233_init_args[] = {
+	[0] = {
+		.is_init = false,
+		.current_lsb = 0.001,
+		.r_shunt = 0.002,
+		.mfr_config_init = false,
+		.is_need_mfr_device_config_init = false,
+		.is_need_set_alert_threshold = false,
+	},
+	[1] = {
+		.is_init = false,
+		.current_lsb = 0.001,
+		.r_shunt = 0.002,
+		.mfr_config_init = false,
+		.is_need_mfr_device_config_init = false,
+		.is_need_set_alert_threshold = false,
+	},
+	[2] = {
+		.is_init = false,
+		.current_lsb = 0.001,
+		.r_shunt = 0.002,
+		.mfr_config_init = false,
+		.is_need_mfr_device_config_init = false,
+		.is_need_set_alert_threshold = false,
+	},
+	[3] = {
+		.is_init = false,
+		.current_lsb = 0.001,
+		.r_shunt = 0.002,
+		.mfr_config_init = false,
+		.is_need_mfr_device_config_init = false,
+		.is_need_set_alert_threshold = false,
+	},
+};
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK FUNC
  **************************************************************************************************/
@@ -428,4 +462,3 @@ bool post_ltc4282_read(sensor_cfg *cfg, void *args, int *reading)
 	sval->fraction = (val - sval->integer) * 1000;
 	return true;
 }
-
