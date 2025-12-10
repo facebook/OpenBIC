@@ -86,6 +86,7 @@ static void adc_poll_init()
 		adc_info[i].vr_sum = 0;
 		adc_info[i].pwr_avg_val = 0;
 		memset(adc_info[i].buf, 0, sizeof(uint16_t) * ADC_AVERGE_TIMES_MAX);
+		memset(adc_info[i].vr_voltage_buf, 0, sizeof(uint16_t) * ADC_AVERGE_TIMES_MAX);
 	}
 }
 
