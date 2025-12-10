@@ -527,6 +527,13 @@ bool temp_threshold_default_settings_init(void)
 		    i == BOT_OUTLET_HIGH_LIMIT) {
 			temperature = 85000;
 		}
+		if (i == ASIC_MEDHA0_SENSOR0_LOW_LIMIT || i == ASIC_MEDHA0_SENSOR1_LOW_LIMIT ||
+		    i == ASIC_OWL_W_LOW_LIMIT || i == ASIC_OWL_E_LOW_LIMIT ||
+		    i == ASIC_MEDHA1_SENSOR0_LOW_LIMIT || i == ASIC_MEDHA1_SENSOR1_LOW_LIMIT ||
+		    i == ASIC_HAMSA_CRM_LOW_LIMIT || i == ASIC_HAMSA_LS_LOW_LIMIT) {
+			temperature = -10000;
+			temp_threshold_default_settings.temperature_reg_val[i] = temperature;
+		}
 
 		if (!set_plat_temp_threshold(i, &temperature, false, false)) {
 			LOG_ERR("Can't set temp threshold index: 0x%x to 100", i);
