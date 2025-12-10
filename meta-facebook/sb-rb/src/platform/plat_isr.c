@@ -94,6 +94,8 @@ void ISR_GPIO_RST_IRIS_PWR_ON_PLD_R1_N()
 		set_bootstrap_table_val_to_ioexp();
 		if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
 			init_U200052_IO();
+			init_U200053_IO();
+			init_U200070_IO();
 			power_on_p3v3_osfp();
 		}
 		for (int i = 0; i < CLK_COMPONENT_MAX; i++) {
