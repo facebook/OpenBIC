@@ -37,15 +37,6 @@ extern "C" {
 #ifndef PLDM_MAX_DATA_SIZE
 #define PLDM_MAX_DATA_SIZE PLDM_MAX_DATA_SIZE_DEFAULT
 #endif
-
-#ifndef PLDM_RETRY
-#define PLDM_RETRY 60
-#endif
-
-#ifndef PLDM_RETRY_TIME_MS
-#define PLDM_RETRY_TIME_MS 3000
-#endif
-
 typedef uint8_t (*pldm_cmd_proc_fn)(void *, uint8_t *, uint16_t, uint8_t, uint8_t *, uint16_t *,
 				    void *);
 
@@ -145,7 +136,6 @@ int pldm_send_ipmi_response(uint8_t interface, ipmi_msg *msg);
 int pldm_send_ipmi_request(ipmi_msg *msg);
 
 uint16_t mctp_pldm_read(void *mctp_p, pldm_msg *msg, uint8_t *rbuf, uint16_t rbuf_len);
-uint16_t mctp_pldm_read_check(void *mctp_p, pldm_msg *msg, uint8_t *rbuf, uint16_t rbuf_len);
 
 pldm_t *pldm_init(void *interface, uint8_t user_idx);
 
