@@ -24,6 +24,7 @@
 #include <zephyr.h>
 
 #define RESET 0x00
+#define VR_EN_PIN_READING_5 0x05
 #define CPLD_OFFSET_BOARD_REV_ID 0x14
 #define CPLD_OFFSET_VR_VENDER_TYPE 0x15
 #define CPLD_OFFSET_POWER_CLAMP 0x25
