@@ -226,6 +226,8 @@ void poll_cpld_registers()
 	uint8_t data = 0;
 	bool prev_alert_status = false;
 	uint8_t board_id = get_asic_board_id();
+	uint8_t asic_rst = 0;
+	uint8_t prev_asic_rst = 0;
 
 	while (1) {
 		/* Sleep for the polling interval */
@@ -262,6 +264,70 @@ void poll_cpld_registers()
 			LOG_ERR("MSB read from CPLD fail");
 		}
 		power_info = (pwr_value_msb<<8)|pwr_value_lsb;
+
+		if (get_asic_board_id() == ASIC_BOARD_ID_EVB && get_board_rev_id() >= REV_ID_EVT1B) {
+
+			if (!plat_read_cpld(CPLD_ASIC_RESET_STATUS_REG, &asic_rst, 1)) {
+				LOG_ERR("Failed to read CPLD_ASIC_RESET_STATUS_REG (0x%02X)",
+					CPLD_ASIC_RESET_STATUS_REG);
+			} else {
+				if (asic_rst != prev_asic_rst) {
+					LOG_DBG("ASIC reset status changed: 0x%02X -> 0x%02X",
+						prev_asic_rst, asic_rst);
+					prev_asic_rst = asic_rst;
+
+					uint8_t hamsa_pwron     = (asic_rst >> 5) & 0x1; // HAMSA_POWER_ON_RESET_PLD_L
+					uint8_t medha0_pwron    = (asic_rst >> 4) & 0x1; // MEDHA0_POWER_ON_RESET_PLD_L
+					uint8_t medha1_pwron    = (asic_rst >> 3) & 0x1; // MEDHA1_POWER_ON_RESET_PLD_L
+					uint8_t hamsa_sys_rst   = (asic_rst >> 2) & 0x1; // HAMSA_SYS_RST_PLD_L
+					uint8_t medha0_sys_rst  = (asic_rst >> 1) & 0x1; // MEDHA0_SYS_RST_PLD_L
+					uint8_t medha1_sys_rst  = (asic_rst >> 0) & 0x1; // MEDHA1_SYS_RST_PLD_L
+
+					/* -------- U200070: io0~2 <- bit5~3 --------
+					*  - io0: HAMSA_POWER_ON_RESET_PLD_L
+					*  - io1: MEDHA0_POWER_ON_RESET_PLD_L
+					*  - io2: MEDHA1_POWER_ON_RESET_PLD_L
+					*/
+					uint8_t new_070 = U200070_IO_INIT_VAL;
+
+					new_070 &= ~(BIT(0) | BIT(1) | BIT(2));
+					new_070 |= (hamsa_pwron   << 0);
+					new_070 |= (medha0_pwron  << 1);
+					new_070 |= (medha1_pwron  << 2);
+
+					set_pca6554apw_ioe_value(U200070_IO_I2C_BUS, U200070_IO_ADDR,
+								OUTPUT_PORT, new_070);
+					LOG_DBG("Update U200070 OUTPUT_PORT: 0x%02X -> 0x%02X",
+						U200070_IO_INIT_VAL, new_070);
+
+					/* -------- U200053: bit2 -> io6 (HAMSA_SYS_RST_PLD_L) -------- */
+					uint8_t new_053 = U200053_IO_INIT_VAL;
+
+					new_053 &= ~BIT(6);
+					new_053 |= (hamsa_sys_rst << 6);
+
+					set_pca6554apw_ioe_value(U200053_IO_I2C_BUS, U200053_IO_ADDR,
+								OUTPUT_PORT, new_053);
+					LOG_DBG("Update U200053 OUTPUT_PORT: 0x%02X -> 0x%02X",
+						U200053_IO_INIT_VAL, new_053);
+
+					/* -------- U200052: bit1/bit0 -> io6/io7 --------
+					*  - bit1 -> io6 (MEDHA0_SYS_RST_PLD_L)
+					*  - bit0 -> io7 (MEDHA1_SYS_RST_PLD_L)
+					*/
+					uint8_t new_052 = U200052_IO_INIT_VAL;
+
+					new_052 &= ~(BIT(6) | BIT(7));
+					new_052 |= (medha0_sys_rst << 6);
+					new_052 |= (medha1_sys_rst << 7);
+
+					set_pca6554apw_ioe_value(U200052_IO_I2C_BUS, U200052_IO_ADDR,
+								OUTPUT_PORT, new_052);
+					LOG_DBG("Update U200052 OUTPUT_PORT: 0x%02X -> 0x%02X",
+						U200052_IO_INIT_VAL, new_052);
+				}
+			}
+		}
 
 		for (size_t i = 0; i < ARRAY_SIZE(cpld_info_table); i++) {
 			uint8_t expected_val = ubc_enabled_delayed_status ?

@@ -59,6 +59,7 @@
 #define VR_PWRGD_PIN_READING_5_REG 0x0B
 #define VR_PWRGD_PIN_READING_6_REG 0x0C
 #define VR_CLK_ENABLE_PIN_CTRL_REG 0xA1 // pin control (1-step only)
+#define CPLD_ASIC_RESET_STATUS_REG 0xA2
 #define VR_1STEP_FUNC_EN_REG 0xA9
 
 #define CPLD_ADDR (0x4C >> 1)
