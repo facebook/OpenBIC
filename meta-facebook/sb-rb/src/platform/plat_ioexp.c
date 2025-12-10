@@ -145,10 +145,26 @@ void init_U200052_IO()
 	// bit0 to bit5 is input (1)
 	set_pca6554apw_ioe_value(U200052_IO_I2C_BUS, U200052_IO_ADDR, CONFIG, 0x3F);
 	// io6,io7 default output 0
-	set_pca6554apw_ioe_value(U200052_IO_I2C_BUS, U200052_IO_ADDR, OUTPUT_PORT, 0x0);
+	set_pca6554apw_ioe_value(U200052_IO_I2C_BUS, U200052_IO_ADDR, OUTPUT_PORT,
+				 U200052_IO_INIT_VAL);
+}
+//evb only
+void init_U200053_IO()
+{
+	LOG_INF("init U200053 IO expander");
+	// bit0 to bit5 is input (1)
+	set_pca6554apw_ioe_value(U200053_IO_I2C_BUS, U200053_IO_ADDR, CONFIG, 0xBF);
+	// io6 default output 1
+	set_pca6554apw_ioe_value(U200053_IO_I2C_BUS, U200053_IO_ADDR, OUTPUT_PORT,
+				 U200053_IO_INIT_VAL);
+}
+//evb2 only
+void init_U200070_IO()
+{
 	LOG_INF("init U200070 IO expander");
 	// bit3 to bit5 is input (1)
 	set_pca6554apw_ioe_value(U200070_IO_I2C_BUS, U200070_IO_ADDR, CONFIG, 0x38);
-	// io0,io1,io2,io7 default output 0
-	set_pca6554apw_ioe_value(U200070_IO_I2C_BUS, U200070_IO_ADDR, OUTPUT_PORT, 0x0);
+	// io0,io1,io2 default output 1 io7 default output 0
+	set_pca6554apw_ioe_value(U200070_IO_I2C_BUS, U200070_IO_ADDR, OUTPUT_PORT,
+				 U200070_IO_INIT_VAL);
 }
