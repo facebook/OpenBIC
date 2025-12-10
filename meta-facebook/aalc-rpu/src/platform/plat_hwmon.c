@@ -44,6 +44,13 @@ static uint32_t pump2_current_boot_unrunning_time = 0;
 static uint32_t pump3_current_boot_unrunning_time = 0;
 static uint32_t last_auto_tune_flag = 0;
 
+static void pump1_hsc_adm1272_re_enable();
+K_WORK_DELAYABLE_DEFINE(pump1_adm1272_re_enable_handler_5sec, pump1_hsc_adm1272_re_enable);
+static void pump2_hsc_adm1272_re_enable();
+K_WORK_DELAYABLE_DEFINE(pump2_adm1272_re_enable_handler_5sec, pump2_hsc_adm1272_re_enable);
+static void pump3_hsc_adm1272_re_enable();
+K_WORK_DELAYABLE_DEFINE(pump3_adm1272_re_enable_handler_5sec, pump3_hsc_adm1272_re_enable);
+
 bool modbus_pump_setting_unsupport_function(pump_reset_struct *data, uint8_t bit_val)
 {
 	CHECK_NULL_ARG_WITH_RETURN(data, false);
@@ -114,6 +121,55 @@ void hsc_xdp710_pwr_ctrl(sensor_cfg *cfg, uint8_t xdp710_reg, uint8_t state)
 	if (!post_PCA9546A_read(cfg, cfg->pre_sensor_read_args, 0))
 		LOG_ERR("post unlock mutex fail !");
 }
+
+void hsc_adm1272_re_enable(uint8_t sensor_num)
+{
+	// Check sensor information in sensor config table
+	sensor_cfg *cfg = get_common_sensor_cfg_info(sensor_num);
+	if (cfg == NULL) {
+		LOG_ERR("Fail when getting pump sensor config, 0x%x", sensor_num);
+		return;
+	}
+	// stop polling
+	plat_disable_sensor_poll();
+
+	uint8_t bus = cfg->port;
+	uint8_t addr = cfg->target_addr;
+	// change mux
+	if (!pre_PCA9546A_read(cfg, cfg->pre_sensor_read_args)) {
+		LOG_ERR("pre lock mutex fail !\n");
+		return;
+	}
+	// enable pump
+	if (!enable_adm1272_hsc(bus, addr, true))
+		LOG_ERR("Fail when re-start the pump, semsor_num: 0x%x", sensor_num);
+	// unlock mutex and enable polling
+	if (!post_PCA9546A_read(cfg, cfg->pre_sensor_read_args, 0))
+		LOG_ERR("post unlock mutex fail !");
+	plat_enable_sensor_poll();
+}
+
+void pump1_hsc_adm1272_re_enable()
+{
+	LOG_INF("pump1 hsc_adm1272_re_enable start");
+	hsc_adm1272_re_enable(SENSOR_NUM_PB_1_HSC_P48V_PIN_PWR_W);
+	LOG_INF("pump1 hsc_adm1272_re_enable end");
+}
+
+void pump2_hsc_adm1272_re_enable()
+{
+	LOG_INF("pump2 hsc_adm1272_re_enable start");
+	hsc_adm1272_re_enable(SENSOR_NUM_PB_2_HSC_P48V_PIN_PWR_W);
+	LOG_INF("pump2 hsc_adm1272_re_enable end");
+}
+
+void pump3_hsc_adm1272_re_enable()
+{
+	LOG_INF("pump3 hsc_adm1272_re_enable start");
+	hsc_adm1272_re_enable(SENSOR_NUM_PB_3_HSC_P48V_PIN_PWR_W);
+	LOG_INF("pump3 hsc_adm1272_re_enable end");
+}
+
 static bool hsc_reset(uint8_t sensor_num)
 {
 	// Check sensor information in sensor config table
@@ -122,27 +178,52 @@ static bool hsc_reset(uint8_t sensor_num)
 		LOG_ERR("Fail when getting pump sensor config, 0x%x", sensor_num);
 		return false;
 	}
+	// stop polling
+	plat_disable_sensor_poll();
 
+	//change mux
+	I2C_MSG msg = { 0 };
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
+	msg.tx_len = 2;
+	if (!pre_PCA9546A_read(cfg, cfg->pre_sensor_read_args)) {
+		LOG_ERR("pre lock mutex fail !\n");
+		return false;
+	}
 	//uint8_t bus,uint8_t addr, bool enable_flag
 	uint8_t bus = cfg->port;
 	uint8_t addr = cfg->target_addr;
 	// 1 enable, 0 disable, stop pump first
 	if (cfg->type == sensor_dev_adm1272) {
-		if (enable_adm1272_hsc(bus, addr, false)) {
-			// check pump is already enable
-			k_msleep(500);
-			// enable pump
-			if (enable_adm1272_hsc(bus, addr, true)) {
-				return true;
-			} else
-				LOG_ERR("Fail when start the pump.");
-		}
+		enable_adm1272_hsc(bus, addr, false);
+		// wait 5s
+		if (sensor_num == SENSOR_NUM_PB_1_HSC_P48V_PIN_PWR_W)
+			k_work_schedule(&pump1_adm1272_re_enable_handler_5sec, K_SECONDS(5));
+		else if (sensor_num == SENSOR_NUM_PB_2_HSC_P48V_PIN_PWR_W)
+			k_work_schedule(&pump2_adm1272_re_enable_handler_5sec, K_SECONDS(5));
+		else if (sensor_num == SENSOR_NUM_PB_3_HSC_P48V_PIN_PWR_W)
+			k_work_schedule(&pump3_adm1272_re_enable_handler_5sec, K_SECONDS(5));
+		else
+			LOG_ERR("Unknown sensor type, Fail when stop the pump.");
+
+		if (!post_PCA9546A_read(cfg, cfg->pre_sensor_read_args, 0))
+			LOG_ERR("post unlock mutex fail !");
+
+		plat_enable_sensor_poll();
+		return true;
 	} else if (cfg->type == sensor_dev_xdp710) {
 		hsc_xdp710_pwr_ctrl(cfg, XDP710_RESTART_ADDR, 0);
+		if (!post_PCA9546A_read(cfg, cfg->pre_sensor_read_args, 0))
+			LOG_ERR("post unlock mutex fail !");
+		plat_enable_sensor_poll();
 		return true;
 	} else {
 		LOG_ERR("Unknown sensor type, Fail when stop the pump.");
 	}
+
+	if (!post_PCA9546A_read(cfg, cfg->pre_sensor_read_args, 0))
+		LOG_ERR("post unlock mutex fail !");
+	plat_enable_sensor_poll();
 	return false;
 }
 
@@ -220,8 +301,7 @@ bool pump_setting_set_pump_redundant(pump_reset_struct *data, uint8_t bit_val)
 {
 	CHECK_NULL_ARG_WITH_RETURN(data, false);
 
-	if (bit_val)
-		set_redundant_transform_phase(REDUNDANCY_TRANSFORM_DISABLE);
+	reset_redundant_transform_status();
 
 	pump_redundant_enable(bit_val);
 
@@ -346,8 +426,8 @@ void pump_redundant_handler_disable(struct k_timer *timer)
 }
 K_TIMER_DEFINE(pump_redundant_timer, pump_redundant_handler, pump_redundant_handler_disable);
 
-static uint8_t pump_redundant_switch_time = 7;
-static uint8_t pump_redundant_switch_time_type = 0; /* for test, 0: day, 1: hours */
+static uint8_t pump_redundant_switch_time = 30;
+static uint8_t pump_redundant_switch_time_type = 0; /* for test, 0: day, 1: minute */
 uint8_t get_pump_redundant_switch_time()
 {
 	return pump_redundant_switch_time;
@@ -426,8 +506,11 @@ uint8_t pwm_control(uint8_t group, uint8_t duty)
 	uint32_t redundant_check = PUMP_REDUNDANT_DISABLE;
 	if (get_fsc_mode() == FSC_MODE_SEMI_MODE) {
 		// failure control in semi mode
-		if (failure_behavior(group))
+		if (failure_behavior(group)) {
+			if (group == PWM_GROUP_E_PUMP)
+				reset_redundant_transform_status();
 			return 0;
+		}
 		redundant_check = get_status_flag(STATUS_FLAG_PUMP_REDUNDANT);
 	}
 
@@ -480,12 +563,21 @@ uint8_t pwm_control(uint8_t group, uint8_t duty)
 
 	// 10s flow rate ready + 1s polling error
 	if ((k_uptime_get() - auto_tune_time) > 11000) {
-		if (failure_behavior(group))
+		if (failure_behavior(group)) {
+			if (group == PWM_GROUP_E_PUMP)
+				reset_redundant_transform_status();
 			return 0;
+		}
 	}
 
-	if (!set_pwm_group(group, duty))
-		return 0;
+	if (group == PWM_GROUP_E_PUMP) {
+		set_pwm_group_cache(group, duty);
+		if (!ctl_pwm_pump(duty, duty, duty))
+			return 0;
+	} else {
+		if (!set_pwm_group(group, duty))
+			return 0;
+	}
 
 	return 1;
 }

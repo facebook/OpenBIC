@@ -230,7 +230,7 @@ ret:
 
 	memcpy(res_p->present_reading, &reading, sizeof(reading));
 	*resp_len = sizeof(struct pldm_get_sensor_reading_resp) +
-		    get_sensor_data_size(sensor_pdr.sensor_data_size) - 1;
+		    get_sensor_data_size(res_p->sensor_data_size) - 1;
 	return PLDM_SUCCESS;
 }
 
@@ -256,7 +256,7 @@ uint16_t pldm_platform_monitor_read(void *mctp_inst, mctp_ext_params ext_params,
 
 	LOG_HEXDUMP_DBG(msg.buf, msg.len, "Buf: ");
 
-	return mctp_pldm_read(mctp_inst, &msg, rbuf, rbuf_len);
+	return mctp_pldm_read_check(mctp_inst, &msg, rbuf, rbuf_len);
 }
 
 static uint8_t pldm_encode_sensor_event_data(struct pldm_sensor_event_data *sensor_event,
