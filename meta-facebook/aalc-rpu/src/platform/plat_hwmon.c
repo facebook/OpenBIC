@@ -426,13 +426,19 @@ void pump_redundant_handler_disable(struct k_timer *timer)
 }
 K_TIMER_DEFINE(pump_redundant_timer, pump_redundant_handler, pump_redundant_handler_disable);
 
-static uint8_t pump_redundant_switch_time = 30;
+static uint16_t pump_redundant_switch_time = 30;
 static uint8_t pump_redundant_switch_time_type = 0; /* for test, 0: day, 1: minute */
-uint8_t get_pump_redundant_switch_time()
+
+uint16_t get_pump_redundant_switch_time()
 {
 	return pump_redundant_switch_time;
 }
-void set_pump_redundant_switch_time(uint8_t time)
+uint8_t get_pump_redundant_switch_time_type()
+{
+	return pump_redundant_switch_time_type;
+}
+
+void set_pump_redundant_switch_time(uint16_t time)
 {
 	pump_redundant_switch_time = time;
 }
