@@ -30,6 +30,7 @@ static bool plat_sensor_polling_enable_flag = true;
 static bool plat_sensor_ubc_polling_enable_flag = true;
 static bool plat_sensor_temp_polling_enable_flag = true;
 static bool plat_sensor_vr_polling_enable_flag = true;
+static uint8_t plat_sensor_one_step_power_enable_flag = 0;
 
 static struct pldm_sensor_thread pal_pldm_sensor_thread[MAX_SENSOR_THREAD_ID] = {
 	// thread id, thread name
@@ -12422,6 +12423,11 @@ void set_plat_sensor_vr_polling_enable_flag(bool value)
 	plat_sensor_vr_polling_enable_flag = value;
 }
 
+void set_plat_sensor_one_step_enable_flag(uint8_t value)
+{
+	plat_sensor_one_step_power_enable_flag = value;
+}
+
 bool get_plat_sensor_polling_enable_flag()
 {
 	return plat_sensor_polling_enable_flag;
@@ -12442,10 +12448,20 @@ bool get_plat_sensor_vr_polling_enable_flag()
 	return plat_sensor_vr_polling_enable_flag;
 }
 
+uint8_t get_plat_sensor_one_step_enable_flag()
+{
+	return plat_sensor_one_step_power_enable_flag;
+}
+
 bool is_ubc_access(uint8_t sensor_num)
 {
-	return (is_dc_access(sensor_num) && get_plat_sensor_ubc_polling_enable_flag() &&
-		get_plat_sensor_polling_enable_flag());
+	if (get_plat_sensor_one_step_enable_flag() == ONE_STEP_POWER_MAGIC_NUMBER) {
+		return (get_plat_sensor_ubc_polling_enable_flag() &&
+			get_plat_sensor_polling_enable_flag());
+	} else {
+		return (is_dc_access(sensor_num) && get_plat_sensor_ubc_polling_enable_flag() &&
+			get_plat_sensor_polling_enable_flag());
+	}
 }
 
 bool is_temp_access(uint8_t cfg_idx)
@@ -12456,8 +12472,14 @@ bool is_temp_access(uint8_t cfg_idx)
 
 bool is_vr_access(uint8_t sensor_num)
 {
-	return (is_dc_access(sensor_num) && get_plat_sensor_vr_polling_enable_flag() &&
-		get_plat_sensor_polling_enable_flag());
+	if (get_plat_sensor_one_step_enable_flag() == ONE_STEP_POWER_MAGIC_NUMBER) {
+		return (get_plat_sensor_vr_polling_enable_flag() &&
+			get_plat_sensor_polling_enable_flag());
+
+	} else {
+		return (is_dc_access(sensor_num) && get_plat_sensor_vr_polling_enable_flag() &&
+			get_plat_sensor_polling_enable_flag());
+	}
 }
 
 void set_ioe_value(uint8_t ioe_addr, uint8_t ioe_reg, uint8_t value)

@@ -368,6 +368,24 @@ ioe_pwr_on ioe_pwr_on_table[] = {
 	{ U200051_IO_I2C_BUS, U200051_IO_ADDR, 5, "FM_P3V3_OSFP_P6_EN" },
 };
 
+bool check_p3v3_p5v_pwrgd(void)
+{
+	// read p3v3_pwrgf and p5v_pwrgf
+	// PWRGD_P3V3_R, bit-4, VR_PWRGD_PIN_READING_5_REG
+	uint8_t offset = VR_PWRGD_PIN_READING_5_REG;
+	uint8_t reg_data = 0;
+	if (!plat_read_cpld(offset, &reg_data, 1)) {
+		LOG_ERR("Read CPLD offset 0x%x failed", offset);
+	}
+	uint8_t p3v3_value = (reg_data >> 4) & 0x01;
+	// PWRGD_P5V_R, bit-5, VR_PWRGD_PIN_READING_5_REG
+	uint8_t p5v_value = (reg_data >> 5) & 0x01;
+	//if both p3v3 and p5v are all 1, return true
+	if (p3v3_value == 1 && p5v_value == 1)
+		return true;
+	return false;
+}
+
 void power_on_p3v3_osfp()
 {
 	uint8_t write_data = 0;
@@ -551,6 +569,7 @@ void cmd_iris_power_on(const struct shell *shell, size_t argc, char **argv)
 	if (gpio_get(RST_IRIS_PWR_ON_PLD_R1_N) == GPIO_HIGH) {
 		shell_print(shell, "iris power on success!");
 		set_pwr_steps_on_flag(0);
+		set_plat_sensor_one_step_enable_flag(false);
 	} else {
 		shell_warn(shell, "iris power on fail!");
 	}
@@ -570,6 +589,7 @@ void cmd_iris_power_off(const struct shell *shell, size_t argc, char **argv)
 	power_steps = 0;
 	// init power steps
 	set_pwr_steps_on_flag(0);
+	set_plat_sensor_one_step_enable_flag(false);
 }
 
 void cmd_iris_power_cycle(const struct shell *shell, size_t argc, char **argv)
@@ -580,6 +600,7 @@ void cmd_iris_power_cycle(const struct shell *shell, size_t argc, char **argv)
 	if (!iris_power_control(1))
 		shell_warn(shell, "iris power cycle(on) fail!");
 	set_pwr_steps_on_flag(0);
+	set_plat_sensor_one_step_enable_flag(false);
 }
 
 void cmd_iris_steps_on(const struct shell *shell, size_t argc, char **argv)
@@ -725,6 +746,12 @@ void cmd_iris_steps_on(const struct shell *shell, size_t argc, char **argv)
 			    power_good_status_table_for_steps_on[pwrgd_idx].power_rail_name, value);
 	}
 
+	if (strcmp(steps_on[power_steps].name, "FM_P5V_EN") == 0) {
+		if (check_p3v3_p5v_pwrgd()) {
+			set_plat_sensor_one_step_enable_flag(ONE_STEP_POWER_MAGIC_NUMBER);
+		}
+	}
+
 	if (strcmp(steps_on[power_steps].name, "FM_P1V80_EN") == 0) {
 		//if board id is evb, run steps_on_p3v3_osfp
 		if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
@@ -743,6 +770,7 @@ void cmd_iris_disable_steps_on(const struct shell *shell, size_t argc, char **ar
 	set_pwr_steps_on_flag(0);
 	// init value is reverse of power on value
 	uint8_t power_init_value = 0;
+	set_plat_sensor_one_step_enable_flag(false);
 	for (int i = 0; i < MAX_STEPS; i++) {
 		power_init_value = steps_on[i].power_on_value ^ 1;
 		// set all steps on value to init value
