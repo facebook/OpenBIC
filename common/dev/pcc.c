@@ -71,6 +71,22 @@ static uint16_t ABL_error_code_list[] = { 0x3000, 0x3001, 0x3002, 0x3003, 0xE2A4
 					  0xE2EF, 0xE2C2, 0xE2C3, 0xE2E3, 0xE2C6, 0xE310, 0xE2E7,
 					  0xE32D, 0xE33E, 0xE328, 0xE345, 0xE32B, 0xE332 };
 
+__weak void pcc_platform_filter_init(void)
+{
+	LOG_DBG("Using default PCC filter (no platform override)");
+}
+
+__weak bool pcc_platform_filter_postcode(uint32_t postcode)
+{
+	ARG_UNUSED(postcode);
+	return true;
+}
+
+__weak void pcc_platform_store_postcode(uint32_t postcode)
+{
+	ARG_UNUSED(postcode);
+}
+
 uint16_t copy_pcc_read_buffer(uint16_t start, uint16_t length, uint8_t *buffer, uint16_t buffer_len)
 {
 	if ((buffer == NULL) || (buffer_len < (length * 4))) {
@@ -398,14 +414,20 @@ void pcc_rx_callback(const uint8_t *rb, uint32_t rb_sz, uint32_t st_idx, uint32_
 		addr = rb[i + 1];
 		four_byte_data |= data << (8 * (addr & 0x0F));
 		if ((addr & 0x0F) == 0x03) {
-			pcc_read_buffer[pcc_read_index] = four_byte_data;
-			four_byte_data = 0;
-			if (pcc_read_len < PCC_BUFFER_LEN) {
-				pcc_read_len++;
-			}
-			pcc_read_index++;
-			if (pcc_read_index == PCC_BUFFER_LEN) {
-				pcc_read_index = 0;
+			pcc_platform_store_postcode(four_byte_data);
+			
+			if (pcc_platform_filter_postcode(four_byte_data)) {
+				pcc_read_buffer[pcc_read_index] = four_byte_data;
+				four_byte_data = 0;
+				if (pcc_read_len < PCC_BUFFER_LEN) {
+					pcc_read_len++;
+				}
+				pcc_read_index++;
+				if (pcc_read_index == PCC_BUFFER_LEN) {
+					pcc_read_index = 0;
+				}
+			} else {
+				four_byte_data = 0;
 			}
 		}
 		i = (i + 2) % rb_sz;
@@ -435,6 +457,8 @@ void pcc_init()
 
 	reg_data = sys_read32(LPC_HICR6_REG);
 	sys_write32((reg_data | 0x00080000) & ~0x0001ffff, LPC_HICR6_REG);
+
+	pcc_platform_filter_init();
 
 	k_sem_init(&get_postcode_sem, 0, 1);
 

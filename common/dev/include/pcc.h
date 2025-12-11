@@ -30,6 +30,9 @@ void reset_pcc_buffer();
 bool get_4byte_postcode_ok();
 void reset_4byte_postcode_ok();
 
+void pcc_platform_filter_init(void);
+bool pcc_platform_filter_postcode(uint32_t postcode);
+void pcc_platform_store_postcode(uint32_t postcode);
 #endif
 
 #endif

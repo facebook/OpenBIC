@@ -14,20 +14,16 @@
  * limitations under the License.
  */
 
-#ifndef PLAT_DEF_H
-#define PLAT_DEF_H
+#ifndef PLAT_PCC_H
+#define PLAT_PCC_H
 
-#define ENABLE_ASD
-#define ENABLE_ISL69260
-#define ENABLE_FIX_SENSOR
-#define ENABLE_PLDM
-#define ENABLE_OEM_PLDM
-#define ENABLE_MCTP_I3C
-#define ENABLE_OCTEON
+#include <stdint.h>
+#include <stdbool.h>
 
-#define BMC_USB_PORT "CDC_ACM_0"
+#define MAX_FILTERED_AMD_POSTCODES 15
 
-#define WORKER_STACK_SIZE 4096
-#define PLAT_MCTP_MSG_MAX_SIZE 64
+void plat_pcc_set_filter_enable(bool enable);
+bool plat_pcc_get_filter_enable(void);
+uint8_t plat_pcc_copy_filtered_postcodes(uint32_t *buffer, uint8_t buffer_size);
 
-#endif
+#endif /* PLAT_PCC_H */
