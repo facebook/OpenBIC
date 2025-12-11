@@ -1088,8 +1088,32 @@ bool set_bootstrap_val_to_device(uint8_t strap, uint8_t val)
 
 	switch (type) {
 	case STRAP_TYPE_CPLD:
-		if (!plat_write_cpld(bootstrap_table[strap].cpld_offsets, &val))
+		if (!plat_write_cpld(bootstrap_table[strap].cpld_offsets, &val)) {
 			return false;
+		}
+		/* when TEST_STRAP to 0, change MFIO 6 8 10 to INPUT  */
+		/* when TEST_STRAP to 1, change MFIO 6 8 10 to OUTPUT */
+		if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
+			if (bootstrap_table[strap].index == STRAP_INDEX_HAMSA_TEST_STRAP_R) {
+				if ((val & BIT(bootstrap_table[strap].bit_offset)) == 0) {
+					set_hamsa_mfio_6_8_10_input();
+				} else {
+					set_hamsa_mfio_6_8_10_output();
+				}
+			} else if (bootstrap_table[strap].index == STRAP_INDEX_MEDHA0_TEST_STRAP) {
+				if ((val & BIT(bootstrap_table[strap].bit_offset)) == 0) {
+					set_medha0_mfio_6_8_10_input();
+				} else {
+					set_medha0_mfio_6_8_10_output();
+				}
+			} else if (bootstrap_table[strap].index == STRAP_INDEX_MEDHA1_TEST_STRAP) {
+				if ((val & BIT(bootstrap_table[strap].bit_offset)) == 0) {
+					set_medha1_mfio_6_8_10_input();
+				} else {
+					set_medha1_mfio_6_8_10_output();
+				}
+			}
+		}
 		break;
 	case STRAP_TYPE_IOEXP_PCA6416A:
 		if (!pca6416a_i2c_write(bootstrap_table[strap].cpld_offsets, &val, 1))

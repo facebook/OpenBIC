@@ -46,12 +46,28 @@
 #define U200070_IO_INIT_VAL 0x07
 
 #define HAMSA_MFIO19 1
+#define HAMSA_MFIO6 6
+#define HAMSA_MFIO8 7
+#define HAMSA_MFIO10 0
+#define MEDHA0_MFIO6 7
+#define MEDHA0_MFIO8 6
+#define MEDHA0_MFIO10 5
+#define MEDHA1_MFIO6 4
+#define MEDHA1_MFIO8 3
+#define MEDHA1_MFIO10 2
 
 bool pca6416a_i2c_read(uint8_t offset, uint8_t *data, uint8_t len);
 bool pca6416a_i2c_write(uint8_t offset, uint8_t *data, uint8_t len);
 bool tca6424a_i2c_read(uint8_t offset, uint8_t *data, uint8_t len);
+bool tca6424a_i2c_read_drive_value(uint8_t group, uint8_t bit, uint8_t *data);
 bool tca6424a_i2c_write(uint8_t offset, uint8_t *data, uint8_t len);
 bool tca6424a_i2c_write_bit(uint8_t offset, uint8_t bit, uint8_t val);
+void set_hamsa_mfio_6_8_10_input();
+void set_medha0_mfio_6_8_10_input();
+void set_medha1_mfio_6_8_10_input();
+void set_hamsa_mfio_6_8_10_output();
+void set_medha0_mfio_6_8_10_output();
+void set_medha1_mfio_6_8_10_output();
 void ioexp_init(void);
 void init_U200052_IO();
 void init_U200053_IO();

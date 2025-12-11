@@ -22,6 +22,7 @@
 #include "plat_hook.h"
 #include "plat_cpld.h"
 #include "plat_ioexp.h"
+#include "plat_class.h"
 
 #define AEGIS_CPLD_ADDR (0x4C >> 1)
 
@@ -60,11 +61,57 @@ static int cmd_bootstrap_get_all(const struct shell *shell, size_t argc, char **
 			LOG_ERR("Can't find strap_rail_name by rail index: %x", i);
 			continue;
 		}
+
 		int drive_level = -1;
 
 		if (!get_bootstrap_change_drive_level(i, &drive_level)) {
 			LOG_ERR("Can't get_bootstrap_change_drive_level by rail index: %x", i);
 			continue;
+		}
+
+		// for MFIO 6 8 10
+		if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
+			uint8_t ioexp_value = 0;
+			switch (i) {
+			case STRAP_INDEX_HAMSA_MFIO6:
+				tca6424a_i2c_read_drive_value(1, HAMSA_MFIO6, &ioexp_value);
+				drive_level = ioexp_value;
+				break;
+			case STRAP_INDEX_HAMSA_MFIO8:
+				tca6424a_i2c_read_drive_value(1, HAMSA_MFIO8, &ioexp_value);
+				drive_level = ioexp_value;
+				break;
+			case STRAP_INDEX_HAMSA_MFIO10:
+				tca6424a_i2c_read_drive_value(2, HAMSA_MFIO10, &ioexp_value);
+				drive_level = ioexp_value;
+				break;
+			case STRAP_INDEX_MEDHA0_MFIO6:
+				tca6424a_i2c_read_drive_value(2, MEDHA0_MFIO6, &ioexp_value);
+				drive_level = ioexp_value;
+				break;
+			case STRAP_INDEX_MEDHA0_MFIO8:
+				tca6424a_i2c_read_drive_value(2, MEDHA0_MFIO8, &ioexp_value);
+				drive_level = ioexp_value;
+				break;
+			case STRAP_INDEX_MEDHA0_MFIO10:
+				tca6424a_i2c_read_drive_value(2, MEDHA0_MFIO10, &ioexp_value);
+				drive_level = ioexp_value;
+				break;
+			case STRAP_INDEX_MEDHA1_MFIO6:
+				tca6424a_i2c_read_drive_value(2, MEDHA1_MFIO6, &ioexp_value);
+				drive_level = ioexp_value;
+				break;
+			case STRAP_INDEX_MEDHA1_MFIO8:
+				tca6424a_i2c_read_drive_value(2, MEDHA1_MFIO8, &ioexp_value);
+				drive_level = ioexp_value;
+				break;
+			case STRAP_INDEX_MEDHA1_MFIO10:
+				tca6424a_i2c_read_drive_value(2, MEDHA1_MFIO10, &ioexp_value);
+				drive_level = ioexp_value;
+				break;
+			default:
+				break;
+			}
 		}
 
 		shell_print(shell, "%-4d|%-40s|0x%-23.2x", i, rail_name, drive_level);
@@ -134,6 +181,41 @@ static int cmd_bootstrap_set(const struct shell *shell, size_t argc, char **argv
 		return -1;
 	}
 
+	// check TEST_STRAP for MFIO 6 8 10
+	int drive_level = -1;
+
+	switch (rail) {
+	case STRAP_INDEX_HAMSA_MFIO6:
+	case STRAP_INDEX_HAMSA_MFIO8:
+	case STRAP_INDEX_HAMSA_MFIO10:
+		get_bootstrap_change_drive_level(STRAP_INDEX_HAMSA_TEST_STRAP_R, &drive_level);
+		if (drive_level == 0) {
+			shell_error(shell, "Can't change due to HAMSA_TEST_STRAP_R is 0x00 ");
+			return -1;
+		}
+		break;
+	case STRAP_INDEX_MEDHA0_MFIO6:
+	case STRAP_INDEX_MEDHA0_MFIO8:
+	case STRAP_INDEX_MEDHA0_MFIO10:
+		get_bootstrap_change_drive_level(STRAP_INDEX_MEDHA0_TEST_STRAP, &drive_level);
+		if (drive_level == 0) {
+			shell_error(shell, "Can't change due to MEDHA0_TEST_STRAP is 0x00");
+			return -1;
+		}
+		break;
+	case STRAP_INDEX_MEDHA1_MFIO6:
+	case STRAP_INDEX_MEDHA1_MFIO8:
+	case STRAP_INDEX_MEDHA1_MFIO10:
+		get_bootstrap_change_drive_level(STRAP_INDEX_MEDHA1_TEST_STRAP, &drive_level);
+		if (drive_level == 0) {
+			shell_error(shell, "Can't change due to MEDHA1_TEST_STRAP is 0x00 ");
+			return -1;
+		}
+		break;
+	default:
+		break;
+	}
+
 	bool is_default = false;
 	if (!strcmp(argv[2], "default"))
 		is_default = true;
@@ -149,6 +231,7 @@ static int cmd_bootstrap_set(const struct shell *shell, size_t argc, char **argv
 		shell_error(shell, "Can't find bootstrap_item by rail index: %d", rail);
 		return -1;
 	}
+
 	// write change_setting_value to cpld or io-exp
 	if (!set_bootstrap_val_to_device(bootstrap_item.index, change_setting_value)) {
 		LOG_ERR("Can't set bootstrap[%2d]=%02x", bootstrap_item.index,
