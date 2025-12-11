@@ -406,6 +406,28 @@ bool tmp432_get_temp_status(sensor_cfg *cfg, uint8_t *temp_status)
 	return true;
 }
 
+bool tmp432_get_temp_open_status(sensor_cfg *cfg, uint8_t *temp_status)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+
+	I2C_MSG i2c_msg = { 0 };
+	uint8_t retry = 5;
+	i2c_msg.bus = cfg->port;
+	i2c_msg.target_addr = cfg->target_addr;
+	i2c_msg.tx_len = 1;
+	i2c_msg.rx_len = 1;
+	i2c_msg.data[0] = TMP432_OPEN_STATUS_REG;
+
+	if (i2c_master_read(&i2c_msg, retry)) {
+		LOG_ERR("TMP[0x%x] get open status reg[0x%d] failed.", cfg->num,
+			TMP432_OPEN_STATUS_REG);
+		return false;
+	}
+	*temp_status = i2c_msg.data[0];
+
+	return true;
+}
+
 bool tmp432_clear_temp_status(sensor_cfg *cfg)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);

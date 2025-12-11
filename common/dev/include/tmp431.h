@@ -20,6 +20,7 @@
 #include "sensor.h"
 
 bool tmp432_get_temp_status(sensor_cfg *cfg, uint8_t *temp_status);
+bool tmp432_get_temp_open_status(sensor_cfg *cfg, uint8_t *temp_status);
 bool tmp432_clear_temp_status(sensor_cfg *cfg);
 
 enum TMP431_CHANNELS {

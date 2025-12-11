@@ -23,6 +23,7 @@
 #include "plat_i2c.h"
 #include "plat_pldm_sensor.h"
 #include "plat_led.h"
+#include "plat_class.h"
 
 LOG_MODULE_REGISTER(plat_thermal);
 
@@ -54,6 +55,7 @@ typedef struct temp_mapping_sensor_t {
 	uint8_t sensor_id;
 	uint8_t *sensor_name;
 	uint8_t last_status;
+	bool is_open;
 } temp_mapping_sensor_t;
 
 temp_mapping_sensor_t temp_alert_index_table[] = {
@@ -80,6 +82,22 @@ void read_temp_status(uint8_t bus, uint8_t target_addr)
 	plat_i2c_read(bus, target_addr, TMP432_HIGH_LIMIT_STATUS_REG, clear_status_data, 1);
 	LOG_DBG("temp status is 0x%x", clear_status_data[0]);
 }
+
+static bool is_thermal_sent_log(sensor_cfg *cfg)
+{
+	uint8_t board_rev_id = get_board_rev_id();
+
+	switch (board_rev_id) {
+	case REV_ID_EVT1A:
+	case REV_ID_EVT1B:
+	case REV_ID_EVT2:
+		if (cfg->cache_status == PLDM_SENSOR_INVALID_READING)
+			return false;
+	}
+
+	return true;
+}
+
 void check_thermal_handler(void *arg1, void *arg2, void *arg3)
 {
 	LOG_INF("check_thermal_handler start");
@@ -103,6 +121,15 @@ void check_thermal_handler(void *arg1, void *arg2, void *arg3)
 			uint8_t status_data;
 			//idx will base on 3
 			plat_get_temp_status(temp_alert_index_table[i].index + 3, &status_data);
+
+			// check status open
+			if (is_thermal_sent_log(temp_cfg)) {
+				if (!temp_alert_index_table[i].is_open) {
+					plat_set_iris_temp_error_log(
+						LOG_ASSERT, temp_alert_index_table[i].sensor_id);
+					temp_alert_index_table[i].is_open = true;
+				}
+			}
 
 			// if status 4-bit is high than send error log;
 			if ((status_data >> 4) & 0x01) {

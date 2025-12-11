@@ -71,6 +71,7 @@ const char *const pldm_sensor_status_name[] = {
 	"sensor_initializing",
 	"sensor_shuttingdown",
 	"sensor_intest",
+	"sensor_invalid_reading",
 };
 #endif
 // clang-format on
