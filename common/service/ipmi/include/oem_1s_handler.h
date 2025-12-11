@@ -127,6 +127,9 @@ void OEM_1S_RECORD_DAM_PIN_STATUS(uint8_t gpio_num, uint8_t status);
 void OEM_1S_INFORM_BMC_TO_CONTROL_POWER(ipmi_msg *msg);
 void OEM_1S_ERASE_BIOS_FLASH(ipmi_msg *msg);
 void OEM_1S_GET_BIOS_ERASE_PROGRESS(ipmi_msg *msg);
+void OEM_1S_SET_POSTCODE_FILTER(ipmi_msg *msg);
+void OEM_1S_GET_POSTCODE_FILTER(ipmi_msg *msg);
+void OEM_1S_GET_FILTERED_AMD_POST_CODE(ipmi_msg *msg);
 
 #ifdef CONFIG_SNOOP_ASPEED
 void OEM_1S_GET_POST_CODE(ipmi_msg *msg);

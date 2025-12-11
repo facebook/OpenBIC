@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -14,25 +14,16 @@
  * limitations under the License.
  */
 
-#ifndef PCC_H
-#define PCC_H
+#ifndef PLAT_PCC_H
+#define PLAT_PCC_H
 
-#ifdef CONFIG_PCC_ASPEED
+#include <stdint.h>
+#include <stdbool.h>
 
-#define PCC_STACK_SIZE 512
-#define PCC_BUFFER_LEN 1024
-#define PROCESS_POSTCODE_STACK_SIZE 2048
+#define MAX_FILTERED_AMD_POSTCODES 15
 
-uint16_t copy_pcc_read_buffer(uint16_t start, uint16_t length, uint8_t *buffer,
-			      uint16_t buffer_len);
-void pcc_init();
-void reset_pcc_buffer();
-bool get_4byte_postcode_ok();
-void reset_4byte_postcode_ok();
+void plat_pcc_set_filter_enable(bool enable);
+bool plat_pcc_get_filter_enable(void);
+uint8_t plat_pcc_copy_filtered_postcodes(uint32_t *buffer, uint8_t buffer_size);
 
-void pcc_platform_filter_init(void);
-bool pcc_platform_filter_postcode(uint32_t postcode);
-void pcc_platform_store_postcode(uint32_t postcode);
-#endif
-
-#endif
+#endif /* PLAT_PCC_H */

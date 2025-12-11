@@ -40,6 +40,7 @@
 #include "plat_dimm.h"
 #include "util_worker.h"
 #include "plat_pldm_monitor.h"
+#include "plat_pcc.h"
 
 #define EVENT_RESEND_DELAY_MS 300000 // 5 minutes delay for resend
 #define MAX_RESEND_ATTEMPTS 3
@@ -721,3 +722,78 @@ void OEM_SET_BOOT_ORDER(ipmi_msg *msg)
 	msg->data_len = 0;
 	return;
 }
+
+void OEM_1S_SET_POSTCODE_FILTER(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	if (msg->data_len != 1) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		msg->data_len = 0;
+		return;
+	}
+
+	uint8_t val = msg->data[0];
+	if (val > 1) {
+		msg->completion_code = CC_INVALID_DATA_FIELD;
+		msg->data_len = 0;
+		return;
+	}
+
+	plat_pcc_set_filter_enable(val ? true : false);
+
+	msg->data_len = 0;
+	msg->completion_code = CC_SUCCESS;
+	return;
+}
+
+void OEM_1S_GET_POSTCODE_FILTER(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	if (msg->data_len != 0) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		msg->data_len = 0;
+		return;
+	}
+
+	bool enabled = plat_pcc_get_filter_enable();
+
+	msg->data[0] = enabled ? 1 : 0;
+	msg->data_len = 1;
+	msg->completion_code = CC_SUCCESS;
+
+	LOG_INF("OEM_1S_GET_POSTCODE_FILTER: %s", enabled ? "enabled" : "disabled");
+	return;
+}
+
+void OEM_1S_GET_FILTERED_AMD_POST_CODE(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	if (msg->data_len != 0) {
+		msg->completion_code = CC_INVALID_LENGTH;
+		msg->data_len = 0;
+		return;
+	}
+
+	#define MAX_FILTERED_AMD_POSTCODES 15
+	uint32_t codes[MAX_FILTERED_AMD_POSTCODES] = { 0 };
+	uint8_t count = plat_pcc_copy_filtered_postcodes(codes, MAX_FILTERED_AMD_POSTCODES);
+
+	msg->data[0] = count;
+
+	for (uint8_t i = 0; i < count; i++) {
+		uint32_t v = codes[i];
+		uint8_t base = 1 + (i * 4);
+		
+		msg->data[base + 0] = (uint8_t)(v & 0xFF);
+		msg->data[base + 1] = (uint8_t)((v >> 8) & 0xFF);
+		msg->data[base + 2] = (uint8_t)((v >> 16) & 0xFF);
+		msg->data[base + 3] = (uint8_t)((v >> 24) & 0xFF);
+	}
+
+	msg->data_len = 1 + (count * 4);
+	msg->completion_code = CC_SUCCESS;
+}
+

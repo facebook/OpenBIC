@@ -2649,6 +2649,21 @@ void IPMI_OEM_1S_handler(ipmi_msg *msg)
 		LOG_DBG("Received 1S Get Post Code (4-Byte) command");
 		OEM_1S_GET_4BYTE_POST_CODE(msg);
 		break;
+
+	case CMD_OEM_1S_SET_POSTCODE_FILTER:
+		LOG_DBG("Received 1S Set Postcode Filter command");
+		OEM_1S_SET_POSTCODE_FILTER(msg);
+		break;
+
+	case CMD_OEM_1S_GET_POSTCODE_FILTER:
+		LOG_DBG("Received 1S Get Postcode Filter command");
+		OEM_1S_GET_POSTCODE_FILTER(msg);
+		break;
+
+	case CMD_OEM_1S_GET_FILTERED_AMD_POST_CODE:
+		LOG_DBG("Received 1S Get Filtered AMD Post Code command");
+		OEM_1S_GET_FILTERED_AMD_POST_CODE(msg);
+		break;
 #ifdef CONFIG_PECI
 	case CMD_OEM_1S_PECI_ACCESS:
 		LOG_DBG("Received 1S Access PECI command");
@@ -2860,4 +2875,28 @@ __weak void OEM_1S_GET_BIOS_ERASE_PROGRESS(ipmi_msg *msg)
 	msg->data[0] = bios_erase_progress;
 	msg->data_len = 1;
 	msg->completion_code = CC_SUCCESS;
+}
+
+__weak void OEM_1S_SET_POSTCODE_FILTER(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+	msg->data_len = 0;
+	msg->completion_code = CC_INVALID_CMD;
+	return;
+}
+
+__weak void OEM_1S_GET_POSTCODE_FILTER(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+	msg->data_len = 0;
+	msg->completion_code = CC_INVALID_CMD;
+	return;
+}
+
+__weak void OEM_1S_GET_FILTERED_AMD_POST_CODE(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+	msg->data_len = 0;
+	msg->completion_code = CC_INVALID_CMD;
+	return;
 }
