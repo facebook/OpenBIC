@@ -133,7 +133,7 @@ bool post_tmp432_read(sensor_cfg *cfg, void *args, int *reading)
 									     0;
 		// only check BIT(1), BIT(2)
 		if (status & bit) {
-			cfg->cache_status = SENSOR_INVALID_READING;
+			cfg->cache_status = SENSOR_OPEN_CIRCUIT;
 			return false;
 		}
 	}

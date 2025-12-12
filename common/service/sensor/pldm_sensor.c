@@ -303,8 +303,8 @@ void pldm_sensor_get_reading(sensor_cfg *pldm_sensor_cfg, uint32_t *update_time,
 	if (pldm_sensor_cfg->post_sensor_read_hook) {
 		if (!pldm_sensor_cfg->post_sensor_read_hook(
 			    pldm_sensor_cfg, pldm_sensor_cfg->post_sensor_read_args, &reading)) {
-			if (pldm_sensor_cfg->cache_status == SENSOR_INVALID_READING)
-				pldm_sensor_cfg->cache_status = PLDM_SENSOR_INVALID_READING;
+			if (pldm_sensor_cfg->cache_status == SENSOR_OPEN_CIRCUIT)
+				pldm_sensor_cfg->cache_status = PLDM_SENSOR_OPEN_CIRCUIT;
 			else
 				pldm_sensor_cfg->cache_status = PLDM_SENSOR_FAILED;
 			*update_time_ms = k_uptime_get_32();

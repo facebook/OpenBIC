@@ -47,8 +47,8 @@ const vr_fault_info vr_fault_table[] = {
 	  SENSOR_NUM_ASIC_P0V8_HAMSA_AVDD_PCIE_VOLT_V },
 	{ IRIS_HAMSA_VDDHRXTX_PCIE, VR_POWER_FAULT_1_REG, BIT(2), true,
 	  SENSOR_NUM_ASIC_P1V2_HAMSA_VDDHRXTX_PCIE_VOLT_V },
-	{ IRIS_4V2, VR_POWER_FAULT_1_REG, BIT(1), false},
-	{ IRIS_P0V75_AVDD_HCSL, VR_POWER_FAULT_1_REG, BIT(0), false},
+	{ IRIS_4V2, VR_POWER_FAULT_1_REG, BIT(1), false },
+	{ IRIS_P0V75_AVDD_HCSL, VR_POWER_FAULT_1_REG, BIT(0), false },
 	// VR Power Fault 2
 	{ IRIS_MEDHA1_VDD, VR_POWER_FAULT_2_REG, BIT(7), true,
 	  SENSOR_NUM_ASIC_P0V85_MEDHA1_VDD_VOLT_V },
@@ -233,5 +233,16 @@ void plat_set_iris_temp_error_log(bool is_assert, uint8_t sensor_id)
 		LOG_INF("Generated IRIS temp error code: 0x%x", error_code);
 	}
 	set_led_flag(true);
+	k_msleep(500);
+}
+
+void asic_thermtrip_error_log(bool is_assert)
+{
+	uint16_t error_code = (ASIC_THERMTRIP_TRIGGER << 13);
+	error_log_event(error_code, (is_assert ? LOG_ASSERT : LOG_DEASSERT));
+
+	if (is_assert == LOG_ASSERT) {
+		LOG_INF("Generated IRIS temp error code: 0x%x", error_code);
+	}
 	k_msleep(500);
 }

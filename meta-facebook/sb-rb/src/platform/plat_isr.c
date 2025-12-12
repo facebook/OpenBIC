@@ -132,6 +132,11 @@ void ISR_GPIO_SMB_HAMSA_MMC_LVC33_ALERT_N()
 	}
 }
 
+void ISR_ASIC_THERMTRIP_TRIGGER()
+{
+	asic_thermtrip_error_log(LOG_ASSERT);
+}
+
 bool plat_gpio_immediate_int_cb(uint8_t gpio_num)
 {
 	bool ret = false;

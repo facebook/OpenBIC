@@ -27,6 +27,7 @@
 #include "plat_hook.h"
 #include "plat_class.h"
 #include "plat_pldm_sensor.h"
+#include "tmp431.h"
 
 LOG_MODULE_REGISTER(plat_log);
 
@@ -304,10 +305,11 @@ bool get_error_data(uint16_t error_code, uint8_t *data)
 		uint8_t temperature_sensoor_num = error_code & 0xFF;
 		LOG_WRN("trigger_case: 0x%x, temperature_sensoor_num: 0x%x", trigger_case,
 			temperature_sensoor_num);
-		if (!get_raw_data_from_sensor_id(temperature_sensoor_num, 0x02, data, 1)) {
-			LOG_ERR("Failed to get temperature data");
+		sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(temperature_sensoor_num);
+		if (!tmp432_get_temp_open_status(cfg, data)) {
+			LOG_ERR("Failed to get 0x%02x temperature data", temperature_sensoor_num);
 			return false;
-		};
+		}
 		// save sensor num to data and keep raw data
 		data[1] = temperature_sensoor_num;
 		LOG_INF("Temperature status: 0x%x, sensor num: 0x%x", data[0], data[1]);

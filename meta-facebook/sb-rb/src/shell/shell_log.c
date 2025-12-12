@@ -194,6 +194,9 @@ void cmd_log_dump(const struct shell *shell, size_t argc, char **argv)
 				}
 			}
 			break;
+		case ASIC_THERMTRIP_TRIGGER:
+			shell_print(shell, "\tASIC_THERMTRIP_TRIGGER");
+			break;
 		default:
 			shell_print(shell, "Unknown error type: %d", err_type);
 			break;
