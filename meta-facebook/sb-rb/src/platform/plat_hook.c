@@ -361,6 +361,16 @@ bootstrap_mapping_register bootstrap_table[] = {
 	  "MEDHA1_MFIO10", 2, 1, 0x0, 0x0, false },
 
 };
+
+void set_bootstrap_table_change_setting_value(uint8_t index, uint8_t value)
+{
+	if (index >= STRAP_INDEX_MAX) {
+		LOG_ERR("invalid index:%d", index);
+		return;
+	}
+	bootstrap_table[index].change_setting_value = value;
+}
+
 bool vr_rail_name_get(uint8_t rail, uint8_t **name)
 {
 	CHECK_NULL_ARG_WITH_RETURN(name, false);

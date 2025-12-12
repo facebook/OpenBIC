@@ -226,6 +226,7 @@ extern vr_vout_user_settings user_settings;
 extern vr_vout_range_user_settings_struct vout_range_user_settings;
 extern vr_mapping_sensor vr_rail_table[];
 extern bootstrap_mapping_register bootstrap_table[];
+void set_bootstrap_table_change_setting_value(uint8_t index, uint8_t value);
 bool pre_vr_read(sensor_cfg *cfg, void *args);
 bool post_vr_read(sensor_cfg *cfg, void *args, int *const reading);
 bool is_mb_dc_on();

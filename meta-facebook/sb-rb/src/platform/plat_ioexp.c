@@ -5,6 +5,7 @@
 #include "plat_ioexp.h"
 #include "plat_class.h"
 #include "plat_pldm_sensor.h"
+#include "plat_hook.h"
 
 LOG_MODULE_REGISTER(plat_ioexp);
 
@@ -141,6 +142,10 @@ void set_hamsa_mfio_6_8_10_output()
 	tca6424a_i2c_write_bit(TCA6424A_OUTPUT_PORT_1, HAMSA_MFIO6, 0);
 	tca6424a_i2c_write_bit(TCA6424A_OUTPUT_PORT_1, HAMSA_MFIO8, 0);
 	tca6424a_i2c_write_bit(TCA6424A_OUTPUT_PORT_2, HAMSA_MFIO10, 0);
+
+	set_bootstrap_table_change_setting_value(STRAP_INDEX_HAMSA_MFIO6, 0);
+	set_bootstrap_table_change_setting_value(STRAP_INDEX_HAMSA_MFIO8, 0);
+	set_bootstrap_table_change_setting_value(STRAP_INDEX_HAMSA_MFIO10, 0);
 }
 
 void set_medha0_mfio_6_8_10_output()
@@ -152,6 +157,10 @@ void set_medha0_mfio_6_8_10_output()
 	tca6424a_i2c_write_bit(TCA6424A_OUTPUT_PORT_2, MEDHA0_MFIO6, 0);
 	tca6424a_i2c_write_bit(TCA6424A_OUTPUT_PORT_2, MEDHA0_MFIO8, 0);
 	tca6424a_i2c_write_bit(TCA6424A_OUTPUT_PORT_2, MEDHA0_MFIO10, 0);
+
+	set_bootstrap_table_change_setting_value(STRAP_INDEX_MEDHA0_MFIO6, 0);
+	set_bootstrap_table_change_setting_value(STRAP_INDEX_MEDHA0_MFIO8, 0);
+	set_bootstrap_table_change_setting_value(STRAP_INDEX_MEDHA0_MFIO10, 0);
 }
 
 void set_medha1_mfio_6_8_10_output()
@@ -163,6 +172,10 @@ void set_medha1_mfio_6_8_10_output()
 	tca6424a_i2c_write_bit(TCA6424A_OUTPUT_PORT_2, MEDHA1_MFIO6, 0);
 	tca6424a_i2c_write_bit(TCA6424A_OUTPUT_PORT_2, MEDHA1_MFIO8, 0);
 	tca6424a_i2c_write_bit(TCA6424A_OUTPUT_PORT_2, MEDHA1_MFIO10, 0);
+
+	set_bootstrap_table_change_setting_value(STRAP_INDEX_MEDHA1_MFIO6, 0);
+	set_bootstrap_table_change_setting_value(STRAP_INDEX_MEDHA1_MFIO8, 0);
+	set_bootstrap_table_change_setting_value(STRAP_INDEX_MEDHA1_MFIO10, 0);
 }
 
 bool tca6424a_init(void)
