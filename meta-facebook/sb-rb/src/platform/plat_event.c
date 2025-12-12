@@ -238,7 +238,7 @@ void plat_set_iris_temp_error_log(bool is_assert, uint8_t sensor_id)
 
 void asic_thermtrip_error_log(bool is_assert)
 {
-	uint16_t error_code = (ASIC_THERMTRIP_TRIGGER << 13);
+	uint16_t error_code = (ASIC_THERMTRIP_TRIGGER_CAUSE << 13);
 	error_log_event(error_code, (is_assert ? LOG_ASSERT : LOG_DEASSERT));
 
 	if (is_assert == LOG_ASSERT) {

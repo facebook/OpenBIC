@@ -61,6 +61,8 @@
 #define VR_CLK_ENABLE_PIN_CTRL_REG 0xA1 // pin control (1-step only)
 #define CPLD_ASIC_RESET_STATUS_REG 0xA2
 #define VR_1STEP_FUNC_EN_REG 0xA9
+#define HBM_CATTRIP_LOG_REG 0x27
+#define ASIC_TEMP_OVER_LOG_REG 0x29
 
 #define CPLD_ADDR (0x4C >> 1)
 #define I2C_BUS_CPLD I2C_BUS11

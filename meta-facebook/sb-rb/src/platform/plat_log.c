@@ -314,6 +314,15 @@ bool get_error_data(uint16_t error_code, uint8_t *data)
 		data[1] = temperature_sensoor_num;
 		LOG_INF("Temperature status: 0x%x, sensor num: 0x%x", data[0], data[1]);
 		return true;
+	} else if (trigger_case == ASIC_THERMTRIP_TRIGGER_CAUSE) {
+		uint8_t cpld_data[3];
+		if (!plat_read_cpld(HBM_CATTRIP_LOG_REG, cpld_data, 3)) {
+			LOG_ERR("Failed to get cpld data");
+			return false;
+		}
+		data[0] = cpld_data[0];
+		data[1] = cpld_data[2];
+		return true;
 	}
 
 	// Extract CPLD offset and bit position from the error code
