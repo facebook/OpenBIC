@@ -110,7 +110,7 @@ void check_thermal_handler(void *arg1, void *arg2, void *arg3)
 			k_sleep(K_MSEC(1000));
 			continue;
 		}
-		k_sleep(K_MSEC(1000));
+
 		//check temp_alert_index_table all temperature status
 		for (int i = 0; i < ARRAY_SIZE(temp_alert_index_table); i++) {
 			sensor_cfg *temp_cfg =
@@ -164,6 +164,7 @@ void check_thermal_handler(void *arg1, void *arg2, void *arg3)
 				temp_cfg->port, temp_cfg->target_addr);
 			read_temp_status(temp_cfg->port, temp_cfg->target_addr);
 		}
+		k_sleep(K_MSEC(1000));
 	}
 }
 

@@ -12558,8 +12558,8 @@ void quick_sensor_poll_handler(void *arug0, void *arug1, void *arug2)
 	uint8_t set_io7_value = 0;
 	uint8_t log_show_flag = 0;
 	while (1) {
-		//check dc on/off
-		if (is_mb_dc_on() == false) {
+		//check dc on/off and polling enable/disable
+		if (is_mb_dc_on() == false || !get_plat_sensor_polling_enable_flag()) {
 			//dc is off, sleep 1 second
 			k_msleep(1000);
 			continue;
