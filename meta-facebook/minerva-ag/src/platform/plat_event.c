@@ -197,7 +197,7 @@ const cpld_bit_name_table_t cpld_bit_name_table[] = {
 		  "RSVD",
 		  "RSVD",
 		  "RSVD",
-		  "RSVD",
+		  "ATH_GPIO_4_SOC_THERMAL_CATTRIP (0-->1)",
 		  "RSVD",
 		  "FM_ATH_PLD_HBM3_CATTRIP_ALARM (0-->1)",
 		  "FM_CPLD_ATH_CURRENT_SENSE_1 (0-->1)",
