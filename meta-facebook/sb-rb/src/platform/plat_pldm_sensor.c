@@ -12545,7 +12545,7 @@ void init_U200051_IO()
 	// only bit6 is input (1)
 	set_ioe_value(U200051_IO_ADDR, CONFIG, 0x40);
 	// io5,io7 default output 1
-	set_ioe_value(U200051_IO_ADDR, OUTPUT_PORT, 0xA0);
+	set_ioe_value(U200051_IO_ADDR, OUTPUT_PORT, 0x80);
 }
 
 /* quick sensor */
