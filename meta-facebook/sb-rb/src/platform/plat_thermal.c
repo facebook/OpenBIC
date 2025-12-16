@@ -15,6 +15,7 @@
  */
 #include "plat_event.h"
 #include <logging/log.h>
+#include "plat_thermal.h"
 #include "tmp431.h"
 #include "sensor.h"
 #include "plat_log.h"
@@ -33,18 +34,6 @@ K_KERNEL_STACK_MEMBER(check_thermal_thread_stack, 1024);
 k_tid_t thermal_tid;
 bool handler_flag = true;
 
-enum IRIS_TEMP_INDEX_E {
-	TEMP_STATUS_INDEX_ASIC_MEDHA0_SENSOR0,
-	TEMP_STATUS_INDEX_ASIC_MEDHA0_SENSOR1,
-	TEMP_STATUS_INDEX_ASIC_OWL_W,
-	TEMP_STATUS_INDEX_ASIC_OWL_E,
-	TEMP_STATUS_INDEX_ASIC_MEDHA1_SENSOR0,
-	TEMP_STATUS_INDEX_ASIC_MEDHA1_SENSOR1,
-	TEMP_STATUS_INDEX_ASIC_HAMSA_CRM,
-	TEMP_STATUS_INDEX_ASIC_HAMSA_LS,
-	TEMP_STATUS_INDEX_MAX,
-};
-
 const char *temperature_name_table[] = {
 	"ASIC_MEDHA0_SENSOR0", "ASIC_MEDHA0_SENSOR1", "ASIC_OWL_W",	"ASIC_OWL_E",
 	"ASIC_MEDHA1_SENSOR0", "ASIC_MEDHA1_SENSOR1", "ASIC_HAMSA_CRM", "ASIC_HAMSA_LS",
@@ -56,6 +45,7 @@ typedef struct temp_mapping_sensor_t {
 	uint8_t *sensor_name;
 	uint8_t last_status;
 	bool is_open;
+	uint8_t log_status_val; // status val for log
 } temp_mapping_sensor_t;
 
 temp_mapping_sensor_t temp_alert_index_table[] = {
@@ -100,8 +90,19 @@ static bool is_thermal_sent_log(sensor_cfg *cfg)
 	return true;
 }
 
+uint8_t get_thermal_status_val_for_log(uint8_t sensor_num)
+{
+	for (uint8_t i = 0; i < ARRAY_SIZE(temp_alert_index_table); i++) {
+		if (temp_alert_index_table[i].sensor_id == sensor_num)
+			return temp_alert_index_table[i].log_status_val;
+	}
+
+	return 0;
+}
+
 void check_thermal_handler(void *arg1, void *arg2, void *arg3)
 {
+	k_sleep(K_MSEC(1000)); // wait sensor thread ready
 	LOG_INF("check_thermal_handler start");
 
 	while (1) {
@@ -125,11 +126,16 @@ void check_thermal_handler(void *arg1, void *arg2, void *arg3)
 			plat_get_temp_status(temp_alert_index_table[i].index + 3, &status_data);
 
 			// check status open
-			if (is_thermal_sent_log(temp_cfg)) {
-				if (!temp_alert_index_table[i].is_open) {
-					plat_set_iris_temp_error_log(
-						LOG_ASSERT, temp_alert_index_table[i].sensor_id);
-					temp_alert_index_table[i].is_open = true;
+			if ((status_data >> 2) & 0x01) {
+				if (is_thermal_sent_log(temp_cfg)) {
+					if (!temp_alert_index_table[i].is_open) {
+						temp_alert_index_table[i].log_status_val =
+							status_data;
+						plat_set_iris_temp_error_log(
+							LOG_ASSERT,
+							temp_alert_index_table[i].sensor_id);
+						temp_alert_index_table[i].is_open = true;
+					}
 				}
 			}
 
@@ -144,6 +150,7 @@ void check_thermal_handler(void *arg1, void *arg2, void *arg3)
 					read_temp_status(temp_cfg->port, temp_cfg->target_addr);
 					continue;
 				} else {
+					temp_alert_index_table[i].log_status_val = status_data;
 					plat_set_iris_temp_error_log(
 						LOG_ASSERT, temp_alert_index_table[i].sensor_id);
 					// if last status is 0, set last status to 1
@@ -155,6 +162,9 @@ void check_thermal_handler(void *arg1, void *arg2, void *arg3)
 				// if last status is 1, set last status to 0
 				if (temp_alert_index_table[i].last_status) {
 					temp_alert_index_table[i].last_status = 0;
+					temp_alert_index_table[i].log_status_val = 0;
+					plat_set_iris_temp_error_log(
+						LOG_DEASSERT, temp_alert_index_table[i].sensor_id);
 					LOG_INF("temperature sensor recovered: 0x%x",
 						temp_alert_index_table[i].sensor_id);
 				}
