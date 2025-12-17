@@ -29,6 +29,7 @@
 LOG_MODULE_REGISTER(plat_thermal);
 
 #define TMP432_HIGH_LIMIT_STATUS_REG 0x35
+
 struct k_thread check_thermal_thread;
 K_KERNEL_STACK_MEMBER(check_thermal_thread_stack, 1024);
 k_tid_t thermal_tid;
@@ -46,6 +47,7 @@ typedef struct temp_mapping_sensor_t {
 	uint8_t last_status;
 	bool is_open;
 	uint8_t log_status_val; // status val for log
+	uint8_t log_limit_status_val; // limit status val for log
 } temp_mapping_sensor_t;
 
 temp_mapping_sensor_t temp_alert_index_table[] = {
@@ -84,7 +86,7 @@ static bool is_thermal_sent_log(sensor_cfg *cfg)
 	case REV_ID_EVT1B:
 	case REV_ID_EVT2:
 		if (cfg->cache_status == PLDM_SENSOR_OPEN_CIRCUIT)
-			return false;
+			return true;
 	}
 
 	return true;
@@ -95,6 +97,16 @@ uint8_t get_thermal_status_val_for_log(uint8_t sensor_num)
 	for (uint8_t i = 0; i < ARRAY_SIZE(temp_alert_index_table); i++) {
 		if (temp_alert_index_table[i].sensor_id == sensor_num)
 			return temp_alert_index_table[i].log_status_val;
+	}
+
+	return 0;
+}
+
+uint8_t get_thermal_limit_status_val_for_log(uint8_t sensor_num)
+{
+	for (uint8_t i = 0; i < ARRAY_SIZE(temp_alert_index_table); i++) {
+		if (temp_alert_index_table[i].sensor_id == sensor_num)
+			return temp_alert_index_table[i].log_limit_status_val;
 	}
 
 	return 0;
@@ -126,7 +138,7 @@ void check_thermal_handler(void *arg1, void *arg2, void *arg3)
 			plat_get_temp_status(temp_alert_index_table[i].index + 3, &status_data);
 
 			// check status open
-			if ((status_data >> 2) & 0x01) {
+			if (status_data & TEMP_STATUS_OPEN) {
 				if (is_thermal_sent_log(temp_cfg)) {
 					if (!temp_alert_index_table[i].is_open) {
 						temp_alert_index_table[i].log_status_val =
@@ -139,23 +151,47 @@ void check_thermal_handler(void *arg1, void *arg2, void *arg3)
 				}
 			}
 
-			// if status 4-bit is high than send error log;
-			if ((status_data >> 4) & 0x01) {
-				//check if still high, don't send error log again
-				if (temp_alert_index_table[i].last_status == 1) {
-					LOG_DBG("keep error sensor_num 0x%x, bus 0x%x, address 0x%x ",
-						temp_cfg->num, temp_cfg->port,
-						temp_cfg->target_addr);
-					// clear temperature status
-					read_temp_status(temp_cfg->port, temp_cfg->target_addr);
-					continue;
-				} else {
-					temp_alert_index_table[i].log_status_val = status_data;
-					plat_set_iris_temp_error_log(
-						LOG_ASSERT, temp_alert_index_table[i].sensor_id);
-					// if last status is 0, set last status to 1
-					if (!temp_alert_index_table[i].last_status) {
-						temp_alert_index_table[i].last_status = 1;
+			// if status BIT(3), BIT(4) is high than send error log;
+			if (status_data & TEMP_LIMIT_STATUS) {
+				uint8_t remote_bit =
+					(temp_cfg->offset == TMP432_REMOTE_TEMPERATRUE_1) ? BIT(1) :
+					(temp_cfg->offset == TMP432_REMOTE_TEMPERATRUE_2) ? BIT(2) :
+											    0;
+				uint8_t limit_status_reg =
+					(status_data & TEMP_STATUS_H_LIMIT) ? H_LIMIT_STATUS :
+					(status_data & TEMP_STATUS_L_LIMIT) ? L_LIMIT_STATUS :
+									      0xFF;
+				uint8_t limit_status_val = 0;
+				if (!get_raw_data_from_sensor_id(
+					    temp_alert_index_table[i].sensor_id, limit_status_reg,
+					    &limit_status_val, 1) ||
+				    (limit_status_reg == 0xFF))
+					LOG_ERR("sensor_num 0x02%x get limit status reg 0x%02x fail",
+						temp_alert_index_table[i].sensor_id,
+						limit_status_reg);
+				// check the corresponding remote port
+				if (limit_status_val & remote_bit) {
+					//check if still high, don't send error log again
+					if (temp_alert_index_table[i].last_status == 1) {
+						LOG_DBG("keep error sensor_num 0x%x, bus 0x%x, address 0x%x ",
+							temp_cfg->num, temp_cfg->port,
+							temp_cfg->target_addr);
+						// clear temperature status
+						read_temp_status(temp_cfg->port,
+								 temp_cfg->target_addr);
+						continue;
+					} else {
+						temp_alert_index_table[i].log_status_val =
+							status_data;
+						temp_alert_index_table[i].log_limit_status_val =
+							limit_status_val;
+						plat_set_iris_temp_error_log(
+							LOG_ASSERT,
+							temp_alert_index_table[i].sensor_id);
+						// if last status is 0, set last status to 1
+						if (!temp_alert_index_table[i].last_status) {
+							temp_alert_index_table[i].last_status = 1;
+						}
 					}
 				}
 			} else {

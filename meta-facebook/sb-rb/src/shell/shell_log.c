@@ -206,6 +206,16 @@ void cmd_log_dump(const struct shell *shell, size_t argc, char **argv)
 							shell,
 							"sensor_num 0x%02x open status(1Bh): 0x%02x",
 							log.error_data[2], log.error_data[1]);
+					else if (log.error_data[0] & BIT(4))
+						shell_print(
+							shell,
+							"high limit trigger, status(35h): 0x%02x",
+							log.error_data[1]);
+					else if (log.error_data[0] & BIT(3))
+						shell_print(
+							shell,
+							"low limit trigger, status(36h): 0x%02x",
+							log.error_data[1]);
 					err_data_len = 3;
 					break;
 				}

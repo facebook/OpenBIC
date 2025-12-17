@@ -311,10 +311,14 @@ bool get_error_data(uint16_t error_code, uint8_t *data)
 			temperature_sensoor_num);
 		sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(temperature_sensoor_num);
 		data[0] = get_thermal_status_val_for_log(temperature_sensoor_num);
-		if (!tmp432_get_temp_open_status(cfg, &data[1])) {
-			LOG_ERR("Failed to get 0x%02x temperature open status",
-				temperature_sensoor_num);
-			return false;
+		if (data[0] & TEMP_STATUS_OPEN) {
+			if (!tmp432_get_temp_open_status(cfg, &data[1])) {
+				LOG_ERR("Failed to get 0x%02x temperature open status",
+					temperature_sensoor_num);
+				return false;
+			}
+		} else {
+			data[1] = get_thermal_limit_status_val_for_log(temperature_sensoor_num);
 		}
 		// save sensor num to data and keep raw data
 		data[2] = temperature_sensoor_num;

@@ -12246,8 +12246,10 @@ bool get_raw_data_from_sensor_id(uint8_t sensor_id, uint8_t offset, uint8_t *val
 
 err:
 	if ((cfg->post_sensor_read_hook)) {
-		if ((cfg->post_sensor_read_hook)(cfg, cfg->post_sensor_read_args, 0) == false) {
-			LOG_DBG("%d read raw value post hook fail!", sensor_id);
+		if ((cfg->post_sensor_read_hook)(cfg, cfg->post_sensor_read_args, 0) == false &&
+		    cfg->cache_status != SENSOR_OPEN_CIRCUIT) {
+			LOG_DBG("%d read raw value post hook fail! %x", sensor_id,
+				cfg->cache_status);
 			return false;
 		}
 	}
