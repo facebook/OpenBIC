@@ -53,9 +53,6 @@ static atomic_t pending_flag = ATOMIC_INIT(0);
 
 // ABL Error codes for filtering (0xEA00xxxx)
 static const uint16_t abl_filter_error_codes[] = {
-	// APCB/Debug related
-	0x0ACE,	0x0ACF,
-
 	// Memory related errors
 	0xBAAB,	0xBAAC,	0xBAAD,
 
@@ -210,7 +207,10 @@ void pcc_platform_filter_init(void)
 	memset(filtered_postcodes, 0, sizeof(filtered_postcodes));
 	filtered_postcode_index = 0;
 	filtered_postcode_count = 0;
-	
+
+    postcode_filter_enabled = true;
+	plat_pcc_set_filter_valid(1);
+
 	LOG_INF("Postcode filter initialized (filter %s)",
 	        postcode_filter_enabled ? "enabled" : "disabled");
 	
@@ -273,6 +273,7 @@ bool pcc_platform_filter_postcode(uint32_t postcode)
 void plat_pcc_set_filter_enable(bool enable)
 {
 	postcode_filter_enabled = enable;
+
 	LOG_INF("Postcode filter %s", enable ? "enabled" : "disabled");
 }
 
@@ -312,4 +313,16 @@ uint8_t plat_pcc_copy_filtered_postcodes(uint32_t *buffer, uint8_t buffer_size)
 	k_mutex_unlock(&filtered_postcode_mutex);
 	
 	return copy_count;
+}
+
+static uint8_t postcode_filter_valid = 1;
+
+uint8_t plat_pcc_get_filter_valid(void)
+{
+    return postcode_filter_valid;
+}
+
+void plat_pcc_set_filter_valid(uint8_t valid)
+{
+    postcode_filter_valid = valid ? 1 : 0;
 }

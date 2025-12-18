@@ -25,5 +25,7 @@
 void plat_pcc_set_filter_enable(bool enable);
 bool plat_pcc_get_filter_enable(void);
 uint8_t plat_pcc_copy_filtered_postcodes(uint32_t *buffer, uint8_t buffer_size);
+uint8_t plat_pcc_get_filter_valid(void);
+void plat_pcc_set_filter_valid(uint8_t valid);
 
 #endif /* PLAT_PCC_H */
