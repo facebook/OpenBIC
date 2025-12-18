@@ -252,7 +252,8 @@ void plat_clear_log()
 		k_msleep(EEPROM_MAX_WRITE_TIME);
 	}
 	log_num = 0;
-	next_index = 0;
+	next_index = 1;
+	next_log_position = 1;
 }
 
 bool vr_fault_get_error_data(uint8_t sensor_id, uint8_t *data)

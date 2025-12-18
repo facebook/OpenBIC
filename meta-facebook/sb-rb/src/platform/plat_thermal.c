@@ -24,7 +24,6 @@
 #include "plat_i2c.h"
 #include "plat_pldm_sensor.h"
 #include "plat_led.h"
-#include "plat_class.h"
 
 LOG_MODULE_REGISTER(plat_thermal);
 
@@ -77,21 +76,6 @@ void read_temp_status(uint8_t bus, uint8_t target_addr)
 	LOG_DBG("temp status is 0x%x", clear_status_data[0]);
 }
 
-static bool is_thermal_sent_log(sensor_cfg *cfg)
-{
-	uint8_t board_rev_id = get_board_rev_id();
-
-	switch (board_rev_id) {
-	case REV_ID_EVT1A:
-	case REV_ID_EVT1B:
-	case REV_ID_EVT2:
-		if (cfg->cache_status == PLDM_SENSOR_OPEN_CIRCUIT)
-			return true;
-	}
-
-	return true;
-}
-
 uint8_t get_thermal_status_val_for_log(uint8_t sensor_num)
 {
 	for (uint8_t i = 0; i < ARRAY_SIZE(temp_alert_index_table); i++) {
@@ -139,7 +123,8 @@ void check_thermal_handler(void *arg1, void *arg2, void *arg3)
 
 			// check status open
 			if (status_data & TEMP_STATUS_OPEN) {
-				if (is_thermal_sent_log(temp_cfg)) {
+				// check sensor
+				if (temp_cfg->cache_status == PLDM_SENSOR_OPEN_CIRCUIT) {
 					if (!temp_alert_index_table[i].is_open) {
 						temp_alert_index_table[i].log_status_val =
 							status_data;
