@@ -60,6 +60,7 @@ static const port_map_t port_map[] = {
 	{TCA6424A_CONFIG_1, TCA6424A_OUTPUT_PORT_1, TCA6424A_INPUT_PORT_1},
 	{TCA6424A_CONFIG_2, TCA6424A_OUTPUT_PORT_2, TCA6424A_INPUT_PORT_2},
 };
+
 static const unassigned_mifo_pin_map_t mfio_list[] = {
 	{ "NC_HAMSA_MFIO20", NC_HAMSA_MFIO20_BIT, PORT_0 },
 	{ "NC_HAMSA_MFIO21", NC_HAMSA_MFIO21_BIT, PORT_0 },
@@ -74,14 +75,20 @@ static const unassigned_mifo_pin_map_t mfio_list[] = {
 	{ "NC_HAMSA_MFIO30", NC_HAMSA_MFIO30_BIT, PORT_1 },
 	{ "NC_HAMSA_MFIO31", NC_HAMSA_MFIO31_BIT, PORT_1 },
 };
+
 static int cmd_mfio_get_all(const struct shell *shell, size_t argc, char **argv)
 {
-	shell_print(shell, "%-20s|%-15s|%-25s", "MFIO name", "Input/Output", "value");
 	uint8_t config = 0;
 	uint8_t config_value = 0;
 	uint8_t input_value = 0;
 	uint8_t output_value = 0;
-	
+
+	if (get_asic_board_id() != ASIC_BOARD_ID_EVB) {
+		shell_error(shell, "Only supported on EVB board");
+		return -1;
+	}
+	shell_print(shell, "%-20s|%-15s|%-25s", "MFIO name", "Input/Output", "value");
+
 	for(int i = 0; i < ARRAY_SIZE(mfio_list); i++){
 		if (config != port_map[mfio_list[i].port].config_reg){
 			config = port_map[mfio_list[i].port].config_reg;
@@ -101,8 +108,13 @@ static int cmd_mfio_get_all(const struct shell *shell, size_t argc, char **argv)
 
 static int cmd_set_mfio_io(const struct shell *shell, size_t argc, char **argv)
 {
-	// shell_print(shell, "set ");
 	uint8_t set_value = strtol(argv[2], NULL, 10);
+
+	if (get_asic_board_id() != ASIC_BOARD_ID_EVB) {
+		shell_error(shell, "Only supported on EVB board");
+		return -1;
+	}
+
 	for(int i = 0; i < ARRAY_SIZE(mfio_list); i++){
 		if(!strcmp(mfio_list[i].name, argv[1])){
 			if(!tca6424a_i2c_write_bit(port_map[mfio_list[i].port].config_reg,mfio_list[i].bit, set_value))
@@ -113,10 +125,17 @@ static int cmd_set_mfio_io(const struct shell *shell, size_t argc, char **argv)
 	}
 	return 0;
 }
+
 static int cmd_set_mfio_value(const struct shell *shell, size_t argc, char **argv)
 {
 	uint8_t set_value = strtol(argv[2], NULL, 10);
 	uint8_t config_value = 0;
+
+	if (get_asic_board_id() != ASIC_BOARD_ID_EVB) {
+		shell_error(shell, "Only supported on EVB board");
+		return -1;
+	}
+
 	for(int i = 0; i < ARRAY_SIZE(mfio_list); i++){
 		if(!strcmp(mfio_list[i].name, argv[1])){
 			tca6424a_i2c_read(port_map[mfio_list[i].port].config_reg, &config_value, 1);
@@ -126,12 +145,13 @@ static int cmd_set_mfio_value(const struct shell *shell, size_t argc, char **arg
 			}
 			if(!tca6424a_i2c_write_bit(port_map[mfio_list[i].port].output_reg,mfio_list[i].bit, set_value))
 				return -1;
-			shell_print(shell, "set %s value to: %s", mfio_list[i].name, set_value);
+			shell_print(shell, "set %s value to: %d", mfio_list[i].name, set_value);
 			break;
 		}
 	}
 	return 0;
 }
+
 static void mfio_dynamic_get_name(size_t idx, struct shell_static_entry *entry)
 {
 	entry->syntax = NULL;
@@ -143,6 +163,7 @@ static void mfio_dynamic_get_name(size_t idx, struct shell_static_entry *entry)
 		entry->syntax = mfio_list[idx].name;
 	}
 }
+
 SHELL_DYNAMIC_CMD_CREATE(mifo_name, mfio_dynamic_get_name);
 
 /* level 2 */
