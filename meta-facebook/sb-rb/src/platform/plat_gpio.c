@@ -33,6 +33,8 @@ void gpio_int_default()
 	return;
 }
 
+// clang-format off
+
 GPIO_CFG plat_gpio_cfg[] = {
 	//  chip,      number,   is_init, is_latch, direction,    status,     property,    int_type,              int_cb
 	// GPIO 0 group
@@ -288,6 +290,8 @@ GPIO_CFG plat_gpio_cfg[] = {
 	{ CHIP_GPIO, 123, ENABLE, DISABLE, GPIO_INPUT, GPIO_HIGH, PUSH_PULL, GPIO_INT_DISABLE,
 	  NULL },
 };
+
+// clang-format on
 
 bool pal_load_gpio_config(void)
 {

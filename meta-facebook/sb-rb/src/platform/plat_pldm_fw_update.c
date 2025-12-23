@@ -39,6 +39,7 @@
 #define RESET_CPLD_ON 0x3F
 #define RESET_CPLD_OFF 0x00
 #define IRIS_BOOT0_IMG_SIZE 0x1FFFFB
+#define PLAT_WAIT_SENSOR_POLLING_END_DELAY_MS 1000
 
 LOG_MODULE_REGISTER(plat_fwupdate);
 
@@ -1279,6 +1280,10 @@ bool find_sensor_id_and_name_by_firmware_comp_id(uint8_t comp_identifier, uint8_
 
 void plat_reset_prepare()
 {
+	set_plat_sensor_polling_enable_flag(false);
+	set_cpld_polling_enable_flag(false);
+	k_msleep(PLAT_WAIT_SENSOR_POLLING_END_DELAY_MS);
+
 	const char *i2c_labels[] = { "I2C_0", "I2C_1", "I2C_2", "I2C_3", "I2C_4",  "I2C_5",
 				     "I2C_6", "I2C_7", "I2C_8", "I2C_9", "I2C_10", "I2C_11" };
 
