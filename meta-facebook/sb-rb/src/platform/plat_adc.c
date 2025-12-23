@@ -661,18 +661,6 @@ static void ad4058_read_voltage(uint8_t idx)
 	return;
 }
 
-void get_ads7066_voltage()
-{
-	printk(" ads7066 medha0 voltage is %f V\n", ads7066_val_0);
-	printk(" ads7066 medha1 voltage is %f V\n", ads7066_val_1);
-}
-
-void get_ad4058_voltage()
-{
-	printk(" ad4058 medha0 voltage is %f V\n", ad4058_val_0);
-	printk(" ad4058 medha1 voltage is %f V\n", ad4058_val_1);
-}
-
 void ads7066_mode_init()
 {
 	//set auto-sequence mode
