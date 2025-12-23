@@ -51,8 +51,7 @@ float ads7066_val_0 = 0;
 float ads7066_val_1 = 0;
 const float ads7066_vref = 2.5;
 const float ad4058_vref = 2.5;
-
-const struct spi_cs_control *cs_ctrl;
+static uint8_t adc_good_status[2] = { 0xFF, 0xFF };
 
 typedef struct {
 	uint16_t avg_times; // 20ms at a time
@@ -76,6 +75,11 @@ adc_info_t adc_info[ADC_IDX_MAX] = { { .avg_times = 20, .ucr = 1255 },
 				     { .avg_times = 800, .ucr = 1255 } };
 
 static const struct device *spi_dev;
+
+uint8_t get_adc_good_status(uint8_t idx)
+{
+	return adc_good_status[idx];
+}
 
 static void adc_poll_init()
 {
@@ -282,7 +286,7 @@ float get_adc_vr_pwr(uint8_t idx)
 {
 	return adc_info[idx].pwr_avg_val;
 }
-int ads7066_read_reg(uint8_t reg, uint8_t idx)
+int ads7066_read_reg(uint8_t reg, uint8_t idx, uint8_t *out_data)
 {
 	spi_dev = device_get_binding("SPIP");
 	if (!spi_dev) {
@@ -338,6 +342,7 @@ int ads7066_read_reg(uint8_t reg, uint8_t idx)
 		return ret;
 	}
 
+	*out_data = rx_buf[0];
 	LOG_INF("medha%d ADS7066 read reg 0x%02x: 0x%02x 0x%02x 0x%02x", idx, reg, rx_buf[0],
 		rx_buf[1], rx_buf[2]);
 	return 0;
@@ -461,7 +466,7 @@ static void ads7066_read_voltage(uint8_t idx)
 
 	return;
 }
-int ad4058_read_reg(uint8_t reg, uint8_t idx)
+int ad4058_read_reg(uint8_t reg, uint8_t idx, uint8_t *out_data)
 {
 	spi_dev = device_get_binding("SPIP");
 	if (!spi_dev) {
@@ -518,6 +523,7 @@ int ad4058_read_reg(uint8_t reg, uint8_t idx)
 		return ret;
 	}
 
+	*out_data = rx_buf[1];
 	LOG_HEXDUMP_INF(rx_buf, 3, "ad4058_read_reg");
 	return 0;
 }
@@ -675,6 +681,12 @@ void ads7066_mode_init()
 			ads7066_write_reg(0x1, 0x82, i);
 		ads7066_write_reg(0x12, 0x1, i);
 		ads7066_write_reg(0x3, 0x6, i);
+
+		//check and update good status
+		uint8_t value = 0;
+		ads7066_read_reg(0x3, i, &value);
+		adc_good_status[i] = (value & 0x07) == 0x06 ? 0 : 0xFF;
+
 		ads7066_write_reg(0x4, 0x8, i);
 		ads7066_write_reg(0x10, 0x11, i);
 		ads7066_write_reg(0x2, 0x10, i);
@@ -691,6 +703,12 @@ void ad4058_mode_init()
 		3.33us * 256 = 0.8ms per sample
 	*/
 	for (int i = 0; i < ADC_RB_IDX_MAX; i++) {
+		// exit to config mode, check product id
+		ad4058_write_reg(0xA8, 0x00, i);
+		uint8_t value = 0;
+		ad4058_read_reg(0x03, i, &value);
+		adc_good_status[i] = (value & 0x0F) == 0x07 ? 0 : 0xFF;
+
 		ad4058_write_reg(0x27, 0x20, i);
 		ad4058_write_reg(0x23, 0x7, i);
 		ad4058_write_reg(0x21, 0x1, i);

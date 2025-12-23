@@ -200,6 +200,12 @@ void cmd_adc_set_ucr(const struct shell *shell, size_t argc, char **argv)
 	shell_warn(shell, "set adc %d ucr to %d", idx, ucr);
 }
 
+void cmd_adc_get_good_status(const struct shell *shell, size_t argc, char **argv)
+{
+	shell_info(shell, "%02x %02x", get_adc_good_status(ADC_RB_IDX_MEDHA0),
+		   get_adc_good_status(ADC_RB_IDX_MEDHA1));
+}
+
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_adc_poll_cmds,
 			       SHELL_CMD(get, NULL, "adc polling get", cmd_adc_poll_get),
 			       SHELL_CMD(set, NULL, "adc polling set", cmd_adc_poll_set),
@@ -221,6 +227,7 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
 	SHELL_CMD(val, NULL, "get adc averge val", cmd_adc_get_averge_val),
 	SHELL_CMD(buf_raw, NULL, "get adc buf raw data", cmd_adc_get_buf_raw),
 	SHELL_CMD(buf, NULL, "get adc buf", cmd_adc_get_buf),
+	SHELL_CMD(get_good_status, NULL, "get adc good status", cmd_adc_get_good_status),
 	SHELL_CMD(ucr, &sub_adc_ucr_cmds, "adc ucr cmds", NULL), SHELL_SUBCMD_SET_END);
 
 /* Root of command test */
