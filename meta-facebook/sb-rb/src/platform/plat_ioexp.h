@@ -58,6 +58,7 @@
 
 bool pca6416a_i2c_read(uint8_t offset, uint8_t *data, uint8_t len);
 bool pca6416a_i2c_write(uint8_t offset, uint8_t *data, uint8_t len);
+bool is_tca6424a_accessible();
 bool tca6424a_i2c_read(uint8_t offset, uint8_t *data, uint8_t len);
 bool tca6424a_i2c_read_drive_value(uint8_t group, uint8_t bit, uint8_t *data);
 bool tca6424a_i2c_write(uint8_t offset, uint8_t *data, uint8_t len);

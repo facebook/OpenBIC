@@ -37,6 +37,11 @@ bool pca6416a_init(void)
 }
 
 // tca6424a
+bool is_tca6424a_accessible()
+{
+	return (get_asic_board_id() == ASIC_BOARD_ID_EVB && is_mb_dc_on());
+}
+
 bool tca6424a_i2c_read(uint8_t offset, uint8_t *data, uint8_t len)
 {
 	return plat_i2c_read(TCA6424A_BUS, TCA6424A_ADDR, (offset | TCA6424A_AI_BIT), data, len);
@@ -138,14 +143,6 @@ void set_hamsa_mfio_6_8_10_output()
 	tca6424a_i2c_write_bit(TCA6424A_CONFIG_1, HAMSA_MFIO6, 0);
 	tca6424a_i2c_write_bit(TCA6424A_CONFIG_1, HAMSA_MFIO8, 0);
 	tca6424a_i2c_write_bit(TCA6424A_CONFIG_2, HAMSA_MFIO10, 0);
-
-	tca6424a_i2c_write_bit(TCA6424A_OUTPUT_PORT_1, HAMSA_MFIO6, 0);
-	tca6424a_i2c_write_bit(TCA6424A_OUTPUT_PORT_1, HAMSA_MFIO8, 0);
-	tca6424a_i2c_write_bit(TCA6424A_OUTPUT_PORT_2, HAMSA_MFIO10, 0);
-
-	set_bootstrap_table_change_setting_value(STRAP_INDEX_HAMSA_MFIO6, 0);
-	set_bootstrap_table_change_setting_value(STRAP_INDEX_HAMSA_MFIO8, 0);
-	set_bootstrap_table_change_setting_value(STRAP_INDEX_HAMSA_MFIO10, 0);
 }
 
 void set_medha0_mfio_6_8_10_output()
@@ -153,14 +150,6 @@ void set_medha0_mfio_6_8_10_output()
 	tca6424a_i2c_write_bit(TCA6424A_CONFIG_2, MEDHA0_MFIO6, 0);
 	tca6424a_i2c_write_bit(TCA6424A_CONFIG_2, MEDHA0_MFIO8, 0);
 	tca6424a_i2c_write_bit(TCA6424A_CONFIG_2, MEDHA0_MFIO10, 0);
-
-	tca6424a_i2c_write_bit(TCA6424A_OUTPUT_PORT_2, MEDHA0_MFIO6, 0);
-	tca6424a_i2c_write_bit(TCA6424A_OUTPUT_PORT_2, MEDHA0_MFIO8, 0);
-	tca6424a_i2c_write_bit(TCA6424A_OUTPUT_PORT_2, MEDHA0_MFIO10, 0);
-
-	set_bootstrap_table_change_setting_value(STRAP_INDEX_MEDHA0_MFIO6, 0);
-	set_bootstrap_table_change_setting_value(STRAP_INDEX_MEDHA0_MFIO8, 0);
-	set_bootstrap_table_change_setting_value(STRAP_INDEX_MEDHA0_MFIO10, 0);
 }
 
 void set_medha1_mfio_6_8_10_output()
@@ -168,14 +157,6 @@ void set_medha1_mfio_6_8_10_output()
 	tca6424a_i2c_write_bit(TCA6424A_CONFIG_2, MEDHA1_MFIO6, 0);
 	tca6424a_i2c_write_bit(TCA6424A_CONFIG_2, MEDHA1_MFIO8, 0);
 	tca6424a_i2c_write_bit(TCA6424A_CONFIG_2, MEDHA1_MFIO10, 0);
-
-	tca6424a_i2c_write_bit(TCA6424A_OUTPUT_PORT_2, MEDHA1_MFIO6, 0);
-	tca6424a_i2c_write_bit(TCA6424A_OUTPUT_PORT_2, MEDHA1_MFIO8, 0);
-	tca6424a_i2c_write_bit(TCA6424A_OUTPUT_PORT_2, MEDHA1_MFIO10, 0);
-
-	set_bootstrap_table_change_setting_value(STRAP_INDEX_MEDHA1_MFIO6, 0);
-	set_bootstrap_table_change_setting_value(STRAP_INDEX_MEDHA1_MFIO8, 0);
-	set_bootstrap_table_change_setting_value(STRAP_INDEX_MEDHA1_MFIO10, 0);
 }
 
 bool tca6424a_init(void)
@@ -195,13 +176,34 @@ bool tca6424a_init(void)
 // total
 void ioexp_init(void)
 {
+	// read from IO, save value (if output) to table
+	set_ioexp_val_to_bootstrap_table();
+
 	if (!pca6416a_init())
 		LOG_ERR("pca6416a init fail");
 
-	if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
+	if (is_tca6424a_accessible()) {
 		if (!tca6424a_init())
 			LOG_ERR("tca6424a init fail");
 	}
+
+	// set to output if TEST_STRAP enable
+	int drive_level = 0;
+	get_bootstrap_change_drive_level(STRAP_INDEX_HAMSA_TEST_STRAP_R, &drive_level);
+	if (drive_level == 1) {
+		set_hamsa_mfio_6_8_10_output();
+	}
+	get_bootstrap_change_drive_level(STRAP_INDEX_MEDHA0_TEST_STRAP, &drive_level);
+	if (drive_level == 1) {
+		set_medha0_mfio_6_8_10_output();
+	}
+	get_bootstrap_change_drive_level(STRAP_INDEX_MEDHA1_TEST_STRAP, &drive_level);
+	if (drive_level == 1) {
+		set_medha1_mfio_6_8_10_output();
+	}
+
+	// set value from table
+	set_bootstrap_table_val_to_ioexp();
 }
 void set_pca6554apw_ioe_value(uint8_t ioe_bus, uint8_t ioe_addr, uint8_t ioe_reg, uint8_t value)
 {

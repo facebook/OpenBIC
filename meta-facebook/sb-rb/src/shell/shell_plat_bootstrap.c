@@ -69,51 +69,6 @@ static int cmd_bootstrap_get_all(const struct shell *shell, size_t argc, char **
 			continue;
 		}
 
-		// for MFIO 6 8 10
-		if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
-			uint8_t ioexp_value = 0;
-			switch (i) {
-			case STRAP_INDEX_HAMSA_MFIO6:
-				tca6424a_i2c_read_drive_value(1, HAMSA_MFIO6, &ioexp_value);
-				drive_level = ioexp_value;
-				break;
-			case STRAP_INDEX_HAMSA_MFIO8:
-				tca6424a_i2c_read_drive_value(1, HAMSA_MFIO8, &ioexp_value);
-				drive_level = ioexp_value;
-				break;
-			case STRAP_INDEX_HAMSA_MFIO10:
-				tca6424a_i2c_read_drive_value(2, HAMSA_MFIO10, &ioexp_value);
-				drive_level = ioexp_value;
-				break;
-			case STRAP_INDEX_MEDHA0_MFIO6:
-				tca6424a_i2c_read_drive_value(2, MEDHA0_MFIO6, &ioexp_value);
-				drive_level = ioexp_value;
-				break;
-			case STRAP_INDEX_MEDHA0_MFIO8:
-				tca6424a_i2c_read_drive_value(2, MEDHA0_MFIO8, &ioexp_value);
-				drive_level = ioexp_value;
-				break;
-			case STRAP_INDEX_MEDHA0_MFIO10:
-				tca6424a_i2c_read_drive_value(2, MEDHA0_MFIO10, &ioexp_value);
-				drive_level = ioexp_value;
-				break;
-			case STRAP_INDEX_MEDHA1_MFIO6:
-				tca6424a_i2c_read_drive_value(2, MEDHA1_MFIO6, &ioexp_value);
-				drive_level = ioexp_value;
-				break;
-			case STRAP_INDEX_MEDHA1_MFIO8:
-				tca6424a_i2c_read_drive_value(2, MEDHA1_MFIO8, &ioexp_value);
-				drive_level = ioexp_value;
-				break;
-			case STRAP_INDEX_MEDHA1_MFIO10:
-				tca6424a_i2c_read_drive_value(2, MEDHA1_MFIO10, &ioexp_value);
-				drive_level = ioexp_value;
-				break;
-			default:
-				break;
-			}
-		}
-
 		shell_print(shell, "%-4d|%-40s|0x%-23.2x", i, rail_name, drive_level);
 	}
 

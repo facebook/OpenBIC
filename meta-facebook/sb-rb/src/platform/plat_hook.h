@@ -267,6 +267,7 @@ bool post_ubc_read(sensor_cfg *cfg, void *args, int *reading);
 bool bootstrap_user_settings_set(void *bootstrap_user_settings);
 bool vr_vout_user_settings_set(void *user_settings_value);
 bool set_bootstrap_table_val_to_ioexp(void);
+bool set_ioexp_val_to_bootstrap_table(void);
 bool set_bootstrap_val_to_device(uint8_t strap, uint8_t val);
 uint8_t get_strap_index_max();
 bool post_tmp432_read(sensor_cfg *cfg, void *args, int *reading);
