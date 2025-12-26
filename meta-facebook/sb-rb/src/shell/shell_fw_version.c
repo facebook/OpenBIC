@@ -153,19 +153,32 @@ void cmd_get_fw_version_cpld(const struct shell *shell, size_t argc, char **argv
 
 void cmd_get_fw_version_asic(const struct shell *shell, size_t argc, char **argv)
 {
-	for (uint8_t idx = BOOT0_HAMSA; idx < BOOT0_MAX; idx++) {
-		I2C_MSG i2c_msg = { .bus = asic_list[idx].bus, .target_addr = asic_list[idx].addr };
-		i2c_msg.tx_len = 1;
-		i2c_msg.rx_len = 11;
-		i2c_msg.data[0] = ASIC_VERSION_BYTE;
-		if (i2c_master_read(&i2c_msg, I2C_MAX_RETRY)) {
-			shell_warn(shell, "Can't get boot0 version from ASIC");
-			return;
-		}
-		shell_print(shell, "%s boot0 VER : %02d.%02d.%02d| CRC32 : %08x",
-			    asic_list[idx].name, i2c_msg.data[9], i2c_msg.data[8], i2c_msg.data[7],
-			    plat_get_image_crc_checksum(asic_list[idx].id));
+	I2C_MSG i2c_msg = { .bus = asic_list[BOOT0_HAMSA].bus, .target_addr = asic_list[BOOT0_HAMSA].addr };
+	i2c_msg.tx_len = 1;
+	i2c_msg.rx_len = 11;
+	i2c_msg.data[0] = ASIC_VERSION_BYTE;
+	if (i2c_master_read(&i2c_msg, I2C_MAX_RETRY)) {
+		shell_warn(shell, "Can't get boot0, boot1 version from ASIC");
+		return;
 	}
+	shell_print(shell, " boot1 VER from asic: %02d.%02d.%02d",
+			i2c_msg.data[2], i2c_msg.data[3], i2c_msg.data[4]);
+	shell_print(shell, " boot0 VER from asic: %02d.%02d.%02d",
+			i2c_msg.data[9], i2c_msg.data[8], i2c_msg.data[7]);
+	// get temp version from temp array
+    for (int i = 0; i < BOOT0_MAX; i++) {
+		uint32_t version_tmp = plat_get_image_version(i);
+		unsigned char tmp_bytes[4];
+		tmp_bytes[0] = (version_tmp >> 24) & 0xFF;
+		tmp_bytes[1] = (version_tmp >> 16) & 0xFF;
+		tmp_bytes[2] = (version_tmp >> 8)  & 0xFF;
+		tmp_bytes[3] = version_tmp & 0xFF;
+        shell_print(shell, " boot0 VER from temp array: %02d.%02d.%02d.%02d",
+			tmp_bytes[0], tmp_bytes[1], tmp_bytes[2], tmp_bytes[3]);
+    }
+
+	
+
 	return;
 }
 

@@ -739,7 +739,7 @@ err_i2c:
 }
 #define ASIC_VERSION_BYTE 0x68
 #define I2C_MAX_RETRY 3
-bool get_fw_version_from_asic(uint8_t *data)
+void get_fw_version_boot0_from_asic()
 {
 	I2C_MSG i2c_msg = { .bus = I2C_BUS12, .target_addr = 0x32 };
 	i2c_msg.tx_len = 1;
@@ -749,7 +749,27 @@ bool get_fw_version_from_asic(uint8_t *data)
 
 	LOG_INF(" boot0 VER : %02d.%02d.%02d", i2c_msg.data[9], i2c_msg.data[8], i2c_msg.data[7]);
 	uint32_t data_p = i2c_msg.data[9] << 16 | i2c_msg.data[8] << 8 | i2c_msg.data[7];
+	if (data_p)
+	{
+		// update temp data
+		LOG_INF("update boot0 version read from asic");
+		version_boot0[0] = data_p;
+		version_boot0[1] = data_p;
+		version_boot0[2] = data_p;
+	}	
+}
+bool get_fw_version_boot1_from_asic(uint8_t *data)
+{
+	I2C_MSG i2c_msg = { .bus = I2C_BUS12, .target_addr = 0x32 };
+	i2c_msg.tx_len = 1;
+	i2c_msg.rx_len = 11;
+	i2c_msg.data[0] = ASIC_VERSION_BYTE;
+	i2c_master_read(&i2c_msg, I2C_MAX_RETRY);
+
+	LOG_INF(" boot1 VER : %02d.%02d.%02d", i2c_msg.data[2], i2c_msg.data[3], i2c_msg.data[4]);
+	uint32_t data_p = i2c_msg.data[2] << 16 | i2c_msg.data[3] << 8 | i2c_msg.data[4];
 	memcpy(data, &data_p, 4);
+	
 	return true;
 }
 
@@ -764,7 +784,7 @@ static bool get_boot1_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 	buf_p += strlen(remain_str_p);
 	*len += strlen(remain_str_p);
 	uint8_t *version_tmp = NULL;
-	uint32_t version = get_fw_version_from_asic(version_tmp);
+	uint32_t version = get_fw_version_boot1_from_asic(version_tmp);
 
 	*len += bin2hex((uint8_t *)&version, 4, buf_p, 4);
 	buf_p += 4;
@@ -778,6 +798,7 @@ static bool get_boot0_hamsa_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 	CHECK_NULL_ARG_WITH_RETURN(info_p, false);
 	CHECK_NULL_ARG_WITH_RETURN(buf, false);
 	CHECK_NULL_ARG_WITH_RETURN(len, false);
+	get_fw_version_boot0_from_asic();
 	bool ret = false;
 	const char *remain_str_p = "flash hamsa BOOT0: ";
 	uint8_t *buf_p = buf;
@@ -812,7 +833,8 @@ static bool get_boot0_medha0_fw_version(void *info_p, uint8_t *buf, uint8_t *len
 	CHECK_NULL_ARG_WITH_RETURN(info_p, false);
 	CHECK_NULL_ARG_WITH_RETURN(buf, false);
 	CHECK_NULL_ARG_WITH_RETURN(len, false);
-
+	// read version from asic first
+	get_fw_version_boot0_from_asic();
 	bool ret = false;
 	const char *remain_str_p = "flash medha0 BOOT0: ";
 	uint8_t *buf_p = buf;
@@ -846,6 +868,7 @@ static bool get_boot0_medha1_fw_version(void *info_p, uint8_t *buf, uint8_t *len
 	CHECK_NULL_ARG_WITH_RETURN(info_p, false);
 	CHECK_NULL_ARG_WITH_RETURN(buf, false);
 	CHECK_NULL_ARG_WITH_RETURN(len, false);
+	get_fw_version_boot0_from_asic();
 	bool ret = false;
 	const char *remain_str_p = "flash medha1 BOOT0: ";
 	uint8_t *buf_p = buf;
