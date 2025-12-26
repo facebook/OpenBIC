@@ -103,6 +103,11 @@ void ISR_GPIO_RST_IRIS_PWR_ON_PLD_R1_N()
 	} else {
 		LOG_INF("dc off, clear io expander init flag");
 		set_ioe_init_flag(0);
+		// when dc offm clear cpld polling alert status
+		uint8_t err_type = CPLD_UNEXPECTED_VAL_TRIGGER_CAUSE;
+		LOG_DBG("cpld_polling_alert_status: true -> false, reset_error_log_states: %x",
+			err_type);
+		reset_error_log_states(err_type);
 	}
 }
 

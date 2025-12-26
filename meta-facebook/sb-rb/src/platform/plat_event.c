@@ -116,6 +116,7 @@ void process_mtia_vr_power_fault_sel(cpld_info *cpld_info, uint8_t *current_cpld
 {
 	CHECK_NULL_ARG(cpld_info);
 	CHECK_NULL_ARG(current_cpld_value);
+	LOG_INF("process_mtia_vr_power_fault_sel");
 	bool get_ubc_enabled_delayed_status = is_ubc_enabled_delayed_enabled();
 	uint8_t expected_val =
 		get_ubc_enabled_delayed_status ? cpld_info->dc_on_defaut : cpld_info->dc_off_defaut;

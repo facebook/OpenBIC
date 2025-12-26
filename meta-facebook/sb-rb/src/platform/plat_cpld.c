@@ -224,7 +224,6 @@ void give_all_vr_pm_alert_sem()
 void poll_cpld_registers()
 {
 	uint8_t data = 0;
-	bool prev_alert_status = false;
 	uint8_t board_id = get_asic_board_id();
 	uint8_t asic_rst = 0;
 	uint8_t prev_asic_rst = 0;
@@ -236,19 +235,6 @@ void poll_cpld_registers()
 		if (is_update_state_idle() == false) {
 			continue;
 		}
-
-		LOG_DBG("cpld_polling_alert_status = %d, cpld_polling_enable_flag = %d",
-			cpld_polling_alert_status, cpld_polling_enable_flag);
-
-		// Check for falling edge of cpld_polling_alert_status (true -> false)
-		if (prev_alert_status && !cpld_polling_alert_status) {
-			uint8_t err_type = CPLD_UNEXPECTED_VAL_TRIGGER_CAUSE;
-			LOG_DBG("cpld_polling_alert_status: true -> false, reset_error_log_states: %x",
-				err_type);
-			reset_error_log_states(err_type);
-		}
-		// Save current alert status for next loop comparison
-		prev_alert_status = cpld_polling_alert_status;
 
 		if (!cpld_polling_enable_flag)
 			continue;
