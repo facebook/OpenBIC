@@ -32,6 +32,7 @@
 #include "shell_plat_average_power.h"
 #include "plat_ioexp.h"
 #include "tmp431.h"
+#include "plat_util.h"
 
 LOG_MODULE_REGISTER(plat_hook);
 
@@ -1265,4 +1266,35 @@ uint8_t get_strap_index_max()
 {
 	return (get_asic_board_id() == ASIC_BOARD_ID_EVB) ? STRAP_INDEX_MAX :
 							    STRAP_INDEX_EXCEPT_EVB_MAX;
+}
+
+bool plat_set_vr_reg(uint8_t rail, uint8_t reg, uint8_t *data, uint8_t len)
+{
+	CHECK_NULL_ARG_WITH_RETURN(data, false);
+
+	bool ret = false;
+	uint8_t sensor_id = vr_rail_table[rail].sensor_id;
+	sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+
+	if ((cfg->pre_sensor_read_hook)) {
+		if ((cfg->pre_sensor_read_hook)(cfg, cfg->pre_sensor_read_args) == false) {
+			LOG_DBG("0x%02x read vr reg 0x%02x pre hook fail!", sensor_id, reg);
+			return false;
+		}
+	};
+
+	if (!plat_i2c_write(cfg->port, cfg->target_addr, reg, data, len)) {
+		LOG_ERR("0x%02x write vr reg 0x%02x fail!", sensor_id, reg);
+		goto err;
+	}
+
+	ret = true;
+err:
+	if (cfg->post_sensor_read_hook) {
+		if (cfg->post_sensor_read_hook(cfg, cfg->post_sensor_read_args, NULL) == false) {
+			LOG_ERR("0x%02x read vr reg 0x%02x post hook fail!", sensor_id, reg);
+		}
+	}
+	return ret;
 }

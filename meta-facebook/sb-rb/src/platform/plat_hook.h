@@ -271,4 +271,5 @@ bool set_ioexp_val_to_bootstrap_table(void);
 bool set_bootstrap_val_to_device(uint8_t strap, uint8_t val);
 uint8_t get_strap_index_max();
 bool post_tmp432_read(sensor_cfg *cfg, void *args, int *reading);
+bool plat_set_vr_reg(uint8_t rail, uint8_t reg, uint8_t *data, uint8_t len);
 #endif
