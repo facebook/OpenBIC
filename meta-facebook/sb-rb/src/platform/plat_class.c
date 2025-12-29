@@ -187,14 +187,14 @@ void pal_show_board_types(const struct shell *shell)
 		    (vr_vendor_module == LUXSHURE_UBC_AND_RNS_VR) ? "LUXSHURE_UBC_AND_RNS_VR" :
 								    "not supported");
 	shell_print(shell, "* UBC_TYPE:      (0x%02X)%s", ubc_module,
-		    (ubc_module == UBC_MODULE_DELTA)	? "DELTA_S54SS4P1A2" :
-		    (ubc_module == UBC_MODULE_MPS)	? "MPS_MPC12109" :
+		    (ubc_module == UBC_MODULE_DELTA)	? "UBC_DELTA_S54SS4P1A2" :
+		    (ubc_module == UBC_MODULE_MPS)	? "UBC_MPS_MPC12109" :
 		    (ubc_module == UBC_MODULE_LUXSHARE) ? "UBC_LUXSHURE_LX6310" :
 							  "not supported");
 
 	shell_print(shell, "* VR_TYPE:       (0x%02X)%s", vr_module,
-		    (vr_module == VR_MODULE_MPS) ? "MPS_MP2971_MP29816C" :
-		    (vr_module == VR_MODULE_RNS) ? "MPS_RAA229140_RAA228249" :
+		    (vr_module == VR_MODULE_MPS) ? "VR_MPS_MP2971_MP29816C" :
+		    (vr_module == VR_MODULE_RNS) ? "VR_RNS_RAA229140_RAA228249" :
 						   "not supported");
 
 	shell_print(shell, "* TMP_TYPE:      (0x%02X)%s", tmp_module,
