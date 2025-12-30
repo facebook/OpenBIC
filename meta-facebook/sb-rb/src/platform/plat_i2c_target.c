@@ -38,6 +38,7 @@
 #include "plat_hook.h"
 #include "plat_i2c.h"
 #include "plat_ioexp.h"
+#include "plat_fru.h"
 
 LOG_MODULE_REGISTER(plat_i2c_target);
 
@@ -45,6 +46,8 @@ LOG_MODULE_REGISTER(plat_i2c_target);
 #define DATA_TABLE_LENGTH_1 1
 #define DATA_TABLE_LENGTH_2 2
 #define DATA_TABLE_LENGTH_4 4
+#define DATA_TABLE_LENGTH_7 7
+#define DATA_TABLE_LENGTH_13 13
 #define DEVICE_TYPE 0x01
 #define REGISTER_LAYOUT_VERSION 0x01
 #define SENSOR_READING_PDR_INDEX_MAX 50
@@ -56,6 +59,11 @@ LOG_MODULE_REGISTER(plat_i2c_target);
 #define STRAP_SET_TYPE 0x44 // 01000100
 #define VR_PWR_BUF_SIZE 38
 #define I2C_TARGET_BUS_ASIC I2C_BUS7 // asic bus is I2C_BUS7, I2C_BUS6 is only for test
+
+typedef struct __attribute__((__packed__)) {
+	uint8_t data_length;
+	uint8_t fru_data[];
+} plat_fru_data;
 
 static bool command_reply_data_handle(void *arg);
 void set_bootstrap_element_handler();
@@ -115,9 +123,94 @@ plat_sensor_init_data *sensor_init_data_table[DATA_TABLE_LENGTH_2] = { NULL };
 plat_sensor_reading *sensor_reading_table[DATA_TABLE_LENGTH_4] = { NULL };
 plat_inventory_ids *inventory_ids_table[DATA_TABLE_LENGTH_1] = { NULL };
 plat_strap_capability *strap_capability_table[DATA_TABLE_LENGTH_1] = { NULL };
+plat_fru_data *fru_board_data_table[DATA_TABLE_LENGTH_13] = { NULL };
+plat_fru_data *fru_product_data_table[DATA_TABLE_LENGTH_7] = { NULL };
 plat_i2c_bridge_command_status *i2c_bridge_command_status_table[DATA_TABLE_LENGTH_1] = { NULL };
 plat_i2c_bridge_command_response_data
 	*i2c_bridge_command_response_data_table[DATA_TABLE_LENGTH_1] = { NULL };
+
+bool get_fru_info_element(telemetry_info *telemetry_info, char **fru_element,
+			  uint8_t *fru_element_size)
+{
+	CHECK_NULL_ARG_WITH_RETURN(telemetry_info, false);
+
+	FRU_INFO *plat_fru_info = get_fru_info();
+	if (!plat_fru_info)
+		return false;
+
+	switch (telemetry_info->telemetry_offset) {
+	case FRU_BOARD_PART_NUMBER_REG:
+		*fru_element = plat_fru_info->board.board_part_number;
+		break;
+	case FRU_BOARD_SERIAL_NUMBER_REG:
+		*fru_element = plat_fru_info->board.board_serial;
+		break;
+	case FRU_BOARD_PRODUCT_NAME_REG:
+		*fru_element = plat_fru_info->board.board_product;
+		break;
+	case FRU_BOARD_CUSTOM_DATA_1_REG:
+		*fru_element = plat_fru_info->board.board_custom_data[0];
+		break;
+	case FRU_BOARD_CUSTOM_DATA_2_REG:
+		*fru_element = plat_fru_info->board.board_custom_data[1];
+		break;
+	case FRU_BOARD_CUSTOM_DATA_3_REG:
+		*fru_element = plat_fru_info->board.board_custom_data[2];
+		break;
+	case FRU_BOARD_CUSTOM_DATA_4_REG:
+		*fru_element = plat_fru_info->board.board_custom_data[3];
+		break;
+	case FRU_BOARD_CUSTOM_DATA_5_REG:
+		*fru_element = plat_fru_info->board.board_custom_data[4];
+		break;
+	case FRU_BOARD_CUSTOM_DATA_6_REG:
+		*fru_element = plat_fru_info->board.board_custom_data[5];
+		break;
+	case FRU_BOARD_CUSTOM_DATA_7_REG:
+		*fru_element = plat_fru_info->board.board_custom_data[6];
+		break;
+	case FRU_BOARD_CUSTOM_DATA_8_REG:
+		*fru_element = plat_fru_info->board.board_custom_data[7];
+		break;
+	case FRU_BOARD_CUSTOM_DATA_9_REG:
+		*fru_element = plat_fru_info->board.board_custom_data[8];
+		break;
+	case FRU_BOARD_CUSTOM_DATA_10_REG:
+		*fru_element = plat_fru_info->board.board_custom_data[9];
+		break;
+	case FRU_PRODUCT_NAME_REG:
+		*fru_element = plat_fru_info->product.product_name;
+		break;
+	case FRU_PRODUCT_PART_NUMBER_REG:
+		*fru_element = plat_fru_info->product.product_part_number;
+		break;
+	case FRU_PRODUCT_PART_VERSION_REG:
+		*fru_element = plat_fru_info->product.product_version;
+		break;
+	case FRU_PRODUCT_SERIAL_NUMBER_REG:
+		*fru_element = plat_fru_info->product.product_serial;
+		break;
+	case FRU_PRODUCT_ASSET_TAG_REG:
+		*fru_element = plat_fru_info->product.product_asset_tag;
+		break;
+	case FRU_PRODUCT_CUSTOM_DATA_1_REG:
+		*fru_element = plat_fru_info->product.product_custom_data[0];
+		break;
+	case FRU_PRODUCT_CUSTOM_DATA_2_REG:
+		*fru_element = plat_fru_info->product.product_custom_data[1];
+		break;
+	default:
+		LOG_ERR("Unknown reg offset: 0x%02x", telemetry_info->telemetry_offset);
+		break;
+	}
+	if (*fru_element) {
+		*fru_element_size = (uint8_t)strlen(*fru_element);
+	} else {
+		*fru_element_size = 0;
+	}
+	return true;
+}
+
 bool initialize_sensor_data(telemetry_info *telemetry_info, uint8_t *buffer_size)
 {
 	CHECK_NULL_ARG_WITH_RETURN(telemetry_info, false);
@@ -156,6 +249,7 @@ bool initialize_sensor_data(telemetry_info *telemetry_info, uint8_t *buffer_size
 	*buffer_size = (uint8_t)table_size;
 	return true;
 }
+
 bool initialize_sensor_reading(telemetry_info *telemetry_info, uint8_t *buffer_size)
 {
 	CHECK_NULL_ARG_WITH_RETURN(telemetry_info, false);
@@ -192,6 +286,61 @@ bool initialize_sensor_reading(telemetry_info *telemetry_info, uint8_t *buffer_s
 	LOG_HEXDUMP_DBG(sensor_data, table_size, "sensor_data");
 	return true;
 }
+
+bool initialize_fru_board_data(telemetry_info *telemetry_info, uint8_t *buffer_size)
+{
+	CHECK_NULL_ARG_WITH_RETURN(telemetry_info, false);
+
+	int table_index = telemetry_info->telemetry_offset - FRU_BOARD_PART_NUMBER_REG;
+	if (table_index < 0 || table_index >= DATA_TABLE_LENGTH_13)
+		return false;
+
+	char *fru_string = NULL;
+	uint8_t fru_length = 0;
+	if (!get_fru_info_element(telemetry_info, &fru_string, &fru_length)) {
+		LOG_ERR("Failed to retrieve FRU Element");
+	}
+
+	size_t table_size = sizeof(plat_fru_data) + fru_length;
+	plat_fru_data *sensor_data =
+		allocate_table((void **)&fru_board_data_table[table_index], table_size);
+	if (!sensor_data)
+		return false;
+
+	sensor_data->data_length = fru_length;
+	memcpy(sensor_data->fru_data, fru_string, fru_length);
+
+	*buffer_size = (uint8_t)table_size;
+	return true;
+}
+
+bool initialize_fru_product_data(telemetry_info *telemetry_info, uint8_t *buffer_size)
+{
+	CHECK_NULL_ARG_WITH_RETURN(telemetry_info, false);
+
+	int table_index = telemetry_info->telemetry_offset - FRU_PRODUCT_NAME_REG;
+	if (table_index < 0 || table_index >= DATA_TABLE_LENGTH_7)
+		return false;
+
+	char *fru_string = NULL;
+	uint8_t fru_length = 0;
+	if (!get_fru_info_element(telemetry_info, &fru_string, &fru_length)) {
+		LOG_ERR("Failed to retrieve FRU Element");
+	}
+
+	size_t table_size = sizeof(plat_fru_data) + fru_length;
+	plat_fru_data *sensor_data =
+		allocate_table((void **)&fru_product_data_table[table_index], table_size);
+	if (!sensor_data)
+		return false;
+
+	sensor_data->data_length = fru_length;
+	memcpy(sensor_data->fru_data, fru_string, fru_length);
+
+	*buffer_size = (uint8_t)table_size;
+	return true;
+}
+
 void update_sensor_reading_by_sensor_number(uint8_t sensor_number)
 {
 	// sensor number is 1-base but index is 0-base
@@ -612,6 +761,26 @@ telemetry_info telemetry_info_table[] = {
 	{ I2C_BRIDGE_COMMAND_REG },
 	{ I2C_BRIDGE_COMMAND_STATUS_REG },
 	{ I2C_BRIDGE_COMMAND_RESPONSE_REG },
+	{ FRU_BOARD_PART_NUMBER_REG, 0x00, .telemetry_table_init = initialize_fru_board_data },
+	{ FRU_BOARD_SERIAL_NUMBER_REG, 0x00, .telemetry_table_init = initialize_fru_board_data },
+	{ FRU_BOARD_PRODUCT_NAME_REG, 0x00, .telemetry_table_init = initialize_fru_board_data },
+	{ FRU_BOARD_CUSTOM_DATA_1_REG, 0x00, .telemetry_table_init = initialize_fru_board_data },
+	{ FRU_BOARD_CUSTOM_DATA_2_REG, 0x00, .telemetry_table_init = initialize_fru_board_data },
+	{ FRU_BOARD_CUSTOM_DATA_3_REG, 0x00, .telemetry_table_init = initialize_fru_board_data },
+	{ FRU_BOARD_CUSTOM_DATA_4_REG, 0x00, .telemetry_table_init = initialize_fru_board_data },
+	{ FRU_BOARD_CUSTOM_DATA_5_REG, 0x00, .telemetry_table_init = initialize_fru_board_data },
+	{ FRU_BOARD_CUSTOM_DATA_6_REG, 0x00, .telemetry_table_init = initialize_fru_board_data },
+	{ FRU_BOARD_CUSTOM_DATA_7_REG, 0x00, .telemetry_table_init = initialize_fru_board_data },
+	{ FRU_BOARD_CUSTOM_DATA_8_REG, 0x00, .telemetry_table_init = initialize_fru_board_data },
+	{ FRU_BOARD_CUSTOM_DATA_9_REG, 0x00, .telemetry_table_init = initialize_fru_board_data },
+	{ FRU_BOARD_CUSTOM_DATA_10_REG, 0x00, .telemetry_table_init = initialize_fru_board_data },
+	{ FRU_PRODUCT_NAME_REG, 0x00, .telemetry_table_init = initialize_fru_product_data },
+	{ FRU_PRODUCT_PART_NUMBER_REG, 0x00, .telemetry_table_init = initialize_fru_product_data },
+	{ FRU_PRODUCT_PART_VERSION_REG, 0x00, .telemetry_table_init = initialize_fru_product_data },
+	{ FRU_PRODUCT_SERIAL_NUMBER_REG, 0x00, .telemetry_table_init = initialize_fru_product_data },
+	{ FRU_PRODUCT_ASSET_TAG_REG, 0x00, .telemetry_table_init = initialize_fru_product_data },
+	{ FRU_PRODUCT_CUSTOM_DATA_1_REG, 0x00, .telemetry_table_init = initialize_fru_product_data },
+	{ FRU_PRODUCT_CUSTOM_DATA_2_REG, 0x00, .telemetry_table_init = initialize_fru_product_data },
 	{ LEVEL_1_2_3_PWR_ALERT_THRESHOLD_REG },
 	{ LEVEL_1_2_3_PWR_ALERT_TIME_WINDOW_REG },
 	{ VR_POWER_READING_REG },
@@ -695,6 +864,36 @@ static bool command_reply_data_handle(void *arg)
 				LOG_HEXDUMP_DBG(data->target_rd_msg.msg,
 						data->target_rd_msg.msg_length,
 						"i2c bridge command response");
+			} break;
+			case FRU_BOARD_PART_NUMBER_REG:
+			case FRU_BOARD_SERIAL_NUMBER_REG:
+			case FRU_BOARD_PRODUCT_NAME_REG:
+			case FRU_BOARD_CUSTOM_DATA_1_REG:
+			case FRU_BOARD_CUSTOM_DATA_2_REG:
+			case FRU_BOARD_CUSTOM_DATA_3_REG:
+			case FRU_BOARD_CUSTOM_DATA_4_REG:
+			case FRU_BOARD_CUSTOM_DATA_5_REG:
+			case FRU_BOARD_CUSTOM_DATA_6_REG:
+			case FRU_BOARD_CUSTOM_DATA_7_REG:
+			case FRU_BOARD_CUSTOM_DATA_8_REG:
+			case FRU_BOARD_CUSTOM_DATA_9_REG:
+			case FRU_BOARD_CUSTOM_DATA_10_REG: {
+				data->target_rd_msg.msg_length = struct_size;
+				memcpy(data->target_rd_msg.msg,
+						fru_board_data_table[reg_offset - FRU_BOARD_PART_NUMBER_REG],
+						struct_size);
+			} break;
+			case FRU_PRODUCT_NAME_REG:
+			case FRU_PRODUCT_PART_NUMBER_REG:
+			case FRU_PRODUCT_PART_VERSION_REG:
+			case FRU_PRODUCT_SERIAL_NUMBER_REG:
+			case FRU_PRODUCT_ASSET_TAG_REG:
+			case FRU_PRODUCT_CUSTOM_DATA_1_REG:
+			case FRU_PRODUCT_CUSTOM_DATA_2_REG: {
+				data->target_rd_msg.msg_length = struct_size;
+				memcpy(data->target_rd_msg.msg,
+						fru_product_data_table[reg_offset - FRU_PRODUCT_NAME_REG],
+						struct_size);
 			} break;
 			case CONTROL_VOL_VR_ASIC_P0V75_VDDPHY_HBM0246_REG:
 			case CONTROL_VOL_VR_ASIC_P0V75_VDDPHY_HBM1357_REG:
@@ -940,6 +1139,7 @@ void i2c_bridge_command_handler(struct k_work *work_item)
 		memcpy(sensor_data_response->response_data, i2c_msg.data, response_data_len);
 	}
 }
+
 void set_control_voltage_handler(struct k_work *work_item)
 {
 	const plat_control_voltage *sensor_data =
@@ -950,6 +1150,7 @@ void set_control_voltage_handler(struct k_work *work_item)
 
 	plat_set_vout_command(rail, &millivolt, false, false);
 }
+
 void plat_master_write_thread_handler()
 {
 	int rc = 0;
