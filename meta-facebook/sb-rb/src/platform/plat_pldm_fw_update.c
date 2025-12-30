@@ -749,14 +749,13 @@ void get_fw_version_boot0_from_asic()
 
 	LOG_INF(" boot0 VER : %02d.%02d.%02d", i2c_msg.data[9], i2c_msg.data[8], i2c_msg.data[7]);
 	uint32_t data_p = i2c_msg.data[9] << 16 | i2c_msg.data[8] << 8 | i2c_msg.data[7];
-	if (data_p)
-	{
+	if (data_p) {
 		// update temp data
 		LOG_INF("update boot0 version read from asic");
 		version_boot0[0] = data_p;
 		version_boot0[1] = data_p;
 		version_boot0[2] = data_p;
-	}	
+	}
 }
 bool get_fw_version_boot1_from_asic(uint8_t *data)
 {
@@ -769,7 +768,7 @@ bool get_fw_version_boot1_from_asic(uint8_t *data)
 	LOG_INF(" boot1 VER : %02d.%02d.%02d", i2c_msg.data[2], i2c_msg.data[3], i2c_msg.data[4]);
 	uint32_t data_p = i2c_msg.data[2] << 16 | i2c_msg.data[3] << 8 | i2c_msg.data[4];
 	memcpy(data, &data_p, 4);
-	
+
 	return true;
 }
 
@@ -1330,4 +1329,9 @@ void pal_warm_reset_prepare()
 {
 	LOG_INF("cmd platform warm reset prepare");
 	plat_reset_prepare();
+}
+
+void update_temp_boot0_version(uint32_t version, uint8_t index)
+{
+	version_boot0[index] = version;
 }

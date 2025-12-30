@@ -153,7 +153,8 @@ void cmd_get_fw_version_cpld(const struct shell *shell, size_t argc, char **argv
 
 void cmd_get_fw_version_asic(const struct shell *shell, size_t argc, char **argv)
 {
-	I2C_MSG i2c_msg = { .bus = asic_list[BOOT0_HAMSA].bus, .target_addr = asic_list[BOOT0_HAMSA].addr };
+	I2C_MSG i2c_msg = { .bus = asic_list[BOOT0_HAMSA].bus,
+			    .target_addr = asic_list[BOOT0_HAMSA].addr };
 	i2c_msg.tx_len = 1;
 	i2c_msg.rx_len = 11;
 	i2c_msg.data[0] = ASIC_VERSION_BYTE;
@@ -161,24 +162,30 @@ void cmd_get_fw_version_asic(const struct shell *shell, size_t argc, char **argv
 		shell_warn(shell, "Can't get boot0, boot1 version from ASIC");
 		return;
 	}
-	shell_print(shell, " boot1 VER from asic: %02d.%02d.%02d",
-			i2c_msg.data[2], i2c_msg.data[3], i2c_msg.data[4]);
-	shell_print(shell, " boot0 VER from asic: %02d.%02d.%02d",
-			i2c_msg.data[9], i2c_msg.data[8], i2c_msg.data[7]);
+	shell_print(shell, " boot1 VER from asic: %02d.%02d.%02d", i2c_msg.data[2], i2c_msg.data[3],
+		    i2c_msg.data[4]);
+	shell_print(shell, " boot0 VER from asic: %02d.%02d.%02d", i2c_msg.data[9], i2c_msg.data[8],
+		    i2c_msg.data[7]);
+	uint32_t tmp_version_boot0 = i2c_msg.data[9] << 16 | i2c_msg.data[8] << 8 | i2c_msg.data[7];
+	// if boot0 version is not 0, update temp data
+	if (tmp_version_boot0) {
+		// update temp data
+		shell_print(shell, "update boot0 version read from asic");
+		for (int i = 0; i < BOOT0_MAX; i++) {
+			update_temp_boot0_version(tmp_version_boot0, i);
+		}
+	}
 	// get temp version from temp array
-    for (int i = 0; i < BOOT0_MAX; i++) {
+	for (int i = 0; i < BOOT0_MAX; i++) {
 		uint32_t version_tmp = plat_get_image_version(i);
 		unsigned char tmp_bytes[4];
 		tmp_bytes[0] = (version_tmp >> 24) & 0xFF;
 		tmp_bytes[1] = (version_tmp >> 16) & 0xFF;
-		tmp_bytes[2] = (version_tmp >> 8)  & 0xFF;
+		tmp_bytes[2] = (version_tmp >> 8) & 0xFF;
 		tmp_bytes[3] = version_tmp & 0xFF;
-        shell_print(shell, " boot0 VER from temp array: %02d.%02d.%02d.%02d",
-			tmp_bytes[0], tmp_bytes[1], tmp_bytes[2], tmp_bytes[3]);
-    }
-
-	
-
+		shell_print(shell, " boot0 VER from temp array: %02d.%02d.%02d.%02d", tmp_bytes[0],
+			    tmp_bytes[1], tmp_bytes[2], tmp_bytes[3]);
+	}
 	return;
 }
 
