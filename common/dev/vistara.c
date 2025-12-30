@@ -26,7 +26,7 @@
 LOG_MODULE_REGISTER(vistara);
 
 ddr_slot_info_cache_t g_ddr_slot_cache = { 0 };
-
+K_MUTEX_DEFINE(global_init_mutex);
 __weak uint8_t plat_get_cxl_eid(uint8_t cxl_id)
 {
 	return 0;
@@ -74,70 +74,105 @@ bool vistara_read_ddr_slot_info(uint8_t cxl_eid, uint8_t *resp)
 	return true;
 }
 
-int vistara_init_ddr_slot_info(void)
+int vistara_init_ddr_slot_info(uint8_t cxl_id)
 {
+	if (cxl_id >= MAX_CXL_COUNT) {
+		LOG_ERR("Invalid CXL ID: %d (max: %d)", cxl_id + 1, MAX_CXL_COUNT - 1);
+		return 0;
+	}
+
 	uint8_t resp_buf[READ_DDR_SLOT_INFO_RESP_LEN];
-	int success_count = 0;
+	uint8_t cxl_eid = plat_get_cxl_eid(cxl_id);
 
-	// Clear cache
-	memset(&g_ddr_slot_cache, 0, sizeof(ddr_slot_info_cache_t));
-
-	// Init master DIMM ID
-	for (uint8_t i = 0; i < MAX_CXL_COUNT; i++) {
-		g_ddr_slot_cache.master_dimm_id[i] = 0xFF;
-	}
-
-	for (uint8_t cxl_id = 0; cxl_id < MAX_CXL_COUNT; cxl_id++) {
-		uint8_t cxl_eid = plat_get_cxl_eid(cxl_id);
-
-		if (vistara_read_ddr_slot_info(cxl_eid, resp_buf)) {
-			uint32_t *num_slots = (uint32_t *)resp_buf;
-			g_ddr_slot_cache.slot_info[cxl_id].num_dimm_slots = *num_slots;
-
-			// 4 byte(slot count) + 16 byte(per DIMM) * 4
-			uint8_t *dimm_data = resp_buf + 4;  // skip 4 byte(slot count)
-
-			for (int dimm_idx = 0; dimm_idx < MAX_DIMM_PER_CXL && dimm_idx < *num_slots; dimm_idx++) {
-				dimm_slot_info_t *dimm_info = &g_ddr_slot_cache.slot_info[cxl_id].dimm_info[dimm_idx];
-				uint8_t *current_dimm = dimm_data + (dimm_idx * 16);
-
-				dimm_info->spd_i2c_addr = current_dimm[0];
-				dimm_info->channel_id = current_dimm[1];
-				dimm_info->dimm_silk_screen = current_dimm[2];
-				dimm_info->dimm_present = current_dimm[3];
-
-				if (dimm_info->dimm_present &&
-				    g_ddr_slot_cache.master_dimm_id[cxl_id] == 0xFF) {
-					g_ddr_slot_cache.master_dimm_id[cxl_id] = dimm_idx;
-					LOG_INF("CXL_%d: Master DIMM selected as DIMM_%d", cxl_id, dimm_idx);
-				}
-			}
-
-			if (g_ddr_slot_cache.master_dimm_id[cxl_id] == 0xFF) {
-				LOG_WRN("CXL_%d: No DIMM present, no master selected", cxl_id);
-			}
-
-			success_count++;
-		} else {
-			LOG_ERR("Failed to read DDR slot info from CXL %d", cxl_id);
+	// Initialize cache if not initialized
+	k_mutex_lock(&global_init_mutex, K_FOREVER);
+	static bool cache_initialized = false;
+	if (!cache_initialized) {
+		memset(&g_ddr_slot_cache, 0, sizeof(ddr_slot_info_cache_t));
+		for (uint8_t i = 0; i < MAX_CXL_COUNT; i++) {
+			k_mutex_init(&g_ddr_slot_cache.mutex[i]);
+			g_ddr_slot_cache.valid[i] = false;
+			g_ddr_slot_cache.master_dimm_id[i] = 0xFF;
+			g_ddr_slot_cache.timestamp[i] = 0;
 		}
+		cache_initialized = true;
+		LOG_INF("DDR slot cache initialized");
 	}
 
-	if (success_count > 0) {
-		g_ddr_slot_cache.valid = true;
-		g_ddr_slot_cache.timestamp = k_uptime_get_32();
-	}
+	k_mutex_unlock(&global_init_mutex);
+	k_mutex_lock(&g_ddr_slot_cache.mutex[cxl_id], K_FOREVER);
 
-	return success_count;
+	// Clear only this CXL's data
+	memset(&g_ddr_slot_cache.slot_info[cxl_id], 0, sizeof(read_ddr_slot_info_resp));
+	g_ddr_slot_cache.master_dimm_id[cxl_id] = 0xFF;
+	g_ddr_slot_cache.valid[cxl_id] = false;
+
+	k_mutex_unlock(&g_ddr_slot_cache.mutex[cxl_id]);
+
+	if (vistara_read_ddr_slot_info(cxl_eid, resp_buf)) {
+		k_mutex_lock(&g_ddr_slot_cache.mutex[cxl_id], K_FOREVER);
+
+		uint32_t num_slots = 0;
+		memcpy(&num_slots, resp_buf, sizeof(uint32_t));
+		g_ddr_slot_cache.slot_info[cxl_id].num_dimm_slots = num_slots;
+
+		LOG_INF("CXL%d: Found %d DIMM slots", cxl_id + 1, num_slots);
+
+		// Validate slot count
+		if (num_slots > MAX_DIMM_PER_CXL) {
+			LOG_WRN("CXL%d: Number of slots (%d) exceeds maximum (%d), truncating",
+				cxl_id + 1, num_slots, MAX_DIMM_PER_CXL);
+			num_slots = MAX_DIMM_PER_CXL;
+			g_ddr_slot_cache.slot_info[cxl_id].num_dimm_slots = num_slots;
+		}
+
+		// 4 byte(slot count) + 16 byte(per DIMM) * 4
+		uint8_t *dimm_data = resp_buf + 4; // skip 4 byte(slot count)
+
+		for (int dimm_idx = 0; dimm_idx < MAX_DIMM_PER_CXL && dimm_idx < num_slots;
+		     dimm_idx++) {
+			dimm_slot_info_t *dimm_info =
+				&g_ddr_slot_cache.slot_info[cxl_id].dimm_info[dimm_idx];
+			uint8_t *current_dimm = dimm_data + (dimm_idx * 16);
+
+			dimm_info->spd_i2c_addr = current_dimm[0];
+			dimm_info->channel_id = current_dimm[1];
+			dimm_info->dimm_silk_screen = current_dimm[2];
+			dimm_info->dimm_present = current_dimm[3];
+
+			LOG_DBG("CXL%d DIMM_%d: addr=0x%02x, ch=%d, silk=%d, present=%d", cxl_id,
+				dimm_idx, dimm_info->spd_i2c_addr, dimm_info->channel_id,
+				dimm_info->dimm_silk_screen, dimm_info->dimm_present);
+
+			if (dimm_info->dimm_present &&
+			    g_ddr_slot_cache.master_dimm_id[cxl_id] == 0xFF) {
+				g_ddr_slot_cache.master_dimm_id[cxl_id] = dimm_idx;
+				LOG_INF("CXL%d: Master DIMM selected as DIMM_%d", cxl_id + 1,
+					dimm_idx);
+			}
+		}
+
+		if (g_ddr_slot_cache.master_dimm_id[cxl_id] == 0xFF) {
+			LOG_WRN("CXL%d: No DIMM present, no master selected", cxl_id + 1);
+		}
+
+		g_ddr_slot_cache.valid[cxl_id] = true;
+		g_ddr_slot_cache.timestamp[cxl_id] = k_uptime_get_32();
+
+		LOG_INF("CXL%d: DDR slot info initialized successfully at timestamp %u", cxl_id + 1,
+			g_ddr_slot_cache.timestamp[cxl_id]);
+
+		k_mutex_unlock(&g_ddr_slot_cache.mutex[cxl_id]);
+
+		return 1; // Success
+	} else {
+		LOG_ERR("Failed to read DDR slot info from CXL %d", cxl_id + 1);
+		return 0; // Failure
+	}
 }
 
 bool vistara_get_dimm_present_from_cache(uint8_t dimm_id)
 {
-	if (!g_ddr_slot_cache.valid) {
-		LOG_WRN("DDR slot info cache is not valid");
-		return false;
-	}
-
 	uint8_t cxl_id = dimm_id / MAX_DIMM_PER_CXL;
 	uint8_t dimm_idx = dimm_id % MAX_DIMM_PER_CXL;
 
@@ -146,13 +181,24 @@ bool vistara_get_dimm_present_from_cache(uint8_t dimm_id)
 		return false;
 	}
 
+	k_mutex_lock(&g_ddr_slot_cache.mutex[cxl_id], K_FOREVER);
+
+	if (!g_ddr_slot_cache.valid[cxl_id]) {
+		k_mutex_unlock(&g_ddr_slot_cache.mutex[cxl_id]);
+		LOG_WRN("CXL%d DDR slot info cache is not valid", cxl_id + 1);
+		return false;
+	}
+
 	if (dimm_idx >= g_ddr_slot_cache.slot_info[cxl_id].num_dimm_slots) {
-		LOG_DBG("DIMM index %d exceeds available slots %d for CXL %d",
-			dimm_idx, g_ddr_slot_cache.slot_info[cxl_id].num_dimm_slots, cxl_id);
+		k_mutex_unlock(&g_ddr_slot_cache.mutex[cxl_id]);
+		LOG_DBG("DIMM index %d exceeds available slots %d for CXL %d", dimm_idx,
+			g_ddr_slot_cache.slot_info[cxl_id].num_dimm_slots, cxl_id + 1);
 		return false;
 	}
 
 	bool present = g_ddr_slot_cache.slot_info[cxl_id].dimm_info[dimm_idx].dimm_present;
+
+	k_mutex_unlock(&g_ddr_slot_cache.mutex[cxl_id]);
 
 	return present;
 }
@@ -189,6 +235,7 @@ uint8_t vistara_read(sensor_cfg *cfg, int *reading)
 	uint8_t cxl_eid = plat_get_cxl_eid(cxl_id);
 	uint8_t dimm_id = cfg->target_addr;
 	uint8_t sensor_type = cfg->arg0;
+	uint8_t dimm_idx = dimm_id % MAX_DIMM_PER_CXL;
 	vistara_init_arg *init_arg = (vistara_init_arg *)cfg->init_args;
 
 	sensor_val *sval = (sensor_val *)reading;
@@ -198,18 +245,20 @@ uint8_t vistara_read(sensor_cfg *cfg, int *reading)
 	case DDR_TEMP: {
 		uint8_t resp_buf[READ_DDR_TEMP_RESP_LEN];
 		if (init_arg->is_cached) {
+			k_mutex_lock(&g_ddr_slot_cache.mutex[cxl_id], K_FOREVER);
 			// Get master dimm id from slot info cache
-			if (!g_ddr_slot_cache.valid) {
+			if (!g_ddr_slot_cache.valid[cxl_id]) {
+				k_mutex_unlock(&g_ddr_slot_cache.mutex[cxl_id]);
 				return SENSOR_FAIL_TO_ACCESS;
 			}
-
 			uint8_t master_dimm = g_ddr_slot_cache.master_dimm_id[cxl_id];
+			k_mutex_unlock(&g_ddr_slot_cache.mutex[cxl_id]);
 
 			if (master_dimm == 0xFF) {
 				return SENSOR_FAIL_TO_ACCESS;
 			}
 
-			if (dimm_id == master_dimm) {
+			if (dimm_idx == master_dimm) {
 				if (!vistara_read_ddr_temp(cxl_eid, resp_buf)) {
 					plat_set_dimm_cache(resp_buf, cxl_id,
 							    SENSOR_FAIL_TO_ACCESS);
@@ -219,7 +268,7 @@ uint8_t vistara_read(sensor_cfg *cfg, int *reading)
 				}
 			}
 
-			f_val = plat_get_dimm_cache(cxl_id, dimm_id);
+			f_val = plat_get_dimm_cache(cxl_id, dimm_idx);
 			if (f_val < 0) {
 				return SENSOR_FAIL_TO_ACCESS;
 			}
@@ -229,7 +278,7 @@ uint8_t vistara_read(sensor_cfg *cfg, int *reading)
 				return SENSOR_FAIL_TO_ACCESS;
 			} else {
 				read_ddr_temp_resp *ddr_temp =
-					(read_ddr_temp_resp *)(resp_buf + dimm_id * 8);
+					(read_ddr_temp_resp *)(resp_buf + dimm_idx * 8);
 				f_val = *((float *)&ddr_temp->dimm_temp);
 				LOG_HEXDUMP_INF(ddr_temp->dimm_temp, sizeof(float), "ddr temp");
 			}

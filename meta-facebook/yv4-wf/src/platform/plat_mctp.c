@@ -36,6 +36,7 @@
 #include "plat_ipmb.h"
 #include "plat_power_seq.h"
 #include "plat_pldm_sensor.h"
+#include "plat_dimm.h"
 
 #include "hal_i2c.h"
 
@@ -191,6 +192,16 @@ static void set_dev_endpoint(void)
 			if (!p->set_endpoint)
 				continue;
 
+			if (p->bus == I2C_BUS_CXL1 && set_eid[CXL_ID_1]) {
+				LOG_DBG("CXL1 EID already set, skip");
+				continue;
+			}
+
+			if (p->bus == I2C_BUS_CXL2 && set_eid[CXL_ID_2]) {
+				LOG_DBG("CXL2 EID already set, skip");
+				continue;
+			}
+
 			// Check CXLs ready status before setting EID
 			if (p->bus == I2C_BUS_CXL1 && !get_cxl_ready_status(CXL_ID_1))
 				continue;
@@ -227,11 +238,13 @@ static void set_dev_endpoint(void)
 					case I2C_BUS_CXL1: {
 						LOG_INF("Send set EID command to CXL1");
 						set_eid[CXL_ID_1] = true;
+						create_init_ddr_slot_info_thread(CXL_ID_1);
 						break;
 					}
 					case I2C_BUS_CXL2: {
 						LOG_INF("Send set EID command to CXL2");
 						set_eid[CXL_ID_2] = true;
+						create_init_ddr_slot_info_thread(CXL_ID_2);
 						break;
 					}
 					}

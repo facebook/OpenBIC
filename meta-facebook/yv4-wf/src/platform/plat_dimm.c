@@ -31,84 +31,87 @@ LOG_MODULE_REGISTER(plat_dimm);
 #include "vistara.h"
 #include "plat_power_seq.h"
 
-K_THREAD_STACK_DEFINE(dimm_slot_info_init_stack, 2048);
-struct k_thread dimm_slot_info_init_thread;
+K_THREAD_STACK_DEFINE(dimm_cxl1_init_stack, 2048);
+struct k_thread dimm_cxl1_init_thread;
+static k_tid_t dimm_cxl1_init_tid = NULL;
 
-void dimm_slot_info_init_handler(void *arg1, void *arg2, void *arg3)
+K_THREAD_STACK_DEFINE(dimm_cxl2_init_stack, 2048);
+struct k_thread dimm_cxl2_init_thread;
+static k_tid_t dimm_cxl2_init_tid = NULL;
+
+void dimm_cxl1_slot_info_init_handler()
 {
-    LOG_INF("DIMM slot info initialization thread started");
+	LOG_INF("DIMM slot info initialization for CXL1 started");
 
-    // Wait for CXL ready
-    while (1) {
-        bool all_cxl_ready = true;
+	int retry = 0;
+	while (retry < 5) {
+		int result = vistara_init_ddr_slot_info(CXL_ID_1);
+		if (result > 0) {
+			LOG_INF("CXL1 DIMM slot info initialized successfully");
+			return;
+		} else {
+			LOG_ERR("Failed to initialize CXL1 DIMM slot info, retry: %d", retry);
+		}
+		retry++;
+		k_msleep(1000);
+	}
 
-        for (uint8_t cxl_id = 0; cxl_id < MAX_CXL_ID; cxl_id++) {
-            if (!get_cxl_ready_status(cxl_id)) {
-                all_cxl_ready = false;
-                LOG_INF("CXL devices %d not ready...retry", cxl_id);
-                break;
-            }
-        }
-
-        if (all_cxl_ready) {
-            LOG_INF("All CXL devices ready, initializing DIMM slot info");
-            break;
-        }
-
-        k_msleep(1000);
-    }
-
-    // Init ddr slot info
-    int retry = 0;
-    int result;
-
-    while (retry < 5) {
-        result = vistara_init_ddr_slot_info();
-        if (result > 0) {
-            return;
-        } else {
-            LOG_ERR("Failed to initialize DIMM slot info, retry: %d", retry);
-        }
-        retry++;
-        k_msleep(1000);
-    }
-
-	LOG_ERR("Failed to initialize DIMM slot info after all retries");
+	LOG_ERR("Failed to initialize CXL1 DIMM slot info after all retries");
 }
 
-void create_init_ddr_slot_info_thread(void)
+void dimm_cxl2_slot_info_init_handler()
 {
-	const int MAX_RETRY = 30;
-	int retry = 0;
-	k_tid_t tid = NULL;
+	LOG_INF("DIMM slot info initialization for CXL2 started");
 
-	LOG_INF("Creating DIMM init thread...");
-	
-	while (retry < MAX_RETRY) {
-		retry++;
-		LOG_INF("Thread creation attempt %d/%d", retry, MAX_RETRY);
-		
-		tid = k_thread_create(&dimm_slot_info_init_thread, 
-		                      dimm_slot_info_init_stack,
-		                      K_THREAD_STACK_SIZEOF(dimm_slot_info_init_stack),
-		                      dimm_slot_info_init_handler, 
-		                      NULL, NULL, NULL,
-		                      K_PRIO_PREEMPT(10), 0, K_NO_WAIT);
-		
-		if (tid != NULL) {
-			k_thread_name_set(&dimm_slot_info_init_thread, "dimm_slot_info_init");
-			LOG_INF("DIMM init thread created successfully");
+	int retry = 0;
+	while (retry < 5) {
+		int result = vistara_init_ddr_slot_info(CXL_ID_2);
+		if (result > 0) {
+			LOG_INF("CXL2 DIMM slot info initialized successfully");
 			return;
-		} 
-		
-		if (retry < MAX_RETRY) {
-			LOG_INF("init_ddr_slot_info_thread creation failed, retrying in 1 second...");
-			k_msleep(1000);
-			memset(&dimm_slot_info_init_thread, 0, sizeof(struct k_thread));
+		} else {
+			LOG_ERR("Failed to initialize CXL2 DIMM slot info, retry: %d", retry);
 		}
+		retry++;
+		k_msleep(1000);
 	}
-	
-	LOG_ERR("FAILED to create DIMM init thread after %d attempts", MAX_RETRY);
+
+	LOG_ERR("Failed to initialize CXL2 DIMM slot info after all retries");
+}
+
+void create_init_ddr_slot_info_thread(uint8_t cxl_id)
+{
+	if (cxl_id == CXL_ID_1) {
+		if ((dimm_cxl1_init_tid != NULL) &&
+		    ((strcmp(k_thread_state_str(dimm_cxl1_init_tid), "dead") != 0) &&
+		     (strcmp(k_thread_state_str(dimm_cxl1_init_tid), "unknown") != 0))) {
+			k_thread_abort(dimm_cxl1_init_tid);
+		}
+
+		dimm_cxl1_init_tid =
+			k_thread_create(&dimm_cxl1_init_thread, dimm_cxl1_init_stack,
+					K_THREAD_STACK_SIZEOF(dimm_cxl1_init_stack),
+					dimm_cxl1_slot_info_init_handler, NULL, NULL, NULL,
+					CONFIG_MAIN_THREAD_PRIORITY + 1, 0, K_NO_WAIT);
+		k_thread_name_set(dimm_cxl1_init_tid, "dimm_cxl1_init_thread");
+		k_thread_start(dimm_cxl1_init_tid);
+	} else if (cxl_id == CXL_ID_2) {
+		if ((dimm_cxl2_init_tid != NULL) &&
+		    ((strcmp(k_thread_state_str(dimm_cxl2_init_tid), "dead") != 0) &&
+		     (strcmp(k_thread_state_str(dimm_cxl2_init_tid), "unknown") != 0))) {
+			k_thread_abort(dimm_cxl2_init_tid);
+		}
+
+		dimm_cxl2_init_tid =
+			k_thread_create(&dimm_cxl2_init_thread, dimm_cxl2_init_stack,
+					K_THREAD_STACK_SIZEOF(dimm_cxl2_init_stack),
+					dimm_cxl2_slot_info_init_handler, NULL, NULL, NULL,
+					CONFIG_MAIN_THREAD_PRIORITY + 1, 0, K_NO_WAIT);
+		k_thread_name_set(dimm_cxl2_init_tid, "dimm_cxl2_init_thread");
+		k_thread_start(dimm_cxl2_init_tid);
+	} else {
+		LOG_ERR("Invalid CXL ID: %d", cxl_id);
+	}
 }
 
 uint8_t sensor_num_map_dimm_id(uint8_t sensor_num)
