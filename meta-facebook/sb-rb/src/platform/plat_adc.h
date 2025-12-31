@@ -35,6 +35,8 @@ enum {
 #define TIC_ADS7066 0x1
 
 uint8_t get_adc_good_status(uint8_t idx);
+uint8_t get_final_ucr_status();
+void adc_poll_init();
 void plat_adc_init(void);
 void adc_set_poll_flag(uint8_t onoff);
 bool adc_get_poll_flag();

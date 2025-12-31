@@ -38,6 +38,7 @@ LOG_MODULE_REGISTER(mp29816a);
 
 #define MP29816A_VOUT_MAX_REG 0x24
 #define MP29816A_VOUT_MIN_REG 0x2B
+#define MP29816A_SVI3_IOUT_RPT_REG 0x67
 
 /* --------- PAGE1 ---------- */
 #define VR_REG_EXPECTED_USER_CRC 0xED
@@ -312,6 +313,74 @@ bool mp29816a_set_vout_min(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt)
 	data[1] = (read_value >> 8) & 0xFF;
 
 	if (!mp29816a_i2c_write(cfg->port, cfg->target_addr, MP29816A_VOUT_MIN_REG, data,
+				sizeof(data))) {
+		return false;
+	}
+
+	return true;
+}
+
+bool mp29816a_get_iout_oc_warn_limit(sensor_cfg *cfg, uint16_t *value)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(value, false);
+
+	uint8_t data[2] = { 0 };
+	uint8_t scale_bit = 0;
+	if (!mp29816a_i2c_read(cfg->port, cfg->target_addr, MP29816A_SVI3_IOUT_RPT_REG, data,
+			       sizeof(data))) {
+		return false;
+	}
+	scale_bit = data[0] & 0x07;
+
+	if (!mp29816a_i2c_read(cfg->port, cfg->target_addr, PMBUS_IOUT_OC_WARN_LIMIT, data,
+			       sizeof(data))) {
+		return false;
+	}
+
+	// final value: 8 * data * scale_bit
+	if (scale_bit == 7) {
+		// 2A for scale_bit
+		*value = 8 * (data[0] | (data[1] << 8)) * 2;
+	} else if (scale_bit < 6 && scale_bit > 0) {
+		// 1/32, 1/16, 1/8 ...
+		*value = 8 * (data[0] | (data[1] << 8)) / (2 ^ (6 - scale_bit));
+	} else {
+		// 1A
+		*value = 8 * (data[0] | (data[1] << 8));
+	}
+
+	return true;
+}
+
+bool mp29816a_set_iout_oc_warn_limit(sensor_cfg *cfg, uint16_t value)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+
+	uint8_t data[2] = { 0 };
+	uint8_t scale_bit = 0;
+	if (!mp29816a_i2c_read(cfg->port, cfg->target_addr, MP29816A_SVI3_IOUT_RPT_REG, data,
+			       sizeof(data))) {
+		return false;
+	}
+	scale_bit = data[0] & 0x07;
+
+	// final value: (data / scale_bit) / 8
+	if (scale_bit == 7) {
+		// 2A for scale_bit
+		value = (value / 2) / 8;
+	} else if (scale_bit < 6 && scale_bit > 0) {
+		// 1/32, 1/16, 1/8 ...
+		value = (value * (2 ^ (6 - scale_bit))) / 8;
+	} else {
+		// 1A
+		value = value / 8;
+	}
+
+	data[0] = value & 0xFF;
+	data[1] = value >> 8;
+
+	if (!mp29816a_i2c_write(cfg->port, cfg->target_addr, PMBUS_IOUT_OC_WARN_LIMIT, data,
 				sizeof(data))) {
 		return false;
 	}

@@ -69,8 +69,9 @@
 #define CONTROL_VOL_VR_ASIC_P1V8_VPP_HBM1357_REG 0x87
 #define CONTROL_VOL_VR_ASIC_P0V85_MEDHA0_VDD_REG 0x88
 #define CONTROL_VOL_VR_ASIC_P0V85_MEDHA1_VDD_REG 0x89
-#define LEVEL_1_2_3_PWR_ALERT_THRESHOLD_REG 0x90
-#define LEVEL_1_2_3_PWR_ALERT_TIME_WINDOW_REG 0x91
+#define LEVEL_1_PWR_ALERT_THRESHOLD_TIME_REG 0x90
+#define LEVEL_2_PWR_ALERT_THRESHOLD_TIME_REG 0x91
+#define LEVEL_3_PWR_ALERT_THRESHOLD_TIME_REG 0x92
 #define VR_POWER_READING_REG 0x93
 #define MEDHA_SENSOR_VALUE_REG 0x94
 #define TRAY_INFO_REG 0x98
@@ -199,6 +200,11 @@ typedef struct __attribute__((__packed__)) {
 	uint8_t rail;
 	uint16_t set_value;
 } plat_control_voltage;
+typedef struct __attribute__((__packed__)) {
+	struct k_work work;
+	uint8_t lv;
+	uint8_t in_data[8];
+} plat_power_capping_threshold_time_t;
 typedef struct __attribute__((__packed__)) {
 	struct k_work work;
 	uint8_t set_value;

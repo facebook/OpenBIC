@@ -28,6 +28,8 @@ int raa228249_get_remaining_wr(uint8_t bus, uint8_t addr, uint8_t *remain);
 bool raa228249_fwupdate(uint8_t bus, uint8_t addr, uint8_t *img_buff, uint32_t img_size);
 bool raa228249_get_vout_command(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt);
 bool raa228249_set_vout_command(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt);
+bool raa228249_get_iout_oc_warn_limit(sensor_cfg *cfg, uint16_t *value);
+bool raa228249_set_iout_oc_warn_limit(sensor_cfg *cfg, uint16_t value);
 bool raa228249_get_vr_status(sensor_cfg *cfg, uint8_t rail, uint8_t vr_status_rail,
 			     uint16_t *vr_status);
 bool raa228249_clear_vr_status(sensor_cfg *cfg, uint8_t rail);

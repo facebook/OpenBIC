@@ -30,6 +30,7 @@
 #include "plat_i2c.h"
 #include "shell_iris_power.h"
 #include "plat_class.h"
+#include "plat_power_capping.h"
 
 LOG_MODULE_REGISTER(plat_isr);
 
@@ -100,6 +101,7 @@ void ISR_GPIO_RST_IRIS_PWR_ON_PLD_R1_N()
 		for (int i = 0; i < CLK_COMPONENT_MAX; i++) {
 			clear_clock_status(NULL, i);
 		}
+		add_sync_oc_warn_to_work();
 	} else {
 		LOG_INF("dc off, clear io expander init flag");
 		set_ioe_init_flag(0);

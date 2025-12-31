@@ -36,6 +36,7 @@
 #include "plat_gpio.h"
 #include "plat_event.h"
 #include "plat_vr_test_mode.h"
+#include "plat_power_capping.h"
 
 LOG_MODULE_REGISTER(plat_init);
 
@@ -68,6 +69,7 @@ void pal_post_init()
 	pldm_assign_gpio_effecter_id(PLAT_EFFECTER_ID_GPIO_HIGH_BYTE);
 	init_fru_info();
 	plat_adc_rainbow_init();
+	plat_power_capping_init();
 	init_load_eeprom_log();
 	if (get_asic_board_id() == ASIC_BOARD_ID_EVB && get_board_rev_id() >= REV_ID_EVT1B) {
 		// if board id >= EVB EVT1B(FAB2)

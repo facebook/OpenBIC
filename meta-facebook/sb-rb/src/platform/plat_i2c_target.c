@@ -39,6 +39,7 @@
 #include "plat_i2c.h"
 #include "plat_ioexp.h"
 #include "plat_fru.h"
+#include "plat_power_capping.h"
 
 LOG_MODULE_REGISTER(plat_i2c_target);
 
@@ -669,84 +670,6 @@ void set_vr_pwr_alert_data(uint8_t controller_id, uint8_t alert_level, uint8_t d
 		controller_id, alert_level, write_data_lsb, write_data_msb);
 	LOG_HEXDUMP_DBG(vr_alert_all, sizeof(vr_alert_all), "vr_alert_all");
 };
-void get_vr_pwr_alert_data(uint8_t *buffer, size_t buf_size, uint8_t data_type, uint8_t alert_level,
-			   uint8_t controller_id)
-{
-	if (alert_level >= VR_ALERT_MAX) {
-		LOG_ERR("Invalid alert level %d", alert_level);
-		return;
-	}
-
-	if (data_type >= VR_INFO_TYPE_MAX) {
-		LOG_ERR("Invalid data type %d", data_type);
-		return;
-	}
-
-	if (data_type == VR_THRESHOLD) {
-		switch (controller_id) {
-		/*
-			Response Data
-			[0] - time window. Unit: us for Level 1, ms for Level 2/3  (LSB, read only)
-			[1] - time window. Unit: us for Level 1, ms for Level 2/3  (MSB, read only)
-		*/
-		case MEDHA0:
-			// update read data from write data
-			vr_alert_all[MEDHA0].level[alert_level].read_data_msb =
-				vr_alert_all[MEDHA0].level[alert_level].threshold_msb;
-			vr_alert_all[MEDHA0].level[alert_level].read_data_lsb =
-				vr_alert_all[MEDHA0].level[alert_level].threshold_lsb;
-			// copy data to buffer
-			buffer[0] = vr_alert_all[MEDHA0].level[alert_level].read_data_lsb;
-			buffer[1] = vr_alert_all[MEDHA0].level[alert_level].read_data_msb;
-
-			break;
-		case MEDHA1:
-			// update read data from write data
-			vr_alert_all[MEDHA1].level[alert_level].read_data_msb =
-				vr_alert_all[MEDHA1].level[alert_level].threshold_msb;
-			vr_alert_all[MEDHA1].level[alert_level].read_data_lsb =
-				vr_alert_all[MEDHA1].level[alert_level].threshold_lsb;
-			// copy data to buffer
-			buffer[0] = vr_alert_all[MEDHA1].level[alert_level].read_data_lsb;
-			buffer[1] = vr_alert_all[MEDHA1].level[alert_level].read_data_msb;
-			break;
-		default:
-			LOG_ERR("Invalid controller id %d", controller_id);
-			break;
-		}
-	} else if (data_type == VR_TIME_WINDOW) {
-		switch (controller_id) {
-		case MEDHA0:
-			// update read data from write data
-			vr_alert_all[MEDHA0].level[alert_level].read_data_msb =
-				vr_alert_all[MEDHA0].level[alert_level].time_window_msb;
-			vr_alert_all[MEDHA0].level[alert_level].read_data_lsb =
-				vr_alert_all[MEDHA0].level[alert_level].time_window_lsb;
-			// // copy data to buffer
-			buffer[0] = vr_alert_all[MEDHA0].level[alert_level].read_data_lsb;
-			buffer[1] = vr_alert_all[MEDHA0].level[alert_level].read_data_msb;
-			break;
-		case MEDHA1:
-			// update read data from write data
-			vr_alert_all[MEDHA1].level[alert_level].read_data_msb =
-				vr_alert_all[MEDHA1].level[alert_level].time_window_msb;
-			vr_alert_all[MEDHA1].level[alert_level].read_data_lsb =
-				vr_alert_all[MEDHA1].level[alert_level].time_window_lsb;
-
-			// copy data to buffer
-			buffer[0] = vr_alert_all[MEDHA1].level[alert_level].read_data_lsb;
-			buffer[1] = vr_alert_all[MEDHA1].level[alert_level].read_data_msb;
-			break;
-		default:
-			LOG_ERR("Invalid controller id %d", controller_id);
-			break;
-		}
-	} else
-		LOG_ERR("Invalid data type %d", data_type);
-	LOG_DBG("controller_id %d, alert_level %d, data_type %d, read_data_lsb %d, read_data_msb %d",
-		controller_id, alert_level, data_type, buffer[0], buffer[1]);
-	LOG_HEXDUMP_DBG(vr_alert_all, sizeof(vr_alert_all), "vr_alert_all");
-};
 
 telemetry_info telemetry_info_table[] = {
 	{ SENSOR_INIT_DATA_0_REG, 0x00, .telemetry_table_init = initialize_sensor_data },
@@ -781,8 +704,6 @@ telemetry_info telemetry_info_table[] = {
 	{ FRU_PRODUCT_ASSET_TAG_REG, 0x00, .telemetry_table_init = initialize_fru_product_data },
 	{ FRU_PRODUCT_CUSTOM_DATA_1_REG, 0x00, .telemetry_table_init = initialize_fru_product_data },
 	{ FRU_PRODUCT_CUSTOM_DATA_2_REG, 0x00, .telemetry_table_init = initialize_fru_product_data },
-	{ LEVEL_1_2_3_PWR_ALERT_THRESHOLD_REG },
-	{ LEVEL_1_2_3_PWR_ALERT_TIME_WINDOW_REG },
 	{ VR_POWER_READING_REG },
 };
 
@@ -914,6 +835,32 @@ static bool command_reply_data_handle(void *arg)
 				memcpy(data->target_rd_msg.msg, &vout, sizeof(vout));
 				data->target_rd_msg.msg_length = 2;
 			} break;
+			case LEVEL_1_PWR_ALERT_THRESHOLD_TIME_REG:
+			case LEVEL_2_PWR_ALERT_THRESHOLD_TIME_REG:
+			case LEVEL_3_PWR_ALERT_THRESHOLD_TIME_REG: {
+				uint8_t lv = 0;
+				uint16_t tmp_value = 0;
+				if (reg_offset == LEVEL_1_PWR_ALERT_THRESHOLD_TIME_REG) {
+					lv = CAPPING_LV_IDX_LV1;
+				} else if (reg_offset == LEVEL_2_PWR_ALERT_THRESHOLD_TIME_REG) {
+					lv = CAPPING_LV_IDX_LV2;
+				} else if (reg_offset == LEVEL_3_PWR_ALERT_THRESHOLD_TIME_REG) {
+					lv = CAPPING_LV_IDX_LV3;
+				}
+				tmp_value = get_power_capping_threshold(CAPPING_VR_IDX_MEDHA0, lv);
+				data->target_rd_msg.msg[0] = tmp_value & 0xFF;
+				data->target_rd_msg.msg[1] = tmp_value >> 8;
+				tmp_value = get_power_capping_time_w(CAPPING_VR_IDX_MEDHA0, lv);
+				data->target_rd_msg.msg[2] = tmp_value & 0xFF;
+				data->target_rd_msg.msg[3] = tmp_value >> 8;
+				tmp_value = get_power_capping_threshold(CAPPING_VR_IDX_MEDHA1, lv);
+				data->target_rd_msg.msg[4] = tmp_value & 0xFF;
+				data->target_rd_msg.msg[5] = tmp_value >> 8;
+				tmp_value = get_power_capping_time_w(CAPPING_VR_IDX_MEDHA1, lv);
+				data->target_rd_msg.msg[6] = tmp_value & 0xFF;
+				data->target_rd_msg.msg[7] = tmp_value >> 8;
+				data->target_rd_msg.msg_length = 8;
+			} break;
 			case VR_POWER_READING_REG: {
 				data->target_rd_msg.msg_length = VR_PWR_BUF_SIZE;
 				vr_power_reading(data->target_rd_msg.msg,
@@ -985,41 +932,6 @@ static bool command_reply_data_handle(void *arg)
 				data->target_rd_msg.msg[0] = 0xFF;
 				break;
 			}
-		} else if (data->wr_buffer_idx == 3) {
-			LOG_DBG("Received reg offset(write 3 data): 0x%02x",
-				data->target_wr_msg.msg[0]);
-			uint8_t reg_offset = data->target_wr_msg.msg[0];
-			switch (reg_offset) {
-			case LEVEL_1_2_3_PWR_ALERT_THRESHOLD_REG: {
-				data->target_rd_msg.msg_length = 2;
-				uint8_t vr_controller = data->target_wr_msg.msg[1];
-				uint8_t alert_level = data->target_wr_msg.msg[2];
-				get_vr_pwr_alert_data(data->target_rd_msg.msg,
-						      data->target_rd_msg.msg_length, VR_THRESHOLD,
-						      alert_level, vr_controller);
-				LOG_DBG("vr controller: %d, alert level: %d", vr_controller,
-					alert_level);
-				LOG_HEXDUMP_DBG(data->target_rd_msg.msg,
-						data->target_rd_msg.msg_length, "vr threshold");
-			} break;
-			case LEVEL_1_2_3_PWR_ALERT_TIME_WINDOW_REG: {
-				data->target_rd_msg.msg_length = 2;
-				uint8_t vr_controller = data->target_wr_msg.msg[1];
-				uint8_t alert_level = data->target_wr_msg.msg[2];
-				get_vr_pwr_alert_data(data->target_rd_msg.msg,
-						      data->target_rd_msg.msg_length,
-						      VR_TIME_WINDOW, alert_level, vr_controller);
-				LOG_DBG("vr controller: %d, alert level: %d", vr_controller,
-					alert_level);
-				LOG_HEXDUMP_DBG(data->target_rd_msg.msg,
-						data->target_rd_msg.msg_length, "vr time window");
-			} break;
-			default:
-				LOG_ERR("Unknown reg offset: 0x%02x", reg_offset);
-				data->target_rd_msg.msg_length = 1;
-				data->target_rd_msg.msg[0] = 0xFF;
-				break;
-			}
 		} else {
 			LOG_ERR("Received data length: 0x%02x", data->wr_buffer_idx);
 			data->target_rd_msg.msg_length = 1;
@@ -1027,7 +939,7 @@ static bool command_reply_data_handle(void *arg)
 		}
 	}
 	LOG_DBG("Reply data length: 0x%02x", data->target_rd_msg.msg_length);
-	return true;
+	return false;
 }
 
 /* I2C target init-config table */
@@ -1151,6 +1063,25 @@ void set_control_voltage_handler(struct k_work *work_item)
 	plat_set_vout_command(rail, &millivolt, false, false);
 }
 
+void set_power_capping_threshold_time_handler(struct k_work *work_item)
+{
+	const plat_power_capping_threshold_time_t *sensor_data =
+		CONTAINER_OF(work_item, plat_power_capping_threshold_time_t, work);
+	const uint8_t *in_data = sensor_data->in_data;
+	uint8_t lv = sensor_data->lv;
+	uint16_t value = 0;
+
+	value = in_data[0] | (in_data[1] << 8);
+	set_power_capping_threshold(CAPPING_VR_IDX_MEDHA0, lv, value);
+	value = in_data[2] | (in_data[3] << 8);
+	set_power_capping_time_w(CAPPING_VR_IDX_MEDHA0, lv, value);
+
+	value = in_data[4] | (in_data[5] << 8);
+	set_power_capping_threshold(CAPPING_VR_IDX_MEDHA1, lv, value);
+	value = in_data[6] | (in_data[7] << 8);
+	set_power_capping_time_w(CAPPING_VR_IDX_MEDHA1, lv, value);
+}
+
 void plat_master_write_thread_handler()
 {
 	int rc = 0;
@@ -1231,6 +1162,31 @@ void plat_master_write_thread_handler()
 			k_work_init(&sensor_data->work, set_control_voltage_handler);
 			k_work_submit(&sensor_data->work);
 		} break;
+		case LEVEL_1_PWR_ALERT_THRESHOLD_TIME_REG:
+		case LEVEL_2_PWR_ALERT_THRESHOLD_TIME_REG:
+		case LEVEL_3_PWR_ALERT_THRESHOLD_TIME_REG: {
+			if (rlen != 9) {
+				LOG_ERR("Invalid length for offset(write): 0x%02x", reg_offset);
+				break;
+			}
+
+			plat_power_capping_threshold_time_t *sensor_data =
+				malloc(sizeof(plat_power_capping_threshold_time_t));
+			if (!sensor_data) {
+				LOG_ERR("Memory allocation failed!");
+				break;
+			}
+			if (reg_offset == LEVEL_1_PWR_ALERT_THRESHOLD_TIME_REG) {
+				sensor_data->lv = CAPPING_LV_IDX_LV1;
+			} else if (reg_offset == LEVEL_2_PWR_ALERT_THRESHOLD_TIME_REG) {
+				sensor_data->lv = CAPPING_LV_IDX_LV2;
+			} else if (reg_offset == LEVEL_3_PWR_ALERT_THRESHOLD_TIME_REG) {
+				sensor_data->lv = CAPPING_LV_IDX_LV3;
+			}
+			memcpy(sensor_data->in_data, &rdata[1], 8);
+			k_work_init(&sensor_data->work, set_power_capping_threshold_time_handler);
+			k_work_submit(&sensor_data->work);
+		} break;
 		case SET_SENSOR_POLLING_COMMAND_REG: {
 			if (rlen != 8) {
 				LOG_ERR("Invalid length for offset: 0x%02x", reg_offset);
@@ -1258,42 +1214,6 @@ void plat_master_write_thread_handler()
 			sensor_data->set_value = sensor_data->set_value ? true : false;
 			k_work_init(&sensor_data->work, set_sensor_polling_handler);
 			k_work_submit(&sensor_data->work);
-		} break;
-		/*
-		Request Data
-		[0] - VR controller
-			0 - MEDHA0
-			1 - MEDHA1
-		[1] - alert level
-			0 - Level 1
-			1 - Level 2
-			2 - Level 3
-		[2] - alert threshold. Unit: W  (LSB, write only)
-		[3] - alert threshold. Unit: W  (MSB, write only)
-		*/
-		case LEVEL_1_2_3_PWR_ALERT_THRESHOLD_REG: {
-			if (rlen != 5) {
-				LOG_ERR("Invalid length for offset(write threshold): 0x%02x",
-					reg_offset);
-				break;
-			}
-			uint8_t vr_controller = rdata[1];
-			uint8_t alert_level = rdata[2];
-			uint8_t lsb = rdata[3];
-			uint8_t msb = rdata[4];
-			set_vr_pwr_alert_data(vr_controller, alert_level, VR_THRESHOLD, lsb, msb);
-		} break;
-		case LEVEL_1_2_3_PWR_ALERT_TIME_WINDOW_REG: {
-			if (rlen != 5) {
-				LOG_ERR("Invalid length for offset(write time window): 0x%02x",
-					reg_offset);
-				break;
-			}
-			uint8_t vr_controller = rdata[1];
-			uint8_t alert_level = rdata[2];
-			uint8_t lsb = rdata[3];
-			uint8_t msb = rdata[4];
-			set_vr_pwr_alert_data(vr_controller, alert_level, VR_TIME_WINDOW, lsb, msb);
 		} break;
 		default:
 			LOG_WRN("Unknown reg offset(write): 0x%02x", reg_offset);

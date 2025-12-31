@@ -519,6 +519,40 @@ bool raa228249_set_vout_command(sensor_cfg *cfg, uint8_t rail, uint16_t *millivo
 	return true;
 }
 
+bool raa228249_get_iout_oc_warn_limit(sensor_cfg *cfg, uint16_t *value)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(value, false);
+
+	uint8_t data[2] = { 0 };
+	if (!raa228249_i2c_read(cfg->port, cfg->target_addr, PMBUS_IOUT_OC_WARN_LIMIT, data,
+				sizeof(data))) {
+		return false;
+	}
+
+	// 1 unit = 0.1A
+	*value = (data[0] | (data[1] << 8)) * 0.1;
+	return true;
+}
+
+bool raa228249_set_iout_oc_warn_limit(sensor_cfg *cfg, uint16_t value)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+
+	/* input value unit: 1A */
+	uint8_t data[2] = { 0 };
+	uint16_t cal_value = value * 10;
+	data[0] = cal_value & 0xFF;
+	data[1] = cal_value >> 8;
+
+	if (!raa228249_i2c_write(cfg->port, cfg->target_addr, PMBUS_IOUT_OC_WARN_LIMIT, data,
+				 sizeof(data))) {
+		return false;
+	}
+
+	return true;
+}
+
 bool raa228249_get_vr_status(sensor_cfg *cfg, uint8_t rail, uint8_t vr_status_rail,
 			     uint16_t *vr_status)
 {
