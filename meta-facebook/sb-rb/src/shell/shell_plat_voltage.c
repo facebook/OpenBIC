@@ -24,6 +24,7 @@
 #include "plat_event.h"
 #include "plat_hook.h"
 #include "plat_cpld.h"
+#include "plat_vr_test_mode.h"
 
 LOG_MODULE_REGISTER(plat_voltage_shell, LOG_LEVEL_DBG);
 
@@ -65,6 +66,10 @@ static int cmd_voltage_set(const struct shell *shell, size_t argc, char **argv)
 {
 	bool is_default = false;
 	bool is_perm = false;
+	if (!get_vr_test_mode_flag()) {
+		shell_warn(shell, "This command is only for VR test mode");
+		return -1;
+	}
 
 	/* is_ubc_enabled_delayed_enabled() is to wait for all VR to be enabled  */
 	/* (gpio_get(FM_PLD_UBC_EN_R) == GPIO_HIGH) is to shut down polling immediately when UBC is disabled */
@@ -100,6 +105,11 @@ static int cmd_voltage_set(const struct shell *shell, size_t argc, char **argv)
 		if (millivolt < vout_min_millivolt || millivolt > vout_max_millivolt) {
 			shell_error(shell, "vout[%d] cannot be less than %dmV or greater than %dmV",
 				    rail, vout_min_millivolt, vout_max_millivolt);
+			return -1;
+		}
+		// can't set voltage for osfp p3v3
+		if (rail == VR_RAIL_E_P3V3_OSFP_VOLT_V) {
+			shell_warn(shell, "OSFP P3V3 can't set voltage");
 			return -1;
 		}
 		shell_info(shell, "Set %s(%d) to %d mV, %svolatile\n", argv[1], rail, millivolt,

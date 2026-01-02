@@ -30,6 +30,7 @@
 #include "plat_i2c.h"
 #include "shell_iris_power.h"
 #include "plat_class.h"
+#include "plat_vr_test_mode.h"
 #include "plat_power_capping.h"
 
 LOG_MODULE_REGISTER(plat_isr);
@@ -105,6 +106,8 @@ void ISR_GPIO_RST_IRIS_PWR_ON_PLD_R1_N()
 	} else {
 		LOG_INF("dc off, clear io expander init flag");
 		set_ioe_init_flag(0);
+		LOG_INF("dc off, exit the vr test mode");
+		vr_test_mode_enable(false);
 		// when dc offm clear cpld polling alert status
 		uint8_t err_type = CPLD_UNEXPECTED_VAL_TRIGGER_CAUSE;
 		LOG_DBG("cpld_polling_alert_status: true -> false, reset_error_log_states: %x",
