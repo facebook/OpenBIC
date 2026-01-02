@@ -23,7 +23,6 @@
 #include "plat_hook.h"
 #include <logging/log.h>
 
-
 #define POLLING_CPLD_STACK_SIZE 2048
 #define CPLD_POLLING_INTERVAL_MS 1000 // 1 second polling interval
 

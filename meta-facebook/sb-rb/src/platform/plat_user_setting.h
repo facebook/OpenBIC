@@ -59,7 +59,6 @@ SENSOR_NUM_ASIC_HAMSA_CRM_TEMP_C 0x0A
 SENSOR_NUM_ASIC_HAMSA_LS_TEMP_C 0x0B
 */
 
-
 enum PLAT_TEMP_INDEX_THRESHOLD_TYPE_E {
 	TOP_INLET_LOW_LIMIT,
 	TOP_INLET_HIGH_LIMIT,
@@ -106,7 +105,6 @@ typedef struct thermaltrip_user_settings_struct {
 typedef struct temp_threshold_user_settings_struct {
 	uint32_t temperature_reg_val[PLAT_TEMP_INDEX_THRESHOLD_TYPE_MAX];
 } temp_threshold_user_settings_struct;
-
 
 bool set_thermaltrip_user_settings(bool thermaltrip_enable, bool is_perm);
 bool get_temp_sensor_rail_name(uint8_t rail, uint8_t **name);
