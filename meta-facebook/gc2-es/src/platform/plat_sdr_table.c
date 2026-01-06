@@ -137,8 +137,8 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // normal minimum
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
-		0x00, // UNRT
-		0x54, // UCT
+		0x4E, // UNRT
+		0x4B, // UCT
 		0x00, // UNCT
 		0x00, // LNRT
 		0x00, // LCT
@@ -809,7 +809,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
 		0x00, // UNRT
-		0x4A, // UCT
+		0x47, // UCT
 		0x00, // UNCT
 		0x00, // LNRT
 		0x00, // LCT
@@ -2090,7 +2090,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
 		0x00, // UNRT
-		0x50, // UCT
+		0x55, // UCT
 		0x00, // UNCT
 		0x00, // LNRT
 		0x00, // LCT
@@ -2151,7 +2151,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
 		0x00, // UNRT
-		0x50, // UCT
+		0x55, // UCT
 		0x00, // UNCT
 		0x00, // LNRT
 		0x00, // LCT
@@ -2212,7 +2212,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
 		0x00, // UNRT
-		0x50, // UCT
+		0x55, // UCT
 		0x00, // UNCT
 		0x00, // LNRT
 		0x00, // LCT
@@ -2273,7 +2273,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
 		0x00, // UNRT
-		0x50, // UCT
+		0x55, // UCT
 		0x00, // UNCT
 		0x00, // LNRT
 		0x00, // LCT
@@ -2813,7 +2813,7 @@ SDR_Full_sensor hotswap_sdr_table[] = {
 		IPMI_SENSOR_UNIT_AMP, // base unit
 		0x00, // modifier unit
 		IPMI_SDR_LINEAR_LINEAR, // linearization
-		0x11, // [7:0] M bits
+		0x22, // [7:0] M bits
 		0x00, // [9:8] M bits, tolerance
 		0x00, // [7:0] B bits
 		0x00, // [9:8] B bits, tolerance
@@ -2825,9 +2825,9 @@ SDR_Full_sensor hotswap_sdr_table[] = {
 		0x00, // normal minimum
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
-		0xEB, // UNRT
-		0xBC, // UCT
-		0xA9, // UNCT
+		0x3F, // UNRT
+		0x3A, // UCT
+		0x37, // UNCT
 		0x00, // LNRT
 		0x00, // LCT
 		0x00, // LNCT
@@ -2886,9 +2886,9 @@ SDR_Full_sensor hotswap_sdr_table[] = {
 		0x00, // normal minimum
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
-		0xE6, // UNRT
-		0xB8, // UCT
-		0xA6, // UNCT
+		0x79, // UNRT
+		0x6F, // UCT
+		0x6A, // UNCT
 		0x00, // LNRT
 		0x00, // LCT
 		0x00, // LNCT

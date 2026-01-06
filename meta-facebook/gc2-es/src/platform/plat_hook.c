@@ -54,7 +54,7 @@ LOG_MODULE_REGISTER(plat_hook);
 adc_asd_init_arg adc_asd_init_args[] = { [0] = { .is_init = false } };
 
 adm1278_init_arg adm1278_init_args[] = {
-	[0] = { .is_init = false, .config = { 0x3F1C }, .r_sense = 0.25 }
+	[0] = { .is_init = false, .config = { 0x3F1C }, .r_sense = 1 }
 };
 mp5990_init_arg mp5990_init_args[] = { [0] = { .is_init = false,
 					       .iout_cal_gain = 0x0104,
@@ -428,4 +428,3 @@ bool post_ltc4282_read(sensor_cfg *cfg, void *args, int *reading)
 	sval->fraction = (val - sval->integer) * 1000;
 	return true;
 }
-
