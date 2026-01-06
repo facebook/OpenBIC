@@ -39,25 +39,25 @@ K_THREAD_STACK_DEFINE(monitor_pmic_error_stack, MONITOR_PMIC_ERROR_STACK_SIZE);
 
 struct k_thread monitor_pmic_error_thread;
 k_tid_t monitor_pmic_error_tid;
-static const uint8_t pmic_err_pattern[MAX_COUNT_PMIC_ERROR_TYPE][MAX_COUNT_PMIC_ERROR_OFFSET] = {
+static const uint8_t pmic_err_pattern[MAX_COUNT_PMIC_ERROR_TYPE][MAX_COUNT_PMIC_ERROR_OFFSET + 1] = {
 	// R05,  R06,  R08,  R09,  R0A,  R0B,  R33
-	{ 0x02, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00 }, // SWAOUT_OV
-	{ 0x02, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00 }, // SWBOUT_OV
-	{ 0x02, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00 }, // SWCOUT_OV
-	{ 0x02, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00 }, // SWDOUT_OV
-	{ 0x04, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00 }, // VIN_BULK_OV
-	{ 0x00, 0x00, 0x02, 0x00, 0x02, 0x00, 0x00 }, // VIN_MGMT_OV
-	{ 0x02, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00 }, // SWAOUT_UV
-	{ 0x02, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00 }, // SWBOUT_UV
-	{ 0x02, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00 }, // SWCOUT_UV
-	{ 0x02, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00 }, // SWDOUT_UV
-	{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08 }, // VIN_BULK_UV
-	{ 0x00, 0x00, 0x00, 0x10, 0x02, 0x00, 0x00 }, // VIN_MGMT_TO_VIN_BUCK_SWITCHOVER
-	{ 0x00, 0x00, 0x00, 0x80, 0x02, 0x00, 0x00 }, // HIGH_TEMP_WARNING
-	{ 0x00, 0x00, 0x00, 0x20, 0x02, 0x00, 0x00 }, // VOUT_1V8_PG
-	{ 0x00, 0x00, 0x00, 0x0F, 0x02, 0x00, 0x00 }, // HIGH_CURRENT_WARNING
-	{ 0x00, 0x00, 0x00, 0x00, 0x02, 0xF0, 0x00 }, // CURRENT_LIMIT_WARNING
-	{ 0x00, 0x00, 0x40, 0x00, 0x00, 0x00, 0x00 }, // CURRENT_TEMP_SHUTDOWN
+	{ 0x02, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, PMIC_ERROR_LEVEL_FATAL }, // SWAOUT_OV
+	{ 0x02, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, PMIC_ERROR_LEVEL_FATAL }, // SWBOUT_OV
+	{ 0x02, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, PMIC_ERROR_LEVEL_FATAL }, // SWCOUT_OV
+	{ 0x02, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, PMIC_ERROR_LEVEL_FATAL }, // SWDOUT_OV
+	{ 0x04, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, PMIC_ERROR_LEVEL_FATAL }, // VIN_BULK_OV
+	{ 0x00, 0x00, 0x02, 0x00, 0x02, 0x00, 0x00, PMIC_ERROR_LEVEL_NON_FATAL }, // VIN_MGMT_OV
+	{ 0x02, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, PMIC_ERROR_LEVEL_FATAL }, // SWAOUT_UV
+	{ 0x02, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, PMIC_ERROR_LEVEL_FATAL }, // SWBOUT_UV
+	{ 0x02, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, PMIC_ERROR_LEVEL_FATAL }, // SWCOUT_UV
+	{ 0x02, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, PMIC_ERROR_LEVEL_FATAL }, // SWDOUT_UV
+	{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08, PMIC_ERROR_LEVEL_FATAL }, // VIN_BULK_UV
+	{ 0x00, 0x00, 0x00, 0x10, 0x02, 0x00, 0x00, PMIC_ERROR_LEVEL_NON_FATAL }, // VIN_MGMT_TO_VIN_BUCK_SWITCHOVER
+	{ 0x00, 0x00, 0x00, 0x80, 0x02, 0x00, 0x00, PMIC_ERROR_LEVEL_NON_FATAL }, // HIGH_TEMP_WARNING
+	{ 0x00, 0x00, 0x00, 0x20, 0x02, 0x00, 0x00, PMIC_ERROR_LEVEL_FATAL }, // VOUT_1V8_PG
+	{ 0x00, 0x00, 0x00, 0x0F, 0x02, 0x00, 0x00, PMIC_ERROR_LEVEL_NON_FATAL }, // HIGH_CURRENT_WARNING
+	{ 0x00, 0x00, 0x00, 0x00, 0x02, 0xF0, 0x00, PMIC_ERROR_LEVEL_NON_FATAL }, // CURRENT_LIMIT_WARNING
+	{ 0x00, 0x00, 0x40, 0x00, 0x00, 0x00, 0x00, PMIC_ERROR_LEVEL_FATAL }, // CURRENT_TEMP_SHUTDOWN
 };
 
 static bool is_pmic_error_flag[DIMM_ID_MAX][MAX_COUNT_PMIC_ERROR_TYPE];
@@ -219,19 +219,37 @@ void monitor_pmic_error_via_i3c_handler()
 {
 	int ret = 0, dimm_id = 0;
 	uint8_t error_data[MAX_LEN_I3C_GET_PMIC_ERR] = { 0 };
+	uint8_t err_level = PMIC_ERROR_LEVEL_NONE;
+	int non_fatal_check_timer = 0;
 
 	// initialize PMIC error flag array
 	memset(is_pmic_error_flag, false, sizeof(is_pmic_error_flag));
 	while (1) {
-		k_msleep(MONITOR_PMIC_ERROR_TIME_MS);
+		k_msleep(MONITOR_PMIC_FATAL_ERROR_TIME_MS);
 
 		// Check sensor poll enable
 		if (get_sensor_poll_enable_flag() == false) {
 			continue;
 		}
 
+		// Reset error level
+		err_level = PMIC_ERROR_LEVEL_NONE;
+
+		if (get_post_status()) {
+			// Check non-fatal error poll
+			non_fatal_check_timer += MONITOR_PMIC_FATAL_ERROR_TIME_MS;
+			if (non_fatal_check_timer >= MONITOR_PMIC_NON_FATAL_ERROR_TIME_MS) {
+				non_fatal_check_timer = 0;
+				err_level = PMIC_ERROR_LEVEL_NON_FATAL;
+			}
+		}
+
 		// Check CPLD pmic error bit
-		if (get_pmic_error_status() == false) {
+		if (get_pmic_error_status() == true) {
+			err_level = PMIC_ERROR_LEVEL_FATAL;
+		}
+
+		if (err_level == PMIC_ERROR_LEVEL_NONE) {
 			continue;
 		}
 		k_msleep(READ_PMIC_CRITICAL_ERROR_MS);
@@ -260,7 +278,8 @@ void monitor_pmic_error_via_i3c_handler()
 				error_data[5], error_data[6], error_data[46]);
 
 			// Compare error pattern, add SEL to BMC and update record
-			ret = compare_pmic_error(dimm_id, error_data, sizeof(error_data));
+			ret = compare_pmic_error(dimm_id, error_data, sizeof(error_data),
+						 err_level);
 			if (ret < 0) {
 				continue;
 			}
@@ -272,15 +291,22 @@ void monitor_pmic_error_via_i3c_handler()
 	}
 }
 
-int compare_pmic_error(uint8_t dimm_id, uint8_t *pmic_err_data, uint8_t pmic_err_data_len)
+int compare_pmic_error(uint8_t dimm_id, uint8_t *pmic_err_data, uint8_t pmic_err_data_len,
+		       uint8_t level)
 {
 	CHECK_NULL_ARG_WITH_RETURN(pmic_err_data, -1);
 
 	bool is_pmic_error_match = false;
 	uint8_t err_index = 0, reg_index = 0, data_index = 0;
 	uint8_t pattern = 0;
+	uint8_t err_level = 0;
 
 	for (err_index = 0; err_index < MAX_COUNT_PMIC_ERROR_TYPE; err_index++) {
+		err_level = pmic_err_pattern[err_index][MAX_COUNT_PMIC_ERROR_OFFSET];
+		if (level < err_level) {
+			continue;
+		}
+
 		for (reg_index = 0; reg_index < MAX_COUNT_PMIC_ERROR_OFFSET; reg_index++) {
 			data_index = pmic_i3c_err_data_index[reg_index];
 			// Not enough data
@@ -447,7 +473,8 @@ void read_pmic_error_when_dc_off()
 
 		LOG_HEXDUMP_DBG(error_data, MAX_LEN_I3C_GET_PMIC_ERR, "PMIC error data");
 		// Compare error pattern, add SEL to BMC and update record
-		ret = compare_pmic_error(dimm_id, error_data, MAX_LEN_I3C_GET_PMIC_ERR);
+		ret = compare_pmic_error(dimm_id, error_data, MAX_LEN_I3C_GET_PMIC_ERR,
+					 PMIC_ERROR_LEVEL_FATAL);
 		if (ret < 0) {
 			continue;
 		}

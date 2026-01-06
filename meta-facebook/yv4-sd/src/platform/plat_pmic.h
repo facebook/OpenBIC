@@ -21,6 +21,8 @@
 
 #define MONITOR_PMIC_ERROR_STACK_SIZE 1536
 #define MONITOR_PMIC_ERROR_TIME_MS (3 * 1000) // 3s
+#define MONITOR_PMIC_FATAL_ERROR_TIME_MS (3 * 1000) // 3s
+#define MONITOR_PMIC_NON_FATAL_ERROR_TIME_MS (9 * 1000) // 9s
 #define CLEAR_MTP_DELAY_MS 200
 // The PMIC needs a total of 200ms from CAMP signal assertion to complete the write operation
 #define READ_PMIC_CRITICAL_ERROR_MS 200
@@ -29,6 +31,11 @@
 #define MAX_COUNT_PMIC_ERROR_OFFSET 7
 #define MAX_COUNT_PMIC_ERROR_TYPE 17
 #define MAX_LEN_PMIC_CRITICAL_ERROR_INDEX 11
+enum {
+    PMIC_ERROR_LEVEL_NONE = 0,
+    PMIC_ERROR_LEVEL_NON_FATAL,
+    PMIC_ERROR_LEVEL_FATAL
+};
 
 #define PMIC_ERROR_STATUS_START_OFFSET 0x04
 #define PMIC_CLEAR_STATUS_BITS4_OFFSET 0x14
@@ -37,7 +44,8 @@
 
 void start_monitor_pmic_error_thread();
 void monitor_pmic_error_via_i3c_handler();
-int compare_pmic_error(uint8_t dimm_id, uint8_t *pmic_err_data, uint8_t pmic_err_data_len);
+int compare_pmic_error(uint8_t dimm_id, uint8_t *pmic_err_data, uint8_t pmic_err_data_len,
+		       uint8_t level);
 int get_pmic_fault_status();
 void read_pmic_error_when_dc_off();
 void clear_pmic_error(uint8_t dimm_id);
