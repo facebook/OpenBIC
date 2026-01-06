@@ -33,8 +33,8 @@ bool get_vr_test_mode_flag(void)
 
 const vr_test_mode_setting_t vr_test_mode_table[] = {
 	// vr_rail, fast ocp: x/10(A), slow ocp: x/10(A), uvp: 1(mV), ovp: 1(mV), v max: 1(mV), lcr(mV), ucr(mV)
-	{ VR_RAIL_E_ASIC_P0V85_MEDHA0_VDD, 14500, 14500, 200, 940, 930, 595, 930 },
-	{ VR_RAIL_E_ASIC_P0V85_MEDHA1_VDD, 14500, 14500, 200, 940, 930, 595, 930 },
+	{ VR_RAIL_E_ASIC_P0V85_MEDHA0_VDD, 14300, 14300, 200, 940, 930, 595, 930 },
+	{ VR_RAIL_E_ASIC_P0V85_MEDHA1_VDD, 14300, 14300, 200, 940, 930, 595, 930 },
 	{ VR_RAIL_E_ASIC_P0V9_OWL_E_TRVDD, 170, 170, 200, 1130, 1120, 630, 1120 },
 	{ VR_RAIL_E_ASIC_P0V75_OWL_E_TRVDD, 110, 110, 200, 1130, 975, 525, 975 },
 	{ VR_RAIL_E_ASIC_P0V75_MAX_M_VDD, 1200, 1200, 200, 1130, 975, 525, 975 },
@@ -59,8 +59,8 @@ const vr_test_mode_setting_t vr_test_mode_table[] = {
 
 const vr_test_mode_setting_t vr_test_mode_table_default[] = {
 	// vr_rail, fast ocp: x/10(A), slow ocp: x/10(A), uvp: 1(mV), ovp: 1(mV), v max: 1(mV), lcr(mV), ucr(mV)
-	{ VR_RAIL_E_ASIC_P0V85_MEDHA0_VDD, 14500, 14500, 640, 940, 918, 782, 918 },
-	{ VR_RAIL_E_ASIC_P0V85_MEDHA1_VDD, 14500, 14500, 640, 940, 918, 782, 918 },
+	{ VR_RAIL_E_ASIC_P0V85_MEDHA0_VDD, 14300, 14300, 640, 940, 918, 782, 918 },
+	{ VR_RAIL_E_ASIC_P0V85_MEDHA1_VDD, 14300, 14300, 640, 940, 918, 782, 918 },
 	{ VR_RAIL_E_ASIC_P0V9_OWL_E_TRVDD, 170, 160, 700, 1010, 954, 846, 954 },
 	{ VR_RAIL_E_ASIC_P0V75_OWL_E_TRVDD, 110, 100, 575, 910, 795, 705, 795 },
 	{ VR_RAIL_E_ASIC_P0V75_MAX_M_VDD, 670, 570, 575, 910, 848, 690, 848 },
