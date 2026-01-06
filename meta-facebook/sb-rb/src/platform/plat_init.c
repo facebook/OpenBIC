@@ -80,12 +80,6 @@ void pal_post_init()
 		if (get_board_rev_id() >= REV_ID_EVT2)
 			init_U200070_IO();
 	}
-	// if board id == EVB
-	if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
-		init_pwm_dev();
-		ast_pwm_set(65, PWM_PORT1);
-		ast_pwm_set(65, PWM_PORT6);
-	}
 
 	init_cpld_polling();
 	plat_telemetry_table_init();

@@ -32,6 +32,7 @@
 #include "plat_class.h"
 #include "plat_vr_test_mode.h"
 #include "plat_power_capping.h"
+#include "plat_hwmon.h"
 
 LOG_MODULE_REGISTER(plat_isr);
 
@@ -103,6 +104,13 @@ void ISR_GPIO_RST_IRIS_PWR_ON_PLD_R1_N()
 			clear_clock_status(NULL, i);
 		}
 		add_sync_oc_warn_to_work();
+		// if board id == EVB , ctrl fan pwm
+		if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
+			LOG_INF("dc off, set fan pwm 65");
+			init_pwm_dev();
+			ast_pwm_set(65, PWM_PORT1);
+			ast_pwm_set(65, PWM_PORT6);
+		}
 	} else {
 		LOG_INF("dc off, clear io expander init flag");
 		set_ioe_init_flag(0);
@@ -113,6 +121,14 @@ void ISR_GPIO_RST_IRIS_PWR_ON_PLD_R1_N()
 		LOG_DBG("cpld_polling_alert_status: true -> false, reset_error_log_states: %x",
 			err_type);
 		reset_error_log_states(err_type);
+		
+		// if board id == EVB , ctrl fan pwm
+		if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
+			LOG_INF("dc off, set fan pwm 0");
+			init_pwm_dev();
+			ast_pwm_set(0, PWM_PORT1);
+			ast_pwm_set(0, PWM_PORT6);
+		}
 	}
 }
 
