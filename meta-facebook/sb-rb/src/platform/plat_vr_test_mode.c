@@ -99,6 +99,121 @@ static bool update_vr_reg(uint8_t rail, uint8_t reg, uint16_t val)
 	return true;
 }
 
+bool dma_write_vr(uint8_t rail, uint16_t reg, uint8_t *data, uint8_t len)
+{
+	if (!update_vr_reg(rail, 0xC7, reg)) {
+		LOG_ERR("VR %x dma write 0x%04x to 0xC7 fail", rail, reg);
+		return false;
+	}
+
+	if (!plat_set_vr_reg(rail, 0xC5, data, len)) {
+		LOG_ERR("VR %x dma write 0xC5 fail", rail);
+		return false;
+	}
+
+	return true;
+}
+
+bool dma_read_vr(uint8_t rail, uint16_t reg, uint8_t *data, uint8_t len)
+{
+	if (!update_vr_reg(rail, 0xC7, reg)) {
+		LOG_ERR("VR %x dma write 0x%04x to 0xC7 fail", rail, reg);
+		return false;
+	}
+	uint8_t sensor_num = vr_rail_table[rail].sensor_id;
+	if (!get_raw_data_from_sensor_id(sensor_num, 0xC5, data, len)) {
+		LOG_ERR("VR %x dma write 0x%04x to 0xC5 fail", rail, reg);
+		return false;
+	}
+	return true;
+}
+
+// uvp = vout - offset uvp, uvp = vout + offset ovp,
+bool get_vr_offset_uvp_ovp(uint8_t rail, uint16_t *uvp, uint16_t *ovp)
+{
+	CHECK_NULL_ARG_WITH_RETURN(uvp, false);
+	CHECK_NULL_ARG_WITH_RETURN(ovp, false);
+
+	uint8_t data[2];
+	uint8_t sensor_num = vr_rail_table[rail].sensor_id;
+	if (!get_raw_data_from_sensor_id(sensor_num, VR_VOUT_REG, data, sizeof(data))) {
+		LOG_ERR("VR %x get Vout fail", rail);
+		return false;
+	}
+
+	uint16_t vout = (data[1] << 8) | data[0];
+	uint8_t page = get_vr_page(rail);
+
+	uint16_t reg = page ? VR_UVP_1_DMA_ADDR : VR_UVP_0_DMA_ADDR;
+	if (!dma_read_vr(rail, reg, data, 2)) {
+		LOG_ERR("VR %x get dma uvp fail", rail);
+		return false;
+	}
+	uint16_t uvp_offset = (data[1] << 8) | data[0];
+
+	reg = page ? VR_OVP_1_DMA_ADDR : VR_OVP_0_DMA_ADDR;
+	if (!dma_read_vr(rail, reg, data, 2)) {
+		LOG_ERR("VR %x get dma ovp fail", rail);
+		return false;
+	}
+	uint16_t ovp_offset = (data[1] << 8) | data[0];
+
+	*uvp = (vout > uvp_offset) ? (vout - uvp_offset) : 0;
+	*ovp = vout + ovp_offset;
+
+	return true;
+}
+
+// check if offset uvp/ovp is used.
+bool use_offset_uvp_ovp(uint8_t rail)
+{
+	switch (rail) {
+	case VR_RAIL_E_ASIC_P0V85_MEDHA0_VDD:
+	case VR_RAIL_E_ASIC_P0V85_MEDHA1_VDD:
+		return false;
+	default:
+		return true;
+	}
+}
+bool get_vr_fixed_uvp_ovp_enable(uint8_t rail)
+{
+	// no offset UVP/OVP setting
+	if (!use_offset_uvp_ovp(rail))
+		return true;
+
+	uint8_t data[2];
+	uint8_t sensor_num = vr_rail_table[rail].sensor_id;
+	if (!get_raw_data_from_sensor_id(sensor_num, VR_LOOPCFG_REG, data, sizeof(data))) {
+		LOG_ERR("VR %x get loopcfg fail", rail);
+		return false;
+	}
+
+	if (data[1] & BIT(6))
+		return true;
+	return false;
+}
+bool set_vr_fixed_uvp_ovp_enable(uint8_t rail, uint8_t enable)
+{
+	// no offset UVP/OVP setting
+	if (!use_offset_uvp_ovp(rail))
+		return true;
+
+	uint8_t data[2];
+	uint8_t sensor_num = vr_rail_table[rail].sensor_id;
+	if (!get_raw_data_from_sensor_id(sensor_num, VR_LOOPCFG_REG, data, sizeof(data))) {
+		LOG_ERR("VR %x get loopcfg fail", rail);
+		return false;
+	}
+
+	WRITE_BIT(data[1], 6, enable);
+	if (!plat_set_vr_reg(rail, VR_LOOPCFG_REG, data, 2)) {
+		LOG_ERR("VR %x set loopcfg fail: %x %x", rail, data[0], data[1]);
+		return false;
+	}
+
+	return true;
+}
+
 static bool set_vr_test_mode_reg(bool is_default)
 {
 	bool ret = true;
@@ -136,11 +251,33 @@ static bool set_vr_test_mode_reg(bool is_default)
 	}
 	return ret;
 }
+
+static bool check_vr_fast_ocp_match_test_mode(void)
+{
+	for (uint8_t i = 0; i < VR_RAIL_E_P3V3_OSFP_VOLT_V; i++) {
+		uint8_t data[2] = { 0 };
+		if (!get_raw_data_from_sensor_id(vr_rail_table[i].sensor_id, VR_FAST_OCP_REG, data,
+						 2))
+			return false;
+
+		uint16_t raw_val = (data[1] << 8) | data[0];
+		if (vr_test_mode_table[i].fast_ocp != raw_val)
+			return false;
+	}
+
+	return true;
+}
+
 void vr_test_mode_enable(bool onoff)
 {
 	vr_test_mode_flag = onoff;
 
 	set_vr_test_mode_reg((onoff ? false : true));
+	// not include P3V3
+	for (uint8_t i = 0; i < VR_RAIL_E_P3V3_OSFP_VOLT_V; i++) {
+		if (!set_vr_fixed_uvp_ovp_enable(i, (onoff ? 1 : 0)))
+			LOG_ERR("set vr %d fix uvp/ovp enable fail!", i);
+	}
 }
 
 void vr_test_mode_handler(void *arg1, void *arg2, void *arg3)
@@ -156,6 +293,13 @@ void vr_test_mode_handler(void *arg1, void *arg2, void *arg3)
 
 void init_vr_test_mode_polling(void)
 {
+	if (is_dc_on()) {
+		if (check_vr_fast_ocp_match_test_mode()) {
+			vr_test_mode_enable(true);
+			LOG_INF("Fast OCP value is the same, start VR TEST MODE");
+		}
+	}
+
 	vr_test_mode_tid = k_thread_create(&vr_test_mode_thread, vr_test_mode_thread_stack,
 					   K_THREAD_STACK_SIZEOF(vr_test_mode_thread_stack),
 					   vr_test_mode_handler, NULL, NULL, NULL,

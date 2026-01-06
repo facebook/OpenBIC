@@ -1298,3 +1298,14 @@ err:
 	}
 	return ret;
 }
+
+int get_vr_page(uint8_t rail)
+{
+	uint8_t sensor_id = vr_rail_table[rail].sensor_id;
+	sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
+	CHECK_NULL_ARG_WITH_RETURN(cfg, -1);
+
+	const vr_pre_proc_arg *pre_sensor_read_args = cfg->pre_sensor_read_args;
+	CHECK_NULL_ARG_WITH_RETURN(pre_sensor_read_args, -1);
+	return pre_sensor_read_args->vr_page;
+}

@@ -22,9 +22,13 @@
 #define VR_UVP_REG 0x44
 #define VR_OVP_REG 0x40
 #define VR_VOUT_MAX_REG 0x24
+#define VR_VOUT_REG 0x21
+#define VR_LOOPCFG_REG 0xF0
 
-#define VR_SLOW_OCP_1_DMA_ADDR 0x00EA
-#define VR_SLOW_OCP_2_DMA_ADDR 0x01EA
+#define VR_UVP_0_DMA_ADDR 0xEA3D
+#define VR_UVP_1_DMA_ADDR 0xEABD
+#define VR_OVP_0_DMA_ADDR 0xEA3E
+#define VR_OVP_1_DMA_ADDR 0xEABE
 
 typedef struct {
 	uint8_t vr_rail;
@@ -45,4 +49,10 @@ extern const uint8_t vr_test_mode_table_dafault_size;
 bool get_vr_test_mode_flag(void);
 void vr_test_mode_enable(bool onoff);
 void init_vr_test_mode_polling(void);
+bool dma_write_vr(uint8_t rail, uint16_t reg, uint8_t *data, uint8_t len);
+bool dma_read_vr(uint8_t rail, uint16_t reg, uint8_t *data, uint8_t len);
+bool get_vr_offset_uvp_ovp(uint8_t rail, uint16_t *uvp, uint16_t *ovp);
+bool use_offset_uvp_ovp(uint8_t rail);
+bool get_vr_fixed_uvp_ovp_enable(uint8_t rail);
+bool set_vr_fixed_uvp_ovp_enable(uint8_t rail, uint8_t enable);
 #endif /* _PLAT_VR_TEST_MODE_H_ */
