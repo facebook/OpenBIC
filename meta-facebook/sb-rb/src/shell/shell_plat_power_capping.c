@@ -71,13 +71,13 @@ static int cmd_power_capping_get_all(const struct shell *shell, size_t argc, cha
 		    get_power_capping_time_w(CAPPING_VR_IDX_MEDHA1, CAPPING_LV_IDX_LV2));
 	shell_print(shell, "MEDHA1 LV2 threshold: %6d (W)",
 		    get_power_capping_threshold(CAPPING_VR_IDX_MEDHA1, CAPPING_LV_IDX_LV2));
-	shell_print(shell, "MEDHA0 LV2 avg_power: %6d (W)\n",
+	shell_print(shell, "MEDHA1 LV2 avg_power: %6d (W)\n",
 		    get_power_capping_avg_power(CAPPING_VR_IDX_MEDHA1, CAPPING_LV_IDX_LV2));
 	shell_print(shell, "MEDHA1 LV3 time window: %4d (ms)",
 		    get_power_capping_time_w(CAPPING_VR_IDX_MEDHA1, CAPPING_LV_IDX_LV3));
 	shell_print(shell, "MEDHA1 LV3 threshold: %6d (W)",
 		    get_power_capping_threshold(CAPPING_VR_IDX_MEDHA1, CAPPING_LV_IDX_LV3));
-	shell_print(shell, "MEDHA0 LV3 avg_power: %6d (W)\n",
+	shell_print(shell, "MEDHA1 LV3 avg_power: %6d (W)\n",
 		    get_power_capping_avg_power(CAPPING_VR_IDX_MEDHA1, CAPPING_LV_IDX_LV3));
 	return 0;
 }
@@ -226,7 +226,7 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
 		      "power_capping set time_window <MEDHA[X]_LV[Y]> <time>",
 		      cmd_power_capping_set_time_window, 3, 0),
 	SHELL_CMD_ARG(threshold, &power_capping_name,
-		      "power_capping set time_window <MEDHA[X]_LV[Y]> <threshold>",
+		      "power_capping set threshold <MEDHA[X]_LV[Y]> <threshold>",
 		      cmd_power_capping_set_threshold, 3, 0),
 	SHELL_SUBCMD_SET_END);
 

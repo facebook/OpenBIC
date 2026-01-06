@@ -420,6 +420,7 @@ void pldm_sensor_polling_handler(void *arug0, void *arug1, void *arug2)
 	int thread_id = (int)arug0;
 	int pldm_sensor_count = 0;
 	uint32_t poll_interval_ms = PLDM_SENSOR_POLL_TIME_DEFAULT_MS;
+	uint8_t is_need_check = false;
 
 	pldm_sensor_count = plat_pldm_sensor_get_sensor_count(thread_id);
 	if (pldm_sensor_count <= 0) {
@@ -438,6 +439,8 @@ void pldm_sensor_polling_handler(void *arug0, void *arug1, void *arug2)
 		poll_interval_ms = pldm_sensor_thread_list[thread_id].poll_interval_ms;
 	}
 
+	is_need_check = pldm_sensor_thread_list[thread_id].still_check_interval == 0 ? false : true;
+
 	plat_pldm_sensor_post_load_init(thread_id);
 
 	while (1) {
@@ -455,7 +458,8 @@ void pldm_sensor_polling_handler(void *arug0, void *arug1, void *arug2)
 			if (pldm_sensor_thread_list[thread_id].poll_interval_ms != 0) {
 				if (pldm_polling_sensor_reading_optional_check(
 					    &pldm_sensor_list[thread_id][sensor_num],
-					    pldm_sensor_count, thread_id, sensor_num, false) != 0) {
+					    pldm_sensor_count, thread_id, sensor_num,
+					    is_need_check) != 0) {
 					continue;
 				}
 			} else {

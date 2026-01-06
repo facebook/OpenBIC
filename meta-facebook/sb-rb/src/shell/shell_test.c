@@ -144,7 +144,7 @@ void cmd_info(const struct shell *shell, size_t argc, char **argv)
 	shell_warn(shell, "asic board id: %s",
 		   (board_id < ASIC_BOARD_ID_UNKNOWN) ? asic_board_id_str[board_id] : "UNKNOWN");
 	shell_warn(shell, "asic board rev id: %d", board_rev);
-	shell_warn(shell, "adc idx: %d", adc_idx);
+	shell_warn(shell, "adc idx: %d (0:ADI, 1:TI)", adc_idx);
 	shell_warn(shell, "tray location: %d", tray_loc);
 }
 

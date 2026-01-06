@@ -370,13 +370,6 @@ int get_cached_sensor_reading_by_sensor_number(uint8_t sensor_number)
 	return sensor_data->sensor_entries[sensor_index].sensor_value;
 }
 
-float get_sensor_reading_cache_as_float(uint8_t sensor_number)
-{
-	int reading = get_cached_sensor_reading_by_sensor_number(sensor_number);
-	const sensor_val *sval = (sensor_val *)&reading;
-	return ((sval->integer * 1000 + sval->fraction) / 1000.0);
-}
-
 bool initialize_inventory_ids(telemetry_info *telemetry_info, uint8_t *buffer_size)
 {
 	CHECK_NULL_ARG_WITH_RETURN(telemetry_info, false);
@@ -547,18 +540,18 @@ void vr_power_reading(uint8_t *buffer, size_t buf_size)
 		}
 
 		uint16_t val = 0;
-		float float_value = 0;
-		float_value = get_sensor_reading_cache_as_float(vr_pwr_sensor_table[i]);
-		val = (float_value + 500) / 1000;
+		int milivolt = 0;
+		milivolt = get_cached_sensor_reading_by_sensor_number(vr_pwr_sensor_table[i]);
+		val = (milivolt + 500) / 1000;
 
 		switch (vr_pwr_sensor_table[i]) {
 		case SENSOR_NUM_ASIC_P0V85_MEDHA0_VDD_PWR_W:
 			memcpy(&buffer[6], &val, 2);
-			medha0 = float_value;
+			medha0 = milivolt;
 			break;
 		case SENSOR_NUM_ASIC_P0V85_MEDHA1_VDD_PWR_W:
 			memcpy(&buffer[8], &val, 2);
-			medha1 = float_value;
+			medha1 = milivolt;
 			break;
 		case SENSOR_NUM_ASIC_P1V1_VDDQC_HBM0246_PWR_W:
 			memcpy(&buffer[10], &val, 2);
@@ -606,7 +599,7 @@ void vr_power_reading(uint8_t *buffer, size_t buf_size)
 
 		if (vr_pwr_sensor_table[i] != SENSOR_NUM_ASIC_P0V85_MEDHA0_VDD_PWR_W &&
 		    vr_pwr_sensor_table[i] != SENSOR_NUM_ASIC_P0V85_MEDHA1_VDD_PWR_W) {
-			x += float_value;
+			x += milivolt;
 		}
 	}
 	int reading;
@@ -616,7 +609,7 @@ void vr_power_reading(uint8_t *buffer, size_t buf_size)
 
 	chiplet0 = ((medha0 + 0.5 * x) + 500) / 1000;
 	chiplet1 = ((medha1 + 0.5 * x) + 500) / 1000;
-	uint16_t val_x = (uint16_t)(x + 500) / 1000;
+	uint16_t val_x = (uint16_t)((x + 500) / 1000);
 	uint16_t val_c0 = (uint16_t)chiplet0;
 	uint16_t val_c1 = (uint16_t)chiplet1;
 	memcpy(&buffer[0], &val_x, 2);
@@ -874,19 +867,27 @@ static bool command_reply_data_handle(void *arg)
 			case MEDHA_SENSOR_VALUE_REG: {
 				data->target_rd_msg.msg_length = 4;
 				uint16_t sensor_value;
-				sensor_value = (get_sensor_reading_cache_as_float(
+				sensor_value = (get_cached_sensor_reading_by_sensor_number(
 							SENSOR_NUM_ASIC_P0V85_MEDHA0_VDD_PWR_W) +
 						500) /
 					       1000;
 				memcpy(&data->target_rd_msg.msg[0], &sensor_value,
 				       sizeof(sensor_value));
-				sensor_value = (get_sensor_reading_cache_as_float(
+				sensor_value = (get_cached_sensor_reading_by_sensor_number(
 							SENSOR_NUM_ASIC_P0V85_MEDHA1_VDD_PWR_W) +
 						500) /
 					       1000;
 				memcpy(&data->target_rd_msg.msg[2], &sensor_value,
 				       sizeof(sensor_value));
 
+			} break;
+			case POWER_CAPPING_METHOD_REG: {
+				data->target_rd_msg.msg[0] = get_power_capping_method();
+				data->target_rd_msg.msg_length = 1;
+			} break;
+			case MEDHA_POWER_SOURCE_REG: {
+				data->target_rd_msg.msg[0] = get_power_capping_source();
+				data->target_rd_msg.msg_length = 1;
 			} break;
 			case TRAY_INFO_REG: {
 				/* TRAY_INFO_REG:
@@ -1085,6 +1086,22 @@ void set_power_capping_threshold_time_handler(struct k_work *work_item)
 	set_power_capping_time_w(CAPPING_VR_IDX_MEDHA1, lv, value);
 }
 
+void set_power_capping_method_handler(struct k_work *work_item)
+{
+	const plat_power_capping_method_t *sensor_data =
+		CONTAINER_OF(work_item, plat_power_capping_method_t, work);
+
+	set_power_capping_method(sensor_data->set_value);
+}
+
+void set_power_capping_source_handler(struct k_work *work_item)
+{
+	const plat_power_capping_method_t *sensor_data =
+		CONTAINER_OF(work_item, plat_power_capping_method_t, work);
+
+	set_power_capping_source(sensor_data->set_value);
+}
+
 void plat_master_write_thread_handler()
 {
 	int rc = 0;
@@ -1188,6 +1205,40 @@ void plat_master_write_thread_handler()
 			}
 			memcpy(sensor_data->in_data, &rdata[1], 8);
 			k_work_init(&sensor_data->work, set_power_capping_threshold_time_handler);
+			k_work_submit(&sensor_data->work);
+		} break;
+		case POWER_CAPPING_METHOD_REG: {
+			if (rlen != 2) {
+				LOG_ERR("Invalid length for offset(write): 0x%02x", reg_offset);
+				break;
+			}
+
+			plat_power_capping_method_t *sensor_data =
+				malloc(sizeof(plat_power_capping_method_t));
+			if (!sensor_data) {
+				LOG_ERR("Memory allocation failed!");
+				break;
+			}
+			sensor_data->set_value = rdata[1];
+
+			k_work_init(&sensor_data->work, set_power_capping_method_handler);
+			k_work_submit(&sensor_data->work);
+		} break;
+		case MEDHA_POWER_SOURCE_REG: {
+			if (rlen != 2) {
+				LOG_ERR("Invalid length for offset(write): 0x%02x", reg_offset);
+				break;
+			}
+
+			plat_power_capping_method_t *sensor_data =
+				malloc(sizeof(plat_power_capping_method_t));
+			if (!sensor_data) {
+				LOG_ERR("Memory allocation failed!");
+				break;
+			}
+			sensor_data->set_value = rdata[1];
+
+			k_work_init(&sensor_data->work, set_power_capping_source_handler);
 			k_work_submit(&sensor_data->work);
 		} break;
 		case SET_SENSOR_POLLING_COMMAND_REG: {
