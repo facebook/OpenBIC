@@ -52,6 +52,7 @@ uint8_t get_adc_type();
 float get_ads7066_vref();
 float get_ad4058_vref();
 float get_adc_vr_pwr(uint8_t idx);
+float get_vr_vol_sum(uint8_t idx);
 uint16_t float_voltage_transfer_to_uint16(float temp_voltage_value);
 uint16_t *get_adc_buf(uint16_t idx);
 float uint16_voltage_transfer_to_float(uint16_t temp_voltage_value);

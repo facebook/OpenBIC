@@ -235,9 +235,11 @@ static void update_vr_base_power_info()
 	int int_value = 0;
 	uint16_t val_medha0 = 0;
 	uint16_t val_medha1 = 0;
-	int_value = get_cached_sensor_reading_by_sensor_number(SENSOR_NUM_ASIC_P0V85_MEDHA0_VDD_PWR_W);
+	int_value =
+		get_cached_sensor_reading_by_sensor_number(SENSOR_NUM_ASIC_P0V85_MEDHA0_VDD_PWR_W);
 	val_medha0 = (int_value + 500) / 1000;
-	int_value = get_cached_sensor_reading_by_sensor_number(SENSOR_NUM_ASIC_P0V85_MEDHA1_VDD_PWR_W);
+	int_value =
+		get_cached_sensor_reading_by_sensor_number(SENSOR_NUM_ASIC_P0V85_MEDHA1_VDD_PWR_W);
 	val_medha1 = (int_value + 500) / 1000;
 
 	for (uint8_t i = 0; i < ADC_IDX_MAX; i++) {
@@ -299,6 +301,11 @@ uint8_t get_adc_type()
 float get_adc_vr_pwr(uint8_t idx)
 {
 	return adc_info[idx].pwr_avg_val;
+}
+
+float get_vr_vol_sum(uint8_t idx)
+{
+	return adc_info[idx].vr_sum;
 }
 int ads7066_read_reg(uint8_t reg, uint8_t idx, uint8_t *out_data)
 {

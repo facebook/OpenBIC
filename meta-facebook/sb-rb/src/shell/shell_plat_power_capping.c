@@ -21,20 +21,22 @@
 #include "plat_cpld.h"
 #include "plat_adc.h"
 #include "plat_power_capping.h"
+#include "shell_adc.h"
 
 typedef struct {
 	const char *name;
 	uint8_t vr_idx;
 	uint8_t lv;
+	uint8_t adc_mapping_idx;
 } power_capping_item_t;
 
 static const power_capping_item_t power_capping_item_list[CAPPING_VR_IDX_MAX * CAPPING_LV_IDX_MAX] = {
-	{ "MEDHA0_LV1", CAPPING_VR_IDX_MEDHA0, CAPPING_LV_IDX_LV1 },
-	{ "MEDHA0_LV2", CAPPING_VR_IDX_MEDHA0, CAPPING_LV_IDX_LV2 },
-	{ "MEDHA0_LV3", CAPPING_VR_IDX_MEDHA0, CAPPING_LV_IDX_LV3 },
-	{ "MEDHA1_LV1", CAPPING_VR_IDX_MEDHA1, CAPPING_LV_IDX_LV1 },
-	{ "MEDHA1_LV2", CAPPING_VR_IDX_MEDHA1, CAPPING_LV_IDX_LV2 },
-	{ "MEDHA1_LV3", CAPPING_VR_IDX_MEDHA1, CAPPING_LV_IDX_LV3 },
+	{ "MEDHA0_LV1", CAPPING_VR_IDX_MEDHA0, CAPPING_LV_IDX_LV1, 0xFF },
+	{ "MEDHA0_LV2", CAPPING_VR_IDX_MEDHA0, CAPPING_LV_IDX_LV2, ADC_IDX_MEDHA0_1 },
+	{ "MEDHA0_LV3", CAPPING_VR_IDX_MEDHA0, CAPPING_LV_IDX_LV3, ADC_IDX_MEDHA0_2 },
+	{ "MEDHA1_LV1", CAPPING_VR_IDX_MEDHA1, CAPPING_LV_IDX_LV1, 0xFF },
+	{ "MEDHA1_LV2", CAPPING_VR_IDX_MEDHA1, CAPPING_LV_IDX_LV2, ADC_IDX_MEDHA1_1 },
+	{ "MEDHA1_LV3", CAPPING_VR_IDX_MEDHA1, CAPPING_LV_IDX_LV3, ADC_IDX_MEDHA1_2 },
 };
 
 static int cmd_power_capping_get_all(const struct shell *shell, size_t argc, char **argv)
@@ -180,6 +182,51 @@ static int cmd_power_capping_set_threshold(const struct shell *shell, size_t arg
 	return 0;
 }
 
+static int cmd_power_capping_debug(const struct shell *shell, size_t argc, char **argv)
+{
+	uint8_t idx = 0xff;
+	for (uint8_t id = 0; id < ARRAY_SIZE(power_capping_item_list); id++) {
+		if (!strcmp(argv[1], power_capping_item_list[id].name)) {
+			if (power_capping_item_list[id].adc_mapping_idx != 0xFF) {
+				idx = id;
+				break;
+			} else {
+				shell_error(shell, "Not support LV1");
+				return -1;
+			}
+		}
+	}
+
+	if (idx == 0xff) {
+		shell_error(shell, "Should input: <MEDHA[X]_LV[Y]>");
+		return -1;
+	}
+
+	if (get_power_capping_source() == CAPPING_SOURCE_ADC) {
+		shell_adc_get_averge_val(shell, power_capping_item_list[idx].adc_mapping_idx);
+		shell_adc_get_buf(shell, power_capping_item_list[idx].adc_mapping_idx);
+	} else if (get_power_capping_source() == CAPPING_SOURCE_VR) {
+		uint16_t avg_pwr = get_adc_averge_val(power_capping_item_list[idx].adc_mapping_idx);
+		shell_warn(shell, "%s VR PWR:  %d(W)", power_capping_item_list[idx].name, avg_pwr);
+		shell_print(shell, "");
+
+		uint16_t *buf = get_adc_buf(power_capping_item_list[idx].adc_mapping_idx);
+		uint16_t len = get_power_capping_time_w(power_capping_item_list[idx].vr_idx,
+							power_capping_item_list[idx].lv);
+		shell_warn(shell, "%s VR PWR buf_raw (len=%d)(unit=W): ",
+			   power_capping_item_list[idx].name, len);
+		for (uint16_t i = 0; i < len; i++) {
+			shell_fprintf(shell, SHELL_NORMAL, "%5d ", buf[i]);
+			if ((i + 1) % 10 == 0) {
+				shell_print(shell, "");
+			}
+		}
+		shell_print(shell, "");
+	}
+
+	return 0;
+}
+
 static void power_capping_name_get_for_set_cmd(size_t idx, struct shell_static_entry *entry)
 {
 	entry->syntax = NULL;
@@ -235,6 +282,8 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
 	power_capping_subcmds, SHELL_CMD(get, &get_subcmds, "power_capping get all", NULL),
 	SHELL_CMD(set, &set_subcmds,
 		  "power_capping set <method | source | time_window | threshold>", NULL),
+	SHELL_CMD_ARG(debug, &power_capping_name, "power_capping debug <MEDHA[X]_LV[Y]>",
+		      cmd_power_capping_debug, 2, 0),
 	SHELL_SUBCMD_SET_END);
 /* Root level */
 SHELL_CMD_REGISTER(
