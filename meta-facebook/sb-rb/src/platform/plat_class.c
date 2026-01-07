@@ -152,6 +152,8 @@ uint8_t get_tray_location()
 	return tray_location;
 }
 
+// clang-format off
+
 void pal_show_board_types(const struct shell *shell)
 {
 	uint8_t adc_type = 0;
@@ -210,6 +212,8 @@ void pal_show_board_types(const struct shell *shell)
 
 	return;
 }
+
+// clang-format on
 
 void pal_show_extra_info(const struct shell *shell)
 {
