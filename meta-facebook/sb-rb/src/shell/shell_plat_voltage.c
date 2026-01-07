@@ -65,7 +65,6 @@ static int cmd_voltage_get_all(const struct shell *shell, size_t argc, char **ar
 static int cmd_voltage_set(const struct shell *shell, size_t argc, char **argv)
 {
 	bool is_default = false;
-	bool is_perm = false;
 	if (!get_vr_test_mode_flag()) {
 		shell_warn(shell, "This command is only for VR test mode");
 		return -1;
@@ -78,13 +77,9 @@ static int cmd_voltage_set(const struct shell *shell, size_t argc, char **argv)
 		return -1;
 	}
 
-	if (argc == 4) {
-		if (!strcmp(argv[3], "perm")) {
-			is_perm = true;
-		} else {
-			shell_error(shell, "The last argument must be <perm>");
-			return -1;
-		}
+	if (argc >= 4) {
+		shell_error(shell, "voltage set <voltage-rail> <new-voltage>");
+		return -1;
 	}
 
 	/* covert rail string to enum */
@@ -121,7 +116,8 @@ static int cmd_voltage_set(const struct shell *shell, size_t argc, char **argv)
 		shell_print(shell, "There is no osfp p3v3");
 		return 0;
 	}
-	if (!plat_set_vout_command(rail, &millivolt, is_default, is_perm)) {
+	// remove set vout command perm
+	if (!plat_set_vout_command(rail, &millivolt, is_default)) {
 		shell_error(shell, "Can't set vout by rail index: %d", rail);
 		return -1;
 	}

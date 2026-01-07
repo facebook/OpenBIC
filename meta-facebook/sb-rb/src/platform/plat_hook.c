@@ -614,7 +614,7 @@ vr_vout_user_settings user_settings = { 0 };
 struct vr_vout_user_settings default_settings = { 0 };
 struct vr_vout_user_settings voltage_command_get = { 0 };
 vr_vout_range_user_settings_struct vout_range_user_settings = { 0 };
-bool plat_set_vout_command(uint8_t rail, uint16_t *millivolt, bool is_default, bool is_perm)
+bool plat_set_vout_command(uint8_t rail, uint16_t *millivolt, bool is_default)
 {
 	CHECK_NULL_ARG_WITH_RETURN(millivolt, false);
 
@@ -665,11 +665,6 @@ bool plat_set_vout_command(uint8_t rail, uint16_t *millivolt, bool is_default, b
 	default:
 		LOG_ERR("Unsupport VR type(%x)", cfg->type);
 		goto err;
-	}
-
-	if (is_perm) {
-		user_settings.vout[rail] = setting_millivolt;
-		vr_vout_user_settings_set(&user_settings);
 	}
 
 	voltage_command_get.vout[rail] = setting_millivolt;
@@ -752,7 +747,8 @@ bool vr_vout_default_settings_init(void)
 		}
 		uint16_t vout = 0;
 		if (!plat_get_vout_command(i, &vout)) {
-			LOG_ERR("Can't find vout default by rail index: %d", i);
+			LOG_ERR("Can't get vout default value by rail index: %d", i);
+			LOG_WRN("Now get Vout default value from VR is 0, please check VR is ok !");
 			return false;
 		}
 		default_settings.vout[i] = vout;
@@ -763,28 +759,6 @@ bool vr_vout_default_settings_init(void)
 	return true;
 }
 
-bool vr_vout_user_settings_init(void)
-{
-	if (vr_vout_user_settings_get(&user_settings) == false) {
-		LOG_ERR("get vout user settings fail");
-		return false;
-	}
-
-	for (int i = 0; i < VR_RAIL_E_MAX; i++) {
-		if (user_settings.vout[i] != 0xffff) {
-			/* write vout */
-			uint16_t millivolt = user_settings.vout[i];
-			if (!plat_set_vout_command(i, &millivolt, false, false)) {
-				LOG_ERR("Can't set vout[%d]=%x by user settings", i, millivolt);
-				return false;
-			}
-			LOG_INF("set [%x]%s: %dmV", i, vr_rail_table[i].sensor_name,
-				user_settings.vout[i]);
-		}
-	}
-
-	return true;
-}
 bool plat_get_vout_range(uint8_t rail, uint16_t *vout_max_millivolt, uint16_t *vout_min_millivolt)
 {
 	CHECK_NULL_ARG_WITH_RETURN(vout_max_millivolt, false);
@@ -812,20 +786,6 @@ bool plat_get_vout_range(uint8_t rail, uint16_t *vout_max_millivolt, uint16_t *v
 
 	*vout_max_millivolt = (uint16_t)(critical_high * 1000.0);
 	*vout_min_millivolt = (uint16_t)(critical_low * 1000.0);
-	return true;
-}
-
-bool vr_vout_user_settings_get(void *user_settings)
-{
-	CHECK_NULL_ARG_WITH_RETURN(user_settings, false);
-
-	/* read the user_settings from eeprom */
-	if (!plat_eeprom_read(VR_VOUT_USER_SETTINGS_OFFSET, user_settings,
-			      sizeof(struct vr_vout_user_settings))) {
-		LOG_ERR("Failed to write thermaltrip to eeprom");
-		return false;
-	}
-
 	return true;
 }
 

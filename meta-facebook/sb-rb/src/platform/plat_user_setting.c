@@ -1347,7 +1347,6 @@ bool get_average_power(uint8_t rail, uint32_t *milliwatt)
 void user_settings_init(void)
 {
 	vr_vout_default_settings_init();
-	vr_vout_user_settings_init();
 	bootstrap_default_settings_init();
 	bootstrap_user_settings_init();
 	vr_vout_range_user_settings_init();
