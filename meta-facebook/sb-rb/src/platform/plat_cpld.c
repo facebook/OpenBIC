@@ -126,10 +126,10 @@ void check_ubc_delayed(struct k_work *work)
 	 */
 	bool is_ubc_enabled = (gpio_get(FM_PLD_UBC_EN_R) == GPIO_HIGH);
 
-	bool is_dc_on = is_mb_dc_on();
+	bool is_dc_on_status = is_mb_dc_on();
 
 	if (is_ubc_enabled) {
-		if (is_dc_on != is_ubc_enabled) {
+		if (is_dc_on_status != is_ubc_enabled) {
 			//send event to bmc
 			uint16_t error_code = (POWER_ON_SEQUENCE_TRIGGER_CAUSE << 13);
 			error_log_event(error_code, LOG_ASSERT);
