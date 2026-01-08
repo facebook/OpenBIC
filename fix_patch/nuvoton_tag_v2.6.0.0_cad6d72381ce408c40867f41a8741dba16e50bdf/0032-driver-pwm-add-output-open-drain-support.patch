@@ -1,0 +1,89 @@
+From 083239028f61d8e1b467e658b072144f518ba6b1 Mon Sep 17 00:00:00 2001
+From: Tim Lee <chli30@nuvoton.com>
+Date: Tue, 6 Jan 2026 16:43:10 +0800
+Subject: [PATCH] driver: pwm: add output open drain support
+
+NPCM PWM supports output buffet select to push-pull or open-drain.
+Add output buffer select option 'drive-open-drain' in devicetree for NPCM PWM.
+If set, the PWM output will be configured as open-drain. If not set, defaults to push-pull.
+
+Signed-off-by: Tim Lee <chli30@nuvoton.com>
+---
+ boards/arm/npcm400f_evb/npcm400f_evb.dts |  2 ++
+ drivers/pwm/pwm_npcm.c                   | 10 ++++++++++
+ dts/bindings/pwm/nuvoton,npcm-pwm.yaml   |  5 +++++
+ 3 files changed, 17 insertions(+)
+
+diff --git a/boards/arm/npcm400f_evb/npcm400f_evb.dts b/boards/arm/npcm400f_evb/npcm400f_evb.dts
+index 8a7c5d9b34..df6329de13 100644
+--- a/boards/arm/npcm400f_evb/npcm400f_evb.dts
++++ b/boards/arm/npcm400f_evb/npcm400f_evb.dts
+@@ -635,6 +635,7 @@
+ &pwm1 {
+ 	pinctrl-0 = <&pinctrl_pwm1_default>;
+ 	pinctrl-names = "default";
++	drive-open-drain;
+ 	status = "okay";
+ };
+ 
+@@ -653,5 +654,6 @@
+ &pwm6 {
+ 	pinctrl-0 = <&pinctrl_pwm6_default>;
+ 	pinctrl-names = "default";
++	drive-open-drain;
+ 	status = "okay";
+ };
+diff --git a/drivers/pwm/pwm_npcm.c b/drivers/pwm/pwm_npcm.c
+index dfaedd325a..6865e53f9f 100644
+--- a/drivers/pwm/pwm_npcm.c
++++ b/drivers/pwm/pwm_npcm.c
+@@ -40,6 +40,8 @@ struct pwm_npcm_config {
+ 	struct pwm_reg *base;
+ 	/* clock configuration */
+ 	struct npcm4xx_clk_cfg clk_cfg;
++	/* open-drain output */
++	bool is_open_drain;
+ };
+ 
+ /* Driver data */
+@@ -78,6 +80,13 @@ static int pwm_npcm_configure(const struct device *dev, int clk_bus)
+ 		return -EINVAL;
+ 	}
+ 
++	/* Configure open-drain output if requested */
++	if (config->is_open_drain) {
++			inst->PWMCTLEX |= BIT(NPCM4XX_PWMCTLEX_OD_OUT);
++	} else {
++			inst->PWMCTLEX &= ~BIT(NPCM4XX_PWMCTLEX_OD_OUT);
++	}
++
+ 	return 0;
+ }
+ 
+@@ -221,6 +230,7 @@ static int pwm_npcm_init(const struct device *dev)
+ 	static const struct pwm_npcm_config pwm_npcm_cfg_##inst = {                     \
+ 		.base = (struct pwm_reg *)DT_INST_REG_ADDR(inst),                       \
+ 		.clk_cfg = NPCM4XX_DT_CLK_CFG_ITEM(inst),                               \
++		.is_open_drain = DT_INST_PROP(inst, drive_open_drain),                  \
+ 	};                                                                              \
+ 									                \
+ 	static struct pwm_npcm_data pwm_npcm_data_##inst;                               \
+diff --git a/dts/bindings/pwm/nuvoton,npcm-pwm.yaml b/dts/bindings/pwm/nuvoton,npcm-pwm.yaml
+index 07b5776b0f..ffbb324581 100644
+--- a/dts/bindings/pwm/nuvoton,npcm-pwm.yaml
++++ b/dts/bindings/pwm/nuvoton,npcm-pwm.yaml
+@@ -22,6 +22,11 @@ properties:
+     type: string-array
+     required: true
+     description: pin configuration state names
++  drive-open-drain:
++    type: boolean
++    description: |
++      The PWM output will be configured as open-drain. If not set,
++      defaults to push-pull.
+ 
+ pwm-cells:
+   - channel
+-- 
+2.34.1
+
