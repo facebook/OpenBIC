@@ -21,6 +21,7 @@
 #include "plat_cpld.h"
 #include "plat_adc.h"
 #include "plat_power_capping.h"
+#include "plat_pldm_sensor.h"
 #include "shell_adc.h"
 
 typedef struct {
@@ -41,10 +42,19 @@ static const power_capping_item_t power_capping_item_list[CAPPING_VR_IDX_MAX * C
 
 static int cmd_power_capping_get_all(const struct shell *shell, size_t argc, char **argv)
 {
+	uint8_t capping_source = get_power_capping_source();
+	const char *volt_str = "MEDHA0_VDD_VOLT, MEDHA1_VDD_VOLT";
+	const char *pwr_str = "MEDHA0_VDD_PWR, MEDHA1_VDD_PWR";
+	const char *print_str = NULL;
+	print_str = (capping_source == CAPPING_SOURCE_VR) ? pwr_str : volt_str;
+
 	shell_print(shell, "==================Power Capping Info=================");
 	shell_print(shell, "Method: %d ( 0:LOOK_UP_TABLE,  1:CREDIT_BASE )",
 		    get_power_capping_method());
-	shell_print(shell, "Source: %d ( 0:VR,  1:ADC )\n", get_power_capping_source());
+	shell_print(shell, "Source: %d ( 0:VR,  1:ADC )\n", capping_source);
+	shell_print(shell, "VR Polling Telemetry: %s", print_str);
+	shell_print(shell, "VR Polling Rate: %11d (ms)\n",
+		    plat_pldm_sensor_get_quick_vr_poll_interval());
 	shell_print(shell, "---------------------MEDHA0---------------------");
 	shell_print(shell, "MEDHA0 LV1 time window: %4d (us)",
 		    get_power_capping_time_w(CAPPING_VR_IDX_MEDHA0, CAPPING_LV_IDX_LV1));
@@ -182,6 +192,16 @@ static int cmd_power_capping_set_threshold(const struct shell *shell, size_t arg
 	return 0;
 }
 
+static int cmd_power_capping_set_polling_rate(const struct shell *shell, size_t argc, char **argv)
+{
+	uint32_t poll_rate = strtoul(argv[1], NULL, 10);
+
+	plat_pldm_sensor_set_quick_vr_poll_interval(poll_rate);
+	shell_print(shell, "set polling rate to %d", poll_rate);
+
+	return 0;
+}
+
 static int cmd_power_capping_debug(const struct shell *shell, size_t argc, char **argv)
 {
 	uint8_t idx = 0xff;
@@ -275,18 +295,21 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
 	SHELL_CMD_ARG(threshold, &power_capping_name,
 		      "power_capping set threshold <MEDHA[X]_LV[Y]> <threshold>",
 		      cmd_power_capping_set_threshold, 3, 0),
+	SHELL_CMD_ARG(polling_rate, NULL, "power_capping set polling_rate <time (ms)>",
+		      cmd_power_capping_set_polling_rate, 2, 0),
 	SHELL_SUBCMD_SET_END);
 
 /* level 1 */
 SHELL_STATIC_SUBCMD_SET_CREATE(
 	power_capping_subcmds, SHELL_CMD(get, &get_subcmds, "power_capping get all", NULL),
 	SHELL_CMD(set, &set_subcmds,
-		  "power_capping set <method | source | time_window | threshold>", NULL),
+		  "power_capping set <method | source | time_window | threshold | polling_rate>",
+		  NULL),
 	SHELL_CMD_ARG(debug, &power_capping_name, "power_capping debug <MEDHA[X]_LV[Y]>",
 		      cmd_power_capping_debug, 2, 0),
 	SHELL_SUBCMD_SET_END);
 /* Root level */
 SHELL_CMD_REGISTER(
 	power_capping, &power_capping_subcmds,
-	"power_capping get all | power_capping set <method | source | time_window | threshold>",
+	"power_capping get all | power_capping set <method | source | time_window | threshold | polling_rate>",
 	NULL);

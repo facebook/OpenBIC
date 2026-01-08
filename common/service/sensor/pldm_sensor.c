@@ -63,6 +63,11 @@ __weak void plat_pldm_sensor_poll_post()
 	return;
 }
 
+__weak void plat_pldm_sensor_change_poll_interval(int thread_id, uint32_t *poll_interval_ms)
+{
+	return;
+}
+
 bool pldm_sensor_is_interval_ready(pldm_sensor_info *pldm_sensor_list)
 {
 	CHECK_NULL_ARG_WITH_RETURN(pldm_sensor_list, false);
@@ -449,6 +454,8 @@ void pldm_sensor_polling_handler(void *arug0, void *arug1, void *arug2)
 			k_msleep(poll_interval_ms);
 			continue;
 		}
+		// Dynamic change polling interval
+		plat_pldm_sensor_change_poll_interval(thread_id, &poll_interval_ms);
 
 		for (sensor_num = 0; sensor_num < pldm_sensor_count; sensor_num++) {
 			if (get_sensor_poll_enable_flag() == false) {

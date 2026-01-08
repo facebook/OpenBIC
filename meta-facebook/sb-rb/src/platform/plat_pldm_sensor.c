@@ -32,11 +32,14 @@ static bool plat_sensor_temp_polling_enable_flag = true;
 static bool plat_sensor_vr_polling_enable_flag = true;
 static uint8_t plat_sensor_one_step_power_enable_flag = 0;
 
+static uint32_t quick_vr_poll_interval = QUICK_POLL_INTERVAL;
+static bool is_quick_vr_poll_changed = false;
+
 static struct pldm_sensor_thread pal_pldm_sensor_thread[MAX_SENSOR_THREAD_ID] = {
 	// thread id, thread name
 	{ TEMP_SENSOR_THREAD_ID, "TEMP_SENSOR_THREAD" },
 	{ VR_SENSOR_THREAD_ID, "VR_PLDM_SENSOR_THREAD" },
-	{ QUICK_VR_SENSOR_THREAD_ID, "QUICK_VR_PLDM_SENSOR_THREAD", 10, false },
+	{ QUICK_VR_SENSOR_THREAD_ID, "QUICK_VR_PLDM_SENSOR_THREAD", QUICK_POLL_INTERVAL, true },
 	{ UBC_SENSOR_THREAD_ID, "UBC_PLDM_SENSOR_THREAD" },
 	{ EVB_SENSOR_THREAD_ID, "EVB_SENSOR_THREAD" },
 };
@@ -12496,6 +12499,31 @@ bool is_vr_access(uint8_t sensor_num)
 		return (is_dc_access(sensor_num) && get_plat_sensor_vr_polling_enable_flag() &&
 			get_plat_sensor_polling_enable_flag());
 	}
+}
+
+uint32_t plat_pldm_sensor_get_quick_vr_poll_interval()
+{
+	return quick_vr_poll_interval;
+}
+
+void plat_pldm_sensor_set_quick_vr_poll_interval(uint32_t value)
+{
+	quick_vr_poll_interval = value;
+	is_quick_vr_poll_changed = true;
+}
+
+void plat_pldm_sensor_change_poll_interval(int thread_id, uint32_t *poll_interval_ms)
+{
+	CHECK_NULL_ARG(poll_interval_ms);
+
+	if (thread_id == QUICK_VR_SENSOR_THREAD_ID) {
+		if (is_quick_vr_poll_changed) {
+			*poll_interval_ms = quick_vr_poll_interval;
+			is_quick_vr_poll_changed = false;
+		}
+	}
+
+	return;
 }
 
 void set_ioe_value(uint8_t ioe_addr, uint8_t ioe_reg, uint8_t value)
