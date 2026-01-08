@@ -39,6 +39,7 @@ typedef struct {
 	uint16_t vout_max;
 	uint16_t lcr;
 	uint16_t ucr;
+	uint16_t vout_default;
 } vr_test_mode_setting_t;
 
 extern const vr_test_mode_setting_t vr_test_mode_table[];

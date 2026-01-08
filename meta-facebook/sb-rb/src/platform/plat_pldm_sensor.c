@@ -3648,7 +3648,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t normal_min;
 			0, //uint32_t warning_high;
 			0, //uint32_t warning_low;
-			847, //uint32_t critical_high;
+			848, //uint32_t critical_high;
 			690, //uint32_t critical_low;
 			0, //uint32_t fatal_high;
 			0, //uint32_t fatal_low;
@@ -4008,7 +4008,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t normal_min;
 			0, //uint32_t warning_high;
 			0, //uint32_t warning_low;
-			847, //uint32_t critical_high;
+			848, //uint32_t critical_high;
 			690, //uint32_t critical_low;
 			0, //uint32_t fatal_high;
 			0, //uint32_t fatal_low;
@@ -4368,7 +4368,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t normal_min;
 			0, //uint32_t warning_high;
 			0, //uint32_t warning_low;
-			847, //uint32_t critical_high;
+			848, //uint32_t critical_high;
 			690, //uint32_t critical_low;
 			0, //uint32_t fatal_high;
 			0, //uint32_t fatal_low;
@@ -5809,7 +5809,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0, //uint32_t warning_high;
 			0, //uint32_t warning_low;
 			795, //uint32_t critical_high;
-			690, //uint32_t critical_low;
+			705, //uint32_t critical_low;
 			0, //uint32_t fatal_high;
 			0, //uint32_t fatal_low;
 		},
@@ -6168,8 +6168,8 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t normal_min;
 			0, //uint32_t warning_high;
 			0, //uint32_t warning_low;
-			461, //uint32_t critical_high;
-			368, //uint32_t critical_low;
+			440, //uint32_t critical_high;
+			380, //uint32_t critical_low;
 			0, //uint32_t fatal_high;
 			0, //uint32_t fatal_low;
 		},
@@ -6528,8 +6528,8 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t normal_min;
 			0, //uint32_t warning_high;
 			0, //uint32_t warning_low;
-			1166, //uint32_t critical_high;
-			1034, //uint32_t critical_low;
+			1177, //uint32_t critical_high;
+			1067, //uint32_t critical_low;
 			0, //uint32_t fatal_high;
 			0, //uint32_t fatal_low;
 		},
@@ -6888,8 +6888,8 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t normal_min;
 			0, //uint32_t warning_high;
 			0, //uint32_t warning_low;
-			1908, //uint32_t critical_high;
-			1692, //uint32_t critical_low;
+			1950, //uint32_t critical_high;
+			1746, //uint32_t critical_low;
 			0, //uint32_t fatal_high;
 			0, //uint32_t fatal_low;
 		},
@@ -7249,7 +7249,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0, //uint32_t warning_high;
 			0, //uint32_t warning_low;
 			795, //uint32_t critical_high;
-			690, //uint32_t critical_low;
+			705, //uint32_t critical_low;
 			0, //uint32_t fatal_high;
 			0, //uint32_t fatal_low;
 		},
@@ -7608,8 +7608,8 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t normal_min;
 			0, //uint32_t warning_high;
 			0, //uint32_t warning_low;
-			432, //uint32_t critical_high;
-			368, //uint32_t critical_low;
+			440, //uint32_t critical_high;
+			380, //uint32_t critical_low;
 			0, //uint32_t fatal_high;
 			0, //uint32_t fatal_low;
 		},
@@ -7968,8 +7968,8 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t normal_min;
 			0, //uint32_t warning_high;
 			0, //uint32_t warning_low;
-			1166, //uint32_t critical_high;
-			1034, //uint32_t critical_low;
+			1177, //uint32_t critical_high;
+			1067, //uint32_t critical_low;
 			0, //uint32_t fatal_high;
 			0, //uint32_t fatal_low;
 		},
@@ -8328,8 +8328,8 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t normal_min;
 			0, //uint32_t warning_high;
 			0, //uint32_t warning_low;
-			1908, //uint32_t critical_high;
-			1692, //uint32_t critical_low;
+			1950, //uint32_t critical_high;
+			1746, //uint32_t critical_low;
 			0, //uint32_t fatal_high;
 			0, //uint32_t fatal_low;
 		},
@@ -12250,6 +12250,25 @@ err:
 	}
 
 	return ret;
+}
+
+PDR_numeric_sensor *get_pdr_numeric_sensor_by_sensor_id(uint8_t sensor_id)
+{
+	uint8_t type = check_sensor_type(sensor_id);
+	CHECK_ARG_WITH_RETURN(type == MAX_SENSOR_THREAD_ID, NULL);
+
+	pldm_sensor_info *table = plat_pldm_sensor_load(type);
+	CHECK_NULL_ARG_WITH_RETURN(table, NULL);
+
+	int count = plat_pldm_sensor_get_sensor_count(type);
+	CHECK_ARG_WITH_RETURN(count < 0, NULL);
+
+	for (uint8_t i = 0; i < count; i++) {
+		if (table[i].pldm_sensor_cfg.num == sensor_id)
+			return &table[i].pdr_numeric_sensor;
+	}
+
+	return NULL;
 }
 
 #define SENSOR_CFG_NO_CHANGE 0xFF

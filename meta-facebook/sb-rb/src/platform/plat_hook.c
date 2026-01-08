@@ -765,27 +765,12 @@ bool plat_get_vout_range(uint8_t rail, uint16_t *vout_max_millivolt, uint16_t *v
 	CHECK_NULL_ARG_WITH_RETURN(vout_min_millivolt, false);
 
 	uint8_t sensor_id = vr_rail_table[rail].sensor_id;
-	const sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
+	PDR_numeric_sensor *pdr_sensor = get_pdr_numeric_sensor_by_sensor_id(sensor_id);
+	CHECK_NULL_ARG_WITH_RETURN(pdr_sensor, false);
 
-	if (cfg == NULL) {
-		LOG_ERR("Failed to get sensor config for sensor 0x%x", sensor_id);
-		return false;
-	}
+	*vout_max_millivolt = (uint16_t)pdr_sensor->critical_high;
+	*vout_min_millivolt = (uint16_t)pdr_sensor->critical_low;
 
-	if (check_supported_threshold_with_sensor_id(sensor_id) != 0) {
-		LOG_ERR("sensor id: 0x%x unsupported thresholds", sensor_id);
-		return false;
-	}
-
-	float critical_high, critical_low;
-	if (get_pdr_table_critical_high_and_low_with_sensor_id(sensor_id, &critical_high,
-							       &critical_low) != 0) {
-		LOG_ERR("sensor id: 0x%x get threshold failed", sensor_id);
-		return false;
-	}
-
-	*vout_max_millivolt = (uint16_t)(critical_high * 1000.0);
-	*vout_min_millivolt = (uint16_t)(critical_low * 1000.0);
 	return true;
 }
 
