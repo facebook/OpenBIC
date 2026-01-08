@@ -889,6 +889,21 @@ static bool command_reply_data_handle(void *arg)
 				data->target_rd_msg.msg[0] = get_power_capping_source();
 				data->target_rd_msg.msg_length = 1;
 			} break;
+			case POLLING_RATE_TELEMETRY_REG: {
+				uint32_t interval = plat_pldm_sensor_get_quick_vr_poll_interval();
+				uint8_t value = 0;
+				if (interval == 10) {
+					value = 0;
+				} else if (interval == 5) {
+					value = 1;
+				} else if (interval == 1) {
+					value = 2;
+				} else {
+					value = 4;
+				}
+				data->target_rd_msg.msg[0] = value;
+				data->target_rd_msg.msg_length = 1;
+			} break;
 			case TRAY_INFO_REG: {
 				/* TRAY_INFO_REG:
 				 * Byte0: MMC slot
@@ -1240,6 +1255,21 @@ void plat_master_write_thread_handler()
 
 			k_work_init(&sensor_data->work, set_power_capping_source_handler);
 			k_work_submit(&sensor_data->work);
+		} break;
+		case POLLING_RATE_TELEMETRY_REG: {
+			if (rlen != 2) {
+				LOG_ERR("Invalid length for offset(write): 0x%02x", reg_offset);
+				break;
+			}
+			if (rdata[1] == 0) {
+				plat_pldm_sensor_set_quick_vr_poll_interval(10);
+			} else if (rdata[1] == 1) {
+				plat_pldm_sensor_set_quick_vr_poll_interval(5);
+			} else if (rdata[1] == 2) {
+				plat_pldm_sensor_set_quick_vr_poll_interval(1);
+			} else {
+				LOG_ERR("Invalid D: 0x%x, offset(W): 0x%02x", rdata[1], reg_offset);
+			}
 		} break;
 		case SET_SENSOR_POLLING_COMMAND_REG: {
 			if (rlen != 8) {
