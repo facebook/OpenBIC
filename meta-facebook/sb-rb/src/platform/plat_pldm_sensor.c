@@ -12155,10 +12155,10 @@ char16_t *char16_strcat_char(char16_t *dest, char16_t ch)
 void plat_init_entity_aux_names_pdr_table()
 {
 	// Base name
-	const char16_t base_name[] = u"RB_SLOT_";
+	const char16_t base_name[] = u"RB";
 
 	// Get slot ID
-	uint8_t slot_id = get_mmc_slot() + 1;
+	uint8_t slot_id = get_mmc_slot();
 
 	// Calculate the length of the base name
 	size_t base_len = char16_strlen(base_name);
