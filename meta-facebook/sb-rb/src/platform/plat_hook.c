@@ -611,10 +611,9 @@ bool vr_vout_user_settings_set(void *user_settings_value)
 }
 
 vr_vout_user_settings user_settings = { 0 };
-struct vr_vout_user_settings default_settings = { 0 };
 struct vr_vout_user_settings voltage_command_get = { 0 };
 vr_vout_range_user_settings_struct vout_range_user_settings = { 0 };
-bool plat_set_vout_command(uint8_t rail, uint16_t *millivolt, bool is_default)
+bool plat_set_vout_command(uint8_t rail, uint16_t *millivolt)
 {
 	CHECK_NULL_ARG_WITH_RETURN(millivolt, false);
 
@@ -638,10 +637,6 @@ bool plat_set_vout_command(uint8_t rail, uint16_t *millivolt, bool is_default)
 		}
 	}
 
-	if (is_default) {
-		*millivolt = default_settings.vout[rail];
-		setting_millivolt = default_settings.vout[rail];
-	}
 	LOG_DBG("sensor num 0x%x,page 0x%x, vout 0x%x", sensor_id, page, setting_millivolt);
 	switch (cfg->type) {
 	case sensor_dev_mp2971:
@@ -734,28 +729,6 @@ bool plat_set_vout_range_max(uint8_t rail, uint16_t *millivolt)
 	}
 
 	vout_range_user_settings.change_vout_max[rail] = *millivolt;
-	return true;
-}
-
-bool vr_vout_default_settings_init(void)
-{
-	for (int i = 0; i < VR_RAIL_E_MAX; i++) {
-		if ((get_asic_board_id() != ASIC_BOARD_ID_EVB) &&
-		    (i == VR_RAIL_E_P3V3_OSFP_VOLT_V)) {
-			default_settings.vout[i] = 0xffff;
-			continue; // skip osfp p3v3 on AEGIS BD
-		}
-		uint16_t vout = 0;
-		if (!plat_get_vout_command(i, &vout)) {
-			LOG_ERR("Can't get vout default value by rail index: %d", i);
-			LOG_WRN("Now get Vout default value from VR is 0, please check VR is ok !");
-			return false;
-		}
-		default_settings.vout[i] = vout;
-	}
-
-	memcpy(&voltage_command_get, &default_settings, sizeof(vr_vout_user_settings));
-
 	return true;
 }
 

@@ -240,7 +240,7 @@ static bool set_vr_test_mode_reg(bool is_default)
 		if (is_default) {
 			// set vout default
 			uint16_t vout_default = cfg->vout_default;
-			if (!plat_set_vout_command(cfg->vr_rail, &vout_default, false)) {
+			if (!plat_set_vout_command(cfg->vr_rail, &vout_default)) {
 				LOG_ERR("VR rail %x set vout to default: %d failed", cfg->vr_rail,
 					cfg[i].vout_default);
 				ret = false;
