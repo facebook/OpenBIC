@@ -22,31 +22,35 @@
 #include "plat_hook.h"
 #include "plat_util.h"
 
-void cmd_vr_test_mode_start(const struct shell *shell, size_t argc, char **argv)
+static bool cmd_is_dc_on(const struct shell *shell)
 {
 	if (!is_dc_on()) {
-		shell_print(shell, "please iris power on first");
-		return;
+		shell_warn(shell, "please iris power on first");
+		return false;
 	}
+
+	return true;
+}
+
+void cmd_vr_test_mode_start(const struct shell *shell, size_t argc, char **argv)
+{
+	if (!cmd_is_dc_on(shell))
+		return;
 
 	vr_test_mode_enable(true);
 }
 void cmd_vr_test_mode_exit(const struct shell *shell, size_t argc, char **argv)
 {
-	if (!is_dc_on()) {
-		shell_print(shell, "please iris power on first");
+	if (!cmd_is_dc_on(shell))
 		return;
-	}
 
 	vr_test_mode_enable(false);
 }
 
 void cmd_vr_test_mode_show_default(const struct shell *shell, size_t argc, char **argv)
 {
-	if (!is_dc_on()) {
-		shell_print(shell, "please iris power on first");
+	if (!cmd_is_dc_on(shell))
 		return;
-	}
 
 	shell_print(shell, "%-30s | %-11s | %-11s | %-7s | %-7s | %-9s | %-7s | %-7s ",
 		    "VR RAIL NAME", "FAST OCP(A)", "SLOW OCP(A)", "UVP(mV)", "OVP(mV)", "V MAX(mV)",
@@ -111,10 +115,8 @@ static int get_vr_reg_to_int(uint8_t vr_rail, uint8_t reg)
 
 void cmd_vr_test_mode_show_real(const struct shell *shell, size_t argc, char **argv)
 {
-	if (!is_dc_on()) {
-		shell_print(shell, "please iris power on first");
+	if (!cmd_is_dc_on(shell))
 		return;
-	}
 
 	shell_print(shell, "%-30s | %-11s | %-11s | %-7s | %-7s | %-9s | %-7s | %-7s ",
 		    "VR RAIL NAME", "FAST OCP(A)", "SLOW OCP(A)", "UVP(mV)", "OVP(mV)", "V MAX(mV)",
@@ -152,6 +154,9 @@ void cmd_vr_test_mode_get_status(const struct shell *shell, size_t argc, char **
 
 void cmd_vr_test_mode_get_page(const struct shell *shell, size_t argc, char **argv)
 {
+	if (!cmd_is_dc_on(shell))
+		return;
+
 	enum VR_RAIL_E rail;
 	if (vr_rail_enum_get(argv[1], &rail) == false) {
 		shell_error(shell, "Invalid rail name: %s", argv[1]);
@@ -163,6 +168,9 @@ void cmd_vr_test_mode_get_page(const struct shell *shell, size_t argc, char **ar
 
 void cmd_vr_dma_read(const struct shell *shell, size_t argc, char **argv)
 {
+	if (!cmd_is_dc_on(shell))
+		return;
+
 	enum VR_RAIL_E rail;
 	if (vr_rail_enum_get(argv[1], &rail) == false) {
 		shell_error(shell, "Invalid rail name: %s", argv[1]);
@@ -183,6 +191,9 @@ void cmd_vr_dma_read(const struct shell *shell, size_t argc, char **argv)
 }
 void cmd_vr_dma_write(const struct shell *shell, size_t argc, char **argv)
 {
+	if (!cmd_is_dc_on(shell))
+		return;
+
 	enum VR_RAIL_E rail;
 	if (vr_rail_enum_get(argv[1], &rail) == false) {
 		shell_error(shell, "Invalid rail name: %s", argv[1]);
@@ -204,6 +215,9 @@ void cmd_vr_dma_write(const struct shell *shell, size_t argc, char **argv)
 
 void cmd_vr_pmbus_read(const struct shell *shell, size_t argc, char **argv)
 {
+	if (!cmd_is_dc_on(shell))
+		return;
+
 	enum VR_RAIL_E rail;
 	if (vr_rail_enum_get(argv[1], &rail) == false) {
 		shell_error(shell, "Invalid rail name: %s", argv[1]);
@@ -224,6 +238,9 @@ void cmd_vr_pmbus_read(const struct shell *shell, size_t argc, char **argv)
 }
 void cmd_vr_pmbus_write(const struct shell *shell, size_t argc, char **argv)
 {
+	if (!cmd_is_dc_on(shell))
+		return;
+
 	enum VR_RAIL_E rail;
 	if (vr_rail_enum_get(argv[1], &rail) == false) {
 		shell_error(shell, "Invalid rail name: %s", argv[1]);

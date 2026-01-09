@@ -22,7 +22,7 @@
 LOG_MODULE_REGISTER(plat_vr_test_mode);
 
 struct k_thread vr_test_mode_thread;
-K_KERNEL_STACK_MEMBER(vr_test_mode_thread_stack, 1024);
+K_KERNEL_STACK_MEMBER(vr_test_mode_thread_stack, 512);
 k_tid_t vr_test_mode_tid;
 bool vr_test_mode_flag = false;
 
