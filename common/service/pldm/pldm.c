@@ -47,6 +47,14 @@ LOG_MODULE_REGISTER(pldm);
 
 #define PLDM_FW_UPDATE_MAX_RETRY 3
 
+#ifndef PLDM_BRIDGE_IPMI_TIMEOUT_MS
+#define PLDM_BRIDGE_IPMI_TIMEOUT_MS PLDM_MSG_TIMEOUT_MS
+#endif
+
+#ifndef PLDM_BRIDGE_IPMI_MAX_RETRY
+#define PLDM_BRIDGE_IPMI_MAX_RETRY PLDM_MSG_MAX_RETRY
+#endif
+
 #define PLDM_RESP_MSG_PROC_MUTEX_TIMEOUT_MS 500
 #define PLDM_TASK_NAME_MAX_SIZE 32
 
@@ -210,6 +218,9 @@ uint16_t mctp_pldm_read(void *mctp_p, pldm_msg *msg, uint8_t *rbuf, uint16_t rbu
 	if (msg->hdr.pldm_type == PLDM_TYPE_FW_UPDATE) {
 		msg->timeout_ms = PLDM_FW_UPDATE_TIMEOUT_MS;
 		max_retry = PLDM_FW_UPDATE_MAX_RETRY;
+	} else if (msg->hdr.cmd == PLDM_OEM_IPMI_BRIDGE) {
+		msg->timeout_ms = PLDM_BRIDGE_IPMI_TIMEOUT_MS;
+		max_retry = PLDM_BRIDGE_IPMI_MAX_RETRY;
 	} else {
 		msg->timeout_ms = PLDM_MSG_TIMEOUT_MS;
 		max_retry = PLDM_MSG_MAX_RETRY;
