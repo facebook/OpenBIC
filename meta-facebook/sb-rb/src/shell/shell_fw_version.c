@@ -194,37 +194,28 @@ void cmd_get_fw_version_asic_from_flash(const struct shell *shell, size_t argc, 
 	// want to show like VER : 01.06.00 | CRC32 : e9e2b0ba
 	uint32_t version = 0;
 	uint32_t crc32 = 0;
-	if (plat_get_image_crc_checksum_from_flash(COMPNT_HAMSA, VERSION, &version)) {
-		if (plat_get_image_crc_checksum_from_flash(COMPNT_HAMSA, CRC32, &crc32)) {
-			shell_print(shell, "HAMSA boot0 VER : %08x | CRC32 : %08x", version, crc32);
-		} else {
-			shell_warn(shell, "HAMSA boot0 CRC32 reading failed");
-		}
+
+	plat_set_cpld_reset_reg(RESET_CPLD_OFF);
+
+	if (plat_get_image_crc_checksum_from_flash(COMPNT_HAMSA, &version, &crc32)) {
+		shell_print(shell, "HAMSA boot0 VER : %08x | CRC32 : %08x", version, crc32);
 	} else {
-		shell_warn(shell, "HAMSA boot0 VER reading failed");
+		shell_warn(shell, "HAMSA boot0 VER and CRC reading failed");
 	}
 
-	if (plat_get_image_crc_checksum_from_flash(COMPNT_MEDHA0, VERSION, &version)) {
-		if (plat_get_image_crc_checksum_from_flash(COMPNT_MEDHA0, CRC32, &crc32)) {
-			shell_print(shell, "MEDHA0 boot0 VER : %08x | CRC32 : %08x", version,
-				    crc32);
-		} else {
-			shell_warn(shell, "MEDHA0 boot0 CRC32 reading failed");
-		}
+	if (plat_get_image_crc_checksum_from_flash(COMPNT_MEDHA0, &version, &crc32)) {
+		shell_print(shell, "MEDHA0 boot0 VER : %08x | CRC32 : %08x", version, crc32);
 	} else {
-		shell_warn(shell, "MEDHA0 boot0 VER reading failed");
+		shell_warn(shell, "MEDHA0 boot0 VER and CRC reading failed");
 	}
 
-	if (plat_get_image_crc_checksum_from_flash(COMPNT_MEDHA1, VERSION, &version)) {
-		if (plat_get_image_crc_checksum_from_flash(COMPNT_MEDHA1, CRC32, &crc32)) {
-			shell_print(shell, "MEDHA1 boot0 VER : %08x | CRC32 : %08x", version,
-				    crc32);
-		} else {
-			shell_warn(shell, "MEDHA1 boot0 CRC32 reading failed");
-		}
+	if (plat_get_image_crc_checksum_from_flash(COMPNT_MEDHA1, &version, &crc32)) {
+		shell_print(shell, "MEDHA1 boot0 VER : %08x | CRC32 : %08x", version, crc32);
 	} else {
-		shell_warn(shell, "MEDHA1 boot0 VER reading failed");
+		shell_warn(shell, "MEDHA1 boot0 VER and CRC reading failed");
 	}
+
+	plat_set_cpld_reset_reg(RESET_CPLD_ON);
 
 	return;
 }
