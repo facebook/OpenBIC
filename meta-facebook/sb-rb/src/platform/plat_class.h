@@ -33,9 +33,18 @@ enum UBC_MODULE {
 	UBC_MODULE_UNKNOWN,
 };
 
+enum ASIC_BOARD_ID {
+	ASIC_BOARD_ID_RSVD1,
+	ASIC_BOARD_ID_RSVD2,
+	ASIC_BOARD_ID_RAINBOW,
+	ASIC_BOARD_ID_EVB,
+	ASIC_BOARD_ID_UNKNOWN,
+};
+
 void init_plat_config();
 uint8_t get_vr_module();
 uint8_t get_ubc_module();
 uint8_t get_mmc_slot();
+uint8_t get_asic_board_id();
 
 #endif
