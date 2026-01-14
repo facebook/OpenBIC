@@ -31,12 +31,12 @@ static int cmd_vr_status_get(const struct shell *shell, size_t argc, char **argv
 	}
 
 	if (!strcmp(argv[1], "all")) {
-		for (int i = 0; i < VR_RAIL_E_MAX; i++) {
-			if ((get_board_type() == MINERVA_AEGIS_BD) && (i == 0))
+		for (int i = 0; i < UBC_VR_RAIL_E_MAX; i++) {
+			if ((get_board_type() == MINERVA_AEGIS_BD) && (i == 2))
 				continue; // skip osfp p3v3 on AEGIS BD
 
 			uint8_t *rail_name = NULL;
-			if (!vr_rail_name_get((uint8_t)i, &rail_name)) {
+			if (!ubc_vr_rail_name_get((uint8_t)i, &rail_name)) {
 				shell_error(shell, "Can't find vr_rail_name by rail index: %x", i);
 				continue;
 			}
@@ -88,13 +88,13 @@ static int cmd_vr_status_get(const struct shell *shell, size_t argc, char **argv
 		}
 		return 0;
 	} else {
-		enum VR_RAIL_E rail;
-		if (vr_rail_enum_get(argv[1], &rail) == false) {
+		enum UBC_VR_RAIL_E rail;
+		if (ubc_vr_rail_enum_get(argv[1], &rail) == false) {
 			shell_error(shell, "Invalid rail name: %s", argv[1]);
 			return -1;
 		}
 
-		if ((get_board_type() == MINERVA_AEGIS_BD) && (rail == 0)) {
+		if ((get_board_type() == MINERVA_AEGIS_BD) && (rail == 2)) {
 			shell_print(shell, "There is no osfp p3v3 on AEGIS BD");
 			return 0;
 		}
@@ -151,12 +151,12 @@ static int cmd_vr_status_clear(const struct shell *shell, size_t argc, char **ar
 	}
 
 	if (!strcmp(argv[1], "all")) {
-		for (int i = 0; i < VR_RAIL_E_MAX; i++) {
-			if ((get_board_type() == MINERVA_AEGIS_BD) && (i == 0))
+		for (int i = 0; i < UBC_VR_RAIL_E_MAX; i++) {
+			if ((get_board_type() == MINERVA_AEGIS_BD) && (i == 2))
 				continue; // skip osfp p3v3 on AEGIS BD
 
 			uint8_t *rail_name = NULL;
-			if (!vr_rail_name_get((uint8_t)i, &rail_name)) {
+			if (!ubc_vr_rail_name_get((uint8_t)i, &rail_name)) {
 				shell_error(shell, "Can't find vr_rail_name by rail index: %x", i);
 				continue;
 			}
@@ -169,13 +169,13 @@ static int cmd_vr_status_clear(const struct shell *shell, size_t argc, char **ar
 		shell_print(shell, "All VR clear vr status finish");
 		return 0;
 	} else {
-		enum VR_RAIL_E rail;
-		if (vr_rail_enum_get(argv[1], &rail) == false) {
+		enum UBC_VR_RAIL_E rail;
+		if (ubc_vr_rail_enum_get(argv[1], &rail) == false) {
 			shell_error(shell, "Invalid rail name: %s", argv[1]);
 			return -1;
 		}
 
-		if ((get_board_type() == MINERVA_AEGIS_BD) && (rail == 0)) {
+		if ((get_board_type() == MINERVA_AEGIS_BD) && (rail == 2)) {
 			shell_print(shell, "There is no osfp p3v3 on AEGIS BD");
 			return 0;
 		}
@@ -191,12 +191,12 @@ static int cmd_vr_status_clear(const struct shell *shell, size_t argc, char **ar
 
 static void vr_status_rname_get(size_t idx, struct shell_static_entry *entry)
 {
-	if ((get_board_type() == MINERVA_AEGIS_BD))
+	if ((get_board_type() == MINERVA_AEGIS_BD) && (idx == 2))
 		idx++;
 
 	uint8_t *name = NULL;
 	vr_status_name_get((uint8_t)idx, &name);
-	if (idx == VR_STAUS_E_MAX)
+	if (idx == UBC_VR_RAIL_E_MAX)
 		name = (uint8_t *)"all";
 
 	entry->syntax = (name) ? (const char *)name : NULL;
@@ -209,13 +209,13 @@ SHELL_DYNAMIC_CMD_CREATE(vr_status_rname_for_vr_status, vr_status_rname_get);
 
 static void voltage_rname_get(size_t idx, struct shell_static_entry *entry)
 {
-	if ((get_board_type() == MINERVA_AEGIS_BD))
+	if ((get_board_type() == MINERVA_AEGIS_BD) && (idx == 2))
 		idx++;
 
 	uint8_t *name = NULL;
-	vr_rail_name_get((uint8_t)idx, &name);
+	ubc_vr_rail_name_get((uint8_t)idx, &name);
 
-	if (idx == VR_RAIL_E_MAX)
+	if (idx == UBC_VR_RAIL_E_MAX)
 		name = (uint8_t *)"all";
 
 	entry->syntax = (name) ? (const char *)name : NULL;
@@ -226,13 +226,13 @@ static void voltage_rname_get(size_t idx, struct shell_static_entry *entry)
 
 static void voltage_rname_clear(size_t idx, struct shell_static_entry *entry)
 {
-	if ((get_board_type() == MINERVA_AEGIS_BD))
+	if ((get_board_type() == MINERVA_AEGIS_BD) && (idx == 2))
 		idx++;
 
 	uint8_t *name = NULL;
-	vr_rail_name_get((uint8_t)idx, &name);
+	ubc_vr_rail_name_get((uint8_t)idx, &name);
 
-	if (idx == VR_RAIL_E_MAX)
+	if (idx == UBC_VR_RAIL_E_MAX)
 		name = (uint8_t *)"all";
 
 	entry->syntax = (name) ? (const char *)name : NULL;
