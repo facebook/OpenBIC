@@ -497,6 +497,11 @@ uint8_t pldm_send_platform_event(uint8_t event_class, uint16_t id, uint8_t ext_c
 	}
 }
 
+__weak void pldm_set_event_receiver_received()
+{
+	return;
+}
+
 uint8_t pldm_set_event_receiver(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t instance_id,
 				uint8_t *resp, uint16_t *resp_len, void *ext_params)
 {
@@ -544,6 +549,8 @@ uint8_t pldm_set_event_receiver(void *mctp_inst, uint8_t *buf, uint16_t len, uin
 	*completion_code_p = PLDM_SUCCESS;
 
 	k_work_schedule(&send_event_pkt_work, K_MSEC(1000));
+
+	pldm_set_event_receiver_received();
 
 	return PLDM_SUCCESS;
 }

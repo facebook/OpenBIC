@@ -155,10 +155,9 @@ void rtc_get_tm(struct tm *tm_now)
 		*tm_now = *gmtime(&now);
 }
 
-void plat_mctp_get_message_type_support_received()
+void pldm_set_event_receiver_received()
 {
 	if (get_mb_type() == MB_PRESENT)
 		rtc_init_once();
-	LOG_INF("plat_mctp_get_message_type_support_received() completed");
-	return;
+	LOG_INF("pldm_set_event_receiver_received() completed");
 }
