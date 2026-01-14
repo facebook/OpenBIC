@@ -56,7 +56,7 @@ static int cmd_voltage_get_all(const struct shell *shell, size_t argc, char **ar
 			continue;
 		}
 
-		shell_print(shell, "%4d|%-50s|%4d", i, rail_name, vout);
+		shell_print(shell, "%4d|%-40s|%4d", i, rail_name, vout);
 	}
 
 	return 0;
@@ -108,6 +108,31 @@ static int cmd_voltage_set(const struct shell *shell, size_t argc, char **argv)
 	if ((get_asic_board_id() != ASIC_BOARD_ID_EVB) && (rail == VR_RAIL_E_P3V3_OSFP_VOLT_V)) {
 		shell_print(shell, "There is no osfp p3v3");
 		return 0;
+	}
+	// if vr is MPS, read back uvp and keep it >= 200mv
+	uint8_t vr = get_vr_module();
+	if (vr == VR_MODULE_MPS) {
+		if (rail == VR_RAIL_E_ASIC_P0V85_MEDHA0_VDD ||
+		    rail == VR_RAIL_E_ASIC_P0V85_MEDHA1_VDD) {
+			uint16_t uvp = 0;
+			uint16_t vout_offset = 0;
+			if (get_vr_mp29816a_reg(rail, &vout_offset, VOUT_OFFSET)) {
+				shell_error(shell, "get vr %d vout cmd fail", rail);
+				return -1;
+			}
+			if (get_vr_mp29816a_reg(rail, &uvp, UVP)) {
+				shell_error(shell, "get vr %d uvp fail", rail);
+				return -1;
+			}
+			// Vout cmd = 200(limit uvp) + 500(test mode uvp_threshold) - vout offset
+			uint16_t limit_vout_cmd = 200 + 500 - vout_offset;
+			;
+			if (millivolt < limit_vout_cmd) {
+				shell_warn(shell, "uvp is too low, set vr %d vout cmd to %d", rail,
+					   limit_vout_cmd);
+				millivolt = limit_vout_cmd;
+			}
+		}
 	}
 
 	if (!plat_set_vout_command(rail, &millivolt)) {

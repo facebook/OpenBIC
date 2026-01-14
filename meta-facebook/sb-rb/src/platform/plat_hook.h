@@ -197,6 +197,19 @@ enum STRAP_TYPE_E {
 	STRAP_TYPE_MAX,
 };
 
+enum VR_MP29816_REG_E {
+	UVP_THRESHOLD = 0,
+	UVP,
+	VOUT_MAX,
+	VOUT_COMMAND,
+	VOUT_OFFSET,
+	TOTAL_OCP,
+	OVP_1,
+	OVP_2,
+	OVP_2_ACTION,
+	VR_MP29816_SET_REG_MAX,
+};
+
 typedef struct vr_vout_range_user_settings_struct {
 	uint16_t default_vout_max[STRAP_INDEX_MAX];
 	uint16_t default_vout_min[STRAP_INDEX_MAX];
@@ -271,4 +284,6 @@ uint8_t get_strap_index_max();
 bool post_tmp432_read(sensor_cfg *cfg, void *args, int *reading);
 bool plat_set_vr_reg(uint8_t rail, uint8_t reg, uint8_t *data, uint8_t len);
 int get_vr_page(uint8_t rail);
+int get_vr_mp29816a_reg(uint8_t rail, uint16_t *get_data, uint8_t get_reg);
+int set_vr_mp29816a_reg(uint8_t rail, uint16_t *millivolt, uint8_t set_reg);
 #endif

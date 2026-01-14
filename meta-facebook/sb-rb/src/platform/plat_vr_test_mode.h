@@ -30,6 +30,10 @@
 #define VR_OVP_0_DMA_ADDR 0xEA3E
 #define VR_OVP_1_DMA_ADDR 0xEABE
 
+#define NO_USE 0xFF //VR_UVP_THRESHOLD_GAIN_NO_USE
+#define NO_ACTION 0 // ovp2 threshold no action
+#define LATCH_OFF 1 // ovp2 threshold latch off
+
 typedef struct {
 	uint8_t vr_rail;
 	uint16_t fast_ocp;
@@ -42,10 +46,31 @@ typedef struct {
 	uint16_t vout_default;
 } vr_test_mode_setting_t;
 
+typedef struct {
+	uint8_t vr_rail;
+	uint16_t total_ocp;
+	uint16_t mp2971_uvp_threshold_gain;
+	uint16_t uvp_threshold;
+	uint16_t lcr;
+	uint16_t ucr;
+	uint16_t ovp2_threshold;
+	uint16_t ovp1_threshold;
+	uint16_t ovp2;
+	uint16_t ovp1;
+	uint16_t vout_default;
+	uint16_t vout_max;
+	uint16_t uvp;
+} mps_vr_test_mode_setting_t;
+
 extern const vr_test_mode_setting_t vr_test_mode_table[];
 extern const vr_test_mode_setting_t vr_test_mode_table_default[];
 extern const uint8_t vr_test_mode_table_size;
 extern const uint8_t vr_test_mode_table_dafault_size;
+
+extern const mps_vr_test_mode_setting_t vr_mps_test_mode_table[];
+extern const mps_vr_test_mode_setting_t vr_mps_normal_mode_table[];
+extern const uint8_t vr_mps_test_mode_table_size;
+extern const uint8_t vr_mps_normal_mode_table_size;
 
 bool get_vr_test_mode_flag(void);
 void vr_test_mode_enable(bool onoff);

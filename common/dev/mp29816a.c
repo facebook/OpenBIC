@@ -29,9 +29,16 @@ LOG_MODULE_REGISTER(mp29816a);
 
 #define READ_VOUT_MASK GENMASK(11, 0)
 #define MFR_VID_RES_MASK GENMASK(12, 10)
+#define UVP_THRESHOLD_MFR_UVP_DELTA_R1 GENMASK(12, 9)
+#define UVP_THRESHOLD_MASK GENMASK(8, 0)
+#define IOUT_OCP_MASK GENMASK(7, 0)
+#define IOUT_SCALE_BIT_A_MASK GENMASK(2, 0)
+#define OVP_2_THRESHOLD_MASK GENMASK(12, 9)
+#define OVP_1_ABS_MASK GENMASK(8, 0)
 #define MFR_VOUT_SCALE_LOOP 0x29
 #define MFR_VOUT_LOOP_CTRL 0x8D
 #define MFR_VDIFF_GAIN_HALF_R2_BIT BIT(10)
+#define OVP_2_ACTION_MASK GENMASK(7, 6)
 
 #define VR_MPS_PAGE_0 0x00
 #define VR_MPS_PAGE_1 0x01
@@ -249,7 +256,6 @@ bool mp29816a_get_vout_max(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt)
 	uint16_t val_int = (uint16_t)val;
 
 	*millivolt = val_int;
-
 	return true;
 }
 
@@ -284,7 +290,8 @@ bool mp29816a_set_vout_max(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt)
 	float resolution = mp29816a_get_resolution(cfg, true);
 	if (resolution == 0)
 		return false;
-	uint16_t read_value = (*millivolt / resolution) / 1000;
+	float tmp_value = ((*millivolt / 1000.0f) / resolution) + 0.5f;
+	uint16_t read_value = (uint16_t)tmp_value;
 
 	uint8_t data[2] = { 0 };
 	data[0] = read_value & 0xFF;
@@ -703,9 +710,11 @@ bool mp29816a_set_vout_command(sensor_cfg *cfg, uint8_t rail, uint16_t *millivol
 	}
 
 	uint16_t val_cal_offset = data_cal_offset[0] | (data_cal_offset[1] << 8);
-	float offset_mv = get_vout_cal_offset(val_cal_offset, vid_step) * 1000.0f;
-	uint16_t set_value = (uint16_t)((*millivolt - offset_mv) / (vid_step * 1000.0f));
-	set_value = set_value & READ_VOUT_MASK;
+	float offset_mv = get_vout_cal_offset(val_cal_offset, vid_step);
+
+	float tmp_value = ((*millivolt - offset_mv) / 1000.0f) / vid_step;
+	uint16_t read_value = (uint16_t)(tmp_value + 0.5f);
+	read_value = read_value & READ_VOUT_MASK;
 
 	uint8_t data[2] = { 0 };
 	data[0] = set_value & 0xFF;
@@ -810,6 +819,376 @@ bool mp29816a_clear_vr_status(sensor_cfg *cfg, uint8_t rail)
 		LOG_ERR("VR[0x%x] clear fault failed.", cfg->num);
 		return false;
 	}
+
+	return true;
+}
+// to do get_Vout_offset (0x22)
+bool mp29816a_get_vout_offset(sensor_cfg *cfg, uint16_t *vout_offset)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(vout_offset, false);
+	uint8_t data_cal_offset[2] = { 0 };
+	if (!mp29816a_i2c_read(cfg->port, cfg->target_addr, PMBUS_VOUT_TRIM, data_cal_offset,
+			       sizeof(data_cal_offset))) {
+		return false;
+	}
+
+	uint16_t val_cal_offset = data_cal_offset[0];
+
+	float vid_step = mp29816a_get_resolution(cfg, false);
+	if (vid_step == 0)
+		return false;
+
+	float offset_mv = val_cal_offset * (vid_step * 1000); // mV
+	*vout_offset = (uint16_t)offset_mv;
+	return true;
+}
+
+// to do set_Vout_offset (0x22)
+bool mp29816a_set_vout_offset(sensor_cfg *cfg, uint16_t *write_vout_offset)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(write_vout_offset, false);
+
+	uint8_t mfr_special_offset[2] = { 0 };
+	float vid_step;
+	int16_t write_value;
+	uint16_t raw;
+
+	vid_step = mp29816a_get_resolution(cfg, false);
+	if (vid_step == 0)
+		return false;
+
+	write_value = (int16_t)((float)(*write_vout_offset) / vid_step);
+	if (write_value > INT16_MAX || write_value < INT16_MIN) {
+		LOG_ERR("Vout offset overflow: %d", write_value);
+		return false;
+	}
+	raw = (uint16_t)write_value;
+	mfr_special_offset[0] = raw & 0xFF;
+	mfr_special_offset[1] = (raw >> 8) & 0xFF;
+
+	if (!mp29816a_i2c_write(cfg->port, cfg->target_addr, PMBUS_VOUT_TRIM, mfr_special_offset,
+				sizeof(mfr_special_offset))) {
+		return false;
+	}
+
+	return true;
+}
+
+bool mp29816a_get_uvp(sensor_cfg *cfg, uint16_t *uvp)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(uvp, false);
+	uint8_t data[2] = { 0, 0 };
+	if (!mp29816a_i2c_read(cfg->port, cfg->target_addr, PMBUS_VOUT_UV_FAULT_LIMIT, data,
+			       sizeof(data))) {
+		return false;
+	}
+	uint16_t read_value = data[0] | (data[1] << 8);
+	/*
+	Delta value to set rail1 under voltage protection threshold. Max protection
+	Value is -500mV.
+	3'b000: disable UVP offset
+	Others: UVP offset = MFR_UVP_DELTA_R1 * (-50mV) - 50 mV
+	*/
+	uint8_t uvp_offset_value = (read_value & UVP_THRESHOLD_MFR_UVP_DELTA_R1) >> 9;
+	/*
+	value = Vout cmd + UVP offset + Vout offset
+	*/
+	int16_t uvp_offset = (uvp_offset_value * (-50)) - 50;
+	uint16_t vout_cmd = 0;
+	mp29816a_get_vout_command(cfg, 0, &vout_cmd);
+	uint16_t vout_offset = 0;
+	mp29816a_get_vout_offset(cfg, &vout_offset);
+
+	*uvp = (uint16_t)(vout_cmd + uvp_offset + vout_offset);
+	return true;
+}
+
+bool mp29816a_set_uvp_threshold(sensor_cfg *cfg, uint16_t *write_uvp_threshold)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(write_uvp_threshold, false);
+	uint8_t data[2] = { 0, 0 };
+	if (!mp29816a_i2c_read(cfg->port, cfg->target_addr, PMBUS_VOUT_UV_FAULT_LIMIT, data,
+			       sizeof(data))) {
+		return false;
+	}
+	uint16_t read_value = data[0] | (data[1] << 8);
+	/*
+	3'b000: disable UVP offset
+	Others: UVP offset = MFR_UVP_DELTA_R1 * (-50mV) - 50 mV
+	*/
+	// let write_uvp_threshold be negative
+
+	uint16_t write_in_value = (-*write_uvp_threshold + 50) / (-50);
+	if (write_in_value > 9) {
+		LOG_ERR("UVP threshold overflow: %d, set to 9", write_in_value);
+		write_in_value = 9;
+	}
+
+	read_value &= ~UVP_THRESHOLD_MFR_UVP_DELTA_R1;
+	read_value |= write_in_value << 9;
+	data[0] = read_value & 0xFF;
+	data[1] = (read_value >> 8) & 0xFF;
+	if (!mp29816a_i2c_write(cfg->port, cfg->target_addr, PMBUS_VOUT_UV_FAULT_LIMIT, data,
+				sizeof(data))) {
+		return false;
+	}
+	return true;
+}
+
+float get_iout_scale_bit_a(sensor_cfg *cfg)
+{
+	uint8_t iout_scale_bit[2] = { 0, 0 };
+	if (!mp29816a_i2c_read(cfg->port, cfg->target_addr, PMBUS_IOUT_SCALE_BIT_A, iout_scale_bit,
+			       sizeof(iout_scale_bit))) {
+		LOG_ERR("VR[0x%x] get iout scale bit failed", cfg->num);
+	}
+	/*
+	Output current scaling selection of rail1.
+	3'b000: 1 A/LSB (Reserved)
+	3'b001: (1/32) A/LSB
+	3'b010: (1/16) A/LSB
+	3'b011: (1/8) A/LSB
+	3'b100: (1/4) A/LSB
+	3'b101: (1/2) A/LSB
+	3'b110: 1 A/LSB
+	3'b111: 2 A/LSB
+	*/
+	uint8_t scale_bit = iout_scale_bit[0] & IOUT_SCALE_BIT_A_MASK;
+	float return_value = 0;
+	switch (scale_bit) {
+	case 0:
+		return_value = 1;
+		break;
+	case 1:
+		return_value = 0.03125;
+		break;
+	case 2:
+		return_value = 0.0625;
+		break;
+	case 3:
+		return_value = 0.125;
+		break;
+	case 4:
+		return_value = 0.25;
+		break;
+	case 5:
+		return_value = 0.5;
+		break;
+	case 6:
+		return_value = 1;
+		break;
+	case 7:
+		return_value = 2;
+		break;
+	default:
+		LOG_ERR("VR[0x%x] get unknown iout scale bit failed", cfg->num);
+		break;
+	}
+
+	return return_value;
+}
+// to do get_total_ocp (0x46) PMBUS_IOUT_OC_FAULT_LIMIT
+bool mp29816a_get_total_ocp(sensor_cfg *cfg, uint16_t *total_ocp)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(total_ocp, false);
+	uint8_t iout_oc_fault_limit[2] = { 0 };
+	//OCP threshold =  total_ocp_reg_value[7:0] * 8 *IOUT_SCALE_BIT_A(P1/67h bit[2:0])
+
+	if (!mp29816a_i2c_read(cfg->port, cfg->target_addr, PMBUS_IOUT_OC_FAULT_LIMIT,
+			       iout_oc_fault_limit, sizeof(iout_oc_fault_limit))) {
+		return false;
+	}
+	//total_ocp_reg_value[7:0]
+	uint16_t val_total_ocp = iout_oc_fault_limit[0];
+	float iout_scale_bit_a = get_iout_scale_bit_a(cfg);
+
+	*total_ocp = (uint16_t)(val_total_ocp * 8 * iout_scale_bit_a);
+
+	return true;
+}
+// to do set_ocp (0x46) PMBUS_IOUT_OC_FAULT_LIMIT
+bool mp29816a_set_total_ocp(sensor_cfg *cfg, uint16_t *write_total_ocp)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(write_total_ocp, false);
+
+	uint8_t iout_oc_fault_limit[2] = { 0 };
+	//OCP threshold =  total_ocp_reg_value[7:0] * 8 *IOUT_SCALE_BIT_A(P1/67h bit[2:0])
+	float iout_scale_bit_a = get_iout_scale_bit_a(cfg);
+	uint16_t write_value = (uint16_t)(*write_total_ocp / (8 * iout_scale_bit_a));
+	if (write_value > INT16_MAX || write_value < INT16_MIN) {
+		LOG_ERR("total ocp overflow: %d", write_value);
+		return false;
+	}
+	//total_ocp_reg_value[7:0]
+	iout_oc_fault_limit[0] = write_value;
+	if (!mp29816a_i2c_write(cfg->port, cfg->target_addr, PMBUS_IOUT_OC_FAULT_LIMIT,
+				iout_oc_fault_limit, sizeof(iout_oc_fault_limit))) {
+		return false;
+	}
+
+	return true;
+}
+
+// to do get_ovp_1 (0x40) PMBUS_VOUT_OV_FAULT_LIMIT
+bool mp29816a_get_ovp_1(sensor_cfg *cfg, uint16_t *ovp_1)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(ovp_1, false);
+	uint8_t ovp_value[2] = { 0 };
+	if (!mp29816a_i2c_read(cfg->port, cfg->target_addr, PMBUS_VOUT_OV_FAULT_LIMIT, ovp_value,
+			       sizeof(ovp_value))) {
+		return false;
+	}
+	uint16_t val_ovp_1 = ovp_value[0] | (ovp_value[1] << 8);
+	/*
+	12:9 bit
+	Max offset value is 500mV
+	3'b000: disable OVP offset
+	Others: OVP offset =MFR_OVP_DELTA_R2 * (+50mV) + 50 mV
+	*/
+	uint16_t ovp2_threshold = (val_ovp_1 & OVP_2_THRESHOLD_MASK) >> 9;
+	if (ovp2_threshold > 9) {
+		LOG_INF("threshold overflow > 500mV, ovp2_threshold data:0x%x", ovp2_threshold);
+		return false;
+	}
+	ovp2_threshold = (ovp2_threshold * 50) + 50;
+	/*
+	Set the absolutely voltage level of rail1 OVP.
+	10mV/LSB,
+	OVP1 threshold =MFR_OVP_ABS_LIMIT_R1+ MFR_OVP_DELTA_R1
+	*/
+
+	*ovp_1 = (uint16_t)((val_ovp_1 & OVP_1_ABS_MASK) * 10) + ovp2_threshold;
+
+	return true;
+}
+// to do set_ovp_1 (0x40) PMBUS_VOUT_OV_FAULT_LIMIT
+bool mp29816a_set_ovp_1(sensor_cfg *cfg, uint16_t *write_ovp_1)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(write_ovp_1, false);
+	uint8_t ovp_value[2] = { 0 };
+	if (!mp29816a_i2c_read(cfg->port, cfg->target_addr, PMBUS_VOUT_OV_FAULT_LIMIT, ovp_value,
+			       sizeof(ovp_value))) {
+		return false;
+	}
+	uint16_t val_ovp_1 = ovp_value[0] | (ovp_value[1] << 8);
+	uint16_t ovp2_threshold = (val_ovp_1 & OVP_2_THRESHOLD_MASK) >> 9;
+	if (ovp2_threshold > 9) {
+		LOG_INF("threshold overflow > 500mV, ovp2_threshold data:0x%x", ovp2_threshold);
+		return false;
+	}
+	ovp2_threshold = (ovp2_threshold * 50) + 50;
+
+	if (*write_ovp_1 > INT16_MAX || *write_ovp_1 < INT16_MIN) {
+		LOG_ERR("ovp 1 overflow: %d", *write_ovp_1);
+		return false;
+	}
+	uint16_t write_value = (uint16_t)((*write_ovp_1 - ovp2_threshold) / 10);
+	uint8_t write_abs_ovp1[2] = { 0 };
+	//ovp reg value[8:0]
+	val_ovp_1 = (val_ovp_1 & ~OVP_1_ABS_MASK) | (write_value & OVP_1_ABS_MASK);
+	write_abs_ovp1[1] = (val_ovp_1 >> 8) & 0xFF;
+	write_abs_ovp1[0] = val_ovp_1 & 0xFF;
+	if (!mp29816a_i2c_write(cfg->port, cfg->target_addr, PMBUS_VOUT_OV_FAULT_LIMIT,
+				write_abs_ovp1, sizeof(write_abs_ovp1))) {
+		return false;
+	}
+
+	return true;
+}
+// to do get_ovp_2
+bool mp29816a_get_ovp_2_action(sensor_cfg *cfg, uint16_t *ovp_2_action)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(ovp_2_action, false);
+	uint8_t ovp_2_response[2] = { 0 };
+	if (!mp29816a_i2c_read(cfg->port, cfg->target_addr, PMBUS_VOUT_OV_FAULT_RESPONSE,
+			       ovp_2_response, sizeof(ovp_2_response))) {
+		return false;
+	}
+	/*
+	7:6 bit
+	2’b00: No action
+	2’b01: Latch off
+	*/
+	uint16_t ovp_2_action_value = ovp_2_response[0] | (ovp_2_response[1] << 8);
+	*ovp_2_action = (ovp_2_action_value & OVP_2_ACTION_MASK) >> 6;
+
+	return true;
+}
+// to do set_ovp_2
+bool mp29816a_set_ovp_2_action(sensor_cfg *cfg, uint16_t *write_ovp_2_action)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(write_ovp_2_action, false);
+	// if write_ovp_2_action is not 0 or 1, return false
+	if (*write_ovp_2_action != 0 && *write_ovp_2_action != 1) {
+		LOG_ERR("ovp 2 action write value is not 0 or 1: value input:%d",
+			*write_ovp_2_action);
+		return false;
+	}
+
+	uint8_t ovp_2_response[2] = { 0 };
+	if (!mp29816a_i2c_read(cfg->port, cfg->target_addr, PMBUS_VOUT_OV_FAULT_RESPONSE,
+			       ovp_2_response, sizeof(ovp_2_response))) {
+		return false;
+	}
+	/*
+	7:6 bit
+	2’b00: No action
+	2’b01: Latch off
+	// only change 7:6 bit
+	*/
+	uint16_t ovp_2_action_value = ovp_2_response[0] | (ovp_2_response[1] << 8);
+	ovp_2_action_value = (ovp_2_action_value & ~OVP_2_ACTION_MASK) | (*write_ovp_2_action << 6);
+	if (!mp29816a_i2c_write(cfg->port, cfg->target_addr, PMBUS_VOUT_OV_FAULT_RESPONSE,
+				(uint8_t *)&ovp_2_action_value, sizeof(ovp_2_action_value))) {
+		return false;
+	}
+
+	return true;
+}
+
+bool mp29816a_get_ovp_2(sensor_cfg *cfg, uint16_t *ovp_2)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(ovp_2, false);
+	uint8_t ovp_value[2] = { 0 };
+	if (!mp29816a_i2c_read(cfg->port, cfg->target_addr, PMBUS_VOUT_OV_FAULT_LIMIT, ovp_value,
+			       sizeof(ovp_value))) {
+		return false;
+	}
+	uint16_t val_ovp_1 = ovp_value[0] | (ovp_value[1] << 8);
+	/*
+	12:9 bit
+	Max offset value is 500mV
+	3'b000: disable OVP offset
+	Others: OVP offset =MFR_OVP_DELTA_R2 * (+50mV) + 50 mV
+	*/
+	uint16_t ovp2_threshold = (val_ovp_1 & OVP_2_THRESHOLD_MASK) >> 9;
+	if (ovp2_threshold > 9) {
+		LOG_INF("threshold overflow > 500mV, ovp2_threshold data:0x%x", ovp2_threshold);
+		return false;
+	}
+	ovp2_threshold = (ovp2_threshold * 50) + 50;
+	/*
+	OVP2  = Vout command + ovp2_threshold + Vout offset
+	*/
+	uint16_t vout_cmd = 0;
+	uint16_t vout_offset = 0;
+
+	if (!mp29816a_get_vout_command(cfg, 0, &vout_cmd)) {
+		return false;
+	}
+	mp29816a_get_vout_offset(cfg, &vout_offset);
+	*ovp_2 = (uint16_t)(vout_cmd + ovp2_threshold + vout_offset);
 
 	return true;
 }

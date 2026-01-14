@@ -32,5 +32,14 @@ bool mp29816a_set_vout_command(sensor_cfg *cfg, uint8_t rail, uint16_t *millivol
 bool mp29816a_get_vr_status(sensor_cfg *cfg, uint8_t rail, uint8_t vr_status_rail,
 			    uint16_t *vr_status);
 bool mp29816a_clear_vr_status(sensor_cfg *cfg, uint8_t rail);
-
+bool mp29816a_get_uvp(sensor_cfg *cfg, uint16_t *uvp_threshold);
+bool mp29816a_set_uvp_threshold(sensor_cfg *cfg, uint16_t *write_uvp_threshold);
+bool mp29816a_get_vout_offset(sensor_cfg *cfg, uint16_t *vout_offset);
+bool mp29816a_set_vout_offset(sensor_cfg *cfg, uint16_t *write_vout_offset);
+bool mp29816a_get_total_ocp(sensor_cfg *cfg, uint16_t *total_ocp);
+bool mp29816a_set_total_ocp(sensor_cfg *cfg, uint16_t *write_total_ocp);
+bool mp29816a_get_ovp_1(sensor_cfg *cfg, uint16_t *ovp_1);
+bool mp29816a_set_ovp_1(sensor_cfg *cfg, uint16_t *write_total_ocp);
+bool mp29816a_get_ovp_2(sensor_cfg *cfg, uint16_t *ovp_2);
+bool mp29816a_set_ovp_2_action(sensor_cfg *cfg, uint16_t *write_ovp_2_action);
 #endif

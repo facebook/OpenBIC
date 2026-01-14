@@ -21,6 +21,7 @@
 #include "plat_vr_test_mode.h"
 #include "plat_hook.h"
 #include "plat_util.h"
+#include "plat_class.h"
 
 static bool cmd_is_dc_on(const struct shell *shell)
 {
@@ -51,55 +52,116 @@ void cmd_vr_test_mode_show_default(const struct shell *shell, size_t argc, char 
 {
 	if (!cmd_is_dc_on(shell))
 		return;
+	uint8_t vr = get_vr_module();
+	if (vr == VR_MODULE_RNS) {
+		// RNS
+		shell_print(shell, "%-30s | %-11s | %-11s | %-7s | %-7s | %-9s | %-7s | %-7s ",
+			    "VR RAIL NAME", "FAST OCP(A)", "SLOW OCP(A)", "UVP(mV)", "OVP(mV)",
+			    "V MAX(mV)", "LCR(mV)", "UCR(mV)");
+		shell_print(
+			shell,
+			"----------------------------------------------------------------------------------------------------------------");
 
-	shell_print(shell, "%-30s | %-11s | %-11s | %-7s | %-7s | %-9s | %-7s | %-7s ",
-		    "VR RAIL NAME", "FAST OCP(A)", "SLOW OCP(A)", "UVP(mV)", "OVP(mV)", "V MAX(mV)",
-		    "LCR(mV)", "UCR(mV)");
-	shell_print(
-		shell,
-		"----------------------------------------------------------------------------------------------------------------");
+		for (uint8_t i = 0; i < vr_test_mode_table_dafault_size; i++) {
+			uint8_t *rail_name = NULL;
+			if (vr_rail_name_get((uint8_t)i, &rail_name)) {
+				const vr_test_mode_setting_t *cfg = &vr_test_mode_table_default[i];
 
-	for (uint8_t i = 0; i < vr_test_mode_table_dafault_size; i++) {
-		uint8_t *rail_name = NULL;
-		if (vr_rail_name_get((uint8_t)i, &rail_name)) {
-			const vr_test_mode_setting_t *cfg = &vr_test_mode_table_default[i];
+				uint16_t uvp = 0;
+				uint16_t ovp = 0;
+				if (!use_offset_uvp_ovp(i)) {
+					uvp = cfg->uvp;
+					ovp = cfg->ovp;
+				} else if (!get_vr_offset_uvp_ovp(i, &uvp, &ovp)) {
+					shell_warn(shell, "get vr %d uvp/ovp fail", i);
+				}
 
-			uint16_t uvp = 0;
-			uint16_t ovp = 0;
-			if (!use_offset_uvp_ovp(i)) {
-				uvp = cfg->uvp;
-				ovp = cfg->ovp;
-			} else if (!get_vr_offset_uvp_ovp(i, &uvp, &ovp)) {
-				shell_warn(shell, "get vr %d uvp/ovp fail", i);
+				shell_print(
+					shell,
+					"%-30s | %-11d | %-11d | %-7d | %-7d | %-9d | %-7d | %-7d ",
+					(char *)rail_name, (cfg->fast_ocp / 10),
+					((cfg->slow_ocp / 10)), uvp, ovp, cfg->vout_max, cfg->lcr,
+					cfg->ucr);
 			}
-
-			shell_print(shell,
-				    "%-30s | %-11d | %-11d | %-7d | %-7d | %-9d | %-7d | %-7d ",
-				    (char *)rail_name, (cfg->fast_ocp / 10), ((cfg->slow_ocp / 10)),
-				    uvp, ovp, cfg->vout_max, cfg->lcr, cfg->ucr);
 		}
+	} else if (vr == VR_MODULE_MPS) {
+		// MPS
+		shell_print(shell, "MPS");
+		shell_print(shell, "%-30s | %-12s | %-7s | %-8s | %-9s | %-9s | %-7s | %-7s ",
+			    "VR RAIL NAME", "Total OCP(A)", "UVP(mv)", "OVP1(mV)", "OVP2(mV)",
+			    "V MAX(mV)", "LCR(mV)", "UCR(mV)");
+		shell_print(
+			shell,
+			"----------------------------------------------------------------------------------------------------------------");
+		// mp29816c
+		for (uint8_t i = 0; i < vr_mps_normal_mode_table_size; i++) {
+			uint8_t *rail_name = NULL;
+			if (vr_rail_name_get((uint8_t)i, &rail_name)) {
+				const mps_vr_test_mode_setting_t *cfg =
+					&vr_mps_normal_mode_table[i];
+				shell_print(
+					shell,
+					"%-30s | %-12d | %-7d | %-8d | %-9d | %-9d | %-7d | %-7d",
+					(char *)rail_name, cfg->total_ocp, cfg->uvp, cfg->ovp1,
+					cfg->ovp2, cfg->vout_max, cfg->lcr, cfg->ucr);
+			}
+		}
+	} else {
+		shell_error(shell, "vr module not support");
 	}
 }
 
 void cmd_vr_test_mode_show_val(const struct shell *shell, size_t argc, char **argv)
 {
-	shell_print(shell, "%-30s | %-11s | %-11s | %-7s | %-7s | %-9s | %-7s | %-7s ",
-		    "VR RAIL NAME", "FAST OCP(A)", "SLOW OCP(A)", "UVP(mV)", "OVP(mV)", "V MAX(mV)",
-		    "LCR(mV)", "UCR(mV)");
-	shell_print(
-		shell,
-		"----------------------------------------------------------------------------------------------------------------");
+	uint8_t vr = get_vr_module();
+	if (vr == VR_MODULE_RNS) {
+		// RNS
+		shell_print(shell, "%-30s | %-11s | %-11s | %-7s | %-7s | %-9s | %-7s | %-7s ",
+			    "VR RAIL NAME", "FAST OCP(A)", "SLOW OCP(A)", "UVP(mV)", "OVP(mV)",
+			    "V MAX(mV)", "LCR(mV)", "UCR(mV)");
+		shell_print(
+			shell,
+			"----------------------------------------------------------------------------------------------------------------");
+		for (uint8_t i = 0; i < vr_test_mode_table_size; i++) {
+			uint8_t *rail_name = NULL;
+			if (vr_rail_name_get((uint8_t)i, &rail_name)) {
+				const vr_test_mode_setting_t *cfg = &vr_test_mode_table[i];
 
-	for (uint8_t i = 0; i < vr_test_mode_table_size; i++) {
-		uint8_t *rail_name = NULL;
-		if (vr_rail_name_get((uint8_t)i, &rail_name)) {
-			const vr_test_mode_setting_t *cfg = &vr_test_mode_table[i];
-
-			shell_print(shell,
-				    "%-30s | %-11d | %-11d | %-7d | %-7d | %-9d | %-7d | %-7d ",
-				    (char *)rail_name, (cfg->fast_ocp / 10), ((cfg->slow_ocp / 10)),
-				    cfg->uvp, cfg->ovp, cfg->vout_max, cfg->lcr, cfg->ucr);
+				shell_print(
+					shell,
+					"%-30s | %-11d | %-11d | %-7d | %-7d | %-9d | %-7d | %-7d ",
+					(char *)rail_name, (cfg->fast_ocp / 10),
+					((cfg->slow_ocp / 10)), cfg->uvp, cfg->ovp, cfg->vout_max,
+					cfg->lcr, cfg->ucr);
+			}
 		}
+	} else if (vr == VR_MODULE_MPS) {
+		// MPS
+		shell_print(shell, "MPS");
+		shell_print(shell, "%-30s | %-12s | %-7s | %-8s | %-9s | %-9s | %-7s | %-7s ",
+			    "VR RAIL NAME", "Total OCP(A)", "UVP(mv)", "OVP1(mV)", "OVP2(mV)",
+			    "V MAX(mV)", "LCR(mV)", "UCR(mV)");
+		shell_print(
+			shell,
+			"----------------------------------------------------------------------------------------------------------------");
+		// mp29816c
+		char ovp2_str[16];
+		snprintf(ovp2_str, sizeof(ovp2_str), "no action");
+		char uvp_str[16];
+		snprintf(uvp_str, sizeof(uvp_str), "> 200");
+		for (uint8_t i = 0; i < vr_mps_test_mode_table_size; i++) {
+			uint8_t *rail_name = NULL;
+			if (vr_rail_name_get((uint8_t)i, &rail_name)) {
+				const mps_vr_test_mode_setting_t *cfg = &vr_mps_test_mode_table[i];
+				shell_print(
+					shell,
+					"%-30s | %-12d | %-7s | %-8d | %-9s | %-9d | %-7d | %-7d",
+					(char *)rail_name, cfg->total_ocp, uvp_str, cfg->ovp1,
+					ovp2_str, cfg->vout_max, cfg->lcr, cfg->ucr);
+			}
+		}
+	} else {
+		shell_error(shell, "vr module not support");
 	}
 }
 
@@ -117,33 +179,86 @@ void cmd_vr_test_mode_show_real(const struct shell *shell, size_t argc, char **a
 {
 	if (!cmd_is_dc_on(shell))
 		return;
+	uint8_t vr = get_vr_module();
+	if (vr == VR_MODULE_RNS) {
+		// RNS
+		shell_print(shell, "%-30s | %-11s | %-11s | %-7s | %-7s | %-9s | %-7s | %-7s ",
+			    "VR RAIL NAME", "FAST OCP(A)", "SLOW OCP(A)", "UVP(mV)", "OVP(mV)",
+			    "V MAX(mV)", "LCR(mV)", "UCR(mV)");
+		shell_print(
+			shell,
+			"----------------------------------------------------------------------------------------------------------------");
+		// not include P3V3
+		for (uint8_t i = 0; i < VR_RAIL_E_P3V3_OSFP_VOLT_V; i++) {
+			uint8_t *rail_name = NULL;
+			if (vr_rail_name_get((uint8_t)i, &rail_name)) {
+				uint16_t uvp = 0;
+				uint16_t ovp = 0;
+				if (get_vr_fixed_uvp_ovp_enable(i)) {
+					uvp = get_vr_reg_to_int(i, VR_UVP_REG);
+					ovp = get_vr_reg_to_int(i, VR_OVP_REG);
+				} else if (!get_vr_offset_uvp_ovp(i, &uvp, &ovp))
+					shell_error(shell, "get vr %d uvp/ovp fail", i);
 
-	shell_print(shell, "%-30s | %-11s | %-11s | %-7s | %-7s | %-9s | %-7s | %-7s ",
-		    "VR RAIL NAME", "FAST OCP(A)", "SLOW OCP(A)", "UVP(mV)", "OVP(mV)", "V MAX(mV)",
-		    "LCR(mV)", "UCR(mV)");
-	shell_print(
-		shell,
-		"----------------------------------------------------------------------------------------------------------------");
-	// not include P3V3
-	for (uint8_t i = 0; i < VR_RAIL_E_P3V3_OSFP_VOLT_V; i++) {
-		uint8_t *rail_name = NULL;
-		if (vr_rail_name_get((uint8_t)i, &rail_name)) {
-			uint16_t uvp = 0;
-			uint16_t ovp = 0;
-			if (get_vr_fixed_uvp_ovp_enable(i)) {
-				uvp = get_vr_reg_to_int(i, VR_UVP_REG);
-				ovp = get_vr_reg_to_int(i, VR_OVP_REG);
-			} else if (!get_vr_offset_uvp_ovp(i, &uvp, &ovp))
-				shell_error(shell, "get vr %d uvp/ovp fail", i);
-
-			shell_print(shell,
-				    "%-30s | %-11d | %-11d | %-7d | %-7d | %-9d | %-7d | %-7d ",
-				    (char *)rail_name, (get_vr_reg_to_int(i, VR_FAST_OCP_REG) / 10),
-				    (get_vr_reg_to_int(i, VR_SLOW_OCP_REG) / 10), uvp, ovp,
-				    get_vr_reg_to_int(i, VR_VOUT_MAX_REG),
-				    vout_range_user_settings.change_vout_min[i],
-				    vout_range_user_settings.change_vout_max[i]);
+				shell_print(
+					shell,
+					"%-30s | %-11d | %-11d | %-7d | %-7d | %-9d | %-7d | %-7d ",
+					(char *)rail_name,
+					(get_vr_reg_to_int(i, VR_FAST_OCP_REG) / 10),
+					(get_vr_reg_to_int(i, VR_SLOW_OCP_REG) / 10), uvp, ovp,
+					get_vr_reg_to_int(i, VR_VOUT_MAX_REG),
+					vout_range_user_settings.change_vout_min[i],
+					vout_range_user_settings.change_vout_max[i]);
+			}
 		}
+	} else if (vr == VR_MODULE_MPS) {
+		// MPS
+		uint16_t uvp = 0;
+		uint16_t vout_max = 0;
+		uint16_t vout_command = 0;
+		uint16_t vout_offset = 0;
+		uint16_t total_ocp = 0;
+		uint16_t ovp_1 = 0;
+		uint16_t ovp_2 = 0;
+		char ovp2_str[16];
+		uint8_t test_mode = get_vr_test_mode_flag() ? 1 : 0;
+
+		shell_print(shell, "MPS");
+		shell_print(shell, "%-30s | %-12s | %-7s | %-8s | %-9s | %-9s | %-7s | %-7s ",
+			    "VR RAIL NAME", "Total OCP(A)", "UVP(mv)", "OVP1(mV)", "OVP2(mV)",
+			    "V MAX(mV)", "LCR(mV)", "UCR(mV)");
+		shell_print(
+			shell,
+			"----------------------------------------------------------------------------------------------------------------");
+		// not include P3V3
+		for (uint8_t i = 0; i <= VR_RAIL_E_ASIC_P0V85_MEDHA1_VDD; i++) {
+			uint8_t *rail_name = NULL;
+			get_vr_mp29816a_reg(i, &uvp, UVP);
+			get_vr_mp29816a_reg(i, &vout_max, VOUT_MAX);
+			get_vr_mp29816a_reg(i, &vout_command, VOUT_COMMAND);
+			get_vr_mp29816a_reg(i, &vout_offset, VOUT_OFFSET);
+			get_vr_mp29816a_reg(i, &total_ocp, TOTAL_OCP);
+			get_vr_mp29816a_reg(i, &ovp_1, OVP_1);
+			get_vr_mp29816a_reg(i, &ovp_2, OVP_2);
+			if (test_mode) {
+				// test mode
+				snprintf(ovp2_str, sizeof(ovp2_str), "no action");
+			} else {
+				// normal mode
+				snprintf(ovp2_str, sizeof(ovp2_str), "%d", ovp_2);
+			}
+			if (vr_rail_name_get((uint8_t)i, &rail_name)) {
+				shell_print(
+					shell,
+					"%-30s | %-12d | %-7d | %-8d | %-9s | %-9d | %-7d | %-7d",
+					(char *)rail_name, total_ocp, uvp, ovp_1, ovp2_str,
+					vout_max, vout_range_user_settings.change_vout_min[i],
+					vout_range_user_settings.change_vout_max[i]);
+			}
+		}
+	} else {
+		// unknown
+		shell_error(shell, "unknown vr module");
 	}
 }
 
@@ -170,7 +285,11 @@ void cmd_vr_dma_read(const struct shell *shell, size_t argc, char **argv)
 {
 	if (!cmd_is_dc_on(shell))
 		return;
-
+	uint8_t vr = get_vr_module();
+	if (vr != VR_MODULE_RNS) {
+		shell_error(shell, "vr dma read only support RNS");
+		return;
+	}
 	enum VR_RAIL_E rail;
 	if (vr_rail_enum_get(argv[1], &rail) == false) {
 		shell_error(shell, "Invalid rail name: %s", argv[1]);
@@ -193,7 +312,11 @@ void cmd_vr_dma_write(const struct shell *shell, size_t argc, char **argv)
 {
 	if (!cmd_is_dc_on(shell))
 		return;
-
+	uint8_t vr = get_vr_module();
+	if (vr != VR_MODULE_RNS) {
+		shell_error(shell, "vr dma write only support RNS");
+		return;
+	}
 	enum VR_RAIL_E rail;
 	if (vr_rail_enum_get(argv[1], &rail) == false) {
 		shell_error(shell, "Invalid rail name: %s", argv[1]);

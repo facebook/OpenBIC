@@ -18,6 +18,7 @@
 #include "plat_pldm_sensor.h"
 #include "plat_vr_test_mode.h"
 #include "plat_hook.h"
+#include "plat_class.h"
 
 LOG_MODULE_REGISTER(plat_vr_test_mode);
 
@@ -82,9 +83,53 @@ const vr_test_mode_setting_t vr_test_mode_table_default[] = {
 	{ VR_RAIL_E_ASIC_P0V9_OWL_W_TRVDD, 170, 160, 700, 1010, 954, 846, 954, 900 },
 	{ VR_RAIL_E_ASIC_P0V75_OWL_W_TRVDD, 110, 100, 575, 910, 795, 705, 795, 750 },
 };
-
+const mps_vr_test_mode_setting_t vr_mps_test_mode_table[] = {
+	/*
+	uint8_t vr_rail;
+	uint16_t total_ocp;
+	uint16_t mp2971_uvp_threshold_gain;
+	uint16_t uvp_threshold;
+	uint16_t lcr;
+	uint16_t ucr;
+	uint16_t ovp2_threshold;
+	uint16_t ovp1_threshold;
+	uint16_t ovp2;
+	uint16_t ovp1;
+	uint16_t vout_default;
+	uint16_t vout_max;
+	uint16_t uvp;
+	*/
+	{ VR_RAIL_E_ASIC_P0V85_MEDHA0_VDD, 1424, NO_USE, 500, 595, 930, NO_USE, NO_USE, NO_ACTION,
+	  940, NO_USE, 930 },
+	{ VR_RAIL_E_ASIC_P0V85_MEDHA1_VDD, 1424, NO_USE, 500, 595, 930, NO_USE, NO_USE, NO_ACTION,
+	  940, NO_USE, 930 },
+};
+const mps_vr_test_mode_setting_t vr_mps_normal_mode_table[] = {
+	/*
+	uint8_t vr_rail;
+	uint16_t total_ocp;
+	uint16_t mp2971_uvp_threshold_gain;
+	uint16_t uvp_threshold;
+	uint16_t lcr;
+	uint16_t ucr;
+	uint16_t ovp2_threshold;
+	uint16_t ovp1_threshold;
+	uint16_t ovp2;
+	uint16_t ovp1;
+	uint16_t vout_default;
+	uint16_t vout_max;
+	uint16_t uvp;
+	*/
+	{ VR_RAIL_E_ASIC_P0V85_MEDHA0_VDD, 1424, NO_USE, 200, 782, 918, NO_USE, NO_USE, 977, 940,
+	  850, 918, 677 },
+	{ VR_RAIL_E_ASIC_P0V85_MEDHA1_VDD, 1424, NO_USE, 200, 782, 918, NO_USE, NO_USE, 980, 940,
+	  850, 918, 680 },
+};
 const uint8_t vr_test_mode_table_size = ARRAY_SIZE(vr_test_mode_table);
 const uint8_t vr_test_mode_table_dafault_size = ARRAY_SIZE(vr_test_mode_table_default);
+
+const uint8_t vr_mps_test_mode_table_size = ARRAY_SIZE(vr_mps_test_mode_table);
+const uint8_t vr_mps_normal_mode_table_size = ARRAY_SIZE(vr_mps_normal_mode_table);
 
 static bool update_vr_reg(uint8_t rail, uint8_t reg, uint16_t val)
 {
@@ -261,6 +306,53 @@ static bool set_vr_test_mode_reg(bool is_default)
 	return ret;
 }
 
+static bool set_mps_vr_test_mode_reg(bool is_default)
+{
+	bool ret = true;
+
+	const mps_vr_test_mode_setting_t *table =
+		is_default ? vr_mps_normal_mode_table : vr_mps_test_mode_table;
+	uint8_t table_size = is_default ? ARRAY_SIZE(vr_mps_normal_mode_table) :
+					  ARRAY_SIZE(vr_mps_test_mode_table);
+
+	for (uint8_t i = 0; i < table_size; i++) {
+		const mps_vr_test_mode_setting_t *cfg = &table[i];
+
+		const struct {
+			uint8_t function;
+			uint16_t val;
+			const char *name;
+		} regs[] = {
+			{ TOTAL_OCP, cfg->total_ocp, "TOTAL OCP" },
+			{ UVP_THRESHOLD, cfg->uvp_threshold, "UVP_THRESHOLD" },
+			{ OVP_1, cfg->ovp1, "OVP1" },
+			{ VOUT_MAX, cfg->vout_max, "VOUT MAX" },
+		};
+		if (is_default) {
+			// set vout default
+			uint16_t vout_default = cfg->vout_default;
+			if (!plat_set_vout_command(cfg->vr_rail, &vout_default)) {
+				LOG_ERR("VR rail %x set vout to default: %d failed", cfg->vr_rail,
+					cfg[i].vout_default);
+				ret = false;
+			}
+		}
+		uint16_t set_val = 0;
+		for (size_t j = 0; j < ARRAY_SIZE(regs); j++) {
+			set_val = regs[j].val;
+			if (set_vr_mp29816a_reg(cfg->vr_rail, &set_val, regs[j].function)) {
+				LOG_ERR("MPS VR rail %x set %s to %d failed", cfg->vr_rail,
+					regs[j].name, regs[j].val);
+			}
+		}
+
+		// vr range
+		vout_range_user_settings.change_vout_min[i] = cfg->lcr;
+		vout_range_user_settings.change_vout_max[i] = cfg->ucr;
+	}
+	return ret;
+}
+
 static bool check_vr_fast_ocp_match_test_mode(void)
 {
 	for (uint8_t i = 0; i < VR_RAIL_E_P3V3_OSFP_VOLT_V; i++) {
@@ -280,12 +372,34 @@ static bool check_vr_fast_ocp_match_test_mode(void)
 void vr_test_mode_enable(bool onoff)
 {
 	vr_test_mode_flag = onoff;
-
-	set_vr_test_mode_reg((onoff ? false : true));
-	// not include P3V3
-	for (uint8_t i = 0; i < VR_RAIL_E_P3V3_OSFP_VOLT_V; i++) {
-		if (!set_vr_fixed_uvp_ovp_enable(i, (onoff ? 1 : 0)))
-			LOG_ERR("set vr %d fix uvp/ovp enable fail!", i);
+	uint8_t vr = get_vr_module();
+	if (vr == VR_MODULE_RNS) {
+		set_vr_test_mode_reg((onoff ? false : true));
+		// not include P3V3
+		for (uint8_t i = 0; i < VR_RAIL_E_P3V3_OSFP_VOLT_V; i++) {
+			if (!set_vr_fixed_uvp_ovp_enable(i, (onoff ? 1 : 0)))
+				LOG_ERR("set vr %d fix uvp/ovp enable fail!", i);
+		}
+	} else if (vr == VR_MODULE_MPS) {
+		set_mps_vr_test_mode_reg((onoff ? false : true));
+		// mp29816C
+		// if set to test mode, set ovp2 action to no action
+		uint16_t action = 0;
+		if (vr_test_mode_flag == true)
+			action = NO_ACTION;
+		else if (vr_test_mode_flag == false)
+			action = LATCH_OFF;
+		else {
+			LOG_ERR("MPS test mode setting flag error! flag: %d", vr_test_mode_flag);
+			return;
+		}
+		for (uint8_t i = 0; i <= VR_RAIL_E_ASIC_P0V85_MEDHA1_VDD; i++) {
+			// set ovp2 action to no action
+			if (set_vr_mp29816a_reg(i, &action, OVP_2_ACTION))
+				LOG_ERR("set vr %d ovp2 action fail!", i);
+		}
+	} else {
+		LOG_ERR("VR module %d is not supported!", vr);
 	}
 }
 
