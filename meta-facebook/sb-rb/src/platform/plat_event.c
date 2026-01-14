@@ -212,6 +212,13 @@ void process_mtia_vr_power_fault_sel(cpld_info *cpld_info, uint8_t *current_cpld
 	}
 }
 
+void plat_set_ac_on_log()
+{
+	uint16_t error_code = (AC_ON_TRIGGER_CAUSE << 13);
+	error_log_event(error_code, LOG_ASSERT);
+	LOG_INF("Generated AC on error code: 0x%x", error_code);
+}
+
 void plat_set_dc_on_log(bool is_assert)
 {
 	uint16_t error_code = (DC_ON_TRIGGER_CAUSE << 13);

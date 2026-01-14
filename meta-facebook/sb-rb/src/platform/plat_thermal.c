@@ -98,7 +98,7 @@ uint8_t get_thermal_limit_status_val_for_log(uint8_t sensor_num)
 
 void check_thermal_handler(void *arg1, void *arg2, void *arg3)
 {
-	k_sleep(K_MSEC(1000)); // wait sensor thread ready
+	k_sleep(K_MSEC(2000)); // wait sensor thread ready
 	LOG_INF("check_thermal_handler start");
 
 	while (1) {

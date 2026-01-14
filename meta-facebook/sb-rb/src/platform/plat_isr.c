@@ -72,13 +72,9 @@ void ISR_GPIO_FM_PLD_UBC_EN_R()
 	if (get_pwr_steps_on_flag() == 1)
 		return;
 
-	LOG_DBG("gpio_%d_isr called, val=%d , dir= %d", FM_PLD_UBC_EN_R, gpio_get(FM_PLD_UBC_EN_R),
-		gpio_get_direction(FM_PLD_UBC_EN_R));
-
 	LOG_INF("FM_PLD_UBC_EN_R = %d", gpio_get(FM_PLD_UBC_EN_R));
 
 	if (gpio_get(FM_PLD_UBC_EN_R) == GPIO_HIGH) {
-		//plat_clock_init();
 		plat_set_dc_on_log(LOG_ASSERT);
 	}
 
@@ -106,7 +102,7 @@ void ISR_GPIO_RST_IRIS_PWR_ON_PLD_R1_N()
 		add_sync_oc_warn_to_work();
 		// if board id == EVB , ctrl fan pwm
 		if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
-			LOG_INF("dc off, set fan pwm 65");
+			LOG_INF("dc on, set fan pwm 65");
 			init_pwm_dev();
 			ast_pwm_set(65, PWM_PORT1);
 			ast_pwm_set(65, PWM_PORT6);
@@ -121,7 +117,7 @@ void ISR_GPIO_RST_IRIS_PWR_ON_PLD_R1_N()
 		LOG_DBG("cpld_polling_alert_status: true -> false, reset_error_log_states: %x",
 			err_type);
 		reset_error_log_states(err_type);
-		
+
 		// if board id == EVB , ctrl fan pwm
 		if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
 			LOG_INF("dc off, set fan pwm 0");

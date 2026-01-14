@@ -21,6 +21,7 @@
 #include "plat_fru.h"
 #include "plat_cpld.h"
 #include "plat_user_setting.h"
+#include "shell_plat_power_sequence.h"
 
 typedef struct {
 	uint8_t cpld_offset;
@@ -180,11 +181,15 @@ void cmd_log_dump(const struct shell *shell, size_t argc, char **argv)
 			shell_print(shell, "\thigh byte: 0x%02x", log.error_data[1]);
 			break;
 		case POWER_ON_SEQUENCE_TRIGGER_CAUSE:
-			shell_print(shell, "\tPOWER_ON_SEQUENCE_TRIGGER");
+			shell_print(shell, "\tPOWER_ON_SEQUENCE_FAILURE");
 			err_data_len = 1;
+			uint8_t *name = NULL;
+			plat_get_power_seq_fail_name(log.error_data[0], &name);
+			shell_print(shell, "RAIL: %s", name);
 			break;
 		case AC_ON_TRIGGER_CAUSE:
 			shell_print(shell, "\tAC_ON");
+			err_data_len = 1;
 			break;
 		case DC_ON_TRIGGER_CAUSE:
 			shell_print(shell, "\tDC_ON_DETECTED");

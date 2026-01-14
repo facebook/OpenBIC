@@ -80,6 +80,7 @@ void pal_post_init()
 		if (get_board_rev_id() >= REV_ID_EVT2)
 			init_U200070_IO();
 	}
+	plat_set_ac_on_log();
 
 	init_cpld_polling();
 	plat_telemetry_table_init();

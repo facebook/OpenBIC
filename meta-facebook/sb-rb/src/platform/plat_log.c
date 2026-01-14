@@ -30,6 +30,7 @@
 #include "tmp431.h"
 #include "plat_gpio.h"
 #include "plat_thermal.h"
+#include "shell_plat_power_sequence.h"
 
 LOG_MODULE_REGISTER(plat_log);
 
@@ -336,7 +337,11 @@ bool get_error_data(uint16_t error_code, uint8_t *data)
 		data[1] = cpld_data[2];
 		return true;
 	}
-	case POWER_ON_SEQUENCE_TRIGGER_CAUSE:
+	case POWER_ON_SEQUENCE_TRIGGER_CAUSE: {
+		data[0] = plat_get_power_seq_fail_id();
+		return true;
+	}
+	case AC_ON_TRIGGER_CAUSE:
 	case DC_ON_TRIGGER_CAUSE: {
 		data[0] = gpio_get(RST_IRIS_PWR_ON_PLD_R1_N);
 		return true;
@@ -358,8 +363,6 @@ bool get_error_data(uint16_t error_code, uint8_t *data)
 		if (vr_error_callback_info_table[i].cpld_offset == cpld_offset) {
 			device_id = vr_error_callback_info_table[i]
 					    .bit_mapping_vr_sensor_num[bit_position];
-			LOG_DBG("offset: 0x%x found", cpld_offset);
-			LOG_DBG("device_id: 0x%x found", device_id);
 			break;
 		}
 	}

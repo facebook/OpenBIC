@@ -35,6 +35,7 @@ enum event_type {
 };
 
 void process_mtia_vr_power_fault_sel(cpld_info *cpld_info, uint8_t *current_cpld_value);
+void plat_set_ac_on_log();
 void plat_set_dc_on_log(bool is_assert);
 void plat_set_iris_temp_error_log(bool is_assert, uint8_t sensor_id);
 void asic_thermtrip_error_log(bool is_assert);
