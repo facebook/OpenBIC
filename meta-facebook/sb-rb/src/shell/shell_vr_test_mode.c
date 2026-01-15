@@ -148,7 +148,7 @@ void cmd_vr_test_mode_show_val(const struct shell *shell, size_t argc, char **ar
 		char ovp2_str[16];
 		snprintf(ovp2_str, sizeof(ovp2_str), "no action");
 		char uvp_str[16];
-		snprintf(uvp_str, sizeof(uvp_str), "> 200");
+		snprintf(uvp_str, sizeof(uvp_str), ">= 200");
 		for (uint8_t i = 0; i < vr_mps_test_mode_table_size; i++) {
 			uint8_t *rail_name = NULL;
 			if (vr_rail_name_get((uint8_t)i, &rail_name)) {
