@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -14,29 +14,12 @@
  * limitations under the License.
  */
 
-#ifndef _PLAT_FWUPDATE_H_
-#define _PLAT_FWUPDATE_H_
+#ifndef PLAT_PWRLEVEL_SHELL_H
+#define PLAT_PWRLEVEL_SHELL_H
 
-enum FIRMWARE_COMPONENT {
-	COMPNT_BIC,
-	COMPNT_VR_1,
-	COMPNT_VR_2,
-	COMPNT_VR_3,
-	COMPNT_VR_4,
-	COMPNT_VR_5,
-	COMPNT_VR_6,
-	COMPNT_VR_7,
-	COMPNT_VR_8,
-	COMPNT_VR_9,
-	COMPNT_VR_10,
-	COMPNT_VR_11,
-	COMPNT_VR_12,
-	COMPNT_HAMSA,
-	COMPNT_MEDHA0,
-	COMPNT_MEDHA1,
-};
+#include <shell/shell.h>
 
-bool find_sensor_id_and_name_by_firmware_comp_id(uint8_t comp_identifier, uint8_t *sensor_id,
-						 char *sensor_name);
+void cmd_set_pwrlevel(const struct shell *shell, size_t argc, char **argv);
+void cmd_get_pwrlevel(const struct shell *shell, size_t argc, char **argv);
 
-#endif /* _PLAT_FWUPDATE_H_ */
+#endif

@@ -58,6 +58,11 @@ __weak void plat_pldm_sensor_post_load_init(int thread_id)
 	return;
 }
 
+__weak void plat_pldm_sensor_poll_post()
+{
+	return;
+}
+
 bool pldm_sensor_is_interval_ready(pldm_sensor_info *pldm_sensor_list)
 {
 	CHECK_NULL_ARG_WITH_RETURN(pldm_sensor_list, false);
@@ -458,7 +463,7 @@ void pldm_sensor_polling_handler(void *arug0, void *arug1, void *arug2)
 				}
 			}
 		}
-
+		plat_pldm_sensor_poll_post();
 		k_msleep(poll_interval_ms);
 	}
 }

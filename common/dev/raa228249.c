@@ -27,6 +27,7 @@ LOG_MODULE_REGISTER(raa228249);
 
 #define raa228249_READ_VOUT_RESOLUTION 0.001
 #define raa228249_READ_IOUT_RESOLUTION 0.1
+#define raa228249_READ_VIN_RESOLUTION 0.01
 
 // RAA GEN3p5
 #define VR_RAA_REG_REMAIN_WR 0x35
@@ -652,6 +653,11 @@ uint8_t raa228249_read(sensor_cfg *cfg, int *reading)
 		/* 2's complement */
 		int16_t read_value = (msg.data[1] << 8) | msg.data[0];
 		val = read_value * raa228249_READ_IOUT_RESOLUTION;
+
+	} else if (cfg->offset == PMBUS_READ_VIN) {
+		/* 2's complement */
+		int16_t read_value = (msg.data[1] << 8) | msg.data[0];
+		val = read_value * raa228249_READ_VIN_RESOLUTION;
 
 	} else {
 		return SENSOR_FAIL_TO_ACCESS;

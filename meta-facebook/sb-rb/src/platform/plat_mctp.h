@@ -18,7 +18,25 @@
 #define _PLAT_MCTP_h
 
 #include "storage_handler.h"
+#include "plat_i2c.h"
 #include "pldm_oem.h"
+
+/* i2c 8 bit address */
+#define I2C_ADDR_BIC 0x42
+#define I2C_ADDR_BMC 0x20
+
+/* i2c dev bus */
+#define I2C_BUS_BMC I2C_BUS6
+
+/* i3c vendor-def-id */
+#define DEFAULT_VENDOR_DEF_ID 0x567
+
+/* mctp endpoint */
+#define MCTP_EID_BMC 0x08
+
+/* I3C related defines */ //Not used in this platform
+#define I3C_BUS_BMC I2C_BUS6
+#define I3C_STATIC_ADDR_BMC 0x20
 
 struct mctp_to_ipmi_header_req {
 	uint8_t iana[IANA_LEN];
@@ -49,5 +67,6 @@ struct mctp_to_ipmi_sel_resp {
 /* init the mctp moduel for platform */
 void plat_mctp_init(void);
 void plat_i3c_set_pid(void);
-
+mctp *find_mctp_by_bus(uint8_t bus);
+void plat_set_eid(uint8_t slot_eid);
 #endif /* _PLAT_MCTP_h */

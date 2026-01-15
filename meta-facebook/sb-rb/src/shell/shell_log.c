@@ -180,10 +180,6 @@ void cmd_log_dump(const struct shell *shell, size_t argc, char **argv)
 		shell_print(shell, "cpld register: start offset 0x%02x",
 			    CPLD_REGISTER_1ST_PART_START_OFFSET);
 		shell_hexdump(shell, log.cpld_dump, CPLD_REGISTER_1ST_PART_NUM);
-		shell_print(shell, "cpld register: start offset 0x%02x",
-			    CPLD_REGISTER_2ND_PART_START_OFFSET);
-		shell_hexdump(shell, log.cpld_dump + CPLD_REGISTER_1ST_PART_NUM,
-			      CPLD_REGISTER_2ND_PART_NUM);
 		shell_print(
 			shell,
 			"====================================================================================");

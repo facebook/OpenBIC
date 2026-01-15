@@ -28,6 +28,8 @@
 #include "plat_class.h"
 #include "plat_cpld.h"
 #include "plat_log.h"
+#include "plat_user_setting.h"
+#include "plat_pldm_monitor.h"
 
 LOG_MODULE_REGISTER(plat_init);
 
@@ -43,7 +45,7 @@ void pal_pre_init()
 	init_plat_config();
 	plat_led_init();
 	vr_mutex_init();
-	plat_i3c_set_pid();
+	pwr_level_mutex_init();
 }
 
 void pal_set_sys_status()
@@ -54,12 +56,16 @@ void pal_set_sys_status()
 void pal_post_init()
 {
 	plat_mctp_init();
+	user_settings_init();
+	pldm_load_state_effecter_table(MAX_STATE_EFFECTER_IDX);
+	pldm_assign_gpio_effecter_id(PLAT_EFFECTER_ID_GPIO_HIGH_BYTE);
 	init_fru_info();
 	uint8_t data = 0;
 	plat_write_cpld(CPLD_OFFSET_POWER_CLAMP, &data);
 	plat_adc_init();
 	init_load_eeprom_log();
 	init_cpld_polling();
+	plat_telemetry_table_init();
 }
 
 #define DEF_PROJ_GPIO_PRIORITY 78

@@ -21,6 +21,7 @@
 #include "plat_gpio.h"
 #include "plat_log.h"
 #include "plat_hook.h"
+#include "plat_event.h"
 #include <logging/log.h>
 
 #define POLLING_CPLD_STACK_SIZE 2048
@@ -71,11 +72,11 @@ bool vr_error_callback(cpld_info *cpld_info, uint8_t *current_cpld_value);
 
 // clang-format off
 cpld_info cpld_info_table[] = {
-	{ VR_POWER_FAULT_1_REG, 			0x00, 0x00, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
-	{ VR_POWER_FAULT_2_REG, 			0x00, 0x00, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
-	{ VR_POWER_FAULT_3_REG, 			0x00, 0x00, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
-	{ VR_POWER_FAULT_4_REG, 			0x00, 0x00, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
-	{ VR_POWER_FAULT_5_REG, 			0x00, 0x00, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
+	{ VR_POWER_FAULT_1_REG, 			0x00, 0x00, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS, .event_type = VR_POWER_FAULT },
+	{ VR_POWER_FAULT_2_REG, 			0x00, 0x00, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS, .event_type = VR_POWER_FAULT },
+	{ VR_POWER_FAULT_3_REG, 			0x00, 0x00, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS, .event_type = VR_POWER_FAULT },
+	{ VR_POWER_FAULT_4_REG, 			0x00, 0x00, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS, .event_type = VR_POWER_FAULT },
+	{ VR_POWER_FAULT_5_REG, 			0x00, 0x00, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS, .event_type = VR_POWER_FAULT },
 };
 
 bool cpld_polling_alert_status = false; // only polling cpld when alert status is true
@@ -125,6 +126,11 @@ void check_ubc_delayed(struct k_work *work)
 	if (is_ubc_enabled == true) {
 		k_work_submit(&vr_vout_work);
 	} */
+}
+
+bool is_ubc_enabled_delayed_enabled(void)
+{
+	return ubc_enabled_delayed_status;
 }
 
 void reset_error_log_states(uint8_t err_type)
@@ -199,6 +205,10 @@ void poll_cpld_registers()
 		/* Sleep for the polling interval */
 		k_msleep(CPLD_POLLING_INTERVAL_MS);
 
+		if (is_update_state_idle() == false) {
+			continue;
+		}
+
 		LOG_DBG("cpld_polling_alert_status = %d, cpld_polling_enable_flag = %d",
 			cpld_polling_alert_status, cpld_polling_enable_flag);
 
@@ -248,12 +258,56 @@ void poll_cpld_registers()
 					cpld_info_table[i].status_changed_cb(
 						&cpld_info_table[i], &data);
 				}
+				if (cpld_info_table[i].event_type == VR_POWER_FAULT) {
+					process_mtia_vr_power_fault_sel(&cpld_info_table[i],
+									&data);
+				}
 				// update map
 				cpld_info_table[i].is_fault_bit_map = new_fault_map;
 				cpld_info_table[i].last_polling_value = data;
 			}
 		}
 	}
+}
+
+bool set_cpld_bit(uint8_t cpld_offset, uint8_t bit, uint8_t value)
+{
+	uint8_t original_value = 0;
+	if (!plat_read_cpld(cpld_offset, &original_value, 1)) {
+		shell_warn(NULL, "offset = 0x%x, bit = %d, value = %d, read cpld fail", cpld_offset,
+			   bit, value);
+		return false;
+	}
+
+	if (value) {
+		original_value |= BIT(bit);
+	} else {
+		original_value &= ~BIT(bit);
+	}
+
+	if (!plat_write_cpld(cpld_offset, &original_value)) {
+		shell_warn(NULL, "offset = 0x%x, bit = %d, value = %d, write cpld fail",
+			   cpld_offset, bit, value);
+		return false;
+	}
+
+	// check if write success
+	uint8_t check_value = 0;
+	if (!plat_read_cpld(cpld_offset, &check_value, 1)) {
+		shell_warn(NULL, "offset = 0x%x, bit = %d, value = %d, read cpld fail", cpld_offset,
+			   bit, value);
+		return false;
+	}
+
+	LOG_DBG("original_value = 0x%x, check_value = 0x%x", original_value, check_value);
+
+	if (check_value != original_value) {
+		shell_warn(NULL, "offset = 0x%x, bit = %d, value = %d, set_cpld_bit fail",
+			   cpld_offset, bit, value);
+		return false;
+	}
+
+	return true;
 }
 
 void check_cpld_handler()
@@ -273,6 +327,8 @@ void init_cpld_polling(void)
 {
 	check_cpld_polling_alert_status();
 
+	k_timer_start(&init_ubc_delayed_timer, K_MSEC(1000), K_NO_WAIT);
+	
 	cpld_polling_tid =
 		k_thread_create(&cpld_polling_thread, cpld_polling_stack,
 				K_THREAD_STACK_SIZEOF(cpld_polling_stack), poll_cpld_registers,

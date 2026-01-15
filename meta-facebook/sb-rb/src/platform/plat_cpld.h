@@ -20,11 +20,23 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <stdbool.h>
+#include <zephyr.h>
 
+#define RESET 0x00
+#define CPLD_OFFSET_BOARD_REV_ID 0x14
 #define CPLD_OFFSET_VR_VENDER_TYPE 0x15
 #define CPLD_OFFSET_POWER_CLAMP 0x25
 #define CPLD_OFFSET_USERCODE 0x32
+#define CPLD_OFFSET_MMC_PWR_EN 0x38
 #define CPLD_OFFSET_ASIC_BOARD_ID 0x3C
+#define VR_AND_CLK_EN 0x3E
+#define VR_1_EN 0x3F
+#define VR_2_EN 0x40
+#define VR_3_EN 0x41
+#define VR_4_EN 0x42
+#define PREST_DELAY_REG 0x9D
+
 #define CPLD_ADDR (0x4C >> 1)
 #define I2C_BUS_CPLD I2C_BUS11
 typedef struct _cpld_info_ cpld_info;
@@ -49,11 +61,17 @@ typedef struct _cpld_info_ {
 
 	uint8_t bit_check_mask; //bit check mask
 
+	uint8_t event_type;
+
 } cpld_info;
 
+void check_ubc_delayed(struct k_work *work);
+bool is_ubc_enabled_delayed_enabled(void);
 bool plat_read_cpld(uint8_t offset, uint8_t *data, uint8_t len);
 bool plat_write_cpld(uint8_t offset, uint8_t *data);
 void init_cpld_polling(void);
 void check_cpld_polling_alert_status(void);
+void check_ubc_delayed_timer_handler(struct k_timer *timer);
+bool set_cpld_bit(uint8_t cpld_offset, uint8_t bit, uint8_t value);
 
 #endif
