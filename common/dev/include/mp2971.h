@@ -34,9 +34,11 @@ bool mp2971_get_vout_offset(sensor_cfg *cfg, uint16_t *vout_offset);
 bool mp2971_get_total_ocp(sensor_cfg *cfg, uint8_t rail, uint16_t *total_ocp);
 bool mp2971_set_total_ocp(sensor_cfg *cfg, uint8_t rail, uint16_t total_ocp);
 bool mp2971_get_ovp_1(sensor_cfg *cfg, uint8_t rail, uint16_t *ovp_1_mv);
+bool mp2971_set_ovp_1(sensor_cfg *cfg, uint8_t rail, uint16_t *ovp_1_mv);
 bool mp2971_get_ovp_2(sensor_cfg *cfg, uint8_t rail, uint16_t *ovp_1_mv);
 bool mp2971_get_uvp(sensor_cfg *cfg, uint8_t rail, uint16_t *uvp_mv);
 bool mp2971_set_ovp2_action_mode(sensor_cfg *cfg, uint8_t rail, uint8_t *mode);
 bool mp2971_get_ovp2_action_mode(sensor_cfg *cfg, uint8_t rail, uint8_t *mode);
+bool mp2971_set_thres_div_en(sensor_cfg *cfg, uint8_t rail, uint16_t *enable);
 
 #endif

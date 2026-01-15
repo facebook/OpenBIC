@@ -1461,6 +1461,40 @@ bool mp2971_set_total_ocp(sensor_cfg *cfg, uint8_t rail, uint16_t total_ocp)
 	return true;
 }
 
+bool mp2971_set_ovp_1(sensor_cfg *cfg, uint8_t rail, uint16_t *ovp_1_mv)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(ovp_1_mv, false);
+
+	uint16_t vout_max_mv = 0;
+	if (!mp2971_get_vout_max(cfg, rail, &vout_max_mv)) {
+		LOG_ERR("mp2971_set_ovp_1: read VOUT_MAX failed (bus=%u addr=0x%02X rail=%u)",
+		cfg->port, cfg->target_addr, rail);
+		return false;
+	}
+
+	uint16_t delta_mv = *ovp_1_mv - vout_max_mv;
+	uint8_t code = (uint8_t)((delta_mv / 50U) - 1U);
+
+	uint8_t data[2] = { 0 };
+	if (!mp2971_i2c_read(cfg->port, cfg->target_addr, MP2971_MFR_OVP_SET, data, sizeof(data))) {
+		LOG_ERR("mp2971_set_ovp_1: read MFR_OVP_SET failed (bus=%u addr=0x%02X reg=0x%02X)",
+			cfg->port, cfg->target_addr, MP2971_MFR_OVP_SET);
+		return false;
+	}
+	data[0] &= ~0x7;          /* clear bits[2:0] */
+	data[0] |= (code & 0x07); /* set new code */
+
+	if (!mp2971_i2c_write(cfg->port, cfg->target_addr, MP2971_MFR_OVP_SET, data,
+					sizeof(data))) {
+		LOG_ERR("mp2971_set_ovp_1: write MFR_OVP_SET failed (bus=%u addr=0x%02X reg=0x%02X)",
+		cfg->port, cfg->target_addr, MP2971_MFR_OVP_SET);
+		return false;
+	}
+	return true;
+}
+
+
 bool mp2971_get_ovp_1(sensor_cfg *cfg, uint8_t rail, uint16_t *ovp_1_mv)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
@@ -1488,6 +1522,38 @@ bool mp2971_get_ovp_1(sensor_cfg *cfg, uint8_t rail, uint16_t *ovp_1_mv)
 
 	uint32_t ovp32 = (uint32_t)vout_max_mv + (uint32_t)delta_mv;
 	*ovp_1_mv = (ovp32 > UINT16_MAX) ? UINT16_MAX : (uint16_t)ovp32;
+
+	return true;
+}
+
+bool mp2971_set_thres_div_en(sensor_cfg *cfg, uint8_t rail, uint16_t *enable)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+
+	if (!mp2856_set_page(cfg->port, cfg->target_addr, VR_MPS_PAGE_2)) {
+		LOG_ERR("mp2971_set_thres_div_en: set page2 failed (bus=%u addr=0x%02X)", cfg->port,
+			cfg->target_addr);
+		return false;
+	}
+	uint8_t coef_reg = (rail == VR_MPS_PAGE_0) ? MFR_VR_CONFIG_IMON_OFFSET_R1 :
+	     MFR_VR_CONFIG_IMON_OFFSET_R2;
+	uint8_t coef_data[2] = { 0 };
+
+	if (!mp2971_i2c_read(cfg->port, cfg->target_addr, coef_reg, coef_data, sizeof(coef_data))) {
+		LOG_ERR("mp2971_set_thres_div_en: read coef reg failed (bus=%u addr=0x%02X reg=0x%02X)",
+			cfg->port, cfg->target_addr, coef_reg);
+		return false;
+	}
+	coef_data[1] &= ~BIT(6); // clear bit 6
+	if (*enable){
+		coef_data[1] |= BIT(6); // set bit 6
+	}
+	if (!mp2971_i2c_write(cfg->port, cfg->target_addr, coef_reg, coef_data,
+	      sizeof(coef_data))) {
+		LOG_ERR("mp2971_set_thres_div_en: write coef reg failed (bus=%u addr=0x%02X reg=0x%02X)",
+			cfg->port, cfg->target_addr, coef_reg);
+		return false;
+	}
 
 	return true;
 }

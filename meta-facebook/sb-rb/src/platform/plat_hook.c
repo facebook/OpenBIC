@@ -1447,7 +1447,7 @@ int get_vr_mp2971_reg(uint8_t rail, uint16_t *get_data, uint8_t get_reg)
 		break;
 	}
 	default:
-		LOG_ERR("Unsupport VR mp29816a setting reg (%x)", cfg->type);
+		LOG_ERR("Unsupport VR mp2971 setting reg (%x)", cfg->type);
 		goto err;
 	}
 
@@ -1522,8 +1522,20 @@ int set_vr_mp2971_reg(uint8_t rail, uint16_t *set_data, uint8_t set_reg)
 		}
 		break;
 	}
+	case OVP_1:
+		if (!mp2971_set_ovp_1(cfg, pre_proc_args->vr_page, set_data)) {
+			LOG_ERR("The VR mp2971 ovp 1 setting failed");
+			goto err;
+		}
+		break;
+	case DIV_EN:
+		if (!mp2971_set_thres_div_en(cfg, pre_proc_args->vr_page, set_data)) {
+			LOG_ERR("The VR mp2971 gain setting failed");
+			goto err;
+		}
+		break;
 	default:
-		LOG_ERR("Unsupport VR mp29816a setting reg (%x)", cfg->type);
+		LOG_ERR("Unsupport VR mp2971 setting reg (%x)", set_reg);
 		goto err;
 	}
 
