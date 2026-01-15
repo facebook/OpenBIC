@@ -1455,9 +1455,6 @@ bool mp2971_set_total_ocp(sensor_cfg *cfg, uint8_t rail, uint16_t total_ocp)
 		return false;
 	}
 
-	LOG_INF("mp2971_set_total_ocp: rail=%u phase_code=0x%X phase_cnt=%u total_ocp=%u => ocp_code=%u",
-		rail, phase_code, phase_cnt, total_ocp, ocp_code);
-
 	return true;
 }
 

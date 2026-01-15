@@ -33,6 +33,8 @@
 #define NO_USE 0xFF //VR_UVP_THRESHOLD_GAIN_NO_USE
 #define NO_ACTION 0 // ovp2 threshold no action
 #define LATCH_OFF 1 // ovp2 threshold latch off
+#define ENABLE 1 // divider enable
+#define DISABLE 0 // divider disable
 
 typedef struct {
 	uint8_t vr_rail;

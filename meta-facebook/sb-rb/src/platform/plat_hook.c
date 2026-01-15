@@ -1482,6 +1482,9 @@ int set_vr_mp2971_reg(uint8_t rail, uint16_t *set_data, uint8_t set_reg)
 	vr_pre_proc_arg *pre_proc_args = (vr_pre_proc_arg *)cfg->pre_sensor_read_args;
 
 	switch (set_reg) {
+	case UVP_THRESHOLD:
+		// no action for mp2971
+		break;
 	case VOUT_MAX:
 		if (!mp2971_set_vout_max(cfg, pre_proc_args->vr_page, set_data)) {
 			LOG_ERR("The VR mp2971 vout max setting failed");

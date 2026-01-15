@@ -405,8 +405,8 @@ static bool set_mps_vr_test_mode_reg(bool is_default)
 		} regs[] = {
 			{ TOTAL_OCP, cfg->total_ocp, "TOTAL OCP" },
 			{ UVP_THRESHOLD, cfg->uvp_threshold, "UVP_THRESHOLD" },
-			{ OVP_1, cfg->ovp1, "OVP1" },
 			{ VOUT_MAX, cfg->vout_max, "VOUT MAX" },
+			{ OVP_1, cfg->ovp1, "OVP1" },
 		};
 		if (is_default) {
 			// set vout default
@@ -420,10 +420,18 @@ static bool set_mps_vr_test_mode_reg(bool is_default)
 		uint16_t set_val = 0;
 		for (size_t j = 0; j < ARRAY_SIZE(regs); j++) {
 			set_val = regs[j].val;
-			if (set_vr_mp29816a_reg(cfg->vr_rail, &set_val, regs[j].function)) {
-				LOG_ERR("MPS VR rail %x set %s to %d failed", cfg->vr_rail,
-					regs[j].name, regs[j].val);
+			if (i < VR_RAIL_E_ASIC_P0V9_OWL_E_TRVDD){
+				if (set_vr_mp29816a_reg(cfg->vr_rail, &set_val, regs[j].function)) {
+					LOG_ERR("MPS29816a VR rail %x set %s to %d failed", cfg->vr_rail,
+						regs[j].name, regs[j].val);
+				}
+			}else{
+				if (set_vr_mp2971_reg(cfg->vr_rail, &set_val, regs[j].function)) {
+					LOG_ERR("MPS2971 VR rail %x set %s to %d failed", cfg->vr_rail,
+						regs[j].name, regs[j].val);
+				}
 			}
+
 		}
 
 		// vr range
@@ -461,14 +469,20 @@ void vr_test_mode_enable(bool onoff)
 				LOG_ERR("set vr %d fix uvp/ovp enable fail!", i);
 		}
 	} else if (vr == VR_MODULE_MPS) {
-		set_mps_vr_test_mode_reg((onoff ? false : true));
 		// mp29816C
 		// if set to test mode, set ovp2 action to no action
+		// mp2971
+		// if set to test mode, set divider enable
 		uint16_t action = 0;
-		if (vr_test_mode_flag == true)
+		uint16_t div_en = 0;
+		if (vr_test_mode_flag == true){
 			action = NO_ACTION;
-		else if (vr_test_mode_flag == false)
+			div_en = ENABLE;
+		}
+		else if (vr_test_mode_flag == false){
 			action = LATCH_OFF;
+			div_en = DISABLE;
+		}
 		else {
 			LOG_ERR("MPS test mode setting flag error! flag: %d", vr_test_mode_flag);
 			return;
@@ -478,6 +492,16 @@ void vr_test_mode_enable(bool onoff)
 			if (set_vr_mp29816a_reg(i, &action, OVP_2_ACTION))
 				LOG_ERR("set vr %d ovp2 action fail!", i);
 		}
+		for (uint8_t i = VR_RAIL_E_ASIC_P0V9_OWL_E_TRVDD; i < VR_RAIL_E_P3V3_OSFP_VOLT_V; i++) {
+			// set ovp2 action to no action
+			if (set_vr_mp2971_reg(i, &action, OVP_2_ACTION))
+				LOG_ERR("set vr %d ovp2 action fail!", i);
+			// set divider enable/disable
+			if (set_vr_mp2971_reg(i, &div_en, DIV_EN))
+				LOG_ERR("set vr %d divider enable/disable fail!", i);
+		}
+
+		set_mps_vr_test_mode_reg((onoff ? false : true));
 	} else {
 		LOG_ERR("VR module %d is not supported!", vr);
 	}
