@@ -256,6 +256,25 @@ void cmd_vr_test_mode_show_real(const struct shell *shell, size_t argc, char **a
 					vout_range_user_settings.change_vout_max[i]);
 			}
 		}
+		for (uint8_t j = VR_RAIL_E_ASIC_P0V9_OWL_E_TRVDD; j < VR_RAIL_E_P3V3_OSFP_VOLT_V;
+		     j++) {
+			uint8_t *rail_name = NULL;
+			get_vr_mp2971_reg(j, &uvp, UVP);
+			get_vr_mp2971_reg(j, &vout_max, VOUT_MAX);
+			get_vr_mp2971_reg(j, &vout_command, VOUT_COMMAND);
+			get_vr_mp2971_reg(j, &vout_offset, VOUT_OFFSET);
+			get_vr_mp2971_reg(j, &total_ocp, TOTAL_OCP);
+			get_vr_mp2971_reg(j, &ovp_1, OVP_1);
+			get_vr_mp2971_reg(j, &ovp_2, OVP_2);
+			if (vr_rail_name_get((uint8_t)j, &rail_name)) {
+				shell_print(
+					shell,
+					"%-30s | %-12d | %-7d | %-8d | %-9d | %-9d | %-7d | %-7d",
+					(char *)rail_name, total_ocp, uvp, ovp_1, ovp_2, vout_max,
+					vout_range_user_settings.change_vout_min[j],
+					vout_range_user_settings.change_vout_max[j]);
+			}
+		}
 	} else {
 		// unknown
 		shell_error(shell, "unknown vr module");

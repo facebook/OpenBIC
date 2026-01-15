@@ -234,6 +234,10 @@ typedef struct bootstrap_user_settings_struct {
 	uint16_t user_setting_value[STRAP_INDEX_MAX];
 } bootstrap_user_settings_struct;
 
+#define OVP2_ACTION_NO_ACTION 0x00 /* 2'b00 */
+#define OVP2_ACTION_LATCH_OFF 0x01 /* 2'b01 */
+#define OVP2_ACTION_UNKNOWN 0xFF
+
 extern bootstrap_user_settings_struct bootstrap_user_settings;
 extern vr_vout_user_settings user_settings;
 extern vr_vout_range_user_settings_struct vout_range_user_settings;
@@ -286,4 +290,6 @@ bool plat_set_vr_reg(uint8_t rail, uint8_t reg, uint8_t *data, uint8_t len);
 int get_vr_page(uint8_t rail);
 int get_vr_mp29816a_reg(uint8_t rail, uint16_t *get_data, uint8_t get_reg);
 int set_vr_mp29816a_reg(uint8_t rail, uint16_t *millivolt, uint8_t set_reg);
+int get_vr_mp2971_reg(uint8_t rail, uint16_t *get_data, uint8_t get_reg);
+int set_vr_mp2971_reg(uint8_t rail, uint16_t *set_data, uint8_t set_reg);
 #endif
