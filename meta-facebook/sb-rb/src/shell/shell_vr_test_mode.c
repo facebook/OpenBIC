@@ -146,6 +146,7 @@ void cmd_vr_test_mode_show_val(const struct shell *shell, size_t argc, char **ar
 			"----------------------------------------------------------------------------------------------------------------");
 		// mp29816c
 		char ovp2_str[16];
+		char uvp_str[16];
 		snprintf(ovp2_str, sizeof(ovp2_str), "no action");
 		for (uint8_t i = 0; i < vr_mps_test_mode_table_size; i++) {
 			uint8_t *rail_name = NULL;
@@ -155,18 +156,19 @@ void cmd_vr_test_mode_show_val(const struct shell *shell, size_t argc, char **ar
 				uint16_t vout = 0;
 				int32_t uvp_show = 0;
 				get_vr_mp2971_reg(rail, &vout, VOUT_COMMAND);
-				if (i >= 2){
+				if (i >= VR_RAIL_E_ASIC_P0V9_OWL_E_TRVDD){
 					/* uvp = vout- 400 mv (default) */
 					uvp_show = (int32_t)vout - 400;
 					if (uvp_show < 0)
 						uvp_show = 0;
+					snprintf(uvp_str, sizeof(uvp_str), "%d", uvp_show);
 				}else{
-					uvp_show = 200;
+					snprintf(uvp_str, sizeof(uvp_str), ">=200");
 				}
 				shell_print(
 					shell,
-					"%-30s | %-12d | %-7d | %-8d | %-9s | %-9d | %-7d | %-7d",
-					(char *)rail_name, cfg->total_ocp, uvp_show, cfg->ovp1,
+					"%-30s | %-12d | %-7s | %-8d | %-9s | %-9d | %-7d | %-7d",
+					(char *)rail_name, cfg->total_ocp, uvp_str, cfg->ovp1,
 					ovp2_str, cfg->vout_max, cfg->lcr, cfg->ucr);
 			}
 		}

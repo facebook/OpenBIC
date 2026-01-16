@@ -1523,6 +1523,74 @@ bool mp2971_get_ovp_1(sensor_cfg *cfg, uint8_t rail, uint16_t *ovp_1_mv)
 	return true;
 }
 
+bool mp2971_set_uvp_threshold(sensor_cfg *cfg, uint8_t rail, uint16_t *write_uvp_threshold)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(write_uvp_threshold, false);
+
+	if(rail != VR_MPS_PAGE_0 && rail != VR_MPS_PAGE_1) {
+		LOG_ERR("mp2971_set_uvp: invalid rail=%u (expect 0/1)", rail);
+		return false;
+	}
+
+	if (!mp2856_set_page(cfg->port, cfg->target_addr, VR_MPS_PAGE_2)) {
+		LOG_ERR("mp2971_get_uvp: set page2 failed (bus=%u addr=0x%02X)", cfg->port,
+			cfg->target_addr);
+		return false;
+	}
+
+	uint8_t coef_reg = (rail == VR_MPS_PAGE_0) ? MFR_VR_CONFIG_IMON_OFFSET_R1 :
+						     MFR_VR_CONFIG_IMON_OFFSET_R2;
+
+	uint8_t coef_data[2] = { 0 };
+	if (!mp2971_i2c_read(cfg->port, cfg->target_addr, coef_reg, coef_data, sizeof(coef_data))) {
+		LOG_ERR("mp2971_get_uvp: read coef reg failed (bus=%u addr=0x%02X reg=0x%02X)",
+			cfg->port, cfg->target_addr, coef_reg);
+		return false;
+	}
+
+	uint16_t raw_coef = (uint16_t)coef_data[0] | ((uint16_t)coef_data[1] << 8);
+
+	/* a: bit[9] => 0:a=1, 1:a=2 */
+	uint8_t a = (raw_coef & BIT(9)) ? 2U : 1U;
+
+	/* b: bit[14] => 0:b=1, 1:b=0.5 => denominator 2 */
+	uint8_t b_den = (raw_coef & BIT(14)) ? 2U : 1U;
+
+	uint8_t code = 0;
+	code = (float)(*write_uvp_threshold * b_den) / (50U * a) - 1U + 0.5;
+
+	if (code > 7U) {
+		code = 7U;
+		LOG_ERR("UVP threshold overflow: %d, set to %d", *write_uvp_threshold, ((code+1)*50*a)/b_den);
+	}
+
+	if (!mp2856_set_page(cfg->port, cfg->target_addr, rail)) {
+		LOG_ERR("mp2971_get_uvp: set page%d failed (bus=%u addr=0x%02X)", rail, cfg->port,
+			cfg->target_addr);
+		return false;
+	}
+
+	uint8_t uvp_data[2] = { 0 };
+	if (!mp2971_i2c_read(cfg->port, cfg->target_addr, MP2971_MFR_UVP_SET, uvp_data,
+			     sizeof(uvp_data))) {
+		LOG_ERR("mp2971_get_uvp: read MFR_UVP_SET failed (bus=%u addr=0x%02X rail=%u)",
+			cfg->port, cfg->target_addr, rail);
+		return false;
+	}
+	uvp_data[0] &= ~0x7;          /* clear bits[2:0] */
+	uvp_data[0] |= (code & 0x07); /* set new code */
+
+	if (!mp2971_i2c_write(cfg->port, cfg->target_addr, MP2971_MFR_UVP_SET, uvp_data,
+			      sizeof(uvp_data))) {
+		LOG_ERR("mp2971_get_uvp: write MFR_UVP_SET failed (bus=%u addr=0x%02X rail=%u)",
+			cfg->port, cfg->target_addr, rail);
+		return false;
+	}
+
+	return true;
+}
+
 bool mp2971_set_thres_div_en(sensor_cfg *cfg, uint8_t rail, uint16_t *enable)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);

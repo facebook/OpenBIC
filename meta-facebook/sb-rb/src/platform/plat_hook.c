@@ -1483,7 +1483,10 @@ int set_vr_mp2971_reg(uint8_t rail, uint16_t *set_data, uint8_t set_reg)
 
 	switch (set_reg) {
 	case UVP_THRESHOLD:
-		// no action for mp2971
+		if (!mp2971_set_uvp_threshold(cfg, pre_proc_args->vr_page, set_data)) {
+			LOG_ERR("The VR mp2971 uvp threshold setting failed");
+			goto err;
+		}
 		break;
 	case VOUT_MAX:
 		if (!mp2971_set_vout_max(cfg, pre_proc_args->vr_page, set_data)) {
