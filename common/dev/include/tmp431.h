@@ -63,7 +63,7 @@ enum TMP431_REIGSTER_MAP {
 };
 
 bool tmp432_get_temp_threshold(sensor_cfg *cfg, uint8_t temp_threshold_index,
-			       uint32_t *millidegree_celsius);
+			       int32_t *millidegree_celsius);
 bool tmp432_set_temp_threshold(sensor_cfg *cfg, uint8_t temp_threshold_index,
 			       uint32_t *millidegree_celsius);
 bool tmp432_set_thermal_mode(sensor_cfg *cfg);

@@ -41,8 +41,8 @@ LOG_MODULE_REGISTER(plat_user_setting);
 #define EEPROM_MAX_WRITE_TIME 5 // the BR24G512 eeprom max write time is 3.5 ms
 #define TMP75_ALERT_CPLD_OFFSET 0x2F
 
-int32_t alert_level_mA_default = 110000;
-int32_t alert_level_mA_user_setting = 110000;
+int32_t alert_level_mA_default = 180000;
+int32_t alert_level_mA_user_setting = 180000;
 static bool uart_pwr_event_is_enable = true;
 bool alert_level_is_assert = false;
 static struct k_mutex pwrlevel_mutex;
@@ -344,7 +344,7 @@ bool set_plat_temp_threshold(uint8_t temp_index_threshold_type, uint32_t *millid
 	return true;
 }
 
-bool get_plat_temp_threshold(uint8_t temp_index_threshold_type, uint32_t *millidegree_celsius)
+bool get_plat_temp_threshold(uint8_t temp_index_threshold_type, int32_t *millidegree_celsius)
 {
 	CHECK_NULL_ARG_WITH_RETURN(millidegree_celsius, false);
 
@@ -509,6 +509,29 @@ bool temp_threshold_default_settings_init(void)
 			return false;
 		}
 		temp_threshold_default_settings.temperature_reg_val[i] = temp_threshold;
+		uint32_t temperature = 0;
+		// these temp_threshold is 100 degree
+		if (i == ASIC_MEDHA0_SENSOR0_HIGH_LIMIT || i == ASIC_MEDHA0_SENSOR1_HIGH_LIMIT ||
+		    i == ASIC_MEDHA1_SENSOR0_HIGH_LIMIT || i == ASIC_MEDHA1_SENSOR1_HIGH_LIMIT ||
+		    i == ASIC_OWL_W_HIGH_LIMIT || i == ASIC_OWL_E_HIGH_LIMIT ||
+		    i == ASIC_HAMSA_CRM_HIGH_LIMIT || i == ASIC_HAMSA_LS_HIGH_LIMIT) {
+			temperature = 100000;
+		}
+		// set board temp threshold low to 0 degree
+		if (i == TOP_INLET_LOW_LIMIT || i == BOT_INLET_LOW_LIMIT ||
+		    i == BOT_OUTLET_LOW_LIMIT) {
+			temperature = 75000;
+		}
+		// set board temp threshold high to 85 degree
+		if (i == TOP_INLET_HIGH_LIMIT || i == BOT_INLET_HIGH_LIMIT ||
+		    i == BOT_OUTLET_HIGH_LIMIT) {
+			temperature = 85000;
+		}
+
+		if (!set_plat_temp_threshold(i, &temperature, false, false)) {
+			LOG_ERR("Can't set temp threshold index: 0x%x to 100", i);
+			return false;
+		}
 	}
 
 	return true;
@@ -714,23 +737,143 @@ static int alert_level_user_settings_init(void)
 
 	return 0;
 }
+static int delay_asic_rst_user_settings_init(void)
+{
+	uint8_t setting_value = 0;
 
-bool get_user_settings_soc_pcie_perst_from_eeprom(void *user_settings, uint8_t data_length)
+	if (get_user_settings_delay_asic_rst_from_eeprom(&setting_value, sizeof(setting_value)) ==
+	    false) {
+		LOG_ERR("get alert level user settings failed");
+		return -1;
+	}
+
+	if (setting_value != 0xff) {
+		if (!plat_write_cpld(CPLD_OFFSET_ASIC_RST_DELAY, &setting_value)) {
+			LOG_ERR("plat delay_asic_rst set failed");
+			return -1;
+		}
+	}
+
+	return 0;
+}
+static int delay_pcie_perst_user_settings_init(void)
+{
+	uint32_t setting_values[4] = { 0 };
+
+	if (get_user_settings_delay_pcie_perst_from_eeprom(&setting_values,
+							   sizeof(setting_values)) == false) {
+		LOG_ERR("get delay pcie perst user settings failed");
+		return -1;
+	}
+	uint8_t setting_value = 0;
+	if (setting_values[0] != 0xffffffff) {
+		setting_value = setting_values[0] & 0xff;
+		if (!plat_write_cpld(CPLD_HAMSA_PCIE0_PERST_DELAY_REG, &setting_value)) {
+			LOG_ERR("plat delay_pcie_perst PCIE0 set failed");
+		}
+	}
+	if (setting_values[1] != 0xffffffff) {
+		setting_value = setting_values[1] & 0xff;
+		if (!plat_write_cpld(CPLD_HAMSA_PCIE1_PERST_DELAY_REG, &setting_value)) {
+			LOG_ERR("plat delay_pcie_perst PCIE1 set failed");
+		}
+	}
+	if (setting_values[2] != 0xffffffff) {
+		setting_value = setting_values[2] & 0xff;
+		if (!plat_write_cpld(CPLD_HAMSA_PCIE2_PERST_DELAY_REG, &setting_value)) {
+			LOG_ERR("plat delay_pcie_perst PCIE2 set failed");
+		}
+	}
+	if (setting_values[3] != 0xffffffff) {
+		setting_value = setting_values[3] & 0xff;
+		if (!plat_write_cpld(CPLD_HAMSA_PCIE3_PERST_DELAY_REG, &setting_value)) {
+			LOG_ERR("plat delay_pcie_perst PCIE3 set failed");
+		}
+	}
+
+	return 0;
+}
+static int delay_module_pg_user_settings_init(void)
+{
+	uint8_t setting_value = 0;
+
+	if (get_user_settings_delay_module_pg_from_eeprom(&setting_value, sizeof(setting_value)) ==
+	    false) {
+		LOG_ERR("get alert level user settings failed");
+		return -1;
+	}
+
+	if (setting_value != 0xff) {
+		if (!plat_write_cpld(CPLD_OFFSET_MODULE_PG_DELAY, &setting_value)) {
+			LOG_ERR("plat delay_module_pg set failed");
+			return -1;
+		}
+	}
+
+	return 0;
+}
+bool get_user_settings_delay_pcie_perst_from_eeprom(void *user_settings, uint8_t data_length)
 {
 	CHECK_NULL_ARG_WITH_RETURN(user_settings, false);
 
-	if (!plat_eeprom_read(SOC_PCIE_PERST_USER_SETTINGS_OFFSET, user_settings, data_length)) {
-		LOG_ERR("Failed to read soc_pcie_perst from eeprom");
+	if (!plat_eeprom_read(DELAY_PCIE_PERST_USER_SETTINGS_OFFSET, user_settings, data_length)) {
+		LOG_ERR("Failed to read delay_pcie_perst from eeprom");
 		return false;
 	}
 	return true;
 }
-bool set_user_settings_soc_pcie_perst_to_eeprom(void *user_settings, uint8_t data_length)
+bool set_user_settings_delay_pcie_perst_to_eeprom(void *user_settings, uint8_t data_length,
+						  uint8_t user_settings_offset)
 {
 	CHECK_NULL_ARG_WITH_RETURN(user_settings, false);
 
-	if (!plat_eeprom_write(SOC_PCIE_PERST_USER_SETTINGS_OFFSET, user_settings, data_length)) {
-		LOG_ERR("soc_pcie_perst Failed to write eeprom");
+	if (!plat_eeprom_write(DELAY_PCIE_PERST_USER_SETTINGS_OFFSET + user_settings_offset,
+			       user_settings, data_length)) {
+		LOG_ERR("delay_pcie_perst Failed to write eeprom");
+		return false;
+	}
+	k_msleep(EEPROM_MAX_WRITE_TIME);
+
+	return true;
+}
+bool get_user_settings_delay_asic_rst_from_eeprom(void *user_settings, uint8_t data_length)
+{
+	CHECK_NULL_ARG_WITH_RETURN(user_settings, false);
+
+	if (!plat_eeprom_read(DELAY_ASIC_RST_USER_SETTINGS_OFFSET, user_settings, data_length)) {
+		LOG_ERR("Failed to read delay_asic_rst from eeprom");
+		return false;
+	}
+	return true;
+}
+bool set_user_settings_delay_asic_rst_to_eeprom(void *user_settings, uint8_t data_length)
+{
+	CHECK_NULL_ARG_WITH_RETURN(user_settings, false);
+
+	if (!plat_eeprom_write(DELAY_ASIC_RST_USER_SETTINGS_OFFSET, user_settings, data_length)) {
+		LOG_ERR("delay_asic_rst Failed to write eeprom");
+		return false;
+	}
+	k_msleep(EEPROM_MAX_WRITE_TIME);
+
+	return true;
+}
+bool get_user_settings_delay_module_pg_from_eeprom(void *user_settings, uint8_t data_length)
+{
+	CHECK_NULL_ARG_WITH_RETURN(user_settings, false);
+
+	if (!plat_eeprom_read(DELAY_MODULE_PG_USER_SETTINGS_OFFSET, user_settings, data_length)) {
+		LOG_ERR("Failed to read delay_module_pg from eeprom");
+		return false;
+	}
+	return true;
+}
+bool set_user_settings_delay_module_pg_to_eeprom(void *user_settings, uint8_t data_length)
+{
+	CHECK_NULL_ARG_WITH_RETURN(user_settings, false);
+
+	if (!plat_eeprom_write(DELAY_MODULE_PG_USER_SETTINGS_OFFSET, user_settings, data_length)) {
+		LOG_ERR("delay_module_pg Failed to write eeprom");
 		return false;
 	}
 	k_msleep(EEPROM_MAX_WRITE_TIME);
@@ -763,17 +906,20 @@ bool perm_config_clear(void)
 	}
 
 	/* clear soc_pcie_perst perm parameter */
-	uint8_t setting_value_for_soc_pcie_perst = 0xFF;
-	if (!set_user_settings_soc_pcie_perst_to_eeprom(&setting_value_for_soc_pcie_perst,
-							sizeof(setting_value_for_soc_pcie_perst))) {
-		LOG_ERR("The perm_config clear failed");
+	uint32_t setting_value_for_delay_pcie_perst[4] = { 0 };
+	memset(setting_value_for_delay_pcie_perst, 0xffffffff,
+	       sizeof(setting_value_for_delay_pcie_perst));
+	if (!set_user_settings_delay_pcie_perst_to_eeprom(
+		    &setting_value_for_delay_pcie_perst[0],
+		    sizeof(setting_value_for_delay_pcie_perst), 0)) {
+		LOG_ERR("The perm_config delay pcie perst clear failed");
 		return false;
 	}
 
 	/* clear all bootstrap perm parameters */
 	memset(bootstrap_user_settings.user_setting_value, 0xFF,
 	       sizeof(bootstrap_user_settings.user_setting_value));
-	if (!set_temp_threshold_user_settings(&bootstrap_user_settings)) {
+	if (!bootstrap_user_settings_set(&bootstrap_user_settings)) {
 		LOG_ERR("The perm_config clear failed");
 		return false;
 	}
@@ -1208,4 +1354,7 @@ void user_settings_init(void)
 	thermaltrip_user_settings_init();
 	throttle_user_settings_init();
 	alert_level_user_settings_init();
+	delay_asic_rst_user_settings_init();
+	delay_module_pg_user_settings_init();
+	delay_pcie_perst_user_settings_init();
 }

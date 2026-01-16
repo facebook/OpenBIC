@@ -30,6 +30,7 @@
 #include "plat_class.h"
 #include "plat_i2c_target.h"
 #include "shell_plat_average_power.h"
+#include "plat_ioexp.h"
 
 LOG_MODULE_REGISTER(plat_hook);
 
@@ -218,67 +219,139 @@ vr_mapping_status vr_status_table[] = {
 	{ VR_STAUS_E_STATUS_CML, PMBUS_STATUS_CML, "STATUS_CML_PMBUS" },
 };
 bootstrap_mapping_register bootstrap_table[] = {
-	{ STRAP_INDEX_HAMSA_TEST_STRAP_R, 0x16, "HAMSA_TEST_STRAP_R", 4, 1, 0x0, 0x0, false },
-	{ STRAP_INDEX_HAMSA_LS_STRAP_0_1, 0x16, "HAMSA_LS_STRAP_0_1", 2, 2, 0x0, 0x0, true },
-	{ STRAP_INDEX_HAMSA_CRM_STRAP_0_1, 0x16, "HAMSA_CRM_STRAP_0_1", 0, 2, 0x0, 0x0, true },
-	{ STRAP_INDEX_HAMSA_MFIO12, 0x17, "HAMSA_MFIO12", 7, 1, 0x0, 0x0, false },
-	{ STRAP_INDEX_HAMSA_MFIO13, 0x17, "HAMSA_MFIO13", 6, 1, 0x0, 0x0, false },
-	{ STRAP_INDEX_HAMSA_MFIO14, 0x17, "HAMSA_MFIO14", 5, 1, 0x0, 0x0, false },
-	{ STRAP_INDEX_HAMSA_MFIO7, 0x17, "HAMSA_MFIO7", 4, 1, 0x0, 0x0, false },
-	{ STRAP_INDEX_HAMSA_MFIO9, 0x17, "HAMSA_MFIO9", 3, 1, 0x0, 0x0, false },
-	{ STRAP_INDEX_HAMSA_MFIO11, 0x17, "HAMSA_MFIO11", 2, 1, 0x0, 0x0, false },
-	{ STRAP_INDEX_HAMSA_MFIO17, 0x17, "HAMSA_MFIO17", 1, 1, 0x0, 0x0, false },
-	{ STRAP_INDEX_HAMSA_MFIO18, 0x17, "HAMSA_MFIO18", 0, 1, 0x0, 0x0, false },
-	{ STRAP_INDEX_HAMSA_CORE_TAP_CTRL_L, 0x18, "HAMSA_CORE_TAP_CTRL_L", 3, 1, 0x01, 0x01,
+	{ STRAP_INDEX_HAMSA_TEST_STRAP_R, STRAP_TYPE_CPLD, 0x16, "HAMSA_TEST_STRAP_R", 4, 1, 0x0,
+	  0x0, false },
+	{ STRAP_INDEX_HAMSA_LS_STRAP_0, STRAP_TYPE_CPLD, 0x16, "HAMSA_LS_STRAP_0", 3, 1, 0x01, 0x01,
+	  true },
+	{ STRAP_INDEX_HAMSA_LS_STRAP_1, STRAP_TYPE_CPLD, 0x16, "HAMSA_LS_STRAP_1", 2, 1, 0x0, 0x0,
+	  true },
+	{ STRAP_INDEX_HAMSA_CRM_STRAP_0, STRAP_TYPE_CPLD, 0x16, "HAMSA_CRM_STRAP_0", 1, 1, 0x0, 0x0,
+	  true },
+	{ STRAP_INDEX_HAMSA_CRM_STRAP_1, STRAP_TYPE_CPLD, 0x16, "HAMSA_CRM_STRAP_1", 0, 1, 0x0, 0x0,
+	  true },
+	{ STRAP_INDEX_HAMSA_MFIO12, STRAP_TYPE_CPLD, 0x17, "HAMSA_MFIO12", 7, 1, 0x0, 0x0, false },
+	{ STRAP_INDEX_HAMSA_MFIO13, STRAP_TYPE_CPLD, 0x17, "HAMSA_MFIO13", 6, 1, 0x0, 0x0, false },
+	{ STRAP_INDEX_HAMSA_MFIO14, STRAP_TYPE_CPLD, 0x17, "HAMSA_MFIO14", 5, 1, 0x0, 0x0, false },
+	{ STRAP_INDEX_HAMSA_MFIO7, STRAP_TYPE_CPLD, 0x17, "HAMSA_MFIO7", 4, 1, 0x01, 0x01, false },
+	{ STRAP_INDEX_HAMSA_MFIO9, STRAP_TYPE_CPLD, 0x17, "HAMSA_MFIO9", 3, 1, 0x0, 0x0, false },
+	{ STRAP_INDEX_HAMSA_MFIO11, STRAP_TYPE_CPLD, 0x17, "HAMSA_MFIO11", 2, 1, 0x0, 0x0, false },
+	{ STRAP_INDEX_HAMSA_MFIO17, STRAP_TYPE_CPLD, 0x17, "HAMSA_MFIO17", 1, 1, 0x0, 0x0, false },
+	{ STRAP_INDEX_HAMSA_MFIO18, STRAP_TYPE_CPLD, 0x17, "HAMSA_MFIO18", 0, 1, 0x01, 0x01,
 	  false },
-	{ STRAP_INDEX_HAMSA_TRI_L, 0x18, "HAMSA_TRI_L", 2, 1, 0x01, 0x1, false },
-	{ STRAP_INDEX_HAMSA_ATPG_MODE_L, 0x18, "HAMSA_ATPG_MODE_L", 1, 1, 0x01, 0x01, false },
-	{ STRAP_INDEX_HAMSA_DFT_TAP_EN_L, 0x18, "HAMSA_DFT_TAP_EN_L", 0, 1, 0x01, 0x01, false },
-	{ STRAP_INDEX_FM_JTAG_HAMSA_JTCE_0_3, 0x19, "HAMSA_JTCE_0_3", 0, 4, 0x01, 0x01, false },
-	{ STRAP_INDEX_MEDHA0_TEST_STRAP, 0x1a, "MEDHA0_TEST_STRAP", 7, 1, 0x0, 0x0, false },
-	{ STRAP_INDEX_MEDHA0_CRM_STRAP_0_1, 0x1a, "MEDHA0_CRM_STRAP_0_1", 2, 2, 0x0, 0x0, true },
-	{ STRAP_INDEX_MEDHA0_CHIP_STRAP_0_1, 0x1a, "MEDHA0_CHIP_STRAP_0_1", 0, 2, 0x0, 0x0, true },
-	{ STRAP_INDEX_MEDHA0_CORE_TAP_CTRL_PLD_L, 0x1b, "MEDHA0_CORE_TAP_CTRL_PLD_L", 3, 1, 0x01,
+	{ STRAP_INDEX_HAMSA_CORE_TAP_CTRL_L, STRAP_TYPE_CPLD, 0x18, "HAMSA_CORE_TAP_CTRL_L", 3, 1,
+	  0x01, 0x01, false },
+	{ STRAP_INDEX_HAMSA_TRI_L, STRAP_TYPE_CPLD, 0x18, "HAMSA_TRI_L", 2, 1, 0x01, 0x1, false },
+	{ STRAP_INDEX_HAMSA_ATPG_MODE_L, STRAP_TYPE_CPLD, 0x18, "HAMSA_ATPG_MODE_L", 1, 1, 0x01,
 	  0x01, false },
-	{ STRAP_INDEX_MEDHA0_TRI_L, 0x1b, "MEDHA0_TRI_L", 2, 1, 0x0, 0x0, false },
-	{ STRAP_INDEX_MEDHA0_ATPG_MODE_L, 0x1b, "MEDHA0_ATPG_MODE_L", 1, 1, 0x0, 0x0, false },
-	{ STRAP_INDEX_MEDHA0_DFT_TAP_EN_PLD_L, 0x1b, "MEDHA0_DFT_TAP_EN_PLD_L", 0, 1, 0x01, 0x01,
-	  false },
-	{ STRAP_INDEX_MEDHA1_TEST_STRAP, 0x1c, "MEDHA1_TEST_STRAP", 4, 1, 0x0, 0x0, false },
-	{ STRAP_INDEX_MEDHA1_CRM_STRAP_0_1, 0x1c, "MEDHA1_CRM_STRAP_0_1", 2, 2, 0x0, 0x0, true },
-	{ STRAP_INDEX_MEDHA1_CHIP_STRAP_0_1, 0x1c, "MEDHA1_CHIP_STRAP_0_1", 0, 2, 0x0, 0x0, true },
-	{ STRAP_INDEX_MEDHA1_CORE_TAP_CTRL_PLD_L, 0x1d, "MEDHA1_CORE_TAP_CTRL_PLD_L", 3, 1, 0x01,
+	{ STRAP_INDEX_HAMSA_DFT_TAP_EN_L, STRAP_TYPE_CPLD, 0x18, "HAMSA_DFT_TAP_EN_L", 0, 1, 0x01,
 	  0x01, false },
-	{ STRAP_INDEX_MEDHA1_TRI_L, 0x1d, "MEDHA1_TRI_L", 2, 1, 0x0, 0x0, false },
-	{ STRAP_INDEX_MEDHA1_ATPG_MODE_L, 0x1d, "MEDHA1_ATPG_MODE_L", 1, 1, 0x0, 0x0, false },
-	{ STRAP_INDEX_MEDHA1_DFT_TAP_EN_PLD_L, 0x1d, "MEDHA1_DFT_TAP_EN_PLD_L", 0, 1, 0x01, 0x01,
-	  false },
-	{ STRAP_INDEX_MEDHA0_MFIO_12_14, 0x1e, "MEDHA0_MFIO_12_14", 3, 3, 0x0, 0x0, true },
-	{ STRAP_INDEX_MEDHA1_MFIO_12_14, 0x1e, "MEDHA1_MFIO_12_14", 0, 3, 0x0, 0x0, true },
-	{ STRAP_INDEX_FM_JTAG_MEDHA0_JTCE_0_2, 0x1f, "MEDHA0_JTCE_0_2", 3, 3, 0x0, 0x0, true },
-	{ STRAP_INDEX_FM_JTAG_MEDHA1_JTCE_0_2, 0x1f, "MEDHA1_JTCE_0_2", 0, 3, 0x0, 0x0, true },
-	{ STRAP_INDEX_PLD_OWL_E_DFT_TAP_EN_L, 0x20, "PLD_OWL_E_DFT_TAP_EN_L", 7, 1, 0x01, 0x01,
-	  false },
-	{ STRAP_INDEX_PLD_OWL_E_CORE_TAP_CTRL_L, 0x20, "PLD_OWL_E_CORE_TAP_CTRL_L", 6, 1, 0x01,
+	{ STRAP_INDEX_FM_JTAG_HAMSA_JTCE_0_3, STRAP_TYPE_CPLD, 0x19, "HAMSA_JTCE_0_3", 0, 4, 0x01,
 	  0x01, false },
-	{ STRAP_INDEX_PLD_OWL_E_PAD_TRI_L, 0x20, "PLD_OWL_E_PAD_TRI_L", 5, 1, 0x01, 0x01, false },
-	{ STRAP_INDEX_PLD_OWL_E_ATPG_MODE_L, 0x20, "PLD_OWL_E_ATPG_MODE_L", 4, 1, 0x01, 0x01,
+	{ STRAP_INDEX_MEDHA0_TEST_STRAP, STRAP_TYPE_CPLD, 0x1a, "MEDHA0_TEST_STRAP", 4, 1, 0x0, 0x0,
 	  false },
-	{ STRAP_INDEX_PLD_OWL_W_DFT_TAP_EN_L, 0x20, "PLD_OWL_W_DFT_TAP_EN_L", 3, 1, 0x01, 0x01,
+	{ STRAP_INDEX_MEDHA0_CRM_STRAP_0, STRAP_TYPE_CPLD, 0x1a, "MEDHA0_CRM_STRAP_0", 3, 1, 0x0,
+	  0x0, true },
+	{ STRAP_INDEX_MEDHA0_CRM_STRAP_1, STRAP_TYPE_CPLD, 0x1a, "MEDHA0_CRM_STRAP_1", 2, 1, 0x0,
+	  0x0, true },
+	{ STRAP_INDEX_MEDHA0_CHIP_STRAP_0, STRAP_TYPE_CPLD, 0x1a, "MEDHA0_CHIP_STRAP_0", 1, 1, 0x01,
+	  0x01, true },
+	{ STRAP_INDEX_MEDHA0_CHIP_STRAP_1, STRAP_TYPE_CPLD, 0x1a, "MEDHA0_CHIP_STRAP_1", 0, 1, 0x0,
+	  0x0, true },
+	{ STRAP_INDEX_MEDHA0_CORE_TAP_CTRL_PLD_L, STRAP_TYPE_CPLD, 0x1b,
+	  "MEDHA0_CORE_TAP_CTRL_PLD_L", 3, 1, 0x01, 0x01, false },
+	{ STRAP_INDEX_MEDHA0_TRI_L, STRAP_TYPE_CPLD, 0x1b, "MEDHA0_TRI_L", 2, 1, 0x01, 0x01,
 	  false },
-	{ STRAP_INDEX_PLD_OWL_W_CORE_TAP_CTRL_L, 0x20, "PLD_OWL_W_CORE_TAP_CTRL_L", 2, 1, 0x01,
+	{ STRAP_INDEX_MEDHA0_ATPG_MODE_L, STRAP_TYPE_CPLD, 0x1b, "MEDHA0_ATPG_MODE_L", 1, 1, 0x01,
 	  0x01, false },
-	{ STRAP_INDEX_PLD_OWL_W_PAD_TRI_L, 0x20, "PLD_OWL_W_PAD_TRI_L", 1, 1, 0x01, 0x01, false },
-	{ STRAP_INDEX_PLD_OWL_W_ATPG_MODE_L, 0x20, "PLD_OWL_W_ATPG_MODE_L", 0, 1, 0x01, 0x01,
+	{ STRAP_INDEX_MEDHA0_DFT_TAP_EN_PLD_L, STRAP_TYPE_CPLD, 0x1b, "MEDHA0_DFT_TAP_EN_PLD_L", 0,
+	  1, 0x01, 0x01, false },
+	{ STRAP_INDEX_MEDHA1_TEST_STRAP, STRAP_TYPE_CPLD, 0x1c, "MEDHA1_TEST_STRAP", 4, 1, 0x0, 0x0,
 	  false },
-	{ STRAP_INDEX_OWL_E_JTAG_MUX_PLD_SEL_0_3, 0x21, "OWL_E_JTAG_MUX_PLD_SEL_0_3", 4, 4, 0x0,
+	{ STRAP_INDEX_MEDHA1_CRM_STRAP_0, STRAP_TYPE_CPLD, 0x1c, "MEDHA1_CRM_STRAP_0", 3, 1, 0x0,
 	  0x0, true },
-	{ STRAP_INDEX_OWL_W_JTAG_MUX_PLD_SEL_0_3, 0x21, "OWL_W_JTAG_MUX_PLD_SEL_0_3", 0, 4, 0x0,
+	{ STRAP_INDEX_MEDHA1_CRM_STRAP_1, STRAP_TYPE_CPLD, 0x1c, "MEDHA1_CRM_STRAP_1", 2, 1, 0x0,
 	  0x0, true },
-	{ STRAP_INDEX_OWL_E_UART_MUX_PLD_SEL_0_2, 0x22, "OWL_E_UART_MUX_PLD_SEL_0_2", 3, 3, 0x0,
+	{ STRAP_INDEX_MEDHA1_CHIP_STRAP_0, STRAP_TYPE_CPLD, 0x1c, "MEDHA1_CHIP_STRAP_0", 1, 1, 0x01,
+	  0x01, true },
+	{ STRAP_INDEX_MEDHA1_CHIP_STRAP_1, STRAP_TYPE_CPLD, 0x1c, "MEDHA1_CHIP_STRAP_1", 0, 1, 0x0,
 	  0x0, true },
-	{ STRAP_INDEX_OWL_W_UART_MUX_PLD_SEL_0_2, 0x22, "OWL_W_UART_MUX_PLD_SEL_0_2", 0, 3, 0x0,
-	  0x0, true },
+	{ STRAP_INDEX_MEDHA1_CORE_TAP_CTRL_PLD_L, STRAP_TYPE_CPLD, 0x1d,
+	  "MEDHA1_CORE_TAP_CTRL_PLD_L", 3, 1, 0x01, 0x01, false },
+	{ STRAP_INDEX_MEDHA1_TRI_L, STRAP_TYPE_CPLD, 0x1d, "MEDHA1_TRI_L", 2, 1, 0x01, 0x01,
+	  false },
+	{ STRAP_INDEX_MEDHA1_ATPG_MODE_L, STRAP_TYPE_CPLD, 0x1d, "MEDHA1_ATPG_MODE_L", 1, 1, 0x01,
+	  0x01, false },
+	{ STRAP_INDEX_MEDHA1_DFT_TAP_EN_PLD_L, STRAP_TYPE_CPLD, 0x1d, "MEDHA1_DFT_TAP_EN_PLD_L", 0,
+	  1, 0x01, 0x01, false },
+	{ STRAP_INDEX_MEDHA0_MFIO_12, STRAP_TYPE_CPLD, 0x1e, "MEDHA0_MFIO_12", 5, 1, 0x0, 0x0,
+	  true },
+	{ STRAP_INDEX_MEDHA0_MFIO_13, STRAP_TYPE_CPLD, 0x1e, "MEDHA0_MFIO_13", 4, 1, 0x0, 0x0,
+	  true },
+	{ STRAP_INDEX_MEDHA0_MFIO_14, STRAP_TYPE_CPLD, 0x1e, "MEDHA0_MFIO_14", 3, 1, 0x0, 0x0,
+	  true },
+	{ STRAP_INDEX_MEDHA1_MFIO_12, STRAP_TYPE_CPLD, 0x1e, "MEDHA1_MFIO_12", 2, 1, 0x0, 0x0,
+	  true },
+	{ STRAP_INDEX_MEDHA1_MFIO_13, STRAP_TYPE_CPLD, 0x1e, "MEDHA1_MFIO_13", 1, 1, 0x0, 0x0,
+	  true },
+	{ STRAP_INDEX_MEDHA1_MFIO_14, STRAP_TYPE_CPLD, 0x1e, "MEDHA1_MFIO_14", 0, 1, 0x0, 0x0,
+	  true },
+	{ STRAP_INDEX_FM_JTAG_MEDHA0_JTCE_0_2, STRAP_TYPE_CPLD, 0x1f, "MEDHA0_JTCE_0_2", 3, 3, 0x01,
+	  0x01, true },
+	{ STRAP_INDEX_FM_JTAG_MEDHA1_JTCE_0_2, STRAP_TYPE_CPLD, 0x1f, "MEDHA1_JTCE_0_2", 0, 3, 0x01,
+	  0x01, true },
+	{ STRAP_INDEX_PLD_OWL_E_DFT_TAP_EN_L, STRAP_TYPE_CPLD, 0x20, "PLD_OWL_E_DFT_TAP_EN_L", 7, 1,
+	  0x01, 0x01, false },
+	{ STRAP_INDEX_PLD_OWL_E_CORE_TAP_CTRL_L, STRAP_TYPE_CPLD, 0x20, "PLD_OWL_E_CORE_TAP_CTRL_L",
+	  6, 1, 0x01, 0x01, false },
+	{ STRAP_INDEX_PLD_OWL_E_PAD_TRI_L, STRAP_TYPE_CPLD, 0x20, "PLD_OWL_E_PAD_TRI_L", 5, 1, 0x01,
+	  0x01, false },
+	{ STRAP_INDEX_PLD_OWL_E_ATPG_MODE_L, STRAP_TYPE_CPLD, 0x20, "PLD_OWL_E_ATPG_MODE_L", 4, 1,
+	  0x01, 0x01, false },
+	{ STRAP_INDEX_PLD_OWL_W_DFT_TAP_EN_L, STRAP_TYPE_CPLD, 0x20, "PLD_OWL_W_DFT_TAP_EN_L", 3, 1,
+	  0x01, 0x01, false },
+	{ STRAP_INDEX_PLD_OWL_W_CORE_TAP_CTRL_L, STRAP_TYPE_CPLD, 0x20, "PLD_OWL_W_CORE_TAP_CTRL_L",
+	  2, 1, 0x01, 0x01, false },
+	{ STRAP_INDEX_PLD_OWL_W_PAD_TRI_L, STRAP_TYPE_CPLD, 0x20, "PLD_OWL_W_PAD_TRI_L", 1, 1, 0x01,
+	  0x01, false },
+	{ STRAP_INDEX_PLD_OWL_W_ATPG_MODE_L, STRAP_TYPE_CPLD, 0x20, "PLD_OWL_W_ATPG_MODE_L", 0, 1,
+	  0x01, 0x01, false },
+	{ STRAP_INDEX_OWL_E_JTAG_MUX_PLD_SEL_0_3, STRAP_TYPE_CPLD, 0x21,
+	  "OWL_E_JTAG_MUX_PLD_SEL_0_3", 4, 4, 0x0, 0x0, true },
+	{ STRAP_INDEX_OWL_W_JTAG_MUX_PLD_SEL_0_3, STRAP_TYPE_CPLD, 0x21,
+	  "OWL_W_JTAG_MUX_PLD_SEL_0_3", 0, 4, 0x0, 0x0, true },
+	{ STRAP_INDEX_OWL_E_UART_MUX_PLD_SEL_0_2, STRAP_TYPE_CPLD, 0x22,
+	  "OWL_E_UART_MUX_PLD_SEL_0_2", 3, 3, 0x0, 0x0, true },
+	{ STRAP_INDEX_OWL_W_UART_MUX_PLD_SEL_0_2, STRAP_TYPE_CPLD, 0x22,
+	  "OWL_W_UART_MUX_PLD_SEL_0_2", 0, 3, 0x0, 0x0, true },
+
+	{ STRAP_INDEX_OWL_E_DVT_ENABLE, STRAP_TYPE_CPLD, 0x9E, "OWL_E_DVT_ENABLE", 1, 1, 0x0, 0x0,
+	  false },
+	{ STRAP_INDEX_OWL_W_DVT_ENABLE, STRAP_TYPE_CPLD, 0x9E, "OWL_W_DVT_ENABLE", 0, 1, 0x0, 0x0,
+	  false },
+	{ STRAP_INDEX_OWL_E_BOOT_SOURCE_0_7, STRAP_TYPE_IOEXP_PCA6416A, PCA6414A_OUTPUT_PORT_0,
+	  "OWL_E_BOOT_SOURCE_0_7", 0, 8, 0x0, 0x0, false },
+	{ STRAP_INDEX_OWL_W_BOOT_SOURCE_0_7, STRAP_TYPE_IOEXP_PCA6416A, PCA6414A_OUTPUT_PORT_1,
+	  "OWL_W_BOOT_SOURCE_0_7", 0, 8, 0x0, 0x0, false },
+
+	{ STRAP_INDEX_HAMSA_MFIO6, STRAP_TYPE_IOEXP_TCA6424A, TCA6424A_OUTPUT_PORT_1, "HAMSA_MFIO6",
+	  6, 1, 0x0, 0x0, false },
+	{ STRAP_INDEX_HAMSA_MFIO8, STRAP_TYPE_IOEXP_TCA6424A, TCA6424A_OUTPUT_PORT_1, "HAMSA_MFIO8",
+	  7, 1, 0x0, 0x0, false },
+	{ STRAP_INDEX_HAMSA_MFIO10, STRAP_TYPE_IOEXP_TCA6424A, TCA6424A_OUTPUT_PORT_2,
+	  "HAMSA_MFIO10", 0, 1, 0x0, 0x0, false },
+	{ STRAP_INDEX_MEDHA0_MFIO6, STRAP_TYPE_IOEXP_TCA6424A, TCA6424A_OUTPUT_PORT_2,
+	  "MEDHA0_MFIO6", 7, 1, 0x0, 0x0, false },
+	{ STRAP_INDEX_MEDHA0_MFIO8, STRAP_TYPE_IOEXP_TCA6424A, TCA6424A_OUTPUT_PORT_2,
+	  "MEDHA0_MFIO8", 6, 1, 0x0, 0x0, false },
+	{ STRAP_INDEX_MEDHA0_MFIO10, STRAP_TYPE_IOEXP_TCA6424A, TCA6424A_OUTPUT_PORT_2,
+	  "MEDHA0_MFIO10", 5, 1, 0x0, 0x0, false },
+	{ STRAP_INDEX_MEDHA1_MFIO6, STRAP_TYPE_IOEXP_TCA6424A, TCA6424A_OUTPUT_PORT_2,
+	  "MEDHA1_MFIO6", 4, 1, 0x0, 0x0, false },
+	{ STRAP_INDEX_MEDHA1_MFIO8, STRAP_TYPE_IOEXP_TCA6424A, TCA6424A_OUTPUT_PORT_2,
+	  "MEDHA1_MFIO8", 3, 1, 0x0, 0x0, false },
+	{ STRAP_INDEX_MEDHA1_MFIO10, STRAP_TYPE_IOEXP_TCA6424A, TCA6424A_OUTPUT_PORT_2,
+	  "MEDHA1_MFIO10", 2, 1, 0x0, 0x0, false },
+
 };
 bool vr_rail_name_get(uint8_t rail, uint8_t **name)
 {
@@ -788,10 +861,76 @@ static uint8_t reverse_bits(uint8_t byte, uint8_t bit_cnt)
 	}
 	return reversed_byte;
 }
+
+static inline uint8_t get_val_from_strap_index(uint8_t strap_index)
+{
+	return ((bootstrap_table[strap_index].change_setting_value & 0x01)
+		<< bootstrap_table[strap_index].bit_offset);
+}
+
+bool set_bootstrap_table_val_to_ioexp(void)
+{
+	uint8_t data[2] = { 0 };
+	data[0] = bootstrap_table[STRAP_INDEX_OWL_E_BOOT_SOURCE_0_7].change_setting_value;
+	data[1] = bootstrap_table[STRAP_INDEX_OWL_W_BOOT_SOURCE_0_7].change_setting_value;
+	if (!pca6416a_i2c_write(PCA6414A_OUTPUT_PORT_0, data, 2)) {
+		LOG_ERR("Can't set pca6416a from bootstrap_table");
+		return false;
+	}
+
+	// tca6424a only in EVB
+	if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
+		uint8_t port1_data = 0;
+		uint8_t port2_data = 0;
+		for (uint8_t i = STRAP_INDEX_HAMSA_MFIO6; i <= STRAP_INDEX_MEDHA1_MFIO10; i++) {
+			if (bootstrap_table[i].cpld_offsets == TCA6424A_OUTPUT_PORT_1)
+				port1_data |= get_val_from_strap_index(i);
+			else
+				port2_data |= get_val_from_strap_index(i);
+		}
+		data[0] = port1_data;
+		data[1] = port2_data;
+		if (!tca6424a_i2c_write(TCA6424A_OUTPUT_PORT_1, data, 2)) {
+			LOG_ERR("Can't set tca6424a from bootstrap_table");
+			return false;
+		}
+	}
+
+	return true;
+}
+
+bool set_ioexp_val_to_bootstrap_table(void)
+{
+	uint8_t data[2] = { 0x00, 0x00 };
+	if (!pca6416a_i2c_read(PCA6414A_OUTPUT_PORT_0, data, 2)) {
+		LOG_ERR("Can't find bootstrap default from pca6416a");
+		return false;
+	}
+	bootstrap_table[STRAP_INDEX_OWL_E_BOOT_SOURCE_0_7].change_setting_value = data[0];
+	bootstrap_table[STRAP_INDEX_OWL_W_BOOT_SOURCE_0_7].change_setting_value = data[1];
+
+	// tca6424a only in EVB
+	if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
+		if (!tca6424a_i2c_read(TCA6424A_OUTPUT_PORT_1, data, 2)) {
+			LOG_ERR("Can't find bootstrap default from tca6424a");
+			return false;
+		}
+		for (uint8_t i = STRAP_INDEX_HAMSA_MFIO6; i <= STRAP_INDEX_MEDHA1_MFIO10; i++) {
+			// check data from port1 or port2
+			uint8_t tmp = (bootstrap_table[i].cpld_offsets == TCA6424A_OUTPUT_PORT_1) ?
+					      data[0] :
+					      data[1];
+			bootstrap_table[i].change_setting_value =
+				(tmp >> bootstrap_table[i].bit_offset) & 0x01;
+		}
+	}
+
+	return true;
+}
 bool bootstrap_default_settings_init(void)
 {
 	// read cpld value and write to bootstrap_table
-	for (int i = 0; i < STRAP_INDEX_MAX; i++) {
+	for (int i = 0; i <= STRAP_INDEX_OWL_W_DVT_ENABLE; i++) {
 		uint8_t data = 0;
 		if (!plat_read_cpld(bootstrap_table[i].cpld_offsets, &data, 1)) {
 			LOG_ERR("Can't find bootstrap default by rail index from cpld: %d", i);
@@ -807,8 +946,11 @@ bool bootstrap_default_settings_init(void)
 				reverse_bits(bootstrap_table[i].change_setting_value,
 					     bootstrap_table[i].bit_count);
 	}
-	return true;
+
+	// read io-exp value and write to bootstrap_table
+	return set_ioexp_val_to_bootstrap_table();
 }
+
 bootstrap_user_settings_struct bootstrap_user_settings = { 0 };
 bool bootstrap_user_settings_get(void *bootstrap_user_settings)
 {
@@ -847,7 +989,7 @@ bool find_bootstrap_by_rail(uint8_t rail, bootstrap_mapping_register *result)
 {
 	CHECK_NULL_ARG_WITH_RETURN(result, false);
 
-	if (rail >= STRAP_INDEX_MAX) {
+	if (rail >= get_strap_index_max()) {
 		return false;
 	}
 
@@ -873,7 +1015,7 @@ bool strap_enum_get(uint8_t *name, uint8_t *num)
 	CHECK_NULL_ARG_WITH_RETURN(name, false);
 	CHECK_NULL_ARG_WITH_RETURN(num, false);
 
-	for (int i = 0; i < STRAP_INDEX_MAX; i++) {
+	for (int i = 0; i < get_strap_index_max(); i++) {
 		if (strcmp(name, bootstrap_table[i].strap_name) == 0) {
 			*num = i;
 			return true;
@@ -886,11 +1028,11 @@ bool strap_enum_get(uint8_t *name, uint8_t *num)
 bool set_bootstrap_table_and_user_settings(uint8_t rail, uint8_t *change_setting_value,
 					   uint8_t drive_index_level, bool is_perm, bool is_default)
 {
-	if (rail >= STRAP_INDEX_MAX)
+	if (rail >= get_strap_index_max())
 		return false;
 
 	*change_setting_value = 0;
-	for (int i = 0; i < STRAP_INDEX_MAX; i++) {
+	for (int i = 0; i < get_strap_index_max(); i++) {
 		if (bootstrap_table[i].index == rail) {
 			drive_index_level = (is_default) ?
 						    bootstrap_table[i].default_setting_value :
@@ -902,9 +1044,10 @@ bool set_bootstrap_table_and_user_settings(uint8_t rail, uint8_t *change_setting
 			bootstrap_table[i].change_setting_value = drive_index_level;
 
 			// get whole cpld register value to set
-			for (int j = 0; j < STRAP_INDEX_MAX; j++) {
-				if (bootstrap_table[j].cpld_offsets ==
-				    bootstrap_table[i].cpld_offsets) {
+			for (int j = 0; j < get_strap_index_max(); j++) {
+				if ((bootstrap_table[j].cpld_offsets ==
+				     bootstrap_table[i].cpld_offsets) &&
+				    (bootstrap_table[j].type == bootstrap_table[i].type)) {
 					uint8_t tmp_reverse = 0;
 					if (bootstrap_table[j].reverse)
 						tmp_reverse = reverse_bits(
@@ -953,6 +1096,35 @@ bool set_bootstrap_table_and_user_settings(uint8_t rail, uint8_t *change_setting
 
 	return false;
 }
+
+bool set_bootstrap_val_to_device(uint8_t strap, uint8_t val)
+{
+	uint8_t type = bootstrap_table[strap].type;
+
+	switch (type) {
+	case STRAP_TYPE_CPLD:
+		if (!plat_write_cpld(bootstrap_table[strap].cpld_offsets, &val))
+			return false;
+		break;
+	case STRAP_TYPE_IOEXP_PCA6416A:
+		if (!pca6416a_i2c_write(bootstrap_table[strap].cpld_offsets, &val, 1))
+			return false;
+		break;
+	case STRAP_TYPE_IOEXP_TCA6424A:
+		// tca6424a only in EVB
+		if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
+			if (!tca6424a_i2c_write(bootstrap_table[strap].cpld_offsets, &val, 1))
+				return false;
+		}
+		break;
+	default:
+		LOG_ERR("Invalid bootstrap_table[%d] type: %d", strap, type);
+		return false;
+	}
+
+	return true;
+}
+
 bool bootstrap_user_settings_init(void)
 {
 	if (bootstrap_user_settings_get(&bootstrap_user_settings) == false) {
@@ -960,7 +1132,7 @@ bool bootstrap_user_settings_init(void)
 		return false;
 	}
 
-	for (int i = 0; i < STRAP_INDEX_MAX; i++) {
+	for (int i = 0; i < get_strap_index_max(); i++) {
 		uint8_t is_perm = ((bootstrap_user_settings.user_setting_value[i] >> 8) != 0xff) ?
 					  true :
 					  false;
@@ -975,13 +1147,10 @@ bool bootstrap_user_settings_init(void)
 				return false;
 			}
 
-			// write cpld
-			if (!plat_write_cpld(bootstrap_table[i].cpld_offsets,
-					     &change_setting_value)) {
+			// write cpld or io-exp
+			if (!set_bootstrap_val_to_device(i, change_setting_value))
 				LOG_ERR("Can't set bootstrap[%2d]=%02x by user settings", i,
 					change_setting_value);
-				return false;
-			}
 
 			LOG_INF("set [%2d]%s: %02x", i, bootstrap_table[i].strap_name,
 				change_setting_value);
@@ -994,7 +1163,7 @@ bool strap_name_get(uint8_t rail, uint8_t **name)
 {
 	CHECK_NULL_ARG_WITH_RETURN(name, false);
 
-	if (rail >= STRAP_INDEX_MAX) {
+	if (rail >= get_strap_index_max()) {
 		*name = NULL;
 		return false;
 	}
@@ -1022,4 +1191,10 @@ bool voltage_command_setting_get(uint8_t rail, uint16_t *vout)
 
 	*vout = voltage_command_get.vout[rail];
 	return true;
+}
+
+uint8_t get_strap_index_max()
+{
+	return (get_asic_board_id() == ASIC_BOARD_ID_EVB) ? STRAP_INDEX_MAX :
+							    STRAP_INDEX_EXCEPT_EVB_MAX;
 }

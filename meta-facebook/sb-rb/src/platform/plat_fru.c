@@ -22,6 +22,7 @@
 #include "fru.h"
 #include "plat_fru.h"
 #include <time.h>
+#include "plat_class.h"
 
 LOG_MODULE_REGISTER(plat_fru);
 
@@ -177,14 +178,15 @@ bool plat_get_cpld_fru_data(uint8_t *data)
 
 	const uint32_t total_size = CPLD_FRU_SIZE; // 0x0400
 	const uint32_t chunk_size = 0x80; // 0x80 bytes per read
-	uint32_t offset = 0;
+	uint32_t offset = 1; // fru header is start at offset 1 (0 is slot id)
 
-	while (offset < total_size) {
-		if (!plat_cpld_fru_read(CPLD_FRU_START + offset, data + offset, chunk_size)) {
+	while (offset < total_size + 1) {
+		uint32_t bytes_to_read = MIN(chunk_size, total_size + 1 - offset);
+		if (!plat_cpld_eerprom_read(data + (offset - 1), offset, bytes_to_read)) {
 			LOG_ERR("Failed to read FRU chunk at offset 0x%x", offset);
 			return false;
 		}
-		offset += chunk_size;
+		offset += bytes_to_read;
 	}
 
 	return true;

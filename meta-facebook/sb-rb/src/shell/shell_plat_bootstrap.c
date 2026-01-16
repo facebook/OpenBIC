@@ -21,6 +21,7 @@
 #include "plat_i2c.h"
 #include "plat_hook.h"
 #include "plat_cpld.h"
+#include "plat_ioexp.h"
 
 #define AEGIS_CPLD_ADDR (0x4C >> 1)
 
@@ -53,7 +54,7 @@ uint8_t read_bits(uint8_t data, uint8_t start_bit, uint8_t end_bit, bool reverse
 static int cmd_bootstrap_get_all(const struct shell *shell, size_t argc, char **argv)
 {
 	shell_print(shell, "%-4s|%-40s|%-25s", "id", "strap name", "hex-value");
-	for (int i = 0; i < STRAP_INDEX_MAX; i++) {
+	for (int i = 0; i < get_strap_index_max(); i++) {
 		uint8_t *rail_name = NULL;
 		if (!strap_name_get((uint8_t)i, &rail_name)) {
 			LOG_ERR("Can't find strap_rail_name by rail index: %x", i);
@@ -79,7 +80,7 @@ static int bootstrap_set_all_default(const struct shell *shell)
 	bootstrap_mapping_register bootstrap_item;
 	bool all_success = true;
 
-	for (int i = 0; i < STRAP_INDEX_MAX; i++) {
+	for (int i = 0; i < get_strap_index_max(); i++) {
 		if (!set_bootstrap_table_and_user_settings(i, &change_setting_value,
 							   drive_index_level, false, true)) {
 			shell_print(shell, "plat bootstrap[%2d] set failed", i);
@@ -89,12 +90,9 @@ static int bootstrap_set_all_default(const struct shell *shell)
 			shell_print(shell, "Can't find bootstrap_item by rail index: %d", i);
 			continue;
 		}
-		// write change_setting_value to cpld
-		if (!plat_write_cpld(bootstrap_item.cpld_offsets, &change_setting_value)) {
-			shell_print(shell, "Can't write bootstrap[%2d] to cpld 0x%02x ", i,
-				    bootstrap_item.cpld_offsets);
-			all_success = false;
-		}
+		// write change_setting_value to cpld or io-exp
+		if (!set_bootstrap_val_to_device(i, change_setting_value))
+			shell_print(shell, "Can't set bootstrap[0x%02x] to default", i);
 	}
 
 	if (all_success) {
@@ -151,10 +149,10 @@ static int cmd_bootstrap_set(const struct shell *shell, size_t argc, char **argv
 		shell_error(shell, "Can't find bootstrap_item by rail index: %d", rail);
 		return -1;
 	}
-	// write change_setting_value to cpld
-	if (!plat_write_cpld(bootstrap_item.cpld_offsets, &change_setting_value)) {
-		shell_error(shell, "Can't write bootstrap[%2d] to cpld 0x%02x ", rail,
-			    bootstrap_item.cpld_offsets);
+	// write change_setting_value to cpld or io-exp
+	if (!set_bootstrap_val_to_device(bootstrap_item.index, change_setting_value)) {
+		LOG_ERR("Can't set bootstrap[%2d]=%02x", bootstrap_item.index,
+			change_setting_value);
 		return -1;
 	}
 
@@ -167,7 +165,7 @@ static void strap_rname_get_(size_t idx, struct shell_static_entry *entry)
 	uint8_t *name = NULL;
 	strap_name_get((uint8_t)idx, &name);
 
-	if (idx == STRAP_INDEX_MAX)
+	if (idx == get_strap_index_max())
 		name = (uint8_t *)"all";
 
 	entry->syntax = (name) ? (const char *)name : NULL;

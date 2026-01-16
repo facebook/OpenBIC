@@ -23,9 +23,9 @@
 #include "plat_cpld.h"
 #include "plat_user_setting.h"
 
-LOG_MODULE_REGISTER(plat_soc_pcie_perst_shell, LOG_LEVEL_DBG);
+LOG_MODULE_REGISTER(plat_delay_asic_rst_shell, LOG_LEVEL_DBG);
 
-static int cmd_soc_pcie_perst_set(const struct shell *shell, size_t argc, char **argv)
+static int cmd_delay_asic_rst_set(const struct shell *shell, size_t argc, char **argv)
 {
 	bool is_perm = false;
 
@@ -40,29 +40,29 @@ static int cmd_soc_pcie_perst_set(const struct shell *shell, size_t argc, char *
 
 	uint8_t setting_value = 0;
 	if (!strcmp(argv[1], "default")) {
-		shell_info(shell, "Set PERST delay to default, %svolatile\n",
+		shell_info(shell, "Set ASIC RST delay to default, %svolatile\n",
 			   (argc == 3) ? "non-" : "");
 	} else {
 		setting_value = strtol(argv[1], NULL, 10);
-		if (setting_value < 0 || setting_value > 200) {
-			shell_warn(shell, "Help: N range from 0 to 200");
+		if (setting_value < 0 || setting_value > 255) {
+			shell_warn(shell, "Help: N range from 0 to 255");
 			return -1;
 		}
-		uint16_t delay_time = (setting_value * 50) + 100; // 100ms by default
-		shell_info(shell, "Set PERST delay to %d ms, %svolatile\n", delay_time,
+		uint16_t delay_time = setting_value * 10;
+		shell_info(shell, "Set ASIC RST delay to %d ms, %svolatile\n", delay_time,
 			   (argc == 3) ? "non-" : "");
 	}
 
-	if (!plat_write_cpld(PREST_DELAY_REG, &setting_value)) {
-		shell_error(shell, "plat soc_pcie_perst set failed");
+	if (!plat_write_cpld(CPLD_OFFSET_ASIC_RST_DELAY, &setting_value)) {
+		shell_error(shell, "plat delay_asic_rst set failed");
 		return -1;
 	}
 
 	//write to eeprom
 	if (is_perm) {
-		if (!set_user_settings_soc_pcie_perst_to_eeprom(&setting_value,
+		if (!set_user_settings_delay_asic_rst_to_eeprom(&setting_value,
 								sizeof(setting_value))) {
-			shell_error(shell, "write PERST delay to eeprom error");
+			shell_error(shell, "write ASIC RST delay to eeprom error");
 			return -1;
 		}
 	}
@@ -70,6 +70,6 @@ static int cmd_soc_pcie_perst_set(const struct shell *shell, size_t argc, char *
 	return 0;
 }
 
-/* Root of command soc_pcie_perst */
-SHELL_CMD_ARG_REGISTER(soc_pcie_perst, NULL, "soc_pcie_perst [N (* 50ms)]|default [perm]",
-		       cmd_soc_pcie_perst_set, 2, 1);
+/* Root of command delay_asic_rst */
+SHELL_CMD_ARG_REGISTER(delay_asic_rst, NULL, "delay_asic_rst [N (* 10ms)]|default [perm]",
+		       cmd_delay_asic_rst_set, 2, 1);

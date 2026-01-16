@@ -37,6 +37,7 @@
 #include "plat_cpld.h"
 #include "plat_hook.h"
 #include "plat_i2c.h"
+#include "plat_ioexp.h"
 
 LOG_MODULE_REGISTER(plat_i2c_target);
 
@@ -53,7 +54,7 @@ LOG_MODULE_REGISTER(plat_i2c_target);
 #define CPLD_VERSION_GET_REG 0x32
 #define CPLD_VERSION_GET_REG_LEN 4
 #define STRAP_SET_TYPE 0x44 // 01000100
-#define VR_PWR_BUF_SIZE 22
+#define VR_PWR_BUF_SIZE 38
 #define I2C_TARGET_BUS_ASIC I2C_BUS7 // asic bus is I2C_BUS7, I2C_BUS6 is only for test
 
 static bool command_reply_data_handle(void *arg);
@@ -97,6 +98,8 @@ voltage_rail_mapping_sensor voltage_rail_mapping_table[] = {
 	{ CONTROL_VOL_VR_ASIC_P0V4_VDDQL_HBM1357_REG, VR_RAIL_E_ASIC_P0V4_VDDQL_HBM1357 },
 	{ CONTROL_VOL_VR_ASIC_P1V8_VPP_HBM0246_REG, VR_RAIL_E_ASIC_P1V8_VPP_HBM0246 },
 	{ CONTROL_VOL_VR_ASIC_P1V8_VPP_HBM1357_REG, VR_RAIL_E_ASIC_P1V8_VPP_HBM1357 },
+	{ CONTROL_VOL_VR_ASIC_P0V85_MEDHA0_VDD_REG, VR_RAIL_E_ASIC_P0V85_MEDHA0_VDD },
+	{ CONTROL_VOL_VR_ASIC_P0V85_MEDHA1_VDD_REG, VR_RAIL_E_ASIC_P0V85_MEDHA1_VDD },
 };
 
 uint8_t get_vr_rail_by_control_vol_reg(uint8_t control_vol_reg)
@@ -207,6 +210,23 @@ void update_sensor_reading_by_sensor_number(uint8_t sensor_number)
 	sensor_data->sensor_entries[sensor_index].sensor_value =
 		(status == SENSOR_READ_SUCCESS) ? reading : 0xFFFFFFFF;
 }
+
+int get_cached_sensor_reading_by_sensor_number(uint8_t sensor_number)
+{
+	uint8_t sensor_index_offset = sensor_number - 1;
+	uint8_t table_index = sensor_index_offset / SENSOR_READING_PDR_INDEX_MAX;
+	uint8_t sensor_index = sensor_index_offset % SENSOR_READING_PDR_INDEX_MAX;
+	plat_sensor_reading *sensor_data = sensor_reading_table[table_index];
+	return sensor_data->sensor_entries[sensor_index].sensor_value;
+}
+
+float get_sensor_reading_cache_as_float(uint8_t sensor_number)
+{
+	int reading = get_cached_sensor_reading_by_sensor_number(sensor_number);
+	const sensor_val *sval = (sensor_val *)&reading;
+	return ((sval->integer * 1000 + sval->fraction) / 1000.0);
+}
+
 bool initialize_inventory_ids(telemetry_info *telemetry_info, uint8_t *buffer_size)
 {
 	CHECK_NULL_ARG_WITH_RETURN(telemetry_info, false);
@@ -248,7 +268,7 @@ bool initialize_strap_capability(telemetry_info *telemetry_info, uint8_t *buffer
 	if (table_index < 0 || table_index >= DATA_TABLE_LENGTH_1)
 		return false;
 
-	int num_idx = STRAP_INDEX_MAX;
+	int num_idx = get_strap_index_max();
 
 	size_t table_size = sizeof(plat_strap_capability) + num_idx * sizeof(strap_entry);
 	plat_strap_capability *sensor_data =
@@ -256,8 +276,8 @@ bool initialize_strap_capability(telemetry_info *telemetry_info, uint8_t *buffer
 	if (!sensor_data)
 		return false;
 
-	sensor_data->strap_data_length = STRAP_INDEX_MAX * 3; // strap_entry data length
-	for (int i = 0; i < STRAP_INDEX_MAX; i++) {
+	sensor_data->strap_data_length = get_strap_index_max() * 3; // strap_entry data length
+	for (int i = 0; i < get_strap_index_max(); i++) {
 		sensor_data->strap_set_format[i].strap_set_index = i;
 		sensor_data->strap_set_format[i].strap_set_type = STRAP_SET_TYPE;
 		int drive_level = 0;
@@ -282,7 +302,7 @@ void update_strap_capability_table()
 
 	plat_strap_capability *sensor_data = strap_capability_table[0];
 
-	for (int i = 0; i < STRAP_INDEX_MAX; i++) {
+	for (int i = 0; i < get_strap_index_max(); i++) {
 		int drive_level = 0;
 		if (!get_bootstrap_change_drive_level(i, &drive_level)) {
 			LOG_ERR("Can't get_bootstrap_change_drive_level by index: %x", i);
@@ -353,6 +373,14 @@ void vr_power_reading(uint8_t *buffer, size_t buf_size)
 	[16:17] - P0V75_VDDPHY_HBM1357 (Unit: W)
 	[18:19] - P0V75_MAX_N_VDD (Unit: W)
 	[20:21] - P0V75_MAX_S_VDD (Unit: W)
+	[22:23] - P0V4_VDDQL_HBM0246 (Unit: W)
+	[24:25] - P0V4_VDDQL_HBM1357 (Unit: W)
+	[26:27] - P1V8_VPP_HBM0246 (Unit: W)
+	[28:29] - P1V8_VPP_HBM1357 (Unit: W)
+	[30:31] - P0V75_MAX_M_VDD (Unit: W)
+	[32:33] - P0V75_OWL_E_VDD (Unit: W)
+	[34:35] - P0V75_OWL_W_VDD (Unit: W)
+	[36:37] - PDB1_P52V_ASIC_SENSE_PWR (Unit: W) (Need BMC support)
 	each data is 2 bytes
 	*/
 	float x = 0;
@@ -404,6 +432,27 @@ void vr_power_reading(uint8_t *buffer, size_t buf_size)
 		case SENSOR_NUM_ASIC_P0V75_MAX_S_VDD_PWR_W:
 			memcpy(&buffer[20], &val, 2);
 			break;
+		case SENSOR_NUM_ASIC_P0V4_VDDQL_HBM0246_PWR_W:
+			memcpy(&buffer[22], &val, 2);
+			break;
+		case SENSOR_NUM_ASIC_P0V4_VDDQL_HBM1357_PWR_W:
+			memcpy(&buffer[24], &val, 2);
+			break;
+		case SENSOR_NUM_ASIC_P1V8_VPP_HBM0246_PWR_W:
+			memcpy(&buffer[26], &val, 2);
+			break;
+		case SENSOR_NUM_ASIC_P1V8_VPP_HBM1357_PWR_W:
+			memcpy(&buffer[28], &val, 2);
+			break;
+		case SENSOR_NUM_ASIC_P0V75_MAX_M_VDD_PWR_W:
+			memcpy(&buffer[30], &val, 2);
+			break;
+		case SENSOR_NUM_ASIC_P0V75_OWL_E_VDD_PWR_W:
+			memcpy(&buffer[32], &val, 2);
+			break;
+		case SENSOR_NUM_ASIC_P0V75_OWL_W_VDD_PWR_W:
+			memcpy(&buffer[34], &val, 2);
+			break;
 		default:
 			// do nothing
 			break;
@@ -416,6 +465,12 @@ void vr_power_reading(uint8_t *buffer, size_t buf_size)
 			x += reading;
 		}
 	}
+	int reading;
+	get_cpld_polling_power_info(&reading);
+	reading = (reading + 500) / 1000;
+	uint16_t val = (uint16_t)reading;
+	memcpy(&buffer[36], &val, 2);
+	x += reading;
 
 	chiplet0 = medha0 + 0.5 * x;
 	chiplet1 = medha1 + 0.5 * x;
@@ -656,7 +711,9 @@ static bool command_reply_data_handle(void *arg)
 			case CONTROL_VOL_VR_ASIC_P0V4_VDDQL_HBM0246_REG:
 			case CONTROL_VOL_VR_ASIC_P0V4_VDDQL_HBM1357_REG:
 			case CONTROL_VOL_VR_ASIC_P1V8_VPP_HBM0246_REG:
-			case CONTROL_VOL_VR_ASIC_P1V8_VPP_HBM1357_REG: {
+			case CONTROL_VOL_VR_ASIC_P1V8_VPP_HBM1357_REG:
+			case CONTROL_VOL_VR_ASIC_P0V85_MEDHA0_VDD_REG:
+			case CONTROL_VOL_VR_ASIC_P0V85_MEDHA1_VDD_REG: {
 				uint8_t rail = get_vr_rail_by_control_vol_reg(reg_offset);
 				uint16_t vout = 0xFFFF;
 				if (!voltage_command_setting_get(rail, &vout)) {
@@ -672,6 +729,22 @@ static bool command_reply_data_handle(void *arg)
 						 data->target_rd_msg.msg_length);
 				LOG_HEXDUMP_DBG(data->target_rd_msg.msg,
 						data->target_rd_msg.msg_length, "vr power reading");
+			} break;
+			case TRAY_INFO_REG: {
+				/* TRAY_INFO_REG:
+				 * Byte0: MMC slot
+				 * Byte1: tray location
+				 */
+				uint8_t slot = get_mmc_slot();
+				uint8_t tray = get_tray_location();
+
+				data->target_rd_msg.msg[0] = slot;
+				data->target_rd_msg.msg[1] = tray;
+				data->target_rd_msg.msg_length = 2;
+
+				LOG_DBG("TRAY_INFO_REG: slot=0x%02x, tray=0x%02x", slot, tray);
+				LOG_HEXDUMP_DBG(data->target_rd_msg.msg,
+						data->target_rd_msg.msg_length, "tray info");
 			} break;
 			default:
 				LOG_ERR("Unknown reg offset: 0x%02x", reg_offset);
@@ -784,17 +857,14 @@ bool set_bootstrap_element(uint8_t bootstrap_pin, uint8_t user_setting_level)
 	// LOG_DBG("set bootstrap_table[%2x]=%x, cpld_offsets 0x%02x change_setting_value 0x%02x",
 	// 	bootstrap_pin, drive_index_level, bootstrap_item.cpld_offsets,
 	// 	change_setting_value);
-	if (!plat_write_cpld(bootstrap_item.cpld_offsets, &change_setting_value)) {
-		LOG_ERR("Can't write bootstrap[0x%02x]=%x, cpld_offsets 0x%02x change_setting_value 0x%02x",
-			bootstrap_pin, user_setting_level, bootstrap_item.cpld_offsets,
-			change_setting_value);
-		return false;
-	}
+	if (!set_bootstrap_val_to_device(bootstrap_pin, change_setting_value))
+		LOG_ERR("Can't write bootstrap[%2d]=%02x", bootstrap_pin, change_setting_value);
+
 	return true;
 }
 void set_bootstrap_element_handler()
 {
-	if (bootstrap_pin >= STRAP_INDEX_MAX) {
+	if (bootstrap_pin >= get_strap_index_max()) {
 		LOG_ERR("bootstrap_pin[%02x] is out of range", bootstrap_pin);
 		return;
 	}
@@ -933,7 +1003,9 @@ void plat_master_write_thread_handler()
 		case CONTROL_VOL_VR_ASIC_P0V4_VDDQL_HBM0246_REG:
 		case CONTROL_VOL_VR_ASIC_P0V4_VDDQL_HBM1357_REG:
 		case CONTROL_VOL_VR_ASIC_P1V8_VPP_HBM0246_REG:
-		case CONTROL_VOL_VR_ASIC_P1V8_VPP_HBM1357_REG: {
+		case CONTROL_VOL_VR_ASIC_P1V8_VPP_HBM1357_REG:
+		case CONTROL_VOL_VR_ASIC_P0V85_MEDHA0_VDD_REG:
+		case CONTROL_VOL_VR_ASIC_P0V85_MEDHA1_VDD_REG: {
 			if (rlen != 3) {
 				LOG_ERR("Invalid length for offset(write): 0x%02x", reg_offset);
 				break;

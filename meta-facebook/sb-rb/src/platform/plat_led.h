@@ -19,5 +19,6 @@
 
 void heartbeat_led_handler(struct k_work *work);
 void plat_led_init(void);
-
+bool get_led_flag(void);
+void set_led_flag(bool flag_value);
 #endif /* _PLAT_LED_h */

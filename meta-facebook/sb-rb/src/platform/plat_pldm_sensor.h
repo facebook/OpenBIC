@@ -311,6 +311,7 @@
 #define UPDATE_INTERVAL_1S 1
 #define UPDATE_INTERVAL_5S 5
 #define UPDATE_INTERVAL_60S 60
+#define U200051_IO_ADDR (0x72 >> 1)
 
 enum SENSOR_THREAD_LIST {
 	TEMP_SENSOR_THREAD_ID = 0,
@@ -320,6 +321,8 @@ enum SENSOR_THREAD_LIST {
 	EVB_SENSOR_THREAD_ID,
 	MAX_SENSOR_THREAD_ID,
 };
+
+enum PCA9554APW_REG { INPUT_PORT = 0, OUTPUT_PORT = 1, POLARITY_INVERSION = 2, CONFIG = 3 };
 
 enum VR_ADDRESS_VIRSION { OLD_MPS = 0, OLD_RNS, NEW_MPS, NEW_RNS, MAX_VR_ADDRESS_VIRSION };
 
@@ -348,4 +351,8 @@ void change_sensor_cfg(uint8_t asic_board_id, uint8_t vr_module, uint8_t ubc_mod
 		       uint8_t board_rev_id);
 uint8_t convert_vr_addr(uint8_t addr, uint8_t vr_change_mode);
 uint32_t plat_get_pdr_size(uint8_t pdr_type);
+void init_U200051_IO();
+void quick_sensor_poll_init();
+void set_ioe_init_flag(uint8_t flag);
+uint8_t get_ioe_init_flag();
 #endif

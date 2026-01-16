@@ -44,10 +44,12 @@
 #define CONTROL_VOL_VR_ASIC_P0V4_VDDQL_HBM1357_REG 0x85
 #define CONTROL_VOL_VR_ASIC_P1V8_VPP_HBM0246_REG 0x86
 #define CONTROL_VOL_VR_ASIC_P1V8_VPP_HBM1357_REG 0x87
-
+#define CONTROL_VOL_VR_ASIC_P0V85_MEDHA0_VDD_REG 0x88
+#define CONTROL_VOL_VR_ASIC_P0V85_MEDHA1_VDD_REG 0x89
 #define LEVEL_1_2_3_PWR_ALERT_THRESHOLD_REG 0x90
 #define LEVEL_1_2_3_PWR_ALERT_TIME_WINDOW_REG 0x91
-#define VR_POWER_READING_REG 0x92
+#define VR_POWER_READING_REG 0x93
+#define TRAY_INFO_REG 0x98
 
 #define SET_SENSOR_POLLING_COMMAND_REG 0xF0
 
@@ -180,4 +182,5 @@ typedef struct __attribute__((__packed__)) {
 void plat_telemetry_table_init(void);
 void update_sensor_reading_by_sensor_number(uint8_t sensor_number);
 void update_strap_capability_table(void);
+float get_sensor_reading_cache_as_float(uint8_t sensor_number);
 #endif

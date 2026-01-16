@@ -64,7 +64,7 @@ temp_mapping_register tmp432_temp_register_map[] = {
 };
 
 bool get_tmp432_two_byte_limit(sensor_cfg *cfg, uint8_t temp_threshold_index,
-			       uint32_t *millidegree_celsius)
+			       int32_t *millidegree_celsius)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	CHECK_NULL_ARG_WITH_RETURN(millidegree_celsius, false);
@@ -84,8 +84,8 @@ bool get_tmp432_two_byte_limit(sensor_cfg *cfg, uint8_t temp_threshold_index,
 		return false;
 	}
 
-	uint32_t limit_high_byte_val = (uint32_t)msg.data[0] * 1000;
-	uint32_t limit_low_byte_val = ((msg.data[1] >> 4) * 625) / 10;
+	int32_t limit_high_byte_val = (int8_t)msg.data[0] * 1000;
+	int32_t limit_low_byte_val = (((int8_t)msg.data[1] >> 4) * 625) / 10;
 	*millidegree_celsius = limit_high_byte_val + limit_low_byte_val;
 
 	return true;
@@ -119,7 +119,7 @@ bool get_tmp432_one_byte_limit(sensor_cfg *cfg, uint8_t temp_threshold_index,
 }
 
 bool tmp432_get_temp_threshold(sensor_cfg *cfg, uint8_t temp_threshold_index,
-			       uint32_t *millidegree_celsius)
+			       int32_t *millidegree_celsius)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	CHECK_NULL_ARG_WITH_RETURN(millidegree_celsius, false);
@@ -165,7 +165,7 @@ bool tmp432_get_temp_threshold(sensor_cfg *cfg, uint8_t temp_threshold_index,
 }
 
 bool set_tmp432_two_byte_limit(sensor_cfg *cfg, uint8_t temp_threshold_index,
-			       uint32_t *millidegree_celsius)
+			       int32_t *millidegree_celsius)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	CHECK_NULL_ARG_WITH_RETURN(millidegree_celsius, false);
@@ -177,10 +177,10 @@ bool set_tmp432_two_byte_limit(sensor_cfg *cfg, uint8_t temp_threshold_index,
 	msg.target_addr = cfg->target_addr;
 	msg.tx_len = 3;
 	msg.data[0] = register_high;
-	msg.data[1] = (uint8_t)(*millidegree_celsius / 1000);
+	msg.data[1] = (int8_t)(*millidegree_celsius / 1000);
 
-	uint32_t remainder = *millidegree_celsius % 1000;
-	uint8_t low_byte_val = (uint8_t)((remainder * 16) / 1000);
+	int32_t remainder = *millidegree_celsius % 1000;
+	int8_t low_byte_val = (int8_t)((remainder * 16) / 1000);
 	msg.data[2] = (low_byte_val << 4);
 
 	if (i2c_master_write(&msg, retry)) {

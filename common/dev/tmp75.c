@@ -24,7 +24,7 @@
 LOG_MODULE_REGISTER(tmp75);
 
 bool get_tmp75_two_byte_limit(sensor_cfg *cfg, uint8_t temp_threshold_index,
-			      uint32_t *millidegree_celsius)
+			      int32_t *millidegree_celsius)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	CHECK_NULL_ARG_WITH_RETURN(millidegree_celsius, false);
@@ -43,16 +43,16 @@ bool get_tmp75_two_byte_limit(sensor_cfg *cfg, uint8_t temp_threshold_index,
 		return false;
 	}
 
-	float limit_byte_1_val = (float)msg.data[0] * 1000.0;
-	float limit_byte_2_val = (float)(msg.data[1] >> 4) * 0.0625;
+	int32_t limit_byte_1_val = (int8_t)msg.data[0] * 1000.0;
+	int32_t limit_byte_2_val = ((int8_t)msg.data[1] >> 4) * 62.5;
 
-	*millidegree_celsius = (uint32_t)limit_byte_1_val + limit_byte_2_val;
+	*millidegree_celsius = limit_byte_1_val + limit_byte_2_val;
 
 	return true;
 }
 
 bool tmp75_get_temp_threshold(sensor_cfg *cfg, uint8_t temp_threshold_index,
-			      uint32_t *millidegree_celsius)
+			      int32_t *millidegree_celsius)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	CHECK_NULL_ARG_WITH_RETURN(millidegree_celsius, false);
@@ -76,7 +76,7 @@ bool tmp75_get_temp_threshold(sensor_cfg *cfg, uint8_t temp_threshold_index,
 }
 
 bool set_tmp75_two_byte_limit(sensor_cfg *cfg, uint8_t temp_threshold_index,
-			      uint32_t *millidegree_celsius)
+			      int32_t *millidegree_celsius)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	CHECK_NULL_ARG_WITH_RETURN(millidegree_celsius, false);
@@ -85,12 +85,12 @@ bool set_tmp75_two_byte_limit(sensor_cfg *cfg, uint8_t temp_threshold_index,
 	I2C_MSG msg = { 0 };
 	msg.bus = cfg->port;
 	msg.target_addr = cfg->target_addr;
-	msg.tx_len = 2;
+	msg.tx_len = 3;
 	msg.data[0] = ((temp_threshold_index == LOCAL_HIGH_LIMIT) ? TMP75_LOCAL_HIGH_LIMIT_REG :
 								    TMP75_LOCAL_LOW_LIMIT_REG);
-	msg.data[1] = (uint8_t)(*millidegree_celsius / 1000.0);
-	uint32_t remainder = *millidegree_celsius % 1000;
-	uint8_t low_byte_val = (uint8_t)((remainder * 16) / 1000);
+	msg.data[1] = (int8_t)(*millidegree_celsius / 1000.0);
+	int32_t remainder = *millidegree_celsius % 1000;
+	int8_t low_byte_val = (int8_t)((remainder * 16) / 1000);
 	msg.data[2] = (low_byte_val << 4);
 
 	if (i2c_master_write(&msg, retry)) {

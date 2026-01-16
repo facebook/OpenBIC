@@ -23,7 +23,7 @@ enum TMP75_REIGSTER_MAP {
 };
 
 bool tmp75_get_temp_threshold(sensor_cfg *cfg, uint8_t temp_threshold_index,
-			      uint32_t *millidegree_celsius);
+			      int32_t *millidegree_celsius);
 bool tmp75_set_temp_threshold(sensor_cfg *cfg, uint8_t temp_threshold_index,
 			      uint32_t *millidegree_celsius);
 uint8_t tmp75_init(sensor_cfg *cfg);

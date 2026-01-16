@@ -30,7 +30,7 @@ static int cmd_perm_config_get(const struct shell *shell, size_t argc, char **ar
 	int config_count = 0;
 	for (int i = 0; i < VR_RAIL_E_MAX; i++) {
 		if (get_asic_board_id() != ASIC_BOARD_ID_EVB && (i == VR_RAIL_E_P3V3_OSFP_VOLT_V))
-			continue; // skip osfp p3v3 on AEGIS BD
+			continue; // skip osfp p3v3 on BD
 		if (user_settings.vout[i] != 0xffff) {
 			uint8_t *rail_name = NULL;
 			if (!vr_rail_name_get((uint8_t)i, &rail_name)) {
@@ -70,19 +70,35 @@ static int cmd_perm_config_get(const struct shell *shell, size_t argc, char **ar
 		}
 	}
 
-	uint8_t setting_data_for_soc_pcie_perst = 0xFF;
-	if (!get_user_settings_soc_pcie_perst_from_eeprom(
-		    &setting_data_for_soc_pcie_perst, sizeof(setting_data_for_soc_pcie_perst))) {
-		LOG_ERR("get soc_pcie_perst user settings failed");
+	uint32_t setting_data_for_delay_pcie_perst[4] = { 0 };
+	if (!get_user_settings_delay_pcie_perst_from_eeprom(
+		    &setting_data_for_delay_pcie_perst[0],
+		    sizeof(setting_data_for_delay_pcie_perst))) {
+		LOG_ERR("get delay_pcie_perst user settings failed");
 	} else {
-		if (setting_data_for_soc_pcie_perst != 0xFF) {
-			shell_print(shell, "soc_pcie_perst                            val=%d",
-				    setting_data_for_soc_pcie_perst);
+		if (setting_data_for_delay_pcie_perst[0] != 0xffffffff) {
+			shell_print(shell, "delay_pcie_perst PCIE0                      val=%d",
+				    setting_data_for_delay_pcie_perst[0] & 0xff);
+			config_count++;
+		}
+		if (setting_data_for_delay_pcie_perst[1] != 0xffffffff) {
+			shell_print(shell, "delay_pcie_perst PCIE1                      val=%d",
+				    setting_data_for_delay_pcie_perst[1] & 0xff);
+			config_count++;
+		}
+		if (setting_data_for_delay_pcie_perst[2] != 0xffffffff) {
+			shell_print(shell, "delay_pcie_perst PCIE2                      val=%d",
+				    setting_data_for_delay_pcie_perst[2] & 0xff);
+			config_count++;
+		}
+		if (setting_data_for_delay_pcie_perst[3] != 0xffffffff) {
+			shell_print(shell, "delay_pcie_perst PCIE3                      val=%d",
+				    setting_data_for_delay_pcie_perst[3] & 0xff);
 			config_count++;
 		}
 	}
 
-	for (int i = 0; i < STRAP_INDEX_MAX; i++) {
+	for (int i = 0; i < get_strap_index_max(); i++) {
 		if (bootstrap_user_settings.user_setting_value[i] != 0xffff) {
 			uint8_t *rail_name = NULL;
 			if (!strap_name_get((uint8_t)i, &rail_name)) {
@@ -116,11 +132,11 @@ static int cmd_perm_config_get(const struct shell *shell, size_t argc, char **ar
 			shell_print(shell, "throttle                            %s",
 				    ((setting_data_for_throttle == 0x00) ?
 					     "sense0 disable, sense1 disable" :
-				     (setting_data_for_throttle == 0x40) ?
+					     (setting_data_for_throttle == 0x40) ?
 					     "sense0 disable, sense1 enable" :
-				     (setting_data_for_throttle == 0x80) ?
+					     (setting_data_for_throttle == 0x80) ?
 					     "sense0 enable, sense1 disable" :
-				     (setting_data_for_throttle == 0xC0) ?
+					     (setting_data_for_throttle == 0xC0) ?
 					     "sense0 enable, sense1 enable" :
 					     "unknown"));
 			config_count++;
