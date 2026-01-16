@@ -99,18 +99,10 @@ void cmd_vr_test_mode_show_default(const struct shell *shell, size_t argc, char 
 			if (vr_rail_name_get((uint8_t)i, &rail_name)) {
 				const mps_vr_test_mode_setting_t *cfg =
 					&vr_mps_normal_mode_table[i];
-
-				int32_t uvp_show = (int32_t)cfg->uvp;
-				if (i >= 2) {
-					uvp_show = (int32_t)cfg->vout_max - 400;
-					if (uvp_show < 0)
-						uvp_show = 0;
-				}
-
 				shell_print(
 					shell,
 					"%-30s | %-12d | %-7d | %-8d | %-9d | %-9d | %-7d | %-7d",
-					(char *)rail_name, cfg->total_ocp, (int)uvp_show, cfg->ovp1,
+					(char *)rail_name, cfg->total_ocp, cfg->uvp, cfg->ovp1,
 					cfg->ovp2, cfg->vout_max, cfg->lcr, cfg->ucr);
 			}
 		}
@@ -155,16 +147,26 @@ void cmd_vr_test_mode_show_val(const struct shell *shell, size_t argc, char **ar
 		// mp29816c
 		char ovp2_str[16];
 		snprintf(ovp2_str, sizeof(ovp2_str), "no action");
-		char uvp_str[16];
-		snprintf(uvp_str, sizeof(uvp_str), ">= 200");
 		for (uint8_t i = 0; i < vr_mps_test_mode_table_size; i++) {
 			uint8_t *rail_name = NULL;
 			if (vr_rail_name_get((uint8_t)i, &rail_name)) {
 				const mps_vr_test_mode_setting_t *cfg = &vr_mps_test_mode_table[i];
+				uint8_t rail = cfg->vr_rail;
+				uint16_t vout = 0;
+				int32_t uvp_show = 0;
+				get_vr_mp2971_reg(rail, &vout, VOUT_COMMAND);
+				if (i >= 2){
+					/* uvp = vout- 400 mv (default) */
+					uvp_show = (int32_t)vout - 400;
+					if (uvp_show < 0)
+						uvp_show = 0;
+				}else{
+					uvp_show = 200;
+				}
 				shell_print(
 					shell,
-					"%-30s | %-12d | %-7s | %-8d | %-9s | %-9d | %-7d | %-7d",
-					(char *)rail_name, cfg->total_ocp, uvp_str, cfg->ovp1,
+					"%-30s | %-12d | %-7d | %-8d | %-9s | %-9d | %-7d | %-7d",
+					(char *)rail_name, cfg->total_ocp, uvp_show, cfg->ovp1,
 					ovp2_str, cfg->vout_max, cfg->lcr, cfg->ucr);
 			}
 		}
