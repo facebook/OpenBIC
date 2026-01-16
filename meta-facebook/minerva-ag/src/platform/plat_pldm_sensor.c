@@ -9966,13 +9966,14 @@ bool is_ubc_access(uint8_t sensor_num)
 	/* is_ubc_enabled_delayed_enabled() is to wait for all VR to be enabled  */
 	/* (gpio_get(FM_PLD_UBC_EN_R) == GPIO_HIGH) is to shut down polling immediately when UBC is disabled */
 	return ((gpio_get(FM_PLD_UBC_EN_R) == GPIO_HIGH) && is_ubc_enabled_delayed_enabled() &&
-		get_plat_sensor_ubc_polling_enable_flag() && get_plat_sensor_polling_enable_flag());
+		get_plat_sensor_ubc_polling_enable_flag() &&
+		get_plat_sensor_polling_enable_flag() && is_update_state_idle());
 }
 
 bool is_temp_access(uint8_t cfg_idx)
 {
 	return (get_plat_sensor_temp_polling_enable_flag() &&
-		get_plat_sensor_polling_enable_flag());
+		get_plat_sensor_polling_enable_flag() && is_update_state_idle());
 }
 
 bool is_vr_access(uint8_t sensor_num)
@@ -9980,7 +9981,8 @@ bool is_vr_access(uint8_t sensor_num)
 	/* is_ubc_enabled_delayed_enabled() is to wait for all VR to be enabled when UBC is enabled  */
 	/* (gpio_get(FM_PLD_UBC_EN_R) == GPIO_HIGH) is to shut down polling immediately when UBC is disabled */
 	return ((gpio_get(FM_PLD_UBC_EN_R) == GPIO_HIGH) && is_ubc_enabled_delayed_enabled() &&
-		get_plat_sensor_vr_polling_enable_flag() && get_plat_sensor_polling_enable_flag());
+		get_plat_sensor_vr_polling_enable_flag() && get_plat_sensor_polling_enable_flag() &&
+		is_update_state_idle());
 }
 
 bool get_sensor_info_by_sensor_id(uint8_t sensor_id, uint8_t *vr_bus, uint8_t *vr_addr,

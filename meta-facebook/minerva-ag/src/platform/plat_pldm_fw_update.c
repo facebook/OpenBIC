@@ -493,6 +493,13 @@ static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 		}
 	}
 
+	/* block getting vr fw version during update */
+	if (is_update_state_idle_or_learn_comp() == false) {
+		LOG_INF("Comp id %d FW version request failed due to FW update in progress",
+			p->comp_identifier);
+		return ret;
+	}
+
 	if (!find_sensor_id_and_name_by_firmware_comp_id(p->comp_identifier, &sensor_id,
 							 sensor_name)) {
 		LOG_ERR("Can't find sensor id and name by comp id: 0x%x", p->comp_identifier);
@@ -778,7 +785,7 @@ uint8_t force_update_flag_get_cmd(void *mctp_inst, uint8_t *buf, uint16_t len, u
 	resp_p->get_value = plat_force_update_flag;
 
 exit:
-	*resp_len = sizeof(struct _sensor_polling_cmd_resp);
+	*resp_len = sizeof(struct _force_update_flag_get_cmd_resp);
 	return PLDM_SUCCESS;
 }
 
