@@ -90,6 +90,18 @@ const cpld_bit_name_table_t cpld_bit_name_table[] = {
 		  "P5V",
 		  "P12V_UBC_PWRGD",
 	  } },
+	{ LEAK_DETECT_REG,
+	  "Leak Detection",
+	  {
+		  "RSVD",
+		  "RSVD",
+		  "RSVD",
+		  "RSVD",
+		  "RSVD",
+		  "RSVD",
+		  "LEAK_DETECT_ALERT_CPLD_N",
+		  "RSVD",
+	  } },
 	{ VR_SMBUS_ALERT_EVENT_LOG_REG,
 	  "VR SMBALRT , Status",
 	  {
@@ -101,7 +113,55 @@ const cpld_bit_name_table_t cpld_bit_name_table[] = {
 		  "OWL_E_SMBALRT_N",
 		  "MEDHA1_VDD_ALERT_R_N",
 		  "MEDHA0_VDD_ALERT_R_N",
-	  } }
+	  } },
+	{ HBM_CATTRIP_REG,
+	  "HBM CATTRIP, Event log",
+	  {
+		  "RSVD",
+		  "RSVD",
+		  "RSVD",
+		  "RSVD",
+		  "RSVD",
+		  "RSVD",
+		  "MEDHA1_HBM_CATTRIP_LS_LVC33_ALARM (1-->0)",
+		  "MEDHA0_HBM_CATTRIP_LS_LVC33_ALARM (1-->0)",
+	  } },
+	{ SYSTEM_ALERT_FAULT_REG,
+	  "System Alert Fault, Event log",
+	  {
+		  "RSVD",
+		  "RSVD",
+		  "RSVD",
+		  "RSVD",
+		  "RSVD",
+		  "RSVD",
+		  "RSVD",
+		  "FM_MODULE_PWRBRK_R_N (MB CPLD to Rainbow CPLD) (1-->0)",
+	  } },
+	{ ASIC_TEMP_OVER_REG,
+	  "ASIC TEMP OVER, Event log",
+	  {
+		  "RSVD",
+		  "RSVD",
+		  "RSVD",
+		  "RSVD",
+		  "RSVD",
+		  "RSVD",
+		  "RSVD",
+		  "FM_ASIC_0_THERMTRIP_N (1-->0)",
+	  } },
+	{ TEMP_IC_OVER_FAULT_REG,
+	  "Temperature IC OVERT fault, Event log",
+	  {
+		  "RSVD",
+		  "RSVD",
+		  "RSVD",
+		  "RSVD",
+		  "RSVD",
+		  "IRQ_TMP75_3_ALERT_R_N (1-->0)",
+		  "IRQ_TMP75_2_ALERT_R_N (1-->0)",
+		  "IRQ_TMP75_1_ALERT_R_N (1-->0)",
+	  } },
 };
 
 const char *get_cpld_reg_name(uint8_t cpld_offset)
@@ -230,6 +290,14 @@ void cmd_log_dump(const struct shell *shell, size_t argc, char **argv)
 			shell_print(shell, "\tASIC_THERMTRIP_TRIGGER");
 			shell_print(shell, "read cpld offset(0x27): 0x%02x", log.error_data[0]);
 			shell_print(shell, "read cpld offset(0x29): 0x%02x", log.error_data[1]);
+			break;
+		case ASIC_ERROR_TRIGGER_CAUSE:
+			shell_print(shell, "\tASIC_ERROR_TRIGGER");
+			shell_print(shell, "event_id:   0x%02x%02x", log.error_data[0],
+				    log.error_data[1]);
+			shell_print(shell, "chiplet_id: 0x%02x", log.error_data[2]);
+			shell_print(shell, "module_id:  0x%02x", log.error_data[3]);
+			err_data_len = 4;
 			break;
 		default:
 			shell_print(shell, "Unknown error type: %d", err_type);

@@ -64,7 +64,7 @@
 
 #define MAX_DATA_PKT_SIZE 24
 #define STATUS_RETRY_CNT 2
-#define ERROR_CODE_LEN 8
+#define ERROR_CODE_LEN 5
 
 // smbus error code
 #define SMBUS_ERROR 122

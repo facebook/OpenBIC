@@ -32,6 +32,8 @@ LOG_MODULE_REGISTER(plat_event);
 void get_vr_vout_handler(struct k_work *work);
 K_WORK_DEFINE(vr_vout_work, get_vr_vout_handler);
 
+static plat_asic_error_event asic_error_event;
+
 const vr_fault_info vr_fault_table[] = {
 	// { iris_event_source, cpld_reg_offset, cpld_reg_bit }
 	// VR Power Fault 1
@@ -101,6 +103,11 @@ const vr_fault_info vr_fault_table[] = {
 	{ IRIS_P1V5_PLL_VDDA_OWL, VR_POWER_FAULT_5_REG, BIT(2), false },
 	{ IRIS_P1V5_PLL_VDDA_SOC, VR_POWER_FAULT_5_REG, BIT(1), false },
 	{ IRIS_PVDD1P5, VR_POWER_FAULT_5_REG, BIT(0), false },
+	// ASIC TEMP OVER
+	{ IRIS_ASIC_THERMTRIP, ASIC_TEMP_OVER_REG, BIT(7), false },
+	// HBM CATTRIP
+	{ IRIS_MEDHA1_HBM_CATTRIP, HBM_CATTRIP_REG, BIT(6), false },
+	{ IRIS_MEDHA0_HBM_CATTRIP, HBM_CATTRIP_REG, BIT(7), false },
 };
 const vr_mapping_status vr_status_rail_list[] = {
 	{ .index = VR_STAUS_E_STATUS_BYTE, .pmbus_reg = PMBUS_STATUS_BYTE },
@@ -140,7 +147,7 @@ void process_mtia_vr_power_fault_sel(cpld_info *cpld_info, uint8_t *current_cpld
 		uint8_t expected_bit_val = (expected_val & vr->cpld_reg_bit) ? 1 : 0;
 
 		// Determine event type: ASSERT / DEASSERT
-		bool is_assert = (bit_val != expected_bit_val) && (bit_val == 1);
+		bool is_assert = (bit_val != expected_bit_val);
 
 		LOG_INF("VR[0x%02X] reg[0x%02X] bit[0x%02X] is %s ", vr->mtia_event_source,
 			vr->cpld_reg_offset, vr->cpld_reg_bit, is_assert ? "ASSERT" : "DEASSERT");
@@ -154,13 +161,11 @@ void process_mtia_vr_power_fault_sel(cpld_info *cpld_info, uint8_t *current_cpld
 			sel_msg.event_data_1 = vr_fault_table[i].mtia_event_source;
 
 			if (PLDM_SUCCESS != send_event_log_to_bmc(sel_msg)) {
-				LOG_ERR("Failed to send MTIA FAULT assert SEL, event data: 0x%x 0x%x 0x%x",
-					sel_msg.event_data_1, sel_msg.event_data_2,
-					sel_msg.event_data_3);
+				LOG_ERR("Fail send event: 0x%x 0x%x 0x%x", sel_msg.event_data_1,
+					sel_msg.event_data_2, sel_msg.event_data_3);
 			} else {
-				LOG_INF("Send MTIA FAULT assert SEL, event data: 0x%x 0x%x 0x%x",
-					sel_msg.event_data_1, sel_msg.event_data_2,
-					sel_msg.event_data_3);
+				LOG_INF("Send event: 0x%x 0x%x 0x%x", sel_msg.event_data_1,
+					sel_msg.event_data_2, sel_msg.event_data_3);
 			}
 		} else {
 			set_plat_sensor_polling_enable_flag(false);
@@ -176,7 +181,7 @@ void process_mtia_vr_power_fault_sel(cpld_info *cpld_info, uint8_t *current_cpld
 				uint16_t vr_status = 0xFFFF;
 				if (!plat_get_vr_status(vr->mtia_event_source, vr_status_rail,
 							&vr_status)) {
-					LOG_ERR("Failed to get VR status: VR[0x%02X] reg[0x%02X]",
+					LOG_ERR("Fail get VR st: VR[0x%02X] reg[0x%02X]",
 						vr->mtia_event_source,
 						vr_status_rail_list[j].pmbus_reg);
 				}
@@ -199,11 +204,11 @@ void process_mtia_vr_power_fault_sel(cpld_info *cpld_info, uint8_t *current_cpld
 			// Send SEL to BMC
 			for (int k = 0; k < sel_msg_idx; k++) {
 				if (PLDM_SUCCESS != send_event_log_to_bmc(sel_msg[k])) {
-					LOG_ERR("Failed to send MTIA FAULT assert SEL, event data: 0x%x 0x%x 0x%x",
+					LOG_ERR("Fail send event: 0x%x 0x%x 0x%x",
 						sel_msg[k].event_data_1, sel_msg[k].event_data_2,
 						sel_msg[k].event_data_3);
 				} else {
-					LOG_INF("Send MTIA FAULT assert SEL, event data: 0x%x 0x%x 0x%x",
+					LOG_INF("Send event: 0x%x 0x%x 0x%x",
 						sel_msg[k].event_data_1, sel_msg[k].event_data_2,
 						sel_msg[k].event_data_3);
 				}
@@ -250,7 +255,25 @@ void asic_thermtrip_error_log(bool is_assert)
 	error_log_event(error_code, (is_assert ? LOG_ASSERT : LOG_DEASSERT));
 
 	if (is_assert == LOG_ASSERT) {
-		LOG_INF("Generated IRIS temp error code: 0x%x", error_code);
+		LOG_INF("Generated thermtrip error code: 0x%x", error_code);
 	}
 	k_msleep(500);
+}
+
+void plat_asic_error_error_log(bool is_assert, plat_asic_error_event event)
+{
+	asic_error_event = event;
+
+	uint16_t error_code = (ASIC_ERROR_TRIGGER_CAUSE << 13);
+	error_log_event(error_code, (is_assert ? LOG_ASSERT : LOG_DEASSERT));
+
+	if (is_assert == LOG_ASSERT) {
+		LOG_INF("Generated ASIC error error code: 0x%x", error_code);
+	}
+	k_msleep(100);
+}
+
+plat_asic_error_event *plat_get_asic_error_event()
+{
+	return &asic_error_event;
 }
