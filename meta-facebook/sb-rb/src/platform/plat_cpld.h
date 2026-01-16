@@ -103,5 +103,5 @@ void check_cpld_polling_alert_status(void);
 void check_ubc_delayed_timer_handler(struct k_timer *timer);
 bool set_cpld_bit(uint8_t cpld_offset, uint8_t bit, uint8_t value);
 void give_all_vr_pm_alert_sem();
-void get_cpld_polling_power_info(int* reading);
+void get_cpld_polling_power_info(int *reading);
 #endif
