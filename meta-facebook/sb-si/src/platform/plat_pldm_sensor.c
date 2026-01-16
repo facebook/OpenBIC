@@ -51,6 +51,8 @@ typedef struct plat_sensor_tmp_extend_info {
 	uint16_t offset;
 } plat_sensor_tmp_extend_info;
 
+// clang-format off
+
 plat_sensor_vr_extend_info plat_sensor_vr_extend_table[] = {
 	{ SENSOR_NUM_VR_ASIC_P0V895_PEX_TEMP_C, VR_ASIC_P0V895_PEX_MP2971_ADDR },
 	{ SENSOR_NUM_VR_ASIC_P0V895_PEX_VOLT_V, VR_ASIC_P0V895_PEX_MP2971_ADDR },
@@ -414,8 +416,8 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t normal_min;
 			0x00000000, //uint32_t warning_high;
 			0x00000000, //uint32_t warning_low;
-			920, //uint32_t critical_high;
-			877, //uint32_t critical_low;
+			958, //uint32_t critical_high;
+			833, //uint32_t critical_low;
 			0x00000000, //uint32_t fatal_high;
 			0x00000000, //uint32_t fatal_low;
 		},
@@ -486,7 +488,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t normal_min;
 			0x00000000, //uint32_t warning_high;
 			0x00000000, //uint32_t warning_low;
-			96800, //uint32_t critical_high;
+			10350, //uint32_t critical_high;
 			0x00000000, //uint32_t critical_low;
 			0x00000000, //uint32_t fatal_high;
 			0x00000000, //uint32_t fatal_low;
@@ -630,7 +632,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t normal_min;
 			0x00000000, //uint32_t warning_high;
 			0x00000000, //uint32_t warning_low;
-			100000, //uint32_t critical_high;
+			99150, //uint32_t critical_high;
 			0x00000000, //uint32_t critical_low;
 			0x00000000, //uint32_t fatal_high;
 			0x00000000, //uint32_t fatal_low;
@@ -2338,6 +2340,8 @@ PDR_entity_auxiliary_names plat_pdr_entity_aux_names_table[] = { {
 	.nameLanguageTag = "en",
 } };
 
+// clang-format on
+
 uint32_t plat_get_pdr_size(uint8_t pdr_type)
 {
 	int total_size = 0, i = 0;
@@ -2594,8 +2598,8 @@ bool get_plat_sensor_vr_polling_enable_flag()
 
 bool is_adc_access(uint8_t sensor_num)
 {
-	if (!is_pcie_switch_access(PEX90144_CFG_ID) || !get_plat_sensor_adc_polling_enable_flag() ||
-	    !get_plat_sensor_polling_enable_flag()) {
+	if (!get_plat_sensor_adc_polling_enable_flag() || !get_plat_sensor_polling_enable_flag() ||
+	    !is_pcie_switch_access(PEX90144_CFG_ID)) {
 		LOG_DBG("Polling disabled: ADC polling enable flag=%d, general polling enable flag=%d",
 			get_plat_sensor_adc_polling_enable_flag(),
 			get_plat_sensor_polling_enable_flag());
@@ -2634,6 +2638,9 @@ bool is_temp_access(uint8_t cfg_idx)
 
 bool is_pcie_switch_access(uint8_t cfg_idx)
 {
+	if (!get_plat_sensor_polling_enable_flag() || !get_plat_sensor_temp_polling_enable_flag())
+		return false;
+
 	I2C_MSG msg = { 0 };
 	uint8_t retry = 3;
 	uint8_t bus = plat_pldm_sensor_temp_table[cfg_idx].pldm_sensor_cfg.port;
@@ -2651,8 +2658,7 @@ bool is_pcie_switch_access(uint8_t cfg_idx)
 
 	LOG_DBG("PEX90144 is present at bus %d addr 0x%X", msg.bus, msg.target_addr);
 
-	return (get_plat_sensor_temp_polling_enable_flag() &&
-		get_plat_sensor_polling_enable_flag());
+	return true;
 }
 
 bool is_vr_access(uint8_t sensor_num)
