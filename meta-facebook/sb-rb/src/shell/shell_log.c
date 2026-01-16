@@ -293,8 +293,8 @@ void cmd_log_dump(const struct shell *shell, size_t argc, char **argv)
 			break;
 		case ASIC_ERROR_TRIGGER_CAUSE:
 			shell_print(shell, "\tASIC_ERROR_TRIGGER");
-			shell_print(shell, "event_id:   0x%02x%02x", log.error_data[0],
-				    log.error_data[1]);
+			shell_print(shell, "event_id:   0x%02x%02x", log.error_data[1],
+				    log.error_data[0]);
 			shell_print(shell, "chiplet_id: 0x%02x", log.error_data[2]);
 			shell_print(shell, "module_id:  0x%02x", log.error_data[3]);
 			err_data_len = 4;
