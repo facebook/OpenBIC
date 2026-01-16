@@ -99,10 +99,18 @@ void cmd_vr_test_mode_show_default(const struct shell *shell, size_t argc, char 
 			if (vr_rail_name_get((uint8_t)i, &rail_name)) {
 				const mps_vr_test_mode_setting_t *cfg =
 					&vr_mps_normal_mode_table[i];
+
+				int32_t uvp_show = (int32_t)cfg->uvp;
+				if (i >= 2) {
+					uvp_show = (int32_t)cfg->vout_max - 400;
+					if (uvp_show < 0)
+						uvp_show = 0;
+				}
+
 				shell_print(
 					shell,
 					"%-30s | %-12d | %-7d | %-8d | %-9d | %-9d | %-7d | %-7d",
-					(char *)rail_name, cfg->total_ocp, cfg->uvp, cfg->ovp1,
+					(char *)rail_name, cfg->total_ocp, (int)uvp_show, cfg->ovp1,
 					cfg->ovp2, cfg->vout_max, cfg->lcr, cfg->ucr);
 			}
 		}
@@ -266,12 +274,19 @@ void cmd_vr_test_mode_show_real(const struct shell *shell, size_t argc, char **a
 			get_vr_mp2971_reg(j, &total_ocp, TOTAL_OCP);
 			get_vr_mp2971_reg(j, &ovp_1, OVP_1);
 			get_vr_mp2971_reg(j, &ovp_2, OVP_2);
+			if (test_mode) {
+				// test mode
+				snprintf(ovp2_str, sizeof(ovp2_str), "no action");
+			} else {
+				// normal mode
+				snprintf(ovp2_str, sizeof(ovp2_str), "%d", ovp_2);
+			}
 			if (vr_rail_name_get((uint8_t)j, &rail_name)) {
 				shell_print(
 					shell,
-					"%-30s | %-12d | %-7d | %-8d | %-9d | %-9d | %-7d | %-7d",
-					(char *)rail_name, total_ocp, uvp, ovp_1, ovp_2, vout_max,
-					vout_range_user_settings.change_vout_min[j],
+					"%-30s | %-12d | %-7d | %-8d | %-9s | %-9d | %-7d | %-7d",
+					(char *)rail_name, total_ocp, uvp, ovp_1, ovp2_str,
+					vout_max, vout_range_user_settings.change_vout_min[j],
 					vout_range_user_settings.change_vout_max[j]);
 			}
 		}
