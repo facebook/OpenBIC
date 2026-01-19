@@ -135,7 +135,7 @@ void add_sync_oc_warn_to_work()
 
 bool set_power_capping_vr_oc_warn_limit(uint8_t vr_idx, uint16_t value)
 {
-	/* input value unit: 1A */
+	/* input value unit: 1W */
 
 	if (!is_mb_dc_on()) {
 		LOG_WRN("need to DC on!");
@@ -172,32 +172,38 @@ bool set_power_capping_vr_oc_warn_limit(uint8_t vr_idx, uint16_t value)
 	}
 
 	if (get_vr_module() == VR_MODULE_MPS) {
-		ret = mp29816a_set_iout_oc_warn_limit(cfg, value);
-		if (!ret) {
-			LOG_ERR("Can't set IOUT_OC_WARN 0x%x", sensor_id);
-		} else {
-			uint16_t voltage_value = 0;
-			float float_value = 0;
-			if (mp29816a_get_vout_command(cfg, 0, &voltage_value)) {
-				float_value = voltage_value / 1000.0;
-				power_capping_info.current_threshold[vr_idx] = value / float_value;
+		uint16_t voltage_value = 0;
+		float float_value = 0;
+		ret = mp29816a_get_vout_command(cfg, 0, &voltage_value);
+		if (ret) {
+			float_value = voltage_value / 1000.0;
+			uint16_t current_val = value / float_value;
+			ret = mp29816a_set_iout_oc_warn_limit(cfg, current_val);
+			if (ret) {
+				mp29816a_get_iout_oc_warn_limit(cfg, &current_val);
+				power_capping_info.current_threshold[vr_idx] = current_val;
 			} else {
-				LOG_ERR("Can't get VOUT_COMMAND: 0x%x", sensor_id);
+				LOG_ERR("Can't set IOUT_OC_WARN 0x%x", sensor_id);
 			}
+		} else {
+			LOG_ERR("Can't get VOUT_COMMAND: 0x%x", sensor_id);
 		}
 	} else if (get_vr_module() == VR_MODULE_RNS) {
-		ret = raa228249_set_iout_oc_warn_limit(cfg, value);
-		if (!ret) {
-			LOG_ERR("Can't set IOUT_OC_WARN 0x%x", sensor_id);
-		} else {
-			uint16_t voltage_value = 0;
-			float float_value = 0;
-			if (raa228249_get_vout_command(cfg, 0, &voltage_value)) {
-				float_value = voltage_value / 1000.0;
-				power_capping_info.current_threshold[vr_idx] = value / float_value;
+		uint16_t voltage_value = 0;
+		float float_value = 0;
+		ret = raa228249_get_vout_command(cfg, 0, &voltage_value);
+		if (ret) {
+			float_value = voltage_value / 1000.0;
+			uint16_t current_val = value / float_value;
+			ret = raa228249_set_iout_oc_warn_limit(cfg, current_val);
+			if (ret) {
+				raa228249_get_iout_oc_warn_limit(cfg, &current_val);
+				power_capping_info.current_threshold[vr_idx] = current_val;
 			} else {
-				LOG_ERR("Can't get VOUT_COMMAND: 0x%x", sensor_id);
+				LOG_ERR("Can't set IOUT_OC_WARN 0x%x", sensor_id);
 			}
+		} else {
+			LOG_ERR("Can't get VOUT_COMMAND: 0x%x", sensor_id);
 		}
 	} else {
 		LOG_ERR("Unknown VR module: %d", get_vr_module());
