@@ -79,7 +79,7 @@ struct i2c_target_data *test_for_reading = NULL;
 /* I2C target init-enable table */
 const bool I2C_TARGET_ENABLE_TABLE[MAX_TARGET_NUM] = {
 	TARGET_DISABLE, TARGET_DISABLE, TARGET_DISABLE, TARGET_DISABLE,
-	TARGET_DISABLE, TARGET_ENABLE,  TARGET_ENABLE,  TARGET_DISABLE,
+	TARGET_DISABLE, TARGET_ENABLE,	TARGET_ENABLE,	TARGET_DISABLE,
 	TARGET_DISABLE, TARGET_DISABLE, TARGET_DISABLE, TARGET_DISABLE,
 };
 
@@ -700,10 +700,13 @@ telemetry_info telemetry_info_table[] = {
 	{ FRU_PRODUCT_NAME_REG, 0x00, .telemetry_table_init = initialize_fru_product_data },
 	{ FRU_PRODUCT_PART_NUMBER_REG, 0x00, .telemetry_table_init = initialize_fru_product_data },
 	{ FRU_PRODUCT_PART_VERSION_REG, 0x00, .telemetry_table_init = initialize_fru_product_data },
-	{ FRU_PRODUCT_SERIAL_NUMBER_REG, 0x00, .telemetry_table_init = initialize_fru_product_data },
+	{ FRU_PRODUCT_SERIAL_NUMBER_REG, 0x00,
+	  .telemetry_table_init = initialize_fru_product_data },
 	{ FRU_PRODUCT_ASSET_TAG_REG, 0x00, .telemetry_table_init = initialize_fru_product_data },
-	{ FRU_PRODUCT_CUSTOM_DATA_1_REG, 0x00, .telemetry_table_init = initialize_fru_product_data },
-	{ FRU_PRODUCT_CUSTOM_DATA_2_REG, 0x00, .telemetry_table_init = initialize_fru_product_data },
+	{ FRU_PRODUCT_CUSTOM_DATA_1_REG, 0x00,
+	  .telemetry_table_init = initialize_fru_product_data },
+	{ FRU_PRODUCT_CUSTOM_DATA_2_REG, 0x00,
+	  .telemetry_table_init = initialize_fru_product_data },
 	{ VR_POWER_READING_REG },
 };
 
@@ -801,8 +804,8 @@ static bool command_reply_data_handle(void *arg)
 			case FRU_BOARD_CUSTOM_DATA_10_REG: {
 				data->target_rd_msg.msg_length = struct_size;
 				memcpy(data->target_rd_msg.msg,
-						fru_board_data_table[reg_offset - FRU_BOARD_PART_NUMBER_REG],
-						struct_size);
+				       fru_board_data_table[reg_offset - FRU_BOARD_PART_NUMBER_REG],
+				       struct_size);
 			} break;
 			case FRU_PRODUCT_NAME_REG:
 			case FRU_PRODUCT_PART_NUMBER_REG:
@@ -813,8 +816,8 @@ static bool command_reply_data_handle(void *arg)
 			case FRU_PRODUCT_CUSTOM_DATA_2_REG: {
 				data->target_rd_msg.msg_length = struct_size;
 				memcpy(data->target_rd_msg.msg,
-						fru_product_data_table[reg_offset - FRU_PRODUCT_NAME_REG],
-						struct_size);
+				       fru_product_data_table[reg_offset - FRU_PRODUCT_NAME_REG],
+				       struct_size);
 			} break;
 			case CONTROL_VOL_VR_ASIC_P0V75_VDDPHY_HBM0246_REG:
 			case CONTROL_VOL_VR_ASIC_P0V75_VDDPHY_HBM1357_REG:
@@ -994,10 +997,10 @@ void set_bootstrap_element_handler()
 	}
 }
 uint8_t vr_pwr_alert_table[] = {
-	SENSOR_NUM_ASIC_P0V85_MEDHA0_VDD_PWR_W,   SENSOR_NUM_ASIC_P0V85_MEDHA1_VDD_PWR_W,
+	SENSOR_NUM_ASIC_P0V85_MEDHA0_VDD_PWR_W,	  SENSOR_NUM_ASIC_P0V85_MEDHA1_VDD_PWR_W,
 	SENSOR_NUM_ASIC_P1V1_VDDQC_HBM0246_PWR_W, SENSOR_NUM_ASIC_P0V75_VDDPHY_HBM0246_PWR_W,
 	SENSOR_NUM_ASIC_P1V1_VDDQC_HBM1357_PWR_W, SENSOR_NUM_ASIC_P0V75_VDDPHY_HBM1357_PWR_W,
-	SENSOR_NUM_ASIC_P0V75_MAX_N_VDD_PWR_W,    SENSOR_NUM_ASIC_P0V75_MAX_S_VDD_PWR_W,
+	SENSOR_NUM_ASIC_P0V75_MAX_N_VDD_PWR_W,	  SENSOR_NUM_ASIC_P0V75_MAX_S_VDD_PWR_W,
 };
 
 void i2c_bridge_command_handler(struct k_work *work_item)

@@ -160,8 +160,6 @@ bool plat_get_cpld_fru_data(uint8_t *data)
 	return true;
 }
 
-
-
 FRU_INFO *plat_fru_info = NULL;
 
 FRU_INFO *create_fru_info(void)
