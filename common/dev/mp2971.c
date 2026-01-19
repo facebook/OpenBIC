@@ -1280,21 +1280,44 @@ bool mp2971_clear_vr_status(sensor_cfg *cfg, uint8_t rail)
 	return true;
 }
 
-bool mp2971_get_vout_offset(sensor_cfg *cfg, uint16_t *vout_offset)
+bool mp2971_get_vout_offset(sensor_cfg *cfg, uint8_t rail, uint16_t *vout_offset)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	CHECK_NULL_ARG_WITH_RETURN(vout_offset, false);
 
+	*vout_offset = 0;
+
 	uint8_t data_cal_offset[2] = { 0 };
 	if (!mp2971_i2c_read(cfg->port, cfg->target_addr, PMBUS_VOUT_CAL_OFFSET, data_cal_offset,
 			     sizeof(data_cal_offset))) {
+		LOG_ERR("mp2971_get_vout_offset: read VOUT_CAL_OFFSET failed");
 		return false;
 	}
 
-	uint16_t val_cal_offset = data_cal_offset[0] | (data_cal_offset[1] << 8);
+	uint16_t val_cal_offset =
+		(uint16_t)data_cal_offset[0] | ((uint16_t)data_cal_offset[1] << 8);
 
-	int8_t signed_offset = get_vout_cal_offset(val_cal_offset);
-	*vout_offset = (uint16_t)signed_offset;
+	int8_t off_code = get_vout_cal_offset(val_cal_offset);
+
+	uint8_t abs_code = (off_code < 0) ? (uint8_t)(-off_code) : (uint8_t)off_code;
+
+	uint16_t mv_base = 1; /* VID = 1 */
+	uint16_t mv_step = (uint16_t)(1 + abs_code);
+
+	if (!mp2971_vid_to_direct(cfg, rail, &mv_base)) {
+		LOG_ERR("mp2971_get_vout_offset: vid_to_direct(base) failed");
+		return false;
+	}
+	if (!mp2971_vid_to_direct(cfg, rail, &mv_step)) {
+		LOG_ERR("mp2971_get_vout_offset: vid_to_direct(step) failed");
+		return false;
+	}
+
+	int32_t offset_mv = (int32_t)mv_step - (int32_t)mv_base;
+	if (off_code < 0)
+		offset_mv = -offset_mv;
+
+	*vout_offset = (uint16_t)((int16_t)offset_mv);
 
 	return true;
 }
@@ -1466,7 +1489,7 @@ bool mp2971_set_ovp_1(sensor_cfg *cfg, uint8_t rail, uint16_t *ovp_1_mv)
 	uint16_t vout_max_mv = 0;
 	if (!mp2971_get_vout_max(cfg, rail, &vout_max_mv)) {
 		LOG_ERR("mp2971_set_ovp_1: read VOUT_MAX failed (bus=%u addr=0x%02X rail=%u)",
-		cfg->port, cfg->target_addr, rail);
+			cfg->port, cfg->target_addr, rail);
 		return false;
 	}
 
@@ -1479,18 +1502,17 @@ bool mp2971_set_ovp_1(sensor_cfg *cfg, uint8_t rail, uint16_t *ovp_1_mv)
 			cfg->port, cfg->target_addr, MP2971_MFR_OVP_SET);
 		return false;
 	}
-	data[0] &= ~0x7;          /* clear bits[2:0] */
+	data[0] &= ~0x7; /* clear bits[2:0] */
 	data[0] |= (code & 0x07); /* set new code */
 
 	if (!mp2971_i2c_write(cfg->port, cfg->target_addr, MP2971_MFR_OVP_SET, data,
-					sizeof(data))) {
+			      sizeof(data))) {
 		LOG_ERR("mp2971_set_ovp_1: write MFR_OVP_SET failed (bus=%u addr=0x%02X reg=0x%02X)",
-		cfg->port, cfg->target_addr, MP2971_MFR_OVP_SET);
+			cfg->port, cfg->target_addr, MP2971_MFR_OVP_SET);
 		return false;
 	}
 	return true;
 }
-
 
 bool mp2971_get_ovp_1(sensor_cfg *cfg, uint8_t rail, uint16_t *ovp_1_mv)
 {
@@ -1528,7 +1550,7 @@ bool mp2971_set_uvp_threshold(sensor_cfg *cfg, uint8_t rail, uint16_t *write_uvp
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	CHECK_NULL_ARG_WITH_RETURN(write_uvp_threshold, false);
 
-	if(rail != VR_MPS_PAGE_0 && rail != VR_MPS_PAGE_1) {
+	if (rail != VR_MPS_PAGE_0 && rail != VR_MPS_PAGE_1) {
 		LOG_ERR("mp2971_set_uvp: invalid rail=%u (expect 0/1)", rail);
 		return false;
 	}
@@ -1562,7 +1584,8 @@ bool mp2971_set_uvp_threshold(sensor_cfg *cfg, uint8_t rail, uint16_t *write_uvp
 
 	if (code > 7U) {
 		code = 7U;
-		LOG_ERR("UVP threshold overflow: %d, set to %d", *write_uvp_threshold, ((code+1)*50*a)/b_den);
+		LOG_ERR("UVP threshold overflow: %d, set to %d", *write_uvp_threshold,
+			((code + 1) * 50 * a) / b_den);
 	}
 
 	if (!mp2856_set_page(cfg->port, cfg->target_addr, rail)) {
@@ -1578,7 +1601,7 @@ bool mp2971_set_uvp_threshold(sensor_cfg *cfg, uint8_t rail, uint16_t *write_uvp
 			cfg->port, cfg->target_addr, rail);
 		return false;
 	}
-	uvp_data[0] &= ~0x7;          /* clear bits[2:0] */
+	uvp_data[0] &= ~0x7; /* clear bits[2:0] */
 	uvp_data[0] |= (code & 0x07); /* set new code */
 
 	if (!mp2971_i2c_write(cfg->port, cfg->target_addr, MP2971_MFR_UVP_SET, uvp_data,
@@ -1601,7 +1624,7 @@ bool mp2971_set_thres_div_en(sensor_cfg *cfg, uint8_t rail, uint16_t *enable)
 		return false;
 	}
 	uint8_t coef_reg = (rail == VR_MPS_PAGE_0) ? MFR_VR_CONFIG_IMON_OFFSET_R1 :
-	     MFR_VR_CONFIG_IMON_OFFSET_R2;
+						     MFR_VR_CONFIG_IMON_OFFSET_R2;
 	uint8_t coef_data[2] = { 0 };
 
 	if (!mp2971_i2c_read(cfg->port, cfg->target_addr, coef_reg, coef_data, sizeof(coef_data))) {
@@ -1610,11 +1633,11 @@ bool mp2971_set_thres_div_en(sensor_cfg *cfg, uint8_t rail, uint16_t *enable)
 		return false;
 	}
 	coef_data[1] &= ~BIT(6); // clear bit 6
-	if (*enable){
+	if (*enable) {
 		coef_data[1] |= BIT(6); // set bit 6
 	}
 	if (!mp2971_i2c_write(cfg->port, cfg->target_addr, coef_reg, coef_data,
-	      sizeof(coef_data))) {
+			      sizeof(coef_data))) {
 		LOG_ERR("mp2971_set_thres_div_en: write coef reg failed (bus=%u addr=0x%02X reg=0x%02X)",
 			cfg->port, cfg->target_addr, coef_reg);
 		return false;

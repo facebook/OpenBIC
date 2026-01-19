@@ -1408,7 +1408,7 @@ int get_vr_mp2971_reg(uint8_t rail, uint16_t *get_data, uint8_t get_reg)
 		}
 		break;
 	case VOUT_OFFSET:
-		if (!mp2971_get_vout_offset(cfg, get_data)) {
+		if (!mp2971_get_vout_offset(cfg, pre_proc_args->vr_page, get_data)) {
 			LOG_ERR("The VR mp2971 vout offset setting failed");
 			goto err;
 		}
