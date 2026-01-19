@@ -940,16 +940,6 @@ bool perm_config_clear(void)
 		return false;
 	}
 
-	/* TODO TODO wait power capping function add
-		// clear power capping perm parameter
-		memset(power_capping_user_settings.user_setting_value, 0xFF,
-			sizeof(power_capping_user_settings.user_setting_value));
-		if (!set_user_settings_power_capping_to_eeprom(&power_capping_user_settings)) {
-			LOG_ERR("The perm_config clear failed");
-			return false;
-		}
-	*/
-
 	return true;
 }
 ubc_vr_power_mapping_sensor ubc_vr_power_table[] = {
