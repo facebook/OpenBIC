@@ -107,16 +107,16 @@ void ISR_GPIO_RST_IRIS_PWR_ON_PLD_R1_N()
 			ast_pwm_set(65, PWM_PORT1);
 			ast_pwm_set(65, PWM_PORT6);
 		}
+		// when dc on clear cpld polling alert status
+		uint8_t err_type = CPLD_UNEXPECTED_VAL_TRIGGER_CAUSE;
+		LOG_DBG("cpld_polling_alert_status: true -> false, reset_error_log_states: %x",
+			err_type);
+		reset_error_log_states(err_type);
 	} else {
 		LOG_INF("dc off, clear io expander init flag");
 		set_ioe_init_flag(0);
 		LOG_INF("dc off, exit the vr test mode");
 		vr_test_mode_enable(false);
-		// when dc offm clear cpld polling alert status
-		uint8_t err_type = CPLD_UNEXPECTED_VAL_TRIGGER_CAUSE;
-		LOG_DBG("cpld_polling_alert_status: true -> false, reset_error_log_states: %x",
-			err_type);
-		reset_error_log_states(err_type);
 
 		// if board id == EVB , ctrl fan pwm
 		if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
