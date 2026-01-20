@@ -596,21 +596,6 @@ err:
 	return ret;
 }
 
-bool vr_vout_user_settings_set(void *user_settings_value)
-{
-	CHECK_NULL_ARG_WITH_RETURN(user_settings_value, false);
-	if (!plat_eeprom_write(VR_VOUT_USER_SETTINGS_OFFSET, user_settings_value,
-			       sizeof(struct vr_vout_user_settings))) {
-		LOG_ERR("Failed to write vr vout user_settings to eeprom");
-		return false;
-	}
-
-	k_msleep(EEPROM_MAX_WRITE_TIME);
-
-	return true;
-}
-
-vr_vout_user_settings user_settings = { 0 };
 struct vr_vout_user_settings voltage_command_get = { 0 };
 vr_vout_range_user_settings_struct vout_range_user_settings = { 0 };
 bool plat_set_vout_command(uint8_t rail, uint16_t *millivolt)
