@@ -517,7 +517,7 @@ void vr_test_mode_handler(void *arg1, void *arg2, void *arg3)
 	while (1) {
 		k_sleep(K_MINUTES(1));
 		if (vr_test_mode_flag)
-			LOG_INF("VR TEST MODE is running!");
+			LOG_INF("VR TEST MODE is running! vr test mode flag: %d", vr_test_mode_flag);
 	}
 }
 
