@@ -181,7 +181,22 @@ int load_mctp_support_types(uint8_t *type_len, uint8_t *types)
 	return MCTP_SUCCESS;
 }
 
+mctp_port *plat_get_mctp_port(uint8_t index)
+{
+	return smbus_port + index;
+}
+
+void plat_update_mctp_routing_table(uint8_t eid)
+{
+	plat_eid = eid;
+}
+
 uint8_t plat_get_eid()
 {
 	return plat_eid;
+}
+
+uint8_t plat_get_mctp_port_count()
+{
+	return ARRAY_SIZE(smbus_port);
 }
