@@ -130,7 +130,7 @@ static int cmd_mfio_get_all(const struct shell *shell, size_t argc, char **argv)
 					return -1;
 			}
 		}
-		if(config_value & BIT(mfio_list[i].config_bit))
+		if((config_value & BIT(mfio_list[i].config_bit)) == 0)
 			shell_print(shell, "%-20s|%-15s|%-10d", mfio_list[i].name, "Input", (input_value>>mfio_list[i].input_bit)&1);
 		else
 			shell_print(shell, "%-20s|%-15s|%-10d", mfio_list[i].name, "Output", (output_value>>mfio_list[i].output_bit)&1);
@@ -181,7 +181,7 @@ static int cmd_set_mfio_io(const struct shell *shell, size_t argc, char **argv)
 				shell_error(shell, "write MFIO config to CPLD failed");
 				return -1;
 			}
-			shell_print(shell, "set %s as : %s", mfio_list[i].name, (set_value == 0)? "Output": "Input");
+			shell_print(shell, "set %s as : %s", mfio_list[i].name, (set_value == 0)? "Input": "Output");
 			return 0;
 		}
 	}
@@ -217,7 +217,7 @@ static int cmd_set_mfio_value(const struct shell *shell, size_t argc, char **arg
 					shell_error(shell, "read MFIO config from CPLD failed");
 					return -1;
 			}
-			if ((config_value>>mfio_list[i].config_bit)&1){
+			if (((config_value >> mfio_list[i].config_bit) & 1) == 0) {
 				shell_error(shell, "Can't set value to Input port");
 				return -1;
 			}
@@ -278,7 +278,7 @@ SHELL_STATIC_SUBCMD_SET_CREATE(sub_mfio_get_cmds,
 			       SHELL_SUBCMD_SET_END);
 
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_set_cmds,
-			       SHELL_CMD(io, &mifo_name, "set io <mfio_name> 1/0, 1 = input, 0 = output", cmd_set_mfio_io),
+			       SHELL_CMD(io, &mifo_name, "set io <mfio_name> 1/0, 1 = output, 0 = input", cmd_set_mfio_io),
 				   SHELL_CMD(value, &mifo_name, "set value <mfio_name> 1/0, 1 = high, 0 = low", cmd_set_mfio_value),
 			       SHELL_SUBCMD_SET_END);
 
