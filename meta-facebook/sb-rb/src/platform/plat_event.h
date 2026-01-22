@@ -26,7 +26,7 @@ typedef struct _vr_fault_info {
 	uint8_t cpld_reg_offset;
 	uint8_t cpld_reg_bit;
 	bool is_pmbus_vr;
-	uint8_t sensor_id;
+	uint8_t rail_id;
 } vr_fault_info;
 
 enum event_type {
