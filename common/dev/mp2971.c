@@ -22,6 +22,7 @@
 #include "hal_i2c.h"
 #include "pmbus.h"
 #include "mp2971.h"
+#include "util_pmbus.h"
 
 LOG_MODULE_REGISTER(mp2971);
 
@@ -718,7 +719,7 @@ bool mp2971_get_checksum(uint8_t bus, uint8_t addr, uint32_t *checksum)
 	return true;
 }
 
-bool get_vout_scale(sensor_cfg *cfg, float *vout_scale)
+bool get_vout_scale(const sensor_cfg *cfg, float *vout_scale)
 {
 	CHECK_NULL_ARG_WITH_RETURN(vout_scale, false);
 	uint8_t i2c_max_retry = 5;
@@ -749,7 +750,7 @@ float get_resolution(sensor_cfg *cfg)
 
 	bool vout_scale_enable = false;
 	if (cfg->init_args != NULL) {
-		mp2971_init_arg *init_arg = (mp2971_init_arg *)cfg->init_args;
+		const mp2971_init_arg *init_arg = (mp2971_init_arg *)cfg->init_args;
 		vout_scale_enable = init_arg->vout_scale_enable;
 	}
 
@@ -906,6 +907,9 @@ float get_resolution(sensor_cfg *cfg)
 		pout_reso = pout_reso / vout_scale;
 		return pout_reso;
 		break;
+	case PMBUS_READ_VIN:
+		return 0.03125; // 1/32V per LSB
+		break;
 	default:
 		LOG_WRN("offset not supported: 0x%x", offset);
 		break;
@@ -922,7 +926,7 @@ bool mp2971_vid_to_direct(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt)
 	float vout_scale = 1.0;
 
 	if (cfg->init_args != NULL) {
-		mp2971_init_arg *init_arg = (mp2971_init_arg *)cfg->init_args;
+		const mp2971_init_arg *init_arg = (mp2971_init_arg *)cfg->init_args;
 		if (init_arg->vout_scale_enable) {
 			if (get_vout_scale(cfg, &vout_scale) == false)
 				LOG_WRN("get vout scale failed");
@@ -1011,7 +1015,7 @@ bool mp2971_direct_to_vid(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt)
 	float vout_scale = 1.0;
 
 	if (cfg->init_args != NULL) {
-		mp2971_init_arg *init_arg = (mp2971_init_arg *)cfg->init_args;
+		const mp2971_init_arg *init_arg = (mp2971_init_arg *)cfg->init_args;
 		if (init_arg->vout_scale_enable) {
 			if (get_vout_scale(cfg, &vout_scale) == false)
 				LOG_WRN("get vout scale failed");
@@ -1277,6 +1281,7 @@ uint8_t mp2971_read(sensor_cfg *cfg, int *reading)
 
 	uint8_t i2c_max_retry = 5;
 	int val = 0;
+	float f_val = 0.0;
 	sensor_val *sval = (sensor_val *)reading;
 	I2C_MSG msg;
 	memset(sval, 0, sizeof(sensor_val));
@@ -1311,6 +1316,11 @@ uint8_t mp2971_read(sensor_cfg *cfg, int *reading)
 		break;
 	case PMBUS_READ_POUT:
 		val = val & BIT_MASK(11);
+		break;
+	case PMBUS_READ_VIN:
+		val = val & BIT_MASK(9);
+		f_val = slinear11_to_float((uint16_t)val);
+		val = (uint16_t)f_val;
 		break;
 	default:
 		LOG_WRN("offset not supported: 0x%x", offset);

@@ -29,14 +29,14 @@ void gpio_int_default();
 #define name_gpio0	\
 	gpio_name_to_num(SPI_MUX_SEL) \
 	gpio_name_to_num(SPI_PEX_LV_OE) \
-	gpio_name_to_num(Reserve_GPIO02) \
+	gpio_name_to_num(RST_PWR_ON_PLD_N) \
 	gpio_name_to_num(Reserve_GPIO03) \
 	gpio_name_to_num(Reserve_GPIO04) \
 	gpio_name_to_num(Reserve_GPIO05) \
 	gpio_name_to_num(Reserve_GPIO06) \
 	gpio_name_to_num(Reserve_GPIO07)
 #define name_gpio1	\
-	gpio_name_to_num(Reserve_GPIO10) \
+	gpio_name_to_num(RSVD_GPIO_2_R) \
 	gpio_name_to_num(Reserve_GPIO11) \
 	gpio_name_to_num(Reserve_GPIO12) \
 	gpio_name_to_num(Reserve_GPIO13) \
@@ -52,7 +52,7 @@ void gpio_int_default();
 	gpio_name_to_num(Reserve_GPIO24) \
 	gpio_name_to_num(Reserve_GPIO25) \
 	gpio_name_to_num(Reserve_GPIO26) \
-	gpio_name_to_num(Reserve_GPIO27)
+	gpio_name_to_num(RSVD_GPIO_3_R)
 #define name_gpio3	\
 	gpio_name_to_num(Reserve_GPIO30) \
 	gpio_name_to_num(Reserve_GPIO31) \
@@ -79,7 +79,7 @@ void gpio_int_default();
 	gpio_name_to_num(Reserve_GPIO54) \
 	gpio_name_to_num(Reserve_GPIO55) \
 	gpio_name_to_num(Reserve_GPIO56) \
-	gpio_name_to_num(Reserve_GPIO57)
+	gpio_name_to_num(RSVD_GPIO_4_R)
 #define name_gpio6	\
 	gpio_name_to_num(Reserve_GPIO60) \
 	gpio_name_to_num(Reserve_GPIO61) \
@@ -94,8 +94,8 @@ void gpio_int_default();
 	gpio_name_to_num(Reserve_GPIO71) \
 	gpio_name_to_num(Reserve_GPIO72) \
 	gpio_name_to_num(Reserve_GPIO73) \
-	gpio_name_to_num(Reserve_GPIO74) \
-	gpio_name_to_num(Reserve_GPIO75) \
+	gpio_name_to_num(STRAP_DSW_EN) \
+	gpio_name_to_num(STRAP_JEN_N) \
 	gpio_name_to_num(Reserve_GPIO76) \
 	gpio_name_to_num(Reserve_GPIO77)
 #define name_gpio8	\
@@ -126,7 +126,7 @@ void gpio_int_default();
 	gpio_name_to_num(Reserve_GPIOA6) \
 	gpio_name_to_num(Reserve_GPIOA7)
 #define name_gpioB	\
-	gpio_name_to_num(Reserve_GPIOB0) \
+	gpio_name_to_num(RSVD_GPIO_1_R) \
 	gpio_name_to_num(Reserve_GPIOB1) \
 	gpio_name_to_num(Reserve_GPIOB2) \
 	gpio_name_to_num(Reserve_GPIOB3) \

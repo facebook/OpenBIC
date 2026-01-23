@@ -612,7 +612,7 @@ bool mp29816a_get_vout_command(sensor_cfg *cfg, uint8_t rail, uint16_t *millivol
 	if (vid_step == 0)
 		return false;
 
-	float offset_mv = get_vout_cal_offset(val_cal_offset, vid_step);
+	float offset_mv = get_vout_cal_offset(val_cal_offset, vid_step) * 1000.0f;
 	float val = (read_value * 1000.0f) * vid_step + offset_mv;
 	*millivolt = (int)val;
 	return true;
@@ -634,14 +634,13 @@ bool mp29816a_set_vout_command(sensor_cfg *cfg, uint8_t rail, uint16_t *millivol
 	}
 
 	uint16_t val_cal_offset = data_cal_offset[0] | (data_cal_offset[1] << 8);
-	float offset_mv = get_vout_cal_offset(val_cal_offset, vid_step);
-
-	uint16_t read_value = (uint16_t)(((*millivolt - offset_mv) / 1000.0f) / vid_step);
-	read_value = read_value & READ_VOUT_MASK;
+	float offset_mv = get_vout_cal_offset(val_cal_offset, vid_step) * 1000.0f;
+	uint16_t set_value = (uint16_t)((*millivolt - offset_mv) / (vid_step * 1000.0f));
+	set_value = set_value & READ_VOUT_MASK;
 
 	uint8_t data[2] = { 0 };
-	data[0] = read_value & 0xFF;
-	data[1] = (read_value >> 8) & 0xFF;
+	data[0] = set_value & 0xFF;
+	data[1] = (set_value >> 8) & 0xFF;
 
 	if (!mp29816a_i2c_write(cfg->port, cfg->target_addr, PMBUS_VOUT_COMMAND, data,
 				sizeof(data))) {
@@ -783,6 +782,11 @@ uint8_t mp29816a_read(sensor_cfg *cfg, int *reading)
 		   cfg->offset == PMBUS_READ_IOUT) {
 		uint16_t read_value = (msg.data[1] << 8) | msg.data[0];
 		val = slinear11_to_float(read_value);
+	} else if (cfg->offset == PMBUS_READ_VIN) {
+		uint16_t read_value = (msg.data[1] << 8) | msg.data[0];
+		read_value = read_value & BIT_MASK(10);
+		val = slinear11_to_float(read_value);
+		val *= 0.03125; // 31.25mV/LSB
 	} else {
 		LOG_ERR("Sensor num 0x%x, offset 0x%x not supported.", cfg->num, cfg->offset);
 		return SENSOR_FAIL_TO_ACCESS;

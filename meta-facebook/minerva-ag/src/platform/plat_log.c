@@ -92,6 +92,8 @@ vr_error_callback_info vr_error_callback_info_table[] = {
 	{ VR_POWER_INPUT_FAULT_1_REG, 0xFF, { VR_10, VR_7, VR_6, VR_4, VR_5, VR_3, VR_9, VR_8 } },
 	{ VR_POWER_INPUT_FAULT_2_REG, 0xC0, { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, VR_11, VR_1 } },
 	{ LEAK_DETCTION_REG, 0x00, { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } },
+	{ VR_SMBUS_ALERT_3_REG, 0xFF, { VR_1, VR_10, VR_7, VR_8, VR_9, VR_2, VR_4, VR_3 } },
+	{ VR_SMBUS_ALERT_4_REG, 0x38, { 0x00, 0x00, 0x00, VR_11, VR_5, VR_6, 0x00, 0x00 } },
 };
 
 void plat_log_read(uint8_t *log_data, uint8_t cmd_size, uint16_t order)

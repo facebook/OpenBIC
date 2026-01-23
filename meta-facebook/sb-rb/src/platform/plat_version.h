@@ -19,7 +19,7 @@
 
 #include "version.h"
 
-#define PLATFORM_NAME "SantaBrabara"
+#define PLATFORM_NAME "SantaBarbara"
 #define PROJECT_NAME "Rainbow"
 #define PROJECT_STAGE POC
 
@@ -28,7 +28,7 @@
 #define DEVICE_REVISION 0x80
 
 #define FIRMWARE_REVISION_1 GET_FW_VERSION1(BOARD_ID, PROJECT_STAGE)
-#define FIRMWARE_REVISION_2 0x04
+#define FIRMWARE_REVISION_2 0x0e
 
 #define IPMI_VERSION 0x02
 #define ADDITIONAL_DEVICE_SUPPORT 0xBF
@@ -37,7 +37,7 @@
 
 #define BIC_FW_YEAR_MSB 0x20
 #define BIC_FW_YEAR_LSB 0x25
-#define BIC_FW_WEEK 0x33
+#define BIC_FW_WEEK 0x49
 #define BIC_FW_VER 0x01
 #define BIC_FW_platform_0 0x73 // char: s
 #define BIC_FW_platform_1 0x72 // char: r

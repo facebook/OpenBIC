@@ -22,7 +22,8 @@
 #define ADDR_UNKNOWN (0xFF >> 1)
 
 /* Define sensors address(7 bit) */
-#define UBC1_ADDR (0x28 >> 1)
+#define UBC1_ADDR (0x28 >> 1) // 0x14 (7 bit)
+#define UBC1_2ND_ADDR (0x3E >> 1) // 0x1f (7 bit)
 #define UBC2_ADDR (0x34 >> 1)
 
 #define TOP_INLET_TEMP_ADDR (0x92 >> 1)
@@ -247,6 +248,7 @@ uint8_t plat_pldm_sensor_get_vr_dev(uint8_t *vr_dev);
 void plat_pldm_sensor_change_vr_dev();
 void plat_pldm_sensor_change_cpu_bus();
 void plat_pldm_sensor_change_retimer_dev();
+void plat_pldm_sensor_change_ubc_addr();
 bool is_dc_access(uint8_t sensor_num);
 void set_plat_sensor_polling_enable_flag(bool value);
 void set_plat_sensor_ubc_polling_enable_flag(bool value);

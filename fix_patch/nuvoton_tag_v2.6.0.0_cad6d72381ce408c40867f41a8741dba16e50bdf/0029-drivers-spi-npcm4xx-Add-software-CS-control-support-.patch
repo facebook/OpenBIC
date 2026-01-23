@@ -1,0 +1,232 @@
+From c0cc137aa4a6062e0b448b756cbd62fdd10be4ca Mon Sep 17 00:00:00 2001
+From: Alan Yang <tyang1@nuvoton.com>
+Date: Thu, 17 Jul 2025 14:28:02 +0800
+Subject: [PATCH 1/2] drivers: spi: npcm4xx: Add software CS control support
+ for SPIP
+
+Add support for software-controlled chip select pins in the SPIP driver
+to enable multi-device SPI configurations.
+
+Changes:
+1. Add cs-sw property and cs-gpios support in device tree bindings
+2. Implement software CS control logic with fallback to hardware CS
+3. Fix RX timeout issue when no device is connected by adding proper
+   timeout handling instead of infinite wait
+
+Example DTS configuration for multiple CS pins:
+    spip1: spi@40016000 {
+        cs-sw;
+        cs-gpios = <&gpio7 3 GPIO_ACTIVE_LOW>,
+                <&gpio8 6 GPIO_ACTIVE_LOW>;
+    };
+
+Signed-off-by: Alan Yang <tyang1@nuvoton.com>
+---
+ drivers/spi/spi_npcm4xx_spip.c             | 77 +++++++++++++++++-----
+ dts/arm/nuvoton/npcm4xx.dtsi               |  2 +
+ dts/bindings/spi/nuvoton,npcm4xx-spip.yaml |  8 +++
+ 3 files changed, 71 insertions(+), 16 deletions(-)
+
+diff --git a/drivers/spi/spi_npcm4xx_spip.c b/drivers/spi/spi_npcm4xx_spip.c
+index 4461878836..abf6abd50d 100644
+--- a/drivers/spi/spi_npcm4xx_spip.c
++++ b/drivers/spi/spi_npcm4xx_spip.c
+@@ -62,28 +62,57 @@ struct npcm4xx_spip_data {
+ 	struct spi_nor_op_info write_op_info;
+ 	uint8_t bytes_per_frame;
+ 	uint8_t access_mode;
++	/* CS control */
++	bool cs_sw;
+ };
+ 
+ /* Driver convenience defines */
+ #define HAL_INSTANCE(dev)									\
+ 	((struct spip_reg *)((const struct npcm4xx_spip_config *)(dev)->config)->base)
+ 
+-static void SPI_SET_SS0_HIGH(const struct device *dev)
++static inline bool spi_npcm_spip_is_cs_gpio73(const struct device *dev,
++						  const struct spi_config *spi_cfg)
+ {
+-	struct spip_reg *const inst = HAL_INSTANCE(dev);
++	/* Check gpio pin is set as GPIO73 */
++	if (spi_cfg->cs && spi_cfg->cs->gpio_dev && spi_cfg->cs->gpio_pin == 3 &&
++	    spi_cfg->cs->gpio_dev == DEVICE_DT_GET(DT_NODELABEL(gpio7))) {
++		return true;
++	}
+ 
+-	inst->SSCTL &= ~BIT(NPCM4XX_SSCTL_AUTOSS);
+-	inst->SSCTL |= BIT(NPCM4XX_SSCTL_SSACTPOL);
+-	inst->SSCTL |= BIT(NPCM4XX_SSCTL_SS);
++	return false;
+ }
+ 
+-static void SPI_SET_SS0_LOW(const struct device *dev)
++static inline void spi_npcm_spip_cs_control(const struct device *dev,
++					    const struct spi_config *spi_cfg, bool on)
+ {
+ 	struct spip_reg *const inst = HAL_INSTANCE(dev);
++	struct npcm4xx_spip_data *data = dev->data;
++	struct spi_context *ctx = &data->ctx;
+ 
+-	inst->SSCTL &= ~BIT(NPCM4XX_SSCTL_AUTOSS);
+-	inst->SSCTL &= ~BIT(NPCM4XX_SSCTL_SSACTPOL);
+-	inst->SSCTL |= BIT(NPCM4XX_SSCTL_SS);
++	/*
++	 * The GPIO73/SPIP1_CS is bundled with SPIP1_CLK, SPIP1_MOSI, SPIP1_DIO1,
++	 * it cannot be set individually. So if the software CS is GPIO73, we should
++	 * use hardware CS control.
++	 */
++	if ((data->cs_sw) && (ctx->config->cs && ctx->config->cs->gpio_dev) &&
++	    ((!spi_npcm_spip_is_cs_gpio73(dev, spi_cfg)))) {
++		/* SW CS pin */
++		LOG_DBG("sw cs control, %s pin %d",
++			ctx->config->cs->gpio_dev->name, ctx->config->cs->gpio_pin);
++		spi_context_cs_control(ctx, on);
++	} else {
++		/* HW CS pin */
++		LOG_DBG("hw cs control");
++		if (on) {
++			/* Set active, active high/low depend on SSACTPOL */
++			inst->SSCTL |= BIT(NPCM4XX_SSCTL_SS);
++		} else {
++			if (spi_cfg->operation & SPI_HOLD_ON_CS) {
++				return;
++			}
++			inst->SSCTL &= ~BIT(NPCM4XX_SSCTL_SS);
++		}
++	}
+ }
+ 
+ static int spip_npcm4xx_configure(const struct device *dev,
+@@ -107,6 +136,7 @@ static int spip_npcm4xx_configure(const struct device *dev,
+ 		LOG_ERR("Loopback mode is not supported");
+ 		return -ENOTSUP;
+ 	}
++	data->ctx.config = config;
+ 
+ 	/* Get the frame length */
+ 	frame_size = SPI_WORD_SIZE_GET(operation);
+@@ -193,6 +223,11 @@ static int spip_npcm4xx_configure(const struct device *dev,
+ 		}
+ 	}
+ 
++	/* Set CS */
++	if ((data->cs_sw) && (!spi_npcm_spip_is_cs_gpio73(dev, config))) {
++		spi_context_cs_configure(&data->ctx);
++	}
++
+ 	/* Active high CS logic */
+ 	if (operation & SPI_CS_ACTIVE_HIGH) {
+ 		inst->SSCTL |= BIT(NPCM4XX_SSCTL_SSACTPOL);
+@@ -200,6 +235,9 @@ static int spip_npcm4xx_configure(const struct device *dev,
+ 		inst->SSCTL &= ~BIT(NPCM4XX_SSCTL_SSACTPOL);
+ 	}
+ 
++	/* Disable AUTOSS */
++	inst->SSCTL &= ~BIT(NPCM4XX_SSCTL_AUTOSS);
++
+ 	/* Set Bus clock */
+ 	if (config->frequency != 0) {
+ 		target_freq = config->frequency;
+@@ -224,8 +262,6 @@ static int spip_npcm4xx_configure(const struct device *dev,
+ 
+ 	inst->CLKDIV = (inst->CLKDIV & ~0xF) | u32Div;
+ 
+-	data->ctx.config = config;
+-
+ 	return ret;
+ }
+ 
+@@ -347,7 +383,8 @@ static int spip_npcm4xx_transceive(const struct device *dev,
+ 	inst->FIFOCTL |= BIT(NPCM4XX_FIFOCTL_TXRST);
+ 	inst->CTL |= BIT(NPCM4XX_CTL_SPIEN);
+ 
+-	SPI_SET_SS0_LOW(dev);
++	/* set active true */
++	spi_npcm_spip_cs_control(dev, config, true);
+ 
+ 	do {
+ 		ret = spi_npcm_spip_xfer_frame(dev);
+@@ -355,7 +392,8 @@ static int spip_npcm4xx_transceive(const struct device *dev,
+ 			break;
+ 	} while (spi_npcm_spip_transfer_ongoing(data));
+ 
+-	SPI_SET_SS0_HIGH(dev);
++	/* set active false */
++	spi_npcm_spip_cs_control(dev, config, false);
+ 
+ 	/* spip disable */
+ 	inst->CTL &= ~BIT(NPCM4XX_CTL_SPIEN);
+@@ -454,7 +492,8 @@ static void spi_nor_npcm4xx_spip_fifo_transceive(const struct device *dev,
+ 	inst->FIFOCTL |= BIT(NPCM4XX_FIFOCTL_TXRST);
+ 	inst->FIFOCTL |= BIT(NPCM4XX_FIFOCTL_RXRST);
+ 
+-	SPI_SET_SS0_LOW(dev);
++	/* set active true */
++	spi_npcm_spip_cs_control(dev, spi_cfg, true);
+ 
+ 	/* send command */
+ 	spi_npcm4xx_spip_write_data(dev, (uint32_t)normal_op_info->opcode);
+@@ -495,7 +534,11 @@ static void spi_nor_npcm4xx_spip_fifo_transceive(const struct device *dev,
+ 			/* write dummy data out*/
+ 			spi_npcm4xx_spip_write_data(dev, dummy_write);
+ 			/* wait received data */
+-			while((inst->STATUS & BIT(NPCM4XX_STATUS_RXEMPTY)));
++			if (WAIT_FOR(!IS_BIT_SET(inst->STATUS, NPCM4XX_STATUS_RXEMPTY),
++				     SPI_NPCM_SPIP_WAIT_STATUS_TIMEOUT_US, NULL) == false) {
++				LOG_ERR("Wait for RX data timeout");
++				goto spi_nor_normal_done;
++			}
+ 
+ 			*(buf_data + index) = (uint8_t)inst->RX;
+ 		}
+@@ -510,7 +553,8 @@ static void spi_nor_npcm4xx_spip_fifo_transceive(const struct device *dev,
+ 
+ spi_nor_normal_done:
+ 
+-	SPI_SET_SS0_HIGH(dev);
++	/* set active false */
++	spi_npcm_spip_cs_control(dev, spi_cfg, false);
+ 
+ 	/* spip disable */
+ 	inst->CTL &= ~BIT(NPCM4XX_CTL_SPIEN);
+@@ -590,6 +634,7 @@ static const struct npcm4xx_spip_config spip_npcm4xx_config = {
+ 
+ static struct npcm4xx_spip_data spip_npcm4xx_dev_data = {
+ 	SPI_CONTEXT_INIT_LOCK(spip_npcm4xx_dev_data, ctx),
++	.cs_sw = DT_INST_PROP(0, cs_sw),
+ };
+ 
+ 
+diff --git a/dts/arm/nuvoton/npcm4xx.dtsi b/dts/arm/nuvoton/npcm4xx.dtsi
+index ca37a0dab0..69d356d040 100644
+--- a/dts/arm/nuvoton/npcm4xx.dtsi
++++ b/dts/arm/nuvoton/npcm4xx.dtsi
+@@ -566,6 +566,8 @@
+ 					<&pcc NPCM4XX_CLOCK_BUS_APB3 NPCM4XX_PWDWN_CTL4 7>;
+ 			spi-ctrl-caps-mask = <0x000f0f0c>;
+ 			pinctrl-0 = <&pinctrl_spip1_default &pinctrl_spip1_quad>;
++			cs-sw;
++			cs-gpios = <&gpio7 3 GPIO_ACTIVE_LOW>;
+ 			label = "SPIP";
+ 			status = "disabled";
+ 
+diff --git a/dts/bindings/spi/nuvoton,npcm4xx-spip.yaml b/dts/bindings/spi/nuvoton,npcm4xx-spip.yaml
+index 7483b0d9a5..c1cd81181a 100644
+--- a/dts/bindings/spi/nuvoton,npcm4xx-spip.yaml
++++ b/dts/bindings/spi/nuvoton,npcm4xx-spip.yaml
+@@ -26,3 +26,11 @@ properties:
+       bit 16: disable 1-1-4
+       bit 17: disable 1-4-4
+       bit 18: disable 4-4-4
++  cs-sw:
++    type: boolean
++    required: false
++    description: |
++      If true, the controller will use software controlled chip select.
++      If false, the controller will use hardware controlled chip select.
++      To support multiple slaves, this property must be set to true.
++      Default is false.
+-- 
+2.47.1
+

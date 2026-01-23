@@ -1,0 +1,573 @@
+From b51f4cadb31a393cc8c6d766bb20cc9f24f1e9bb Mon Sep 17 00:00:00 2001
+From: Tim Lee <chli30@nuvoton.com>
+Date: Wed, 5 Nov 2025 11:37:24 +0800
+Subject: [PATCH] drivers: pwm: add npcm pwm driver
+
+Enable PWM1, PWM4, PWM5 and PWM6 for customer request
+
+Tested:
+pwm cycles PWM_6 0 1000 1000 // 100% duty cycle
+pwm cycles PWM_6 0 1000 500  //  50% duty cycle
+pwm cycles PWM_6 0 1000 250  //  25% duty cycle
+pwm cycles PWM_6 0 1000 0    //   0% duty cycle
+
+Signed-off-by: Tim Lee <chli30@nuvoton.com>
+---
+ boards/arm/npcm400f_evb/fun_def_list.h        |  16 ++
+ boards/arm/npcm400f_evb/npcm400f_evb.dts      |  24 ++
+ .../arm/npcm400f_evb/npcm400f_evb_defconfig   |   5 +
+ drivers/pwm/CMakeLists.txt                    |   1 +
+ drivers/pwm/Kconfig                           |   2 +
+ drivers/pwm/Kconfig.npcm                      |  13 +
+ drivers/pwm/pwm_npcm.c                        | 234 ++++++++++++++++++
+ dts/arm/nuvoton/npcm4xx.dtsi                  |  90 +++++++
+ dts/arm/nuvoton/npcm4xx/npcm4xx-pinctrl.dtsi  |  10 +
+ dts/bindings/pwm/nuvoton,npcm-pwm.yaml        |  29 +++
+ soc/arm/npcm4xx/npcm400f/sig_def_list.h       |  20 ++
+ 11 files changed, 444 insertions(+)
+ create mode 100644 drivers/pwm/Kconfig.npcm
+ create mode 100644 drivers/pwm/pwm_npcm.c
+ create mode 100644 dts/bindings/pwm/nuvoton,npcm-pwm.yaml
+
+diff --git a/boards/arm/npcm400f_evb/fun_def_list.h b/boards/arm/npcm400f_evb/fun_def_list.h
+index 2e63cd7df5..24a3718d5e 100644
+--- a/boards/arm/npcm400f_evb/fun_def_list.h
++++ b/boards/arm/npcm400f_evb/fun_def_list.h
+@@ -132,3 +132,19 @@ FUN_DEFINE(DT_NODELABEL(pinctrl_sgpio0_default), IOX1_LDSH, IOX1_DOUT, IOX1_DIN,
+ #if DT_NODE_HAS_STATUS(DT_NODELABEL(sgpio1), okay) && CONFIG_SGPIO_NPCM4XX
+ FUN_DEFINE(DT_NODELABEL(pinctrl_sgpio1_default), IOX2_LDSH, IOX2_DOUT, IOX2_DIN, IOX2_SCLK)
+ #endif
++
++#if DT_NODE_HAS_STATUS(DT_NODELABEL(pwm1), okay) && CONFIG_PWM_NPCM
++FUN_DEFINE(DT_NODELABEL(pinctrl_pwm1_default), PWM1)
++#endif
++
++#if DT_NODE_HAS_STATUS(DT_NODELABEL(pwm4), okay) && CONFIG_PWM_NPCM
++FUN_DEFINE(DT_NODELABEL(pinctrl_pwm4_default), PWM4)
++#endif
++
++#if DT_NODE_HAS_STATUS(DT_NODELABEL(pwm5), okay) && CONFIG_PWM_NPCM
++FUN_DEFINE(DT_NODELABEL(pinctrl_pwm5_default), PWM5)
++#endif
++
++#if DT_NODE_HAS_STATUS(DT_NODELABEL(pwm6), okay) && CONFIG_PWM_NPCM
++FUN_DEFINE(DT_NODELABEL(pinctrl_pwm6_default), PWM6)
++#endif
+diff --git a/boards/arm/npcm400f_evb/npcm400f_evb.dts b/boards/arm/npcm400f_evb/npcm400f_evb.dts
+index b6954ce637..8a7c5d9b34 100644
+--- a/boards/arm/npcm400f_evb/npcm400f_evb.dts
++++ b/boards/arm/npcm400f_evb/npcm400f_evb.dts
+@@ -631,3 +631,27 @@
+ &c2h {
+ 	status = "okay";
+ };
++
++&pwm1 {
++	pinctrl-0 = <&pinctrl_pwm1_default>;
++	pinctrl-names = "default";
++	status = "okay";
++};
++
++&pwm4 {
++	pinctrl-0 = <&pinctrl_pwm4_default>;
++	pinctrl-names = "default";
++	status = "okay";
++};
++
++&pwm5 {
++	pinctrl-0 = <&pinctrl_pwm5_default>;
++	pinctrl-names = "default";
++	status = "okay";
++};
++
++&pwm6 {
++	pinctrl-0 = <&pinctrl_pwm6_default>;
++	pinctrl-names = "default";
++	status = "okay";
++};
+diff --git a/boards/arm/npcm400f_evb/npcm400f_evb_defconfig b/boards/arm/npcm400f_evb/npcm400f_evb_defconfig
+index 46ba37bbd4..f605554925 100644
+--- a/boards/arm/npcm400f_evb/npcm400f_evb_defconfig
++++ b/boards/arm/npcm400f_evb/npcm400f_evb_defconfig
+@@ -108,3 +108,8 @@ CONFIG_SGPIO_NPCM4XX=n
+ 
+ # C2H Driver
+ CONFIG_C2H_NPCM=y
++
++# PWM Driver
++CONFIG_PWM=y
++CONFIG_PWM_SHELL=y
++CONFIG_PWM_NPCM=y
+diff --git a/drivers/pwm/CMakeLists.txt b/drivers/pwm/CMakeLists.txt
+index 3fec28b16b..31f6d141c0 100644
+--- a/drivers/pwm/CMakeLists.txt
++++ b/drivers/pwm/CMakeLists.txt
+@@ -18,6 +18,7 @@ zephyr_library_sources_ifdef(CONFIG_PWM_RV32M1_TPM	pwm_rv32m1_tpm.c)
+ zephyr_library_sources_ifdef(CONFIG_PWM_MCUX_TPM	pwm_mcux_tpm.c)
+ zephyr_library_sources_ifdef(CONFIG_PWM_SAM0_TCC	pwm_sam0_tcc.c)
+ zephyr_library_sources_ifdef(CONFIG_PWM_NPCX		pwm_npcx.c)
++zephyr_library_sources_ifdef(CONFIG_PWM_NPCM		pwm_npcm.c)
+ zephyr_library_sources_ifdef(CONFIG_PWM_XLNX_AXI_TIMER	pwm_xlnx_axi_timer.c)
+ zephyr_library_sources_ifdef(CONFIG_PWM_MCUX_PWT 	pwm_mcux_pwt.c)
+ zephyr_library_sources_ifdef(CONFIG_PWM_GECKO   pwm_gecko.c)
+diff --git a/drivers/pwm/Kconfig b/drivers/pwm/Kconfig
+index eb27cf5fef..7b9dd93266 100644
+--- a/drivers/pwm/Kconfig
++++ b/drivers/pwm/Kconfig
+@@ -59,6 +59,8 @@ source "drivers/pwm/Kconfig.sam0"
+ 
+ source "drivers/pwm/Kconfig.npcx"
+ 
++source "drivers/pwm/Kconfig.npcm"
++
+ source "drivers/pwm/Kconfig.xlnx"
+ 
+ source "drivers/pwm/Kconfig.mcux_pwt"
+diff --git a/drivers/pwm/Kconfig.npcm b/drivers/pwm/Kconfig.npcm
+new file mode 100644
+index 0000000000..90dc8adff3
+--- /dev/null
++++ b/drivers/pwm/Kconfig.npcm
+@@ -0,0 +1,13 @@
++# NPCM PWM driver configuration options
++
++# Copyright (c) 2024 Nuvoton Technology Corporation.
++# SPDX-License-Identifier: Apache-2.0
++
++config PWM_NPCM
++	bool "Nuvoton NPCM Enhanced Super I/O (eSIO) PWM driver"
++	default y
++	depends on SOC_FAMILY_NPCM4XX && PWM
++	help
++	  This option enables the PWM driver for NPCM family of
++	  processors.
++	  Say y if you wish to use pwm ports on NPCM MCU.
+diff --git a/drivers/pwm/pwm_npcm.c b/drivers/pwm/pwm_npcm.c
+new file mode 100644
+index 0000000000..dfaedd325a
+--- /dev/null
++++ b/drivers/pwm/pwm_npcm.c
+@@ -0,0 +1,234 @@
++/*
++ * Copyright (c) 2024 Nuvoton Technology Corporation.
++ *
++ * SPDX-License-Identifier: Apache-2.0
++ */
++
++#define DT_DRV_COMPAT nuvoton_npcm_pwm
++
++#include <drivers/pwm.h>
++#include <dt-bindings/clock/npcm4xx_clock.h>
++#include <drivers/clock_control.h>
++#include <kernel.h>
++#include <soc.h>
++
++#include <logging/log.h>
++
++LOG_MODULE_REGISTER(pwm_npcm, LOG_LEVEL_ERR);
++
++/* NPCM clock control node reference */
++#define NPCM4XX_CLK_CTRL_NODE DT_NODELABEL(pcc)
++
++/* PWM clock sources */
++#define NPCM_PWM_CLOCK_APB2_LFCLK   0
++#define NPCM_PWM_CLOCK_FX           1
++#define NPCM_PWM_CLOCK_FR           2
++#define NPCM_PWM_CLOCK_RESERVED     3
++
++/* PWM heart-beat mode selection */
++#define NPCM_PWM_HBM_NORMAL         0
++
++/* 16-bit period cycles/prescaler in NPCM PWM modules */
++#define NPCM_PWM_MAX_PRESCALER      (1UL << (16))
++#define NPCM_PWM_MAX_PERIOD_CYCLES  (1UL << (16))
++
++#define DIV_ROUND_UP(n, d) (((n) + (d) - 1) / (d))
++
++/* Device config */
++struct pwm_npcm_config {
++	/* pwm controller base address */
++	struct pwm_reg *base;
++	/* clock configuration */
++	struct npcm4xx_clk_cfg clk_cfg;
++};
++
++/* Driver data */
++struct pwm_npcm_data {
++	/* PWM cycles per second */
++	uint32_t cycles_per_sec;
++};
++
++/* PWM local functions */
++static int pwm_npcm_configure(const struct device *dev, int clk_bus)
++{
++	const struct pwm_npcm_config *config = dev->config;
++	struct pwm_reg *inst = config->base;
++
++	/* Disable PWM for module configuration first */
++	inst->PWMCTL &= ~BIT(NPCM4XX_PWMCTL_PWR);
++
++	/* Set default PWM polarity to normal */
++	inst->PWMCTL &= ~BIT(NPCM4XX_PWMCTL_INVP);
++
++	/* Turn off PWM heart-beat mode */
++	SET_FIELD(inst->PWMCTL, NPCM4XX_PWMCTL_HB_DC_CTL_FIELD,
++			NPCM_PWM_HBM_NORMAL);
++
++	/* Select APB CLK/LFCLK clock sources to PWM module by default */
++	SET_FIELD(inst->PWMCTLEX, NPCM4XX_PWMCTLEX_FCK_SEL_FIELD,
++			NPCM_PWM_CLOCK_APB2_LFCLK);
++
++	/* Select input clock source to LFCLK or APB2 , otherwise failure */
++	if (clk_bus == NPCM4XX_CLOCK_BUS_LFCLK) {
++		inst->PWMCTL |= BIT(NPCM4XX_PWMCTL_CKSEL);
++	} else if (clk_bus == NPCM4XX_CLOCK_BUS_APB2) {
++		inst->PWMCTL &= ~BIT(NPCM4XX_PWMCTL_CKSEL);
++	} else {
++		LOG_ERR("Support LFCLK and APB2 input clock source only");
++		return -EINVAL;
++	}
++
++	return 0;
++}
++
++/* PWM api functions */
++static int pwm_npcm_pin_set(const struct device *dev, uint32_t channel,
++			    uint32_t period_cycles, uint32_t pulse_cycles,
++			    pwm_flags_t flags)
++{
++	/* Single channel for each pwm device */
++	ARG_UNUSED(channel);
++	const struct pwm_npcm_config *config = dev->config;
++	struct pwm_npcm_data *const data = dev->data;
++	struct pwm_reg *inst = config->base;
++	int prescaler;
++	uint32_t ctl;
++	uint32_t ctr;
++	uint32_t dcr;
++	uint32_t prsc;
++
++	ctl = inst->PWMCTL | BIT(NPCM4XX_PWMCTL_PWR);
++
++	/* Select PWM inverted polarity (ie. active-low pulse). */
++	if (flags & PWM_POLARITY_INVERTED) {
++		ctl |= BIT(NPCM4XX_PWMCTL_INVP);
++	} else {
++		ctl &= ~BIT(NPCM4XX_PWMCTL_INVP);
++	}
++
++	/* If pulse_cycles is 0, switch PWM off and return. */
++	if (pulse_cycles == 0) {
++		ctl &= ~BIT(NPCM4XX_PWMCTL_PWR);
++		inst->PWMCTL = ctl;
++		return 0;
++	}
++
++	/*
++	 * Calculate PWM prescaler that let period_cycles map to
++	 * maximum pwm period cycles and won't exceed it.
++	 * Then prescaler = ceil (period_cycles / pwm_max_period_cycles)
++	 */
++	prescaler = DIV_ROUND_UP(period_cycles, NPCM_PWM_MAX_PERIOD_CYCLES);
++	if (prescaler > NPCM_PWM_MAX_PRESCALER) {
++		return -EINVAL;
++	}
++
++	/* Set PWM prescaler. */
++	prsc = prescaler - 1;
++
++	/* Set PWM period cycles. */
++	ctr = (period_cycles / prescaler) - 1;
++
++	/* Set PWM pulse cycles. */
++	dcr = (pulse_cycles / prescaler) - 1;
++
++	LOG_DBG("freq %d, pre %d, period %d, pulse %d",
++		data->cycles_per_sec / period_cycles, prsc, ctr, dcr);
++
++	/* Reconfigure only if necessary. */
++	if (inst->PWMCTL != ctl || inst->PRSC != prsc || inst->CTR != ctr) {
++		/* Disable PWM before configuring. */
++		inst->PWMCTL &= ~BIT(NPCM4XX_PWMCTL_PWR);
++
++		inst->PRSC = prsc;
++		inst->CTR = ctr;
++		inst->DCR = dcr;
++
++		/* Enable PWM now. */
++		inst->PWMCTL = ctl;
++
++		return 0;
++	}
++
++	inst->DCR = dcr;
++
++	return 0;
++}
++
++static int pwm_npcm_get_cycles_per_sec(const struct device *dev,
++				       uint32_t channel, uint64_t *cycles)
++{
++	/* Single channel for each pwm device */
++	ARG_UNUSED(channel);
++	struct pwm_npcm_data *const data = dev->data;
++
++	*cycles = data->cycles_per_sec;
++	return 0;
++}
++
++/* PWM driver registration */
++static const struct pwm_driver_api pwm_npcm_driver_api = {
++	.pin_set = pwm_npcm_pin_set,
++	.get_cycles_per_sec = pwm_npcm_get_cycles_per_sec
++};
++
++static int pwm_npcm_init(const struct device *dev)
++{
++	const struct pwm_npcm_config *const config = dev->config;
++	struct pwm_npcm_data *const data = dev->data;
++    struct pwm_reg *const inst = config->base;
++	const struct device *const clk_dev = DEVICE_DT_GET(NPCM4XX_CLK_CTRL_NODE);
++	int ret;
++
++	/*
++	 * NPCM PWM module mixes byte and word registers together. Make sure
++	 * word reg access via structure won't break into two byte reg accesses
++	 * unexpectedly by toolchains options or attributes. If so, stall here.
++	 */
++	NPCM4XX_REG_WORD_ACCESS_CHECK(inst->PRSC, 0xA55A);
++
++	if (!device_is_ready(clk_dev)) {
++		LOG_ERR("clock control device not ready");
++		return -ENODEV;
++	}
++
++	/* Turn on device clock first and get source clock freq. */
++	ret = clock_control_on(clk_dev, (clock_control_subsys_t)
++							&config->clk_cfg);
++	if (ret < 0) {
++		LOG_ERR("Turn on PWM clock fail %d", ret);
++		return ret;
++	}
++
++	ret = clock_control_get_rate(clk_dev, (clock_control_subsys_t)
++			&config->clk_cfg, &data->cycles_per_sec);
++	if (ret < 0) {
++		LOG_ERR("Get PWM clock rate error %d", ret);
++		return ret;
++	}
++
++	/* Configure PWM device initially */
++	ret = pwm_npcm_configure(dev, config->clk_cfg.bus);
++	if (ret < 0) {
++		LOG_ERR("PWM configure failed (%d)", ret);
++		return ret;
++	}
++
++	return 0;
++}
++
++#define NPCM_PWM_INIT(inst)                                                             \
++	static const struct pwm_npcm_config pwm_npcm_cfg_##inst = {                     \
++		.base = (struct pwm_reg *)DT_INST_REG_ADDR(inst),                       \
++		.clk_cfg = NPCM4XX_DT_CLK_CFG_ITEM(inst),                               \
++	};                                                                              \
++									                \
++	static struct pwm_npcm_data pwm_npcm_data_##inst;                               \
++									                \
++	DEVICE_DT_INST_DEFINE(inst,					                \
++			    &pwm_npcm_init, NULL,			                \
++			    &pwm_npcm_data_##inst, &pwm_npcm_cfg_##inst,                \
++			    POST_KERNEL, CONFIG_KERNEL_INIT_PRIORITY_DEVICE,           \
++			    &pwm_npcm_driver_api);
++
++DT_INST_FOREACH_STATUS_OKAY(NPCM_PWM_INIT)
+diff --git a/dts/arm/nuvoton/npcm4xx.dtsi b/dts/arm/nuvoton/npcm4xx.dtsi
+index 32f21f8133..49885e1a0a 100644
+--- a/dts/arm/nuvoton/npcm4xx.dtsi
++++ b/dts/arm/nuvoton/npcm4xx.dtsi
+@@ -626,6 +626,96 @@
+ 			status = "disabled";
+ 		};
+ 
++		pwm0: pwm@40080000 {
++			compatible = "nuvoton,npcm-pwm";
++			reg = <0x40080000 0x2000>;
++			clocks = <&pcc NPCM4XX_CLOCK_BUS_APB2 NPCM4XX_PWDWN_CTL2 0>;
++			#pwm-cells = <3>;
++			label = "PWM_0";
++			status = "disabled";
++		};
++
++		pwm1: pwm@40082000 {
++			compatible = "nuvoton,npcm-pwm";
++			reg = <0x40082000 0x2000>;
++			clocks = <&pcc NPCM4XX_CLOCK_BUS_APB2 NPCM4XX_PWDWN_CTL2 1>;
++			#pwm-cells = <3>;
++			label = "PWM_1";
++			status = "disabled";
++		};
++
++		pwm2: pwm@40084000 {
++			compatible = "nuvoton,npcm-pwm";
++			reg = <0x40084000 0x2000>;
++			clocks = <&pcc NPCM4XX_CLOCK_BUS_APB2 NPCM4XX_PWDWN_CTL2 2>;
++			#pwm-cells = <3>;
++			label = "PWM_2";
++			status = "disabled";
++		};
++
++		pwm3: pwm@40086000 {
++			compatible = "nuvoton,npcm-pwm";
++			reg = <0x40086000 0x2000>;
++			clocks = <&pcc NPCM4XX_CLOCK_BUS_APB2 NPCM4XX_PWDWN_CTL2 3>;
++			#pwm-cells = <3>;
++			label = "PWM_3";
++			status = "disabled";
++		};
++
++		pwm4: pwm@40088000 {
++			compatible = "nuvoton,npcm-pwm";
++			reg = <0x40088000 0x2000>;
++			clocks = <&pcc NPCM4XX_CLOCK_BUS_APB2 NPCM4XX_PWDWN_CTL2 4>;
++			#pwm-cells = <3>;
++			label = "PWM_4";
++			status = "disabled";
++		};
++
++		pwm5: pwm@4008a000 {
++			compatible = "nuvoton,npcm-pwm";
++			reg = <0x4008a000 0x2000>;
++			clocks = <&pcc NPCM4XX_CLOCK_BUS_APB2 NPCM4XX_PWDWN_CTL2 5>;
++			#pwm-cells = <3>;
++			label = "PWM_5";
++			status = "disabled";
++		};
++
++		pwm6: pwm@4008c000 {
++			compatible = "nuvoton,npcm-pwm";
++			reg = <0x4008c000 0x2000>;
++			clocks = <&pcc NPCM4XX_CLOCK_BUS_APB2 NPCM4XX_PWDWN_CTL2 6>;
++			#pwm-cells = <3>;
++			label = "PWM_6";
++			status = "disabled";
++		};
++
++		pwm7: pwm@4008e000 {
++			compatible = "nuvoton,npcm-pwm";
++			reg = <0x4008e000 0x2000>;
++			clocks = <&pcc NPCM4XX_CLOCK_BUS_APB2 NPCM4XX_PWDWN_CTL2 7>;
++			#pwm-cells = <3>;
++			label = "PWM_7";
++			status = "disabled";
++		};
++
++		pwm8: pwm@40090000 {
++			compatible = "nuvoton,npcm-pwm";
++			reg = <0x40090000 0x2000>;
++			clocks = <&pcc NPCM4XX_CLOCK_BUS_APB2 NPCM4XX_PWDWN_CTL0 0>;
++			#pwm-cells = <3>;
++			label = "PWM_8";
++			status = "disabled";
++		};
++
++		pwm9: pwm@40092000 {
++			compatible = "nuvoton,npcm-pwm";
++			reg = <0x40092000 0x2000>;
++			clocks = <&pcc NPCM4XX_CLOCK_BUS_APB2 NPCM4XX_PWDWN_CTL0 1>;
++			#pwm-cells = <3>;
++			label = "PWM_9";
++			status = "disabled";
++		};
++
+ 	};
+ 
+ 	soc-if {
+diff --git a/dts/arm/nuvoton/npcm4xx/npcm4xx-pinctrl.dtsi b/dts/arm/nuvoton/npcm4xx/npcm4xx-pinctrl.dtsi
+index c18d91a334..dbc263a77a 100644
+--- a/dts/arm/nuvoton/npcm4xx/npcm4xx-pinctrl.dtsi
++++ b/dts/arm/nuvoton/npcm4xx/npcm4xx-pinctrl.dtsi
+@@ -51,4 +51,14 @@
+ 	pinctrl_usbd_phy_xclk: usbd_phy_xclk {};
+ 	pinctrl_sgpio0_default: sgpio0_default {};
+ 	pinctrl_sgpio1_default: sgpio1_default {};
++	pinctrl_pwm0_default: pwm0_default {};
++	pinctrl_pwm1_default: pwm1_default {};
++	pinctrl_pwm2_default: pwm2_default {};
++	pinctrl_pwm3_default: pwm3_default {};
++	pinctrl_pwm4_default: pwm4_default {};
++	pinctrl_pwm5_default: pwm5_default {};
++	pinctrl_pwm6_default: pwm6_default {};
++	pinctrl_pwm7_default: pwm7_default {};
++	pinctrl_pwm8_default: pwm8_default {};
++	pinctrl_pwm9_default: pwm9_default {};
+ };
+diff --git a/dts/bindings/pwm/nuvoton,npcm-pwm.yaml b/dts/bindings/pwm/nuvoton,npcm-pwm.yaml
+new file mode 100644
+index 0000000000..07b5776b0f
+--- /dev/null
++++ b/dts/bindings/pwm/nuvoton,npcm-pwm.yaml
+@@ -0,0 +1,29 @@
++# Copyright (c) 2024 Nuvoton Technology Corporation.
++# SPDX-License-Identifier: Apache-2.0
++
++description: Nuvoton, NPCM Pulse Width Modulator (PWM) node
++
++compatible: "nuvoton,npcm-pwm"
++
++include: [pwm-controller.yaml, base.yaml, nuvoton-pinctrl.yaml]
++
++properties:
++  reg:
++    required: true
++  clocks:
++    required: true
++  label:
++    required: true
++  pinctrl-0:
++    type: phandles
++    required: true
++    description: configurations of pinmux controllers
++  pinctrl-names:
++    type: string-array
++    required: true
++    description: pin configuration state names
++
++pwm-cells:
++  - channel
++  - period
++  - flags
+diff --git a/soc/arm/npcm4xx/npcm400f/sig_def_list.h b/soc/arm/npcm4xx/npcm400f/sig_def_list.h
+index 516a32713b..a0904a2a51 100644
+--- a/soc/arm/npcm4xx/npcm400f/sig_def_list.h
++++ b/soc/arm/npcm4xx/npcm400f/sig_def_list.h
+@@ -275,6 +275,26 @@ SIG_DEFINE(SDA12A, D10, SIG_DESC_CLEAR(0x66, 7), SIG_DESC_SET(0x6D, 5))
+ SIG_DEFINE(PECI, B5, SIG_DESC_CLEAR(0x17, 4), SIG_DESC_SET(0x15, 4))
+ #endif
+ 
++#if DT_NODE_HAS_STATUS(DT_NODELABEL(pwm1), okay) && CONFIG_PWM_NPCM
++/* DEVALT4 - PWM1 signal on GPIO04 */
++SIG_DEFINE(PWM1, E1, SIG_DESC_SET(0x14, 3))
++#endif
++
++#if DT_NODE_HAS_STATUS(DT_NODELABEL(pwm4), okay) && CONFIG_PWM_NPCM
++/* DEVALT4 - PWM4 signal on GPIOA0 */
++SIG_DEFINE(PWM4, C5, SIG_DESC_SET(0x14, 6))
++#endif
++
++#if DT_NODE_HAS_STATUS(DT_NODELABEL(pwm5), okay) && CONFIG_PWM_NPCM
++/* DEVALT4 - PWM5 signal on GPIOA3 */
++SIG_DEFINE(PWM5, D4, SIG_DESC_SET(0x14, 7))
++#endif
++
++#if DT_NODE_HAS_STATUS(DT_NODELABEL(pwm6), okay) && CONFIG_PWM_NPCM
++/* DEVALT5 - PWM6 signal on GPIOA5 */
++SIG_DEFINE(PWM6, B4, SIG_DESC_SET(0x15, 0))
++#endif
++
+ #if DT_NODE_HAS_STATUS(DT_NODELABEL(spi_fiu0), okay) && CONFIG_SPI_NPCM4XX_FIU
+ /* DEVALTC, DEVCNT */
+ SIG_DEFINE(SHD_CS, M12, SIG_DESC_SET(0x1c, 3), SIG_DESC_CLEAR(0x0, 6))
+-- 
+2.34.1
+

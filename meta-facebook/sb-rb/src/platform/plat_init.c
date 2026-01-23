@@ -28,6 +28,11 @@
 #include "plat_class.h"
 #include "plat_cpld.h"
 #include "plat_log.h"
+#include "plat_user_setting.h"
+#include "plat_pldm_monitor.h"
+#include "plat_hwmon.h"
+#include "plat_ioexp.h"
+#include "plat_thermal.h"
 
 LOG_MODULE_REGISTER(plat_init);
 
@@ -43,7 +48,8 @@ void pal_pre_init()
 	init_plat_config();
 	plat_led_init();
 	vr_mutex_init();
-	plat_i3c_set_pid();
+	pwr_level_mutex_init();
+	init_pwm_dev();
 }
 
 void pal_set_sys_status()
@@ -54,12 +60,28 @@ void pal_set_sys_status()
 void pal_post_init()
 {
 	plat_mctp_init();
+	user_settings_init();
+	pldm_load_state_effecter_table(MAX_STATE_EFFECTER_IDX);
+	pldm_assign_gpio_effecter_id(PLAT_EFFECTER_ID_GPIO_HIGH_BYTE);
 	init_fru_info();
-	uint8_t data = 0;
-	plat_write_cpld(CPLD_OFFSET_POWER_CLAMP, &data);
-	plat_adc_init();
+	plat_adc_rainbow_init();
 	init_load_eeprom_log();
+	// if board id >= EVB EVT1B(FAB2)
+	if (get_asic_board_id() == ASIC_BOARD_ID_EVB && get_board_rev_id() >= REV_ID_EVT1B) {
+		quick_sensor_poll_init();
+		init_U200052_IO();
+	}
+	// if board id == EVB
+	if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
+		init_pwm_dev();
+		ast_pwm_set(65, PWM_PORT1);
+		ast_pwm_set(65, PWM_PORT6);
+	}
+
 	init_cpld_polling();
+	plat_telemetry_table_init();
+	ioexp_init();
+	init_thermal_polling();
 }
 
 #define DEF_PROJ_GPIO_PRIORITY 78

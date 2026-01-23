@@ -730,6 +730,7 @@ void pldm_status_reset();
 uint8_t plat_pldm_pass_component_table_check(uint16_t num_of_comp,
 					     const uint8_t *comp_image_version_str,
 					     uint8_t comp_image_version_str_len);
+uint8_t pldm_fw_update(void *fw_update_param, const int flash_position);
 
 #ifdef __cplusplus
 }

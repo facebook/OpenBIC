@@ -360,7 +360,8 @@ uint8_t modbus_pump_setting(modbus_command_mapping *cmd)
 		set_is_pump_not_access(1, false);
 		set_is_pump_not_access(2, false);
 		// restore leak led
-		led_ctrl(LED_IDX_E_LEAK, LED_STOP_BLINK);
+		led_ctrl(LED_IDX_E_LEAK, LED_STOP_BLINK); // only stop blind behavior
+		led_ctrl(LED_IDX_E_LEAK, LED_TURN_OFF); // default led status(turn off)
 		set_status_flag(STATUS_FLAG_FAILURE, GPIO_FAIL_BPB_HSC, 0);
 		for (uint8_t i = PUMP_FAIL_EMERGENCY_BUTTON; i <= PUMP_FAIL_CLOSE_PUMP; i++) {
 			set_status_flag(STATUS_FLAG_FAILURE, i, 0);
@@ -743,7 +744,7 @@ uint8_t modbus_get_setpoint(modbus_command_mapping *cmd)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
 
-	cmd->data[0] = get_fsc_setpoint(cmd->arg0);
+	cmd->data[0] = (uint16_t)(get_fsc_setpoint(cmd->arg0) / cmd->arg1 / pow_of_10(cmd->arg2));
 
 	return MODBUS_EXC_NONE;
 }
@@ -751,9 +752,9 @@ uint8_t modbus_set_setpoint(modbus_command_mapping *cmd)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
 
-	set_fsc_setpoint(cmd->arg0, (uint8_t)cmd->data[0]);
+	set_fsc_setpoint(cmd->arg0, (float)cmd->data[0] * cmd->arg1 * pow_of_10(cmd->arg2));
 	uint8_t idx = cmd->arg0;
-	set_fsc_setpoint(idx, (uint8_t)cmd->data[0]);
+	set_fsc_setpoint(idx, (float)cmd->data[0] * cmd->arg1 * pow_of_10(cmd->arg2));
 	if ((get_status_flag(STATUS_FLAG_SETPOINT_FLAG) && BIT(idx))) {
 		switch (idx) {
 		case SETPOINT_FLAG_LPM:
@@ -797,6 +798,31 @@ uint8_t modbus_set_setpoint_enable(modbus_command_mapping *cmd)
 	default:
 		return MODBUS_EXC_ILLEGAL_DATA_VAL;
 	};
+
+	return MODBUS_EXC_NONE;
+}
+
+uint8_t modbus_get_pump_redundant_switch_day(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	if (get_pump_redundant_switch_time_type())
+		cmd->data[0] = (uint16_t)((double)get_pump_redundant_switch_time() / 1440.0 + 0.5);
+	else
+		cmd->data[0] = get_pump_redundant_switch_time();
+
+	return MODBUS_EXC_NONE;
+}
+uint8_t modbus_set_pump_redundant_switch_day(modbus_command_mapping *cmd)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cmd, MODBUS_EXC_ILLEGAL_DATA_VAL);
+
+	if (!cmd->data[0])
+		return MODBUS_EXC_ILLEGAL_DATA_VAL;
+	else {
+		set_pump_redundant_switch_time_type(0);
+		set_pump_redundant_switch_time(cmd->data[0]);
+	}
 
 	return MODBUS_EXC_NONE;
 }
@@ -1376,9 +1402,11 @@ modbus_command_mapping modbus_command_table[] = {
 	  modbus_get_setpoint_enable, SETPOINT_FLAG_OUTLET_TEMP, 0, 0, 1 },
 	// Control
 	{ MODBUS_AUTO_TUNE_COOLANT_FLOW_RATE_TARGET_SET_ADDR, modbus_set_setpoint,
-	  modbus_get_setpoint, SETPOINT_FLAG_LPM, 0, 0, 1 },
+	  modbus_get_setpoint, SETPOINT_FLAG_LPM, 1, -1, 1 },
 	{ MODBUS_AUTO_TUNE_COOLANT_OUTLET_TEMPERATURE_TARGET_SET_ADDR, modbus_set_setpoint,
-	  modbus_get_setpoint, SETPOINT_FLAG_OUTLET_TEMP, 0, 0, 1 },
+	  modbus_get_setpoint, SETPOINT_FLAG_OUTLET_TEMP, 1, -1, 1 },
+	{ MODBUS_PUMP_REDUNDANT_SWITCHED_INTERVAL_ADDR, modbus_set_pump_redundant_switch_day,
+	  modbus_get_pump_redundant_switch_day, SETPOINT_FLAG_LPM, 0, 0, 1 },
 	{ MODBUS_MANUAL_CONTROL_PUMP_DUTY_SET_ADDR, modbus_set_manual_pwm, modbus_get_manual_pwm,
 	  MANUAL_PWM_E_PUMP, 0, 0, 1 },
 	{ MODBUS_MANUAL_CONTROL_FAN_DUTY_SET_ADDR, modbus_set_manual_pwm, modbus_get_manual_pwm,

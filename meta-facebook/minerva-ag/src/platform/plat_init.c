@@ -51,7 +51,7 @@ void pal_pre_init()
 				1);
 	}
 	init_platform_config();
-	init_worker(); // init util_worker
+	init_plat_worker(CONFIG_MAIN_THREAD_PRIORITY + 1); // work queue for low priority jobs
 	plat_led_init();
 	vr_mutex_init();
 	pwr_level_mutex_init();

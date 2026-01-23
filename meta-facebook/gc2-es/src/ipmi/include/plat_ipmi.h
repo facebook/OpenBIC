@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -20,9 +20,19 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#define IANA_SIZE 3
+#define BITS_PER_BYTE 8
+
 enum REQ_GET_CARD_TYPE {
 	GET_1OU_CARD_TYPE = 0x0,
 	GET_2OU_CARD_TYPE,
 };
 
+enum GPIO_CONFIG_SETTING_BIT {
+	GPIO_CONF_SET_DIR = 0, // 0: input, 1: output
+	GPIO_CONF_SET_INT, // 0: disable, 1 : enable
+	GPIO_CONF_SET_TRG_TYPE, // 0: edge, 1: level
+	GPIO_CONF_SET_TRG_EDGE, // 0: fall, 1: rise
+	GPIO_CONF_SET_TRG_BOTH // 1: both edge
+};
 #endif

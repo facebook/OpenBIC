@@ -33,9 +33,32 @@ enum UBC_MODULE {
 	UBC_MODULE_UNKNOWN,
 };
 
+enum ASIC_BOARD_ID {
+	ASIC_BOARD_ID_RSVD1,
+	ASIC_BOARD_ID_RSVD2,
+	ASIC_BOARD_ID_RAINBOW,
+	ASIC_BOARD_ID_EVB,
+	ASIC_BOARD_ID_UNKNOWN,
+};
+
+enum REV_ID {
+	REV_ID_EVT1A,
+	REV_ID_EVT1B,
+	REV_ID_EVT2,
+	REV_ID_DVT,
+	REV_ID_PVT,
+	REV_ID_MP,
+	REV_ID_RSVD1,
+	REV_ID_RSVD2,
+	MAX_REV_ID,
+};
+
 void init_plat_config();
 uint8_t get_vr_module();
 uint8_t get_ubc_module();
 uint8_t get_mmc_slot();
-
+uint8_t get_asic_board_id();
+uint8_t get_board_rev_id();
+uint8_t get_tray_location();
+bool plat_cpld_eerprom_read(uint8_t *data, uint16_t offset, uint8_t len);
 #endif

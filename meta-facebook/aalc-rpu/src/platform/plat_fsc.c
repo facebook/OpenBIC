@@ -43,7 +43,7 @@ extern pid_cfg pump_pid_table[];
 extern stepwise_cfg pump_stepwise_auto_mode_table[];
 extern stepwise_cfg pump_stepwise_auto_tune_table[];
 
-static uint8_t setpoint[SETPOINT_FLAG_MAX] = { 0, 40 };
+static float setpoint[SETPOINT_FLAG_MAX] = { 0, 40.0 };
 
 uint8_t fsc_debug_set(uint8_t enable)
 {
@@ -75,14 +75,14 @@ void set_fsc_tbl_enable(uint8_t flag)
 	fsc_tbl_enable = flag;
 }
 
-uint8_t get_fsc_setpoint(uint8_t idx)
+float get_fsc_setpoint(uint8_t idx)
 {
 	if (idx >= SETPOINT_FLAG_MAX) {
 		return 0xFF;
 	}
 	return setpoint[idx];
 }
-void set_fsc_setpoint(uint8_t idx, uint8_t val)
+void set_fsc_setpoint(uint8_t idx, float val)
 {
 	if (idx < SETPOINT_FLAG_MAX) {
 		setpoint[idx] = val;
@@ -188,7 +188,7 @@ static uint8_t calculatePID(zone_cfg *zone_p, uint8_t *duty)
 				(int16_t)tmp :
 				tmp;
 
-		FSC_PRINTF("\t\t----- sensor_num %x, temp = %f, p->setpoint %d\n", p->sensor_num,
+		FSC_PRINTF("\t\t----- sensor_num %x, temp = %f, p->setpoint %f\n", p->sensor_num,
 			   temp, p->setpoint);
 
 		// hysteresis
@@ -204,7 +204,7 @@ static uint8_t calculatePID(zone_cfg *zone_p, uint8_t *duty)
 		}
 
 		// p term
-		float error = (float)p->setpoint - temp;
+		float error = p->setpoint - temp;
 		float pterm = p->kp * error;
 		FSC_PRINTF("\t\t\tp->kp = %f, error = %f, pterm = %f\n", p->kp, error, pterm);
 
@@ -293,7 +293,7 @@ void change_lpm_setpoint(uint8_t onoff)
 {
 	if (onoff) {
 		zone_table[1].pid_tbl = pump_pid_table;
-		zone_table[1].pid_tbl->setpoint = get_fsc_setpoint(SETPOINT_FLAG_LPM) + 1;
+		zone_table[1].pid_tbl->setpoint = get_fsc_setpoint(SETPOINT_FLAG_LPM) + 1.0;
 		zone_table[1].sw_tbl = pump_stepwise_auto_tune_table;
 	} else {
 		if (zone_table[1].pid_tbl) {
@@ -311,7 +311,8 @@ void change_temp_setpoint(uint8_t onoff)
 	zone_table[0].pid_tbl->integral = 0.0;
 	zone_table[0].pid_tbl->last_error = 0.0;
 	zone_table[0].pid_tbl->last_temp = FSC_TEMP_INVALID;
-	zone_table[0].pid_tbl->setpoint = onoff ? get_fsc_setpoint(SETPOINT_FLAG_OUTLET_TEMP) : 40;
+	zone_table[0].pid_tbl->setpoint =
+		onoff ? get_fsc_setpoint(SETPOINT_FLAG_OUTLET_TEMP) : 40.0;
 }
 
 /**

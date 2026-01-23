@@ -1,0 +1,80 @@
+From 36af401a91703f27d9a13e010d950a964d9b18db Mon Sep 17 00:00:00 2001
+From: Alan Yang <tyang1@nuvoton.com>
+Date: Thu, 17 Jul 2025 13:38:15 +0800
+Subject: [PATCH 2/2] drivers: flash: npcm4xx: Add configurable CS wait delay
+ and GPIO CS support
+
+Adds support for GPIO-based chip select control.
+
+Change:
+1. Add CONFIG_SPI_NOR_CS_WAIT_DELAY Kconfig option to configure
+   delay time in microseconds for CS switching to take effect.
+2. Add cs_ctrl field to spi_nor_data structure to support GPIO
+   chip select control.
+
+Signed-off-by: Alan Yang <tyang1@nuvoton.com>
+---
+ drivers/flash/Kconfig.multi_dev   |  6 ++++++
+ drivers/flash/spi_nor_multi_dev.c | 15 +++++++++++++++
+ 2 files changed, 21 insertions(+)
+
+diff --git a/drivers/flash/Kconfig.multi_dev b/drivers/flash/Kconfig.multi_dev
+index acfbb42899..28ab6ba2e8 100644
+--- a/drivers/flash/Kconfig.multi_dev
++++ b/drivers/flash/Kconfig.multi_dev
+@@ -47,6 +47,12 @@ config SPI_NOR_INIT_PRIORITY
+ 	  Device is connected to SPI bus, it has to
+ 	  be initialized after SPI driver.
+ 
++config SPI_NOR_CS_WAIT_DELAY
++	int "Delay time in us"
++	default 0
++	help
++	  This is the wait delay (in us) to allow for CS switching to take effect
++
+ config SPI_NOR_FLASH_LAYOUT_PAGE_SIZE
+ 	int "Page size to use for FLASH_LAYOUT feature"
+ 	default 65536
+diff --git a/drivers/flash/spi_nor_multi_dev.c b/drivers/flash/spi_nor_multi_dev.c
+index 94758ba702..adc2e10ec8 100644
+--- a/drivers/flash/spi_nor_multi_dev.c
++++ b/drivers/flash/spi_nor_multi_dev.c
+@@ -64,6 +64,7 @@ struct spi_nor_data {
+ 	struct k_sem sem;
+ 	const struct device *spi;
+ 	struct spi_config spi_cfg;
++	struct spi_cs_control cs_ctrl;
+ 
+ 	/* Miscellaneous flags */
+ 
+@@ -1733,6 +1734,12 @@ static int spi_nor_configure(const struct device *dev)
+ 		goto end;
+ 	}
+ 
++	if (data->cs_ctrl.gpio_dev != NULL) {
++		data->spi_cfg.cs = &data->cs_ctrl;
++	} else {
++		data->spi_cfg.cs = NULL;
++	}
++
+ 	/* now the spi bus is configured, we can verify SPI
+ 	 * connectivity by reading the JEDEC ID.
+ 	 */
+@@ -1928,6 +1935,14 @@ static const struct flash_driver_api spi_nor_api = {
+ 	};	\
+ 	static struct spi_nor_data spi_nor_data_##n = {	\
+ 		.dev_name = DT_INST_BUS_LABEL(n),	\
++		IF_ENABLED(DT_INST_SPI_DEV_HAS_CS_GPIOS(n), ( \
++			.cs_ctrl = {	\
++				.gpio_dev = DEVICE_DT_GET(DT_INST_SPI_DEV_CS_GPIOS_CTLR(n)),	\
++				.gpio_pin = DT_INST_SPI_DEV_CS_GPIOS_PIN(n),	\
++				.gpio_dt_flags = DT_INST_SPI_DEV_CS_GPIOS_FLAGS(n),	\
++				.delay = CONFIG_SPI_NOR_CS_WAIT_DELAY,	\
++			},	\
++		)) \
+ 		.spi_cfg = {	\
+ 			.frequency = DT_INST_PROP(n, spi_max_frequency),	\
+ 			.operation = SPI_WORD_SET(8),	\
+-- 
+2.47.1
+

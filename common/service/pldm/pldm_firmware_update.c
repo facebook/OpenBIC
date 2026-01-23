@@ -53,6 +53,10 @@ LOG_MODULE_DECLARE(pldm);
 #define GET_EEPROM_SLAVE_MASK(offset) (((offset) >> 16) & 0xF)
 #define GET_EERPOM_OFFSET(offset) ((offset) & 0xFFFF)
 
+#ifndef PLDM_UPDATE_DELAY_AFTER_POST_UPDATE
+#define PLDM_UPDATE_DELAY_AFTER_POST_UPDATE 3000
+#endif
+
 pldm_fw_update_info_t *comp_config = NULL;
 uint8_t comp_config_count = 0;
 
@@ -965,6 +969,16 @@ void req_fw_update_handler(void *mctp_p, void *ext_params, void *arg)
 		apply_result = fw_info->self_apply_work_func(fw_info->self_apply_work_arg);
 	}
 
+#ifdef PLDM_UPDATE_POST_UPDATE_BEFORE_APPLY_COMPLETE
+	if (fw_info->pos_update_func) {
+		if (fw_info->pos_update_func(&update_param)) {
+			LOG_ERR("post-update failed!");
+			apply_result = PLDM_FW_UPDATE_GENERIC_ERROR;
+		}
+	}
+	k_msleep(PLDM_UPDATE_DELAY_AFTER_POST_UPDATE);
+#endif
+
 	if (report_tranfer(mctp_p, ext_params, apply_result)) {
 		report_tranfer(mctp_p, ext_params, PLDM_FW_UPDATE_GENERIC_ERROR);
 		cur_aux_state = STATE_AUX_FAILED;
@@ -975,12 +989,15 @@ void req_fw_update_handler(void *mctp_p, void *ext_params, void *arg)
 	cur_aux_state = STATE_AUX_SUCCESS;
 
 exit:
+#ifndef PLDM_UPDATE_POST_UPDATE_BEFORE_APPLY_COMPLETE
 	/* do post-update */
 	if (fw_info->pos_update_func) {
 		if (fw_info->pos_update_func(&update_param)) {
 			LOG_ERR("post-update failed!");
 		}
 	}
+#endif
+
 	fw_update_cfg.image_size = 0;
 	if (fw_update_tid) {
 		fw_update_tid = NULL;

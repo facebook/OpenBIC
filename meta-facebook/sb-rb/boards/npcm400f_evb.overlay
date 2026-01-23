@@ -12,7 +12,9 @@
 };
 
 &i2c1a {
-	clock-frequency = <I2C_BITRATE_STANDARD>;
+	clock-frequency = <I2C_BITRATE_FAST>;
+    scllt = <65>;
+	sclht = <60>;
 	status = "okay";
 };
 
@@ -23,14 +25,14 @@
 &i2c2a {
 	clock-frequency = <I2C_BITRATE_FAST>;
 	scllt = <65>;
-  sclht = <60>;
+	sclht = <60>;
 	status = "okay";
 };
 
 &i2c3a {
 	clock-frequency = <I2C_BITRATE_FAST>;
 	scllt = <65>;
-  sclht = <60>;
+    sclht = <60>;
 	status = "okay";
 };
 
@@ -39,18 +41,24 @@
 };
 
 &i2c4b {
-	clock-frequency = <I2C_BITRATE_STANDARD>;
+	clock-frequency = <I2C_BITRATE_FAST>;
+    scllt = <65>;
+	sclht = <60>;
 	status = "okay";
 };
 
 &i2c5a {
-	clock-frequency = <I2C_BITRATE_STANDARD>;
+	clock-frequency = <I2C_BITRATE_FAST>;
+    scllt = <65>;
+	sclht = <60>;
 	status = "okay";
 };
 
 &i2c6a {
-  clock-frequency = <I2C_BITRATE_STANDARD>;
-	status = "okay";
+    clock-frequency = <I2C_BITRATE_STANDARD>;
+    status = "okay";
+    multi-master = <1>;
+    wait_free_time = <1000>;
 };
 
 &i2c6b {
@@ -58,37 +66,49 @@
 };
 
 &i2c7a {
-	clock-frequency = <I2C_BITRATE_STANDARD>;
+	clock-frequency = <I2C_BITRATE_FAST>;
+    scllt = <65>;
+	sclht = <60>;
 	status = "okay";
 };
 
 &i2c8a {
-	clock-frequency = <I2C_BITRATE_STANDARD>;
+	clock-frequency = <I2C_BITRATE_FAST>;
+    scllt = <65>;
+	sclht = <60>;
 	status = "okay";
 };
 
 &i2c9a {
-	clock-frequency = <I2C_BITRATE_STANDARD>;
+	clock-frequency = <I2C_BITRATE_FAST>;
+    scllt = <65>;
+	sclht = <60>;
 	status = "okay";
 };
 
 &i2c10a {
-	clock-frequency = <I2C_BITRATE_STANDARD>;
+	clock-frequency = <I2C_BITRATE_FAST>;
+    scllt = <65>;
+	sclht = <60>;
 	status = "okay";
 };
 
 &i2c11a {
-    clock-frequency = <I2C_BITRATE_STANDARD>;
+    clock-frequency = <I2C_BITRATE_FAST>;
+    scllt = <65>;
+	sclht = <60>;
     status = "okay";
 };
 
 &i2c12a {
-	clock-frequency = <I2C_BITRATE_STANDARD>;
+	clock-frequency = <I2C_BITRATE_FAST>;
+    scllt = <65>;
+	sclht = <60>;
 	status = "okay";
 };
 
 &spip1 {
-    status = "disabled";
+    status = "okay";
 };
 
 &usbd0 {
@@ -150,4 +170,24 @@
 
 &i3c5 {
 	status = "disabled";
+};
+
+&pwm1 {
+    status = "okay";
+};
+
+&pwm4 {
+    status = "disabled";
+};
+
+&pwm5 {
+    status = "disabled";
+};
+
+&pwm6 {
+    status = "okay";
+};
+
+&gpio7 {
+    label = "GPIO_7";
 };

@@ -14,23 +14,11 @@
  * limitations under the License.
  */
 
-#ifndef CLOCK_SHELL_H
-#define CLOCK_SHELL_H
+#ifndef PLAT_THERMAL_H
+#define PLAT_THERMAL_H
 
-#include <shell/shell.h>
+#include <stdint.h>
 
-enum CLOCK_COMPONENT { CLK_BUF_100M_U85, CLK_BUF_100M_U87, CLK_BUF_100M_U88, CLK_COMPONENT_MAX };
-
-typedef struct clock_compnt_mapping {
-	uint8_t clock_name_index;
-	uint8_t addr;
-	uint8_t bus;
-	uint8_t *clock_name;
-} clock_compnt_mapping;
-
-void cmd_set_clock(const struct shell *shell, size_t argc, char **argv);
-void cmd_get_clock(const struct shell *shell, size_t argc, char **argv);
-void cmd_get_clock_status(const struct shell *shell, size_t argc, char **argv);
-void cmd_clear_clock_status(const struct shell *shell, size_t argc, char **argv);
+void init_thermal_polling(void);
 
 #endif

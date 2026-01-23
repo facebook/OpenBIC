@@ -43,7 +43,8 @@ LOG_MODULE_REGISTER(plat_event);
 #define AEGIS_CPLD_ADDR (0x4C >> 1)
 #endif
 
-void check_cpld_handler();
+void check_cpld_handler(struct k_work *work);
+K_WORK_DELAYABLE_DEFINE(check_cpld_work, check_cpld_handler);
 
 K_TIMER_DEFINE(init_ubc_delayed_timer, check_ubc_delayed_timer_handler, NULL);
 
@@ -779,20 +780,20 @@ void process_mtia_vr_power_fault_sel(aegis_cpld_info *cpld_info, uint8_t *curren
 	}
 }
 
-void check_cpld_handler()
+void check_cpld_handler(struct k_work *work)
 {
 	uint8_t data[4] = { 0 };
 	uint32_t version = 0;
+	struct k_work_delayable *dwork = k_work_delayable_from_work(work);
+
 	if (!plat_i2c_read(I2C_BUS5, AEGIS_CPLD_ADDR, 0x44, data, 4)) {
 		LOG_ERR("Failed to read cpld version from cpld");
+	} else {
+		version = (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | data[3];
+		LOG_DBG("The cpld version: %08x", version);
 	}
-	version = (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | data[3];
-	LOG_DBG("The cpld version: %08x", version);
 
-	worker_job job = { 0 };
-	job.delay_ms = 5000;
-	job.fn = check_cpld_handler;
-	add_work(&job);
+	k_work_schedule_for_queue(&plat_work_q, dwork, K_MSEC(5000));
 }
 
 void init_cpld_polling(void)
@@ -810,8 +811,5 @@ void init_cpld_polling(void)
 
 	k_timer_start(&init_ubc_delayed_timer, K_MSEC(1000), K_NO_WAIT);
 
-	worker_job job = { 0 };
-	job.delay_ms = 15000; // 15 seconds
-	job.fn = check_cpld_handler;
-	add_work(&job);
+	k_work_schedule_for_queue(&plat_work_q, &check_cpld_work, K_MSEC(15000));
 }
