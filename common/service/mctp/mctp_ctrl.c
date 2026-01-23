@@ -134,6 +134,10 @@ uint8_t mctp_ctrl_cmd_get_message_type_support(void *mctp_inst, uint8_t *buf, ui
 	CHECK_NULL_ARG_WITH_RETURN(resp, MCTP_ERROR);
 	CHECK_NULL_ARG_WITH_RETURN(resp_len, MCTP_ERROR);
 
+#ifdef ENABLE_MCTP_GET_MSG_TYPE_SUPPORT_DEBUG_LOG
+	LOG_INF("mctp get_message_type_support received");
+#endif
+
 	struct _get_message_type_resp *p = (struct _get_message_type_resp *)resp;
 
 	uint8_t type_len = 0;
