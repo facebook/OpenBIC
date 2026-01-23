@@ -33,23 +33,23 @@ static int cmd_get_bmc_sensor(const struct shell *shell, size_t argc, char **arg
 
 	uint8_t pwr_value_lsb = 0;
 	uint8_t pwr_value_msb = 0;
-	if (!plat_read_cpld(CPLD_POWER_INFO_0_REG, &pwr_value_lsb, 1)){
+	if (!plat_read_cpld(CPLD_POWER_INFO_0_REG, &pwr_value_lsb, 1)) {
 		shell_error(shell, "LSB read from CPLD fail");
 		return -1;
 	}
-	if (!plat_read_cpld(CPLD_POWER_INFO_1_REG, &pwr_value_msb, 1)){
+	if (!plat_read_cpld(CPLD_POWER_INFO_1_REG, &pwr_value_msb, 1)) {
 		shell_error(shell, "MSB read from CPLD fail");
 		return -1;
 	}
 
-	shell_info(shell, "P52V_ASIC_SENSE_PWR:%d", (pwr_value_msb<<8)|pwr_value_lsb);
+	shell_info(shell, "P52V_ASIC_SENSE_PWR : %d", (pwr_value_msb << 8) | pwr_value_lsb);
 
 	return 0;
 }
-SHELL_STATIC_SUBCMD_SET_CREATE(
-	sub_bmc_sensor, SHELL_CMD(get, NULL, "get P52V_ASIC_SENSE_PWR from CPLD", cmd_get_bmc_sensor),
-	SHELL_SUBCMD_SET_END);
+SHELL_STATIC_SUBCMD_SET_CREATE(sub_bmc_sensor,
+			       SHELL_CMD(get, NULL, "get P52V_ASIC_SENSE_PWR from CPLD",
+					 cmd_get_bmc_sensor),
+			       SHELL_SUBCMD_SET_END);
 
 /* Root of command bmc_sensor */
-SHELL_CMD_REGISTER(bmc_sensor, &sub_bmc_sensor, "bmc_sensor get",
-		       NULL);
+SHELL_CMD_REGISTER(bmc_sensor, &sub_bmc_sensor, "bmc_sensor get", NULL);

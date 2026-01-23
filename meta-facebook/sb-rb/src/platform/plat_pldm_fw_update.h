@@ -67,4 +67,5 @@ uint32_t plat_get_image_crc_checksum(uint8_t index);
 int sb_read_block(uint8_t slv_id, uint8_t cmd, uint8_t *data, uint32_t len);
 bool plat_get_image_crc_checksum_from_flash(uint8_t index, uint8_t data_type, uint32_t *data);
 uint32_t plat_get_image_version(uint8_t index);
+void update_temp_boot0_version(uint32_t version, uint8_t index);
 #endif /* _PLAT_FWUPDATE_H_ */

@@ -26,6 +26,7 @@
 #include "util_sys.h"
 #include "plat_i2c_target.h"
 #include "plat_pldm_sensor.h"
+#include "plat_power_capping.h"
 
 LOG_MODULE_REGISTER(plat_adc);
 
@@ -36,9 +37,6 @@ LOG_MODULE_REGISTER(plat_adc);
 #define MEDHA1_ADC_CHANNEL 6
 
 #define ADC_SPI_FREQ 6000000
-
-K_THREAD_STACK_DEFINE(adc_thread_stack, ADC_STACK_SIZE);
-struct k_thread adc_poll_thread;
 
 K_THREAD_STACK_DEFINE(adc_rainbow_thread_stack, ADC_STACK_SIZE);
 struct k_thread adc_rainbow_poll_thread;
@@ -51,8 +49,8 @@ float ads7066_val_0 = 0;
 float ads7066_val_1 = 0;
 const float ads7066_vref = 2.5;
 const float ad4058_vref = 2.5;
-
-const struct spi_cs_control *cs_ctrl;
+static uint8_t adc_good_status[2] = { 0xFF, 0xFF };
+static uint8_t final_ucr_status = 0;
 
 typedef struct {
 	uint16_t avg_times; // 20ms at a time
@@ -65,19 +63,28 @@ typedef struct {
 	float pwr_avg_val;
 	float vr_sum;
 	bool ucr_status; // over current
-	struct k_work ucr_work;
 } adc_info_t;
 
 //MEDHA0: level 2 , level3
 //MEDHA1: level 2 , level3
-adc_info_t adc_info[ADC_IDX_MAX] = { { .avg_times = 20, .ucr = 1255 },
-				     { .avg_times = 60, .ucr = 1255 },
-				     { .avg_times = 600, .ucr = 1255 },
-				     { .avg_times = 800, .ucr = 1255 } };
+adc_info_t adc_info[ADC_IDX_MAX] = { { .avg_times = 20, .ucr = 1600 },
+				     { .avg_times = 60, .ucr = 1600 },
+				     { .avg_times = 600, .ucr = 1070 },
+				     { .avg_times = 800, .ucr = 1070 } };
 
 static const struct device *spi_dev;
 
-static void adc_poll_init()
+uint8_t get_adc_good_status(uint8_t idx)
+{
+	return adc_good_status[idx];
+}
+
+uint8_t get_final_ucr_status()
+{
+	return (final_ucr_status & 0xF0);
+}
+
+void adc_poll_init()
 {
 	for (uint8_t i = ADC_IDX_MEDHA0_1; i < ADC_IDX_MAX; i++) {
 		adc_info[i].sum = 0;
@@ -86,6 +93,7 @@ static void adc_poll_init()
 		adc_info[i].vr_sum = 0;
 		adc_info[i].pwr_avg_val = 0;
 		memset(adc_info[i].buf, 0, sizeof(uint16_t) * ADC_AVERGE_TIMES_MAX);
+		memset(adc_info[i].vr_voltage_buf, 0, sizeof(uint16_t) * ADC_AVERGE_TIMES_MAX);
 	}
 }
 
@@ -151,39 +159,6 @@ float adc_raw_mv_to_apms(uint16_t v, float vref)
 	return (get_vr_module() == VR_MODULE_MPS) ? 1000 * temp_v * 0.796 : 1000 * temp_v * 0.797;
 }
 
-static bool adc_ucr_handler(uint8_t idx, bool state) // state is ucr or not
-{
-	uint8_t data = 0;
-	if (!plat_read_cpld(CPLD_OFFSET_POWER_CLAMP, &data, 1))
-		return false;
-
-	uint8_t bit = (idx == ADC_IDX_MEDHA0_1) ? 7 :
-		      (idx == ADC_IDX_MEDHA1_1) ? 6 :
-		      (idx == ADC_IDX_MEDHA0_2) ? 5 :
-		      (idx == ADC_IDX_MEDHA1_2) ? 4 :
-						  0xFF;
-	if (bit == 0xFF)
-		return false;
-
-	// if ucr, pull up
-	if (state)
-		data |= (1 << bit);
-	else
-		data &= ~(1 << bit);
-
-	if (!plat_write_cpld(CPLD_OFFSET_POWER_CLAMP, &data))
-		return false;
-
-	return true;
-}
-static void adc_ucr_work_handler(struct k_work *work)
-{
-	const adc_info_t *adc = CONTAINER_OF(work, adc_info_t, ucr_work);
-
-	uint8_t idx = adc - adc_info;
-	adc_ucr_handler(idx, adc->ucr_status);
-}
-
 uint16_t float_voltage_transfer_to_uint16(float temp_voltage_value)
 {
 	// Upper:ex. 0.85 → 85
@@ -206,7 +181,6 @@ float uint16_voltage_transfer_to_float(uint16_t temp_voltage_value)
 	float restored = upper_val + lower_val;
 	return restored;
 }
-K_WORK_DEFINE(adc_ucr_work, adc_ucr_work_handler);
 
 static void update_adc_info(uint16_t raw_data, uint8_t base_idx, float vref)
 {
@@ -247,9 +221,44 @@ static void update_adc_info(uint16_t raw_data, uint8_t base_idx, float vref)
 
 		// check status
 		bool pwr_status = (adc->pwr_avg_val >= adc->ucr);
-		if (adc->ucr_status != pwr_status) {
-			adc->ucr_status = pwr_status;
-			k_work_submit(&adc->ucr_work);
+		adc->ucr_status = pwr_status;
+		if (pwr_status) {
+			final_ucr_status |= (1 << (7 - i));
+		} else {
+			final_ucr_status &= ~(1 << (7 - i));
+		}
+	}
+}
+
+static void update_vr_base_power_info()
+{
+	float float_value = 0;
+	uint16_t val_medha0 = 0;
+	uint16_t val_medha1 = 0;
+	float_value = get_sensor_reading_cache_as_float(SENSOR_NUM_ASIC_P0V85_MEDHA0_VDD_PWR_W);
+	val_medha0 = (float_value + 500) / 1000;
+	float_value = get_sensor_reading_cache_as_float(SENSOR_NUM_ASIC_P0V85_MEDHA1_VDD_PWR_W);
+	val_medha1 = (float_value + 500) / 1000;
+
+	for (uint8_t i = 0; i < ADC_IDX_MAX; i++) {
+		adc_info_t *adc = &adc_info[i];
+		adc->sum -= adc->buf[adc->buf_idx];
+		adc->buf[adc->buf_idx] = ((i == ADC_IDX_MEDHA0_1) || (i == ADC_IDX_MEDHA0_2)) ?
+						 val_medha0 :
+						 val_medha1;
+		adc->sum += adc->buf[adc->buf_idx];
+		adc->avg_val = adc->sum / adc->avg_times;
+
+		// decrease buffer idx
+		adc->buf_idx = (adc->buf_idx + 1) % adc->avg_times;
+
+		// check status
+		bool pwr_status = (adc->avg_val >= adc->ucr);
+		adc->ucr_status = pwr_status;
+		if (pwr_status) {
+			final_ucr_status |= (1 << (7 - i));
+		} else {
+			final_ucr_status &= ~(1 << (7 - i));
 		}
 	}
 }
@@ -281,7 +290,7 @@ float get_adc_vr_pwr(uint8_t idx)
 {
 	return adc_info[idx].pwr_avg_val;
 }
-int ads7066_read_reg(uint8_t reg, uint8_t idx)
+int ads7066_read_reg(uint8_t reg, uint8_t idx, uint8_t *out_data)
 {
 	spi_dev = device_get_binding("SPIP");
 	if (!spi_dev) {
@@ -337,6 +346,7 @@ int ads7066_read_reg(uint8_t reg, uint8_t idx)
 		return ret;
 	}
 
+	*out_data = rx_buf[0];
 	LOG_INF("medha%d ADS7066 read reg 0x%02x: 0x%02x 0x%02x 0x%02x", idx, reg, rx_buf[0],
 		rx_buf[1], rx_buf[2]);
 	return 0;
@@ -460,7 +470,7 @@ static void ads7066_read_voltage(uint8_t idx)
 
 	return;
 }
-int ad4058_read_reg(uint8_t reg, uint8_t idx)
+int ad4058_read_reg(uint8_t reg, uint8_t idx, uint8_t *out_data)
 {
 	spi_dev = device_get_binding("SPIP");
 	if (!spi_dev) {
@@ -517,6 +527,7 @@ int ad4058_read_reg(uint8_t reg, uint8_t idx)
 		return ret;
 	}
 
+	*out_data = rx_buf[1];
 	LOG_HEXDUMP_INF(rx_buf, 3, "ad4058_read_reg");
 	return 0;
 }
@@ -660,18 +671,6 @@ static void ad4058_read_voltage(uint8_t idx)
 	return;
 }
 
-void get_ads7066_voltage()
-{
-	printk(" ads7066 medha0 voltage is %f V\n", ads7066_val_0);
-	printk(" ads7066 medha1 voltage is %f V\n", ads7066_val_1);
-}
-
-void get_ad4058_voltage()
-{
-	printk(" ad4058 medha0 voltage is %f V\n", ad4058_val_0);
-	printk(" ad4058 medha1 voltage is %f V\n", ad4058_val_1);
-}
-
 void ads7066_mode_init()
 {
 	//set auto-sequence mode
@@ -686,6 +685,12 @@ void ads7066_mode_init()
 			ads7066_write_reg(0x1, 0x82, i);
 		ads7066_write_reg(0x12, 0x1, i);
 		ads7066_write_reg(0x3, 0x6, i);
+
+		//check and update good status
+		uint8_t value = 0;
+		ads7066_read_reg(0x3, i, &value);
+		adc_good_status[i] = (value & 0x07) == 0x06 ? 0 : 0xFF;
+
 		ads7066_write_reg(0x4, 0x8, i);
 		ads7066_write_reg(0x10, 0x11, i);
 		ads7066_write_reg(0x2, 0x10, i);
@@ -702,6 +707,12 @@ void ad4058_mode_init()
 		3.33us * 256 = 0.8ms per sample
 	*/
 	for (int i = 0; i < ADC_RB_IDX_MAX; i++) {
+		// exit to config mode, check product id
+		ad4058_write_reg(0xA8, 0x00, i);
+		uint8_t value = 0;
+		ad4058_read_reg(0x03, i, &value);
+		adc_good_status[i] = (value & 0x0F) == 0x07 ? 0 : 0xFF;
+
 		ad4058_write_reg(0x27, 0x20, i);
 		ad4058_write_reg(0x23, 0x7, i);
 		ad4058_write_reg(0x21, 0x1, i);
@@ -722,20 +733,24 @@ void adc_rainbow_polling_handler(void *p1, void *p2, void *p3)
 		LOG_ERR("Invalid ADC index %d", adc_idx_read);
 
 	while (1) {
-		if (adc_poll_flag) {
-			switch (adc_idx_read) {
-			case ADI_AD4058:
-				ad4058_read_voltage(ADC_RB_IDX_MEDHA0);
-				ad4058_read_voltage(ADC_RB_IDX_MEDHA1);
-				break;
-			case TIC_ADS7066:
-				ads7066_read_voltage(ADC_RB_IDX_MEDHA0);
-				ads7066_read_voltage(ADC_RB_IDX_MEDHA1);
-				break;
-			default:
-				LOG_DBG("Invalid ADC index %d", adc_idx_read);
-				break;
+		if (get_power_capping_source() == CAPPING_SOURCE_ADC) {
+			if (adc_poll_flag) {
+				switch (adc_idx_read) {
+				case ADI_AD4058:
+					ad4058_read_voltage(ADC_RB_IDX_MEDHA0);
+					ad4058_read_voltage(ADC_RB_IDX_MEDHA1);
+					break;
+				case TIC_ADS7066:
+					ads7066_read_voltage(ADC_RB_IDX_MEDHA0);
+					ads7066_read_voltage(ADC_RB_IDX_MEDHA1);
+					break;
+				default:
+					LOG_DBG("Invalid ADC index %d", adc_idx_read);
+					break;
+				}
 			}
+		} else if (get_power_capping_source() == CAPPING_SOURCE_VR) {
+			update_vr_base_power_info();
 		}
 		k_msleep(1);
 	}
@@ -743,9 +758,6 @@ void adc_rainbow_polling_handler(void *p1, void *p2, void *p3)
 
 void plat_adc_rainbow_init(void)
 {
-	for (uint8_t i = 0; i < ADC_IDX_MAX; i++) {
-		k_work_init(&adc_info[i].ucr_work, adc_ucr_work_handler);
-	}
 	k_thread_create(&adc_rainbow_poll_thread, adc_rainbow_thread_stack, ADC_STACK_SIZE,
 			adc_rainbow_polling_handler, NULL, NULL, NULL, CONFIG_MAIN_THREAD_PRIORITY,
 			0, K_NO_WAIT);

@@ -55,6 +55,18 @@ void cmd_read_raw(const struct shell *shell, size_t argc, char **argv)
 	shell_print(shell, "");
 }
 
+void cmd_read_info(const struct shell *shell, size_t argc, char **argv)
+{
+	uint8_t sensor_id = strtoul(argv[1], NULL, 16);
+
+	sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
+	if (cfg == NULL)
+		return;
+
+	shell_print(shell, "sensor_id 0x%02x bus: %d, addr: 0x%x(0x%x)", sensor_id, cfg->port,
+		    cfg->target_addr, (cfg->target_addr >> 1));
+}
+
 void cmd_cpld_dump(const struct shell *shell, size_t argc, char **argv)
 {
 	if (argc != 3) {
@@ -122,6 +134,7 @@ void cmd_info(const struct shell *shell, size_t argc, char **argv)
 	uint8_t board_id = get_asic_board_id();
 	uint8_t board_rev = get_board_rev_id();
 	uint8_t adc_idx = get_adc_type();
+	uint8_t tray_loc = get_tray_location();
 
 	shell_warn(shell, "vr module: %s",
 		   (vr < VR_MODULE_UNKNOWN) ? vr_module_str[vr] : "UNKNOWN");
@@ -132,18 +145,19 @@ void cmd_info(const struct shell *shell, size_t argc, char **argv)
 		   (board_id < ASIC_BOARD_ID_UNKNOWN) ? asic_board_id_str[board_id] : "UNKNOWN");
 	shell_warn(shell, "asic board rev id: %d", board_rev);
 	shell_warn(shell, "adc idx: %d", adc_idx);
+	shell_warn(shell, "tray location: %d", tray_loc);
 }
 
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_cpld_cmds, SHELL_CMD(dump, NULL, "cpld dump", cmd_cpld_dump),
 			       SHELL_CMD(write, NULL, "write cpld register", cmd_cpld_write),
 			       SHELL_SUBCMD_SET_END);
 
-SHELL_STATIC_SUBCMD_SET_CREATE(sub_test_cmds, SHELL_CMD(test, NULL, "test command", cmd_test),
-			       SHELL_CMD(read_raw, NULL, "read raw data test command",
-					 cmd_read_raw),
-			       SHELL_CMD(cpld, &sub_cpld_cmds, "cpld commands", NULL),
-			       SHELL_CMD(info, NULL, "info commands", cmd_info),
-			       SHELL_SUBCMD_SET_END);
+SHELL_STATIC_SUBCMD_SET_CREATE(
+	sub_test_cmds, SHELL_CMD(test, NULL, "test command", cmd_test),
+	SHELL_CMD(read_raw, NULL, "read raw data test command", cmd_read_raw),
+	SHELL_CMD(read_info, NULL, "read sensor info test command", cmd_read_info),
+	SHELL_CMD(cpld, &sub_cpld_cmds, "cpld commands", NULL),
+	SHELL_CMD(info, NULL, "info commands", cmd_info), SHELL_SUBCMD_SET_END);
 
 /* Root of command test */
 SHELL_CMD_REGISTER(test, &sub_test_cmds, "Test commands", NULL);

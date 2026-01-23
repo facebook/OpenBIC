@@ -59,6 +59,8 @@ const char *const sensor_status_name[] = {
 	"sensor_not_present",
 	"pec_error",
 	"parameter_not_valid",
+	"unavailable",
+	"open_circuit",
 };
 
 #ifdef ENABLE_PLDM_SENSOR
@@ -71,6 +73,7 @@ const char *const pldm_sensor_status_name[] = {
 	"sensor_initializing",
 	"sensor_shuttingdown",
 	"sensor_intest",
+	"sensor_open_circuit",
 };
 #endif
 // clang-format on

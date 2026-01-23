@@ -18,6 +18,7 @@
 #include <shell/shell.h>
 
 #include "plat_adc.h"
+#include "plat_power_capping.h"
 
 void cmd_adc_poll_get(const struct shell *shell, size_t argc, char **argv)
 {
@@ -60,7 +61,22 @@ void cmd_adc_set_averge_times(const struct shell *shell, size_t argc, char **arg
 		return;
 	}
 
-	adc_set_averge_times(idx, time);
+	switch (idx) {
+	case ADC_IDX_MEDHA0_1:
+		set_power_capping_time_w(CAPPING_VR_IDX_MEDHA0, CAPPING_LV_IDX_LV2, time);
+		break;
+	case ADC_IDX_MEDHA1_1:
+		set_power_capping_time_w(CAPPING_VR_IDX_MEDHA1, CAPPING_LV_IDX_LV2, time);
+		break;
+	case ADC_IDX_MEDHA0_2:
+		set_power_capping_time_w(CAPPING_VR_IDX_MEDHA0, CAPPING_LV_IDX_LV3, time);
+		break;
+	case ADC_IDX_MEDHA1_2:
+		set_power_capping_time_w(CAPPING_VR_IDX_MEDHA1, CAPPING_LV_IDX_LV3, time);
+		break;
+	default:
+		break;
+	}
 
 	shell_warn(shell, "set adc %d averge time to %d", idx, time);
 }
@@ -196,8 +212,29 @@ void cmd_adc_set_ucr(const struct shell *shell, size_t argc, char **argv)
 		return;
 	}
 
-	set_adc_ucr(idx, ucr);
+	switch (idx) {
+	case ADC_IDX_MEDHA0_1:
+		set_power_capping_threshold(CAPPING_VR_IDX_MEDHA0, CAPPING_LV_IDX_LV2, ucr);
+		break;
+	case ADC_IDX_MEDHA1_1:
+		set_power_capping_threshold(CAPPING_VR_IDX_MEDHA1, CAPPING_LV_IDX_LV2, ucr);
+		break;
+	case ADC_IDX_MEDHA0_2:
+		set_power_capping_threshold(CAPPING_VR_IDX_MEDHA0, CAPPING_LV_IDX_LV3, ucr);
+		break;
+	case ADC_IDX_MEDHA1_2:
+		set_power_capping_threshold(CAPPING_VR_IDX_MEDHA1, CAPPING_LV_IDX_LV3, ucr);
+		break;
+	default:
+		break;
+	}
 	shell_warn(shell, "set adc %d ucr to %d", idx, ucr);
+}
+
+void cmd_adc_get_good_status(const struct shell *shell, size_t argc, char **argv)
+{
+	shell_info(shell, "%02x %02x", get_adc_good_status(ADC_RB_IDX_MEDHA0),
+		   get_adc_good_status(ADC_RB_IDX_MEDHA1));
 }
 
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_adc_poll_cmds,
@@ -221,6 +258,7 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
 	SHELL_CMD(val, NULL, "get adc averge val", cmd_adc_get_averge_val),
 	SHELL_CMD(buf_raw, NULL, "get adc buf raw data", cmd_adc_get_buf_raw),
 	SHELL_CMD(buf, NULL, "get adc buf", cmd_adc_get_buf),
+	SHELL_CMD(get_good_status, NULL, "get adc good status", cmd_adc_get_good_status),
 	SHELL_CMD(ucr, &sub_adc_ucr_cmds, "adc ucr cmds", NULL), SHELL_SUBCMD_SET_END);
 
 /* Root of command test */

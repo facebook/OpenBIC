@@ -24,10 +24,12 @@
 #include <zephyr.h>
 
 #define RESET 0x00
+#define VR_EN_PIN_READING_5 0x05
 #define CPLD_OFFSET_BOARD_REV_ID 0x14
 #define CPLD_OFFSET_VR_VENDER_TYPE 0x15
 #define CPLD_OFFSET_POWER_CLAMP 0x25
 #define CPLD_OFFSET_USERCODE 0x32
+#define CPLD_OFFSET_POWER_CAPPING_LV1_TIME 0x36
 #define CPLD_OFFSET_MMC_PWR_EN 0x38
 #define CPLD_OFFSET_ASIC_BOARD_ID 0x3C
 #define CPLD_OFFSET_ADC_IDX 0xA0
@@ -58,7 +60,10 @@
 #define VR_PWRGD_PIN_READING_5_REG 0x0B
 #define VR_PWRGD_PIN_READING_6_REG 0x0C
 #define VR_CLK_ENABLE_PIN_CTRL_REG 0xA1 // pin control (1-step only)
+#define CPLD_ASIC_RESET_STATUS_REG 0xA2
 #define VR_1STEP_FUNC_EN_REG 0xA9
+#define HBM_CATTRIP_LOG_REG 0x27
+#define ASIC_TEMP_OVER_LOG_REG 0x29
 
 #define CPLD_ADDR (0x4C >> 1)
 #define I2C_BUS_CPLD I2C_BUS11
@@ -104,4 +109,6 @@ void check_ubc_delayed_timer_handler(struct k_timer *timer);
 bool set_cpld_bit(uint8_t cpld_offset, uint8_t bit, uint8_t value);
 void give_all_vr_pm_alert_sem();
 void get_cpld_polling_power_info(int *reading);
+void set_cpld_polling_enable_flag(bool status);
+void reset_error_log_states(uint8_t err_type);
 #endif

@@ -31,6 +31,8 @@
 #include "plat_i2c_target.h"
 #include "shell_plat_average_power.h"
 #include "plat_ioexp.h"
+#include "tmp431.h"
+#include "plat_util.h"
 
 LOG_MODULE_REGISTER(plat_hook);
 
@@ -116,6 +118,28 @@ bool post_common_sensor_read(sensor_cfg *cfg, void *args, int *const reading)
 	if (!post_sensor_reading_hook_func(sensor_number))
 		return false;
 	return true;
+}
+
+bool post_tmp432_read(sensor_cfg *cfg, void *args, int *reading)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	ARG_UNUSED(args);
+	ARG_UNUSED(reading);
+
+	uint8_t status = 0;
+
+	if (tmp432_get_temp_open_status(cfg, &status)) {
+		uint8_t bit = (cfg->offset == TMP432_REMOTE_TEMPERATRUE_1) ? BIT(1) :
+			      (cfg->offset == TMP432_REMOTE_TEMPERATRUE_2) ? BIT(2) :
+									     0;
+		// only check BIT(1), BIT(2)
+		if (status & bit) {
+			cfg->cache_status = SENSOR_OPEN_CIRCUIT;
+			return false;
+		}
+	}
+
+	return post_common_sensor_read(cfg, args, reading);
 }
 
 bool is_mb_dc_on()
@@ -229,9 +253,6 @@ bootstrap_mapping_register bootstrap_table[] = {
 	  true },
 	{ STRAP_INDEX_HAMSA_CRM_STRAP_1, STRAP_TYPE_CPLD, 0x16, "HAMSA_CRM_STRAP_1", 0, 1, 0x0, 0x0,
 	  true },
-	{ STRAP_INDEX_HAMSA_MFIO12, STRAP_TYPE_CPLD, 0x17, "HAMSA_MFIO12", 7, 1, 0x0, 0x0, false },
-	{ STRAP_INDEX_HAMSA_MFIO13, STRAP_TYPE_CPLD, 0x17, "HAMSA_MFIO13", 6, 1, 0x0, 0x0, false },
-	{ STRAP_INDEX_HAMSA_MFIO14, STRAP_TYPE_CPLD, 0x17, "HAMSA_MFIO14", 5, 1, 0x0, 0x0, false },
 	{ STRAP_INDEX_HAMSA_MFIO7, STRAP_TYPE_CPLD, 0x17, "HAMSA_MFIO7", 4, 1, 0x01, 0x01, false },
 	{ STRAP_INDEX_HAMSA_MFIO9, STRAP_TYPE_CPLD, 0x17, "HAMSA_MFIO9", 3, 1, 0x0, 0x0, false },
 	{ STRAP_INDEX_HAMSA_MFIO11, STRAP_TYPE_CPLD, 0x17, "HAMSA_MFIO11", 2, 1, 0x0, 0x0, false },
@@ -283,18 +304,6 @@ bootstrap_mapping_register bootstrap_table[] = {
 	  0x01, false },
 	{ STRAP_INDEX_MEDHA1_DFT_TAP_EN_PLD_L, STRAP_TYPE_CPLD, 0x1d, "MEDHA1_DFT_TAP_EN_PLD_L", 0,
 	  1, 0x01, 0x01, false },
-	{ STRAP_INDEX_MEDHA0_MFIO_12, STRAP_TYPE_CPLD, 0x1e, "MEDHA0_MFIO_12", 5, 1, 0x0, 0x0,
-	  true },
-	{ STRAP_INDEX_MEDHA0_MFIO_13, STRAP_TYPE_CPLD, 0x1e, "MEDHA0_MFIO_13", 4, 1, 0x0, 0x0,
-	  true },
-	{ STRAP_INDEX_MEDHA0_MFIO_14, STRAP_TYPE_CPLD, 0x1e, "MEDHA0_MFIO_14", 3, 1, 0x0, 0x0,
-	  true },
-	{ STRAP_INDEX_MEDHA1_MFIO_12, STRAP_TYPE_CPLD, 0x1e, "MEDHA1_MFIO_12", 2, 1, 0x0, 0x0,
-	  true },
-	{ STRAP_INDEX_MEDHA1_MFIO_13, STRAP_TYPE_CPLD, 0x1e, "MEDHA1_MFIO_13", 1, 1, 0x0, 0x0,
-	  true },
-	{ STRAP_INDEX_MEDHA1_MFIO_14, STRAP_TYPE_CPLD, 0x1e, "MEDHA1_MFIO_14", 0, 1, 0x0, 0x0,
-	  true },
 	{ STRAP_INDEX_FM_JTAG_MEDHA0_JTCE_0_2, STRAP_TYPE_CPLD, 0x1f, "MEDHA0_JTCE_0_2", 3, 3, 0x01,
 	  0x01, true },
 	{ STRAP_INDEX_FM_JTAG_MEDHA1_JTCE_0_2, STRAP_TYPE_CPLD, 0x1f, "MEDHA1_JTCE_0_2", 0, 3, 0x01,
@@ -353,6 +362,16 @@ bootstrap_mapping_register bootstrap_table[] = {
 	  "MEDHA1_MFIO10", 2, 1, 0x0, 0x0, false },
 
 };
+
+void set_bootstrap_table_change_setting_value(uint8_t index, uint8_t value)
+{
+	if (index >= STRAP_INDEX_MAX) {
+		LOG_ERR("invalid index:%d", index);
+		return;
+	}
+	bootstrap_table[index].change_setting_value = value;
+}
+
 bool vr_rail_name_get(uint8_t rail, uint8_t **name)
 {
 	CHECK_NULL_ARG_WITH_RETURN(name, false);
@@ -879,7 +898,7 @@ bool set_bootstrap_table_val_to_ioexp(void)
 	}
 
 	// tca6424a only in EVB
-	if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
+	if (is_tca6424a_accessible()) {
 		uint8_t port1_data = 0;
 		uint8_t port2_data = 0;
 		for (uint8_t i = STRAP_INDEX_HAMSA_MFIO6; i <= STRAP_INDEX_MEDHA1_MFIO10; i++) {
@@ -902,24 +921,45 @@ bool set_bootstrap_table_val_to_ioexp(void)
 bool set_ioexp_val_to_bootstrap_table(void)
 {
 	uint8_t data[2] = { 0x00, 0x00 };
-	if (!pca6416a_i2c_read(PCA6414A_OUTPUT_PORT_0, data, 2)) {
-		LOG_ERR("Can't find bootstrap default from pca6416a");
-		return false;
+	uint8_t direction[2] = { 0x00, 0x00 };
+	if (is_mb_dc_on()) {
+		if (!pca6416a_i2c_read(PCA6414A_OUTPUT_PORT_0, data, 2)) {
+			LOG_ERR("Can't find bootstrap value from pca6416a");
+			return false;
+		}
+		if (!pca6416a_i2c_read(PCA6414A_CONFIG_0, direction, 2)) {
+			LOG_ERR("Can't find bootstrap direction from pca6416a");
+			return false;
+		}
+		// set when output only
+		bootstrap_table[STRAP_INDEX_OWL_E_BOOT_SOURCE_0_7].change_setting_value =
+			(data[0] & (~direction[0]));
+		bootstrap_table[STRAP_INDEX_OWL_W_BOOT_SOURCE_0_7].change_setting_value =
+			(data[1] & (~direction[1]));
 	}
-	bootstrap_table[STRAP_INDEX_OWL_E_BOOT_SOURCE_0_7].change_setting_value = data[0];
-	bootstrap_table[STRAP_INDEX_OWL_W_BOOT_SOURCE_0_7].change_setting_value = data[1];
 
 	// tca6424a only in EVB
-	if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
+	if (is_tca6424a_accessible()) {
 		if (!tca6424a_i2c_read(TCA6424A_OUTPUT_PORT_1, data, 2)) {
-			LOG_ERR("Can't find bootstrap default from tca6424a");
+			LOG_ERR("Can't find bootstrap value from tca6424a");
+			return false;
+		}
+		if (!tca6424a_i2c_read(TCA6424A_CONFIG_1, direction, 2)) {
+			LOG_ERR("Can't find bootstrap direction from tca6424a");
 			return false;
 		}
 		for (uint8_t i = STRAP_INDEX_HAMSA_MFIO6; i <= STRAP_INDEX_MEDHA1_MFIO10; i++) {
 			// check data from port1 or port2
+			uint8_t dir = (bootstrap_table[i].cpld_offsets == TCA6424A_OUTPUT_PORT_1) ?
+					      direction[0] :
+					      direction[1];
 			uint8_t tmp = (bootstrap_table[i].cpld_offsets == TCA6424A_OUTPUT_PORT_1) ?
 					      data[0] :
 					      data[1];
+			// set when output only
+			if ((dir >> bootstrap_table[i].bit_offset) & 0x01) {
+				continue;
+			}
 			bootstrap_table[i].change_setting_value =
 				(tmp >> bootstrap_table[i].bit_offset) & 0x01;
 		}
@@ -1103,16 +1143,45 @@ bool set_bootstrap_val_to_device(uint8_t strap, uint8_t val)
 
 	switch (type) {
 	case STRAP_TYPE_CPLD:
-		if (!plat_write_cpld(bootstrap_table[strap].cpld_offsets, &val))
+		if (!plat_write_cpld(bootstrap_table[strap].cpld_offsets, &val)) {
 			return false;
+		}
+		/* when TEST_STRAP to 0, change MFIO 6 8 10 to INPUT  */
+		/* when TEST_STRAP to 1, change MFIO 6 8 10 to OUTPUT */
+		if (is_tca6424a_accessible()) {
+			if (bootstrap_table[strap].index == STRAP_INDEX_HAMSA_TEST_STRAP_R) {
+				if ((val & BIT(bootstrap_table[strap].bit_offset)) == 0) {
+					set_hamsa_mfio_6_8_10_input();
+				} else {
+					set_hamsa_mfio_6_8_10_output();
+					set_bootstrap_table_val_to_ioexp();
+				}
+			} else if (bootstrap_table[strap].index == STRAP_INDEX_MEDHA0_TEST_STRAP) {
+				if ((val & BIT(bootstrap_table[strap].bit_offset)) == 0) {
+					set_medha0_mfio_6_8_10_input();
+				} else {
+					set_medha0_mfio_6_8_10_output();
+					set_bootstrap_table_val_to_ioexp();
+				}
+			} else if (bootstrap_table[strap].index == STRAP_INDEX_MEDHA1_TEST_STRAP) {
+				if ((val & BIT(bootstrap_table[strap].bit_offset)) == 0) {
+					set_medha1_mfio_6_8_10_input();
+				} else {
+					set_medha1_mfio_6_8_10_output();
+					set_bootstrap_table_val_to_ioexp();
+				}
+			}
+		}
 		break;
 	case STRAP_TYPE_IOEXP_PCA6416A:
-		if (!pca6416a_i2c_write(bootstrap_table[strap].cpld_offsets, &val, 1))
-			return false;
+		if (is_mb_dc_on()) {
+			if (!pca6416a_i2c_write(bootstrap_table[strap].cpld_offsets, &val, 1))
+				return false;
+		}
 		break;
 	case STRAP_TYPE_IOEXP_TCA6424A:
 		// tca6424a only in EVB
-		if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
+		if (is_tca6424a_accessible()) {
 			if (!tca6424a_i2c_write(bootstrap_table[strap].cpld_offsets, &val, 1))
 				return false;
 		}
@@ -1197,4 +1266,35 @@ uint8_t get_strap_index_max()
 {
 	return (get_asic_board_id() == ASIC_BOARD_ID_EVB) ? STRAP_INDEX_MAX :
 							    STRAP_INDEX_EXCEPT_EVB_MAX;
+}
+
+bool plat_set_vr_reg(uint8_t rail, uint8_t reg, uint8_t *data, uint8_t len)
+{
+	CHECK_NULL_ARG_WITH_RETURN(data, false);
+
+	bool ret = false;
+	uint8_t sensor_id = vr_rail_table[rail].sensor_id;
+	sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+
+	if ((cfg->pre_sensor_read_hook)) {
+		if ((cfg->pre_sensor_read_hook)(cfg, cfg->pre_sensor_read_args) == false) {
+			LOG_DBG("0x%02x read vr reg 0x%02x pre hook fail!", sensor_id, reg);
+			return false;
+		}
+	};
+
+	if (!plat_i2c_write(cfg->port, cfg->target_addr, reg, data, len)) {
+		LOG_ERR("0x%02x write vr reg 0x%02x fail!", sensor_id, reg);
+		goto err;
+	}
+
+	ret = true;
+err:
+	if (cfg->post_sensor_read_hook) {
+		if (cfg->post_sensor_read_hook(cfg, cfg->post_sensor_read_args, NULL) == false) {
+			LOG_ERR("0x%02x read vr reg 0x%02x post hook fail!", sensor_id, reg);
+		}
+	}
+	return ret;
 }

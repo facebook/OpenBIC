@@ -88,7 +88,8 @@ enum pldm_sensor_operational_state {
 	PLDM_SENSOR_FAILED,
 	PLDM_SENSOR_INITIALIZING,
 	PLDM_SENSOR_SHUTTINGDOWN,
-	PLDM_SENSOR_INTEST
+	PLDM_SENSOR_INTEST,
+	PLDM_SENSOR_OPEN_CIRCUIT,
 };
 
 enum pldm_effecter_operational_state {

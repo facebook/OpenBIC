@@ -38,6 +38,8 @@
 #include "plat_hook.h"
 #include "plat_i2c.h"
 #include "plat_ioexp.h"
+#include "plat_fru.h"
+#include "plat_power_capping.h"
 
 LOG_MODULE_REGISTER(plat_i2c_target);
 
@@ -45,6 +47,8 @@ LOG_MODULE_REGISTER(plat_i2c_target);
 #define DATA_TABLE_LENGTH_1 1
 #define DATA_TABLE_LENGTH_2 2
 #define DATA_TABLE_LENGTH_4 4
+#define DATA_TABLE_LENGTH_7 7
+#define DATA_TABLE_LENGTH_13 13
 #define DEVICE_TYPE 0x01
 #define REGISTER_LAYOUT_VERSION 0x01
 #define SENSOR_READING_PDR_INDEX_MAX 50
@@ -56,6 +60,11 @@ LOG_MODULE_REGISTER(plat_i2c_target);
 #define STRAP_SET_TYPE 0x44 // 01000100
 #define VR_PWR_BUF_SIZE 38
 #define I2C_TARGET_BUS_ASIC I2C_BUS7 // asic bus is I2C_BUS7, I2C_BUS6 is only for test
+
+typedef struct __attribute__((__packed__)) {
+	uint8_t data_length;
+	uint8_t fru_data[];
+} plat_fru_data;
 
 static bool command_reply_data_handle(void *arg);
 void set_bootstrap_element_handler();
@@ -115,9 +124,94 @@ plat_sensor_init_data *sensor_init_data_table[DATA_TABLE_LENGTH_2] = { NULL };
 plat_sensor_reading *sensor_reading_table[DATA_TABLE_LENGTH_4] = { NULL };
 plat_inventory_ids *inventory_ids_table[DATA_TABLE_LENGTH_1] = { NULL };
 plat_strap_capability *strap_capability_table[DATA_TABLE_LENGTH_1] = { NULL };
+plat_fru_data *fru_board_data_table[DATA_TABLE_LENGTH_13] = { NULL };
+plat_fru_data *fru_product_data_table[DATA_TABLE_LENGTH_7] = { NULL };
 plat_i2c_bridge_command_status *i2c_bridge_command_status_table[DATA_TABLE_LENGTH_1] = { NULL };
 plat_i2c_bridge_command_response_data
 	*i2c_bridge_command_response_data_table[DATA_TABLE_LENGTH_1] = { NULL };
+
+bool get_fru_info_element(telemetry_info *telemetry_info, char **fru_element,
+			  uint8_t *fru_element_size)
+{
+	CHECK_NULL_ARG_WITH_RETURN(telemetry_info, false);
+
+	FRU_INFO *plat_fru_info = get_fru_info();
+	if (!plat_fru_info)
+		return false;
+
+	switch (telemetry_info->telemetry_offset) {
+	case FRU_BOARD_PART_NUMBER_REG:
+		*fru_element = plat_fru_info->board.board_part_number;
+		break;
+	case FRU_BOARD_SERIAL_NUMBER_REG:
+		*fru_element = plat_fru_info->board.board_serial;
+		break;
+	case FRU_BOARD_PRODUCT_NAME_REG:
+		*fru_element = plat_fru_info->board.board_product;
+		break;
+	case FRU_BOARD_CUSTOM_DATA_1_REG:
+		*fru_element = plat_fru_info->board.board_custom_data[0];
+		break;
+	case FRU_BOARD_CUSTOM_DATA_2_REG:
+		*fru_element = plat_fru_info->board.board_custom_data[1];
+		break;
+	case FRU_BOARD_CUSTOM_DATA_3_REG:
+		*fru_element = plat_fru_info->board.board_custom_data[2];
+		break;
+	case FRU_BOARD_CUSTOM_DATA_4_REG:
+		*fru_element = plat_fru_info->board.board_custom_data[3];
+		break;
+	case FRU_BOARD_CUSTOM_DATA_5_REG:
+		*fru_element = plat_fru_info->board.board_custom_data[4];
+		break;
+	case FRU_BOARD_CUSTOM_DATA_6_REG:
+		*fru_element = plat_fru_info->board.board_custom_data[5];
+		break;
+	case FRU_BOARD_CUSTOM_DATA_7_REG:
+		*fru_element = plat_fru_info->board.board_custom_data[6];
+		break;
+	case FRU_BOARD_CUSTOM_DATA_8_REG:
+		*fru_element = plat_fru_info->board.board_custom_data[7];
+		break;
+	case FRU_BOARD_CUSTOM_DATA_9_REG:
+		*fru_element = plat_fru_info->board.board_custom_data[8];
+		break;
+	case FRU_BOARD_CUSTOM_DATA_10_REG:
+		*fru_element = plat_fru_info->board.board_custom_data[9];
+		break;
+	case FRU_PRODUCT_NAME_REG:
+		*fru_element = plat_fru_info->product.product_name;
+		break;
+	case FRU_PRODUCT_PART_NUMBER_REG:
+		*fru_element = plat_fru_info->product.product_part_number;
+		break;
+	case FRU_PRODUCT_PART_VERSION_REG:
+		*fru_element = plat_fru_info->product.product_version;
+		break;
+	case FRU_PRODUCT_SERIAL_NUMBER_REG:
+		*fru_element = plat_fru_info->product.product_serial;
+		break;
+	case FRU_PRODUCT_ASSET_TAG_REG:
+		*fru_element = plat_fru_info->product.product_asset_tag;
+		break;
+	case FRU_PRODUCT_CUSTOM_DATA_1_REG:
+		*fru_element = plat_fru_info->product.product_custom_data[0];
+		break;
+	case FRU_PRODUCT_CUSTOM_DATA_2_REG:
+		*fru_element = plat_fru_info->product.product_custom_data[1];
+		break;
+	default:
+		LOG_ERR("Unknown reg offset: 0x%02x", telemetry_info->telemetry_offset);
+		break;
+	}
+	if (*fru_element) {
+		*fru_element_size = (uint8_t)strlen(*fru_element);
+	} else {
+		*fru_element_size = 0;
+	}
+	return true;
+}
+
 bool initialize_sensor_data(telemetry_info *telemetry_info, uint8_t *buffer_size)
 {
 	CHECK_NULL_ARG_WITH_RETURN(telemetry_info, false);
@@ -156,6 +250,7 @@ bool initialize_sensor_data(telemetry_info *telemetry_info, uint8_t *buffer_size
 	*buffer_size = (uint8_t)table_size;
 	return true;
 }
+
 bool initialize_sensor_reading(telemetry_info *telemetry_info, uint8_t *buffer_size)
 {
 	CHECK_NULL_ARG_WITH_RETURN(telemetry_info, false);
@@ -192,6 +287,61 @@ bool initialize_sensor_reading(telemetry_info *telemetry_info, uint8_t *buffer_s
 	LOG_HEXDUMP_DBG(sensor_data, table_size, "sensor_data");
 	return true;
 }
+
+bool initialize_fru_board_data(telemetry_info *telemetry_info, uint8_t *buffer_size)
+{
+	CHECK_NULL_ARG_WITH_RETURN(telemetry_info, false);
+
+	int table_index = telemetry_info->telemetry_offset - FRU_BOARD_PART_NUMBER_REG;
+	if (table_index < 0 || table_index >= DATA_TABLE_LENGTH_13)
+		return false;
+
+	char *fru_string = NULL;
+	uint8_t fru_length = 0;
+	if (!get_fru_info_element(telemetry_info, &fru_string, &fru_length)) {
+		LOG_ERR("Failed to retrieve FRU Element");
+	}
+
+	size_t table_size = sizeof(plat_fru_data) + fru_length;
+	plat_fru_data *sensor_data =
+		allocate_table((void **)&fru_board_data_table[table_index], table_size);
+	if (!sensor_data)
+		return false;
+
+	sensor_data->data_length = fru_length;
+	memcpy(sensor_data->fru_data, fru_string, fru_length);
+
+	*buffer_size = (uint8_t)table_size;
+	return true;
+}
+
+bool initialize_fru_product_data(telemetry_info *telemetry_info, uint8_t *buffer_size)
+{
+	CHECK_NULL_ARG_WITH_RETURN(telemetry_info, false);
+
+	int table_index = telemetry_info->telemetry_offset - FRU_PRODUCT_NAME_REG;
+	if (table_index < 0 || table_index >= DATA_TABLE_LENGTH_7)
+		return false;
+
+	char *fru_string = NULL;
+	uint8_t fru_length = 0;
+	if (!get_fru_info_element(telemetry_info, &fru_string, &fru_length)) {
+		LOG_ERR("Failed to retrieve FRU Element");
+	}
+
+	size_t table_size = sizeof(plat_fru_data) + fru_length;
+	plat_fru_data *sensor_data =
+		allocate_table((void **)&fru_product_data_table[table_index], table_size);
+	if (!sensor_data)
+		return false;
+
+	sensor_data->data_length = fru_length;
+	memcpy(sensor_data->fru_data, fru_string, fru_length);
+
+	*buffer_size = (uint8_t)table_size;
+	return true;
+}
+
 void update_sensor_reading_by_sensor_number(uint8_t sensor_number)
 {
 	// sensor number is 1-base but index is 0-base
@@ -396,23 +546,19 @@ void vr_power_reading(uint8_t *buffer, size_t buf_size)
 			continue;
 		}
 
-		uint8_t status = SENSOR_UNAVAILABLE;
-		int reading = 0;
-		uint8_t sensor_operational_state = PLDM_SENSOR_STATUSUNKOWN;
+		uint16_t val = 0;
+		float float_value = 0;
+		float_value = get_sensor_reading_cache_as_float(vr_pwr_sensor_table[i]);
+		val = (float_value + 500) / 1000;
 
-		status = pldm_sensor_get_reading_from_cache(vr_pwr_sensor_table[i], &reading,
-							    &sensor_operational_state);
-		// reading value unit is mW need to convert to W
-		reading = (reading + 500) / 1000;
-		uint16_t val = (uint16_t)reading;
 		switch (vr_pwr_sensor_table[i]) {
 		case SENSOR_NUM_ASIC_P0V85_MEDHA0_VDD_PWR_W:
 			memcpy(&buffer[6], &val, 2);
-			medha0 = reading;
+			medha0 = float_value;
 			break;
 		case SENSOR_NUM_ASIC_P0V85_MEDHA1_VDD_PWR_W:
 			memcpy(&buffer[8], &val, 2);
-			medha1 = reading;
+			medha1 = float_value;
 			break;
 		case SENSOR_NUM_ASIC_P1V1_VDDQC_HBM0246_PWR_W:
 			memcpy(&buffer[10], &val, 2);
@@ -457,24 +603,20 @@ void vr_power_reading(uint8_t *buffer, size_t buf_size)
 			// do nothing
 			break;
 		}
-		LOG_DBG("Sensor 0x%x: status = %d, reading = 0x%x", vr_pwr_sensor_table[i], status,
-			reading);
 
 		if (vr_pwr_sensor_table[i] != SENSOR_NUM_ASIC_P0V85_MEDHA0_VDD_PWR_W &&
 		    vr_pwr_sensor_table[i] != SENSOR_NUM_ASIC_P0V85_MEDHA1_VDD_PWR_W) {
-			x += reading;
+			x += float_value;
 		}
 	}
 	int reading;
 	get_cpld_polling_power_info(&reading);
-	reading = (reading + 500) / 1000;
 	uint16_t val = (uint16_t)reading;
 	memcpy(&buffer[36], &val, 2);
-	x += reading;
 
-	chiplet0 = medha0 + 0.5 * x;
-	chiplet1 = medha1 + 0.5 * x;
-	uint16_t val_x = (uint16_t)x;
+	chiplet0 = ((medha0 + 0.5 * x) + 500) / 1000;
+	chiplet1 = ((medha1 + 0.5 * x) + 500) / 1000;
+	uint16_t val_x = (uint16_t)(x + 500) / 1000;
 	uint16_t val_c0 = (uint16_t)chiplet0;
 	uint16_t val_c1 = (uint16_t)chiplet1;
 	memcpy(&buffer[0], &val_x, 2);
@@ -528,84 +670,6 @@ void set_vr_pwr_alert_data(uint8_t controller_id, uint8_t alert_level, uint8_t d
 		controller_id, alert_level, write_data_lsb, write_data_msb);
 	LOG_HEXDUMP_DBG(vr_alert_all, sizeof(vr_alert_all), "vr_alert_all");
 };
-void get_vr_pwr_alert_data(uint8_t *buffer, size_t buf_size, uint8_t data_type, uint8_t alert_level,
-			   uint8_t controller_id)
-{
-	if (alert_level >= VR_ALERT_MAX) {
-		LOG_ERR("Invalid alert level %d", alert_level);
-		return;
-	}
-
-	if (data_type >= VR_INFO_TYPE_MAX) {
-		LOG_ERR("Invalid data type %d", data_type);
-		return;
-	}
-
-	if (data_type == VR_THRESHOLD) {
-		switch (controller_id) {
-		/*
-			Response Data
-			[0] - time window. Unit: us for Level 1, ms for Level 2/3  (LSB, read only)
-			[1] - time window. Unit: us for Level 1, ms for Level 2/3  (MSB, read only)
-		*/
-		case MEDHA0:
-			// update read data from write data
-			vr_alert_all[MEDHA0].level[alert_level].read_data_msb =
-				vr_alert_all[MEDHA0].level[alert_level].threshold_msb;
-			vr_alert_all[MEDHA0].level[alert_level].read_data_lsb =
-				vr_alert_all[MEDHA0].level[alert_level].threshold_lsb;
-			// copy data to buffer
-			buffer[0] = vr_alert_all[MEDHA0].level[alert_level].read_data_lsb;
-			buffer[1] = vr_alert_all[MEDHA0].level[alert_level].read_data_msb;
-
-			break;
-		case MEDHA1:
-			// update read data from write data
-			vr_alert_all[MEDHA1].level[alert_level].read_data_msb =
-				vr_alert_all[MEDHA1].level[alert_level].threshold_msb;
-			vr_alert_all[MEDHA1].level[alert_level].read_data_lsb =
-				vr_alert_all[MEDHA1].level[alert_level].threshold_lsb;
-			// copy data to buffer
-			buffer[0] = vr_alert_all[MEDHA1].level[alert_level].read_data_lsb;
-			buffer[1] = vr_alert_all[MEDHA1].level[alert_level].read_data_msb;
-			break;
-		default:
-			LOG_ERR("Invalid controller id %d", controller_id);
-			break;
-		}
-	} else if (data_type == VR_TIME_WINDOW) {
-		switch (controller_id) {
-		case MEDHA0:
-			// update read data from write data
-			vr_alert_all[MEDHA0].level[alert_level].read_data_msb =
-				vr_alert_all[MEDHA0].level[alert_level].time_window_msb;
-			vr_alert_all[MEDHA0].level[alert_level].read_data_lsb =
-				vr_alert_all[MEDHA0].level[alert_level].time_window_lsb;
-			// // copy data to buffer
-			buffer[0] = vr_alert_all[MEDHA0].level[alert_level].read_data_lsb;
-			buffer[1] = vr_alert_all[MEDHA0].level[alert_level].read_data_msb;
-			break;
-		case MEDHA1:
-			// update read data from write data
-			vr_alert_all[MEDHA1].level[alert_level].read_data_msb =
-				vr_alert_all[MEDHA1].level[alert_level].time_window_msb;
-			vr_alert_all[MEDHA1].level[alert_level].read_data_lsb =
-				vr_alert_all[MEDHA1].level[alert_level].time_window_lsb;
-
-			// copy data to buffer
-			buffer[0] = vr_alert_all[MEDHA1].level[alert_level].read_data_lsb;
-			buffer[1] = vr_alert_all[MEDHA1].level[alert_level].read_data_msb;
-			break;
-		default:
-			LOG_ERR("Invalid controller id %d", controller_id);
-			break;
-		}
-	} else
-		LOG_ERR("Invalid data type %d", data_type);
-	LOG_DBG("controller_id %d, alert_level %d, data_type %d, read_data_lsb %d, read_data_msb %d",
-		controller_id, alert_level, data_type, buffer[0], buffer[1]);
-	LOG_HEXDUMP_DBG(vr_alert_all, sizeof(vr_alert_all), "vr_alert_all");
-};
 
 telemetry_info telemetry_info_table[] = {
 	{ SENSOR_INIT_DATA_0_REG, 0x00, .telemetry_table_init = initialize_sensor_data },
@@ -620,8 +684,29 @@ telemetry_info telemetry_info_table[] = {
 	{ I2C_BRIDGE_COMMAND_REG },
 	{ I2C_BRIDGE_COMMAND_STATUS_REG },
 	{ I2C_BRIDGE_COMMAND_RESPONSE_REG },
-	{ LEVEL_1_2_3_PWR_ALERT_THRESHOLD_REG },
-	{ LEVEL_1_2_3_PWR_ALERT_TIME_WINDOW_REG },
+	{ FRU_BOARD_PART_NUMBER_REG, 0x00, .telemetry_table_init = initialize_fru_board_data },
+	{ FRU_BOARD_SERIAL_NUMBER_REG, 0x00, .telemetry_table_init = initialize_fru_board_data },
+	{ FRU_BOARD_PRODUCT_NAME_REG, 0x00, .telemetry_table_init = initialize_fru_board_data },
+	{ FRU_BOARD_CUSTOM_DATA_1_REG, 0x00, .telemetry_table_init = initialize_fru_board_data },
+	{ FRU_BOARD_CUSTOM_DATA_2_REG, 0x00, .telemetry_table_init = initialize_fru_board_data },
+	{ FRU_BOARD_CUSTOM_DATA_3_REG, 0x00, .telemetry_table_init = initialize_fru_board_data },
+	{ FRU_BOARD_CUSTOM_DATA_4_REG, 0x00, .telemetry_table_init = initialize_fru_board_data },
+	{ FRU_BOARD_CUSTOM_DATA_5_REG, 0x00, .telemetry_table_init = initialize_fru_board_data },
+	{ FRU_BOARD_CUSTOM_DATA_6_REG, 0x00, .telemetry_table_init = initialize_fru_board_data },
+	{ FRU_BOARD_CUSTOM_DATA_7_REG, 0x00, .telemetry_table_init = initialize_fru_board_data },
+	{ FRU_BOARD_CUSTOM_DATA_8_REG, 0x00, .telemetry_table_init = initialize_fru_board_data },
+	{ FRU_BOARD_CUSTOM_DATA_9_REG, 0x00, .telemetry_table_init = initialize_fru_board_data },
+	{ FRU_BOARD_CUSTOM_DATA_10_REG, 0x00, .telemetry_table_init = initialize_fru_board_data },
+	{ FRU_PRODUCT_NAME_REG, 0x00, .telemetry_table_init = initialize_fru_product_data },
+	{ FRU_PRODUCT_PART_NUMBER_REG, 0x00, .telemetry_table_init = initialize_fru_product_data },
+	{ FRU_PRODUCT_PART_VERSION_REG, 0x00, .telemetry_table_init = initialize_fru_product_data },
+	{ FRU_PRODUCT_SERIAL_NUMBER_REG, 0x00,
+	  .telemetry_table_init = initialize_fru_product_data },
+	{ FRU_PRODUCT_ASSET_TAG_REG, 0x00, .telemetry_table_init = initialize_fru_product_data },
+	{ FRU_PRODUCT_CUSTOM_DATA_1_REG, 0x00,
+	  .telemetry_table_init = initialize_fru_product_data },
+	{ FRU_PRODUCT_CUSTOM_DATA_2_REG, 0x00,
+	  .telemetry_table_init = initialize_fru_product_data },
 	{ VR_POWER_READING_REG },
 };
 
@@ -704,6 +789,36 @@ static bool command_reply_data_handle(void *arg)
 						data->target_rd_msg.msg_length,
 						"i2c bridge command response");
 			} break;
+			case FRU_BOARD_PART_NUMBER_REG:
+			case FRU_BOARD_SERIAL_NUMBER_REG:
+			case FRU_BOARD_PRODUCT_NAME_REG:
+			case FRU_BOARD_CUSTOM_DATA_1_REG:
+			case FRU_BOARD_CUSTOM_DATA_2_REG:
+			case FRU_BOARD_CUSTOM_DATA_3_REG:
+			case FRU_BOARD_CUSTOM_DATA_4_REG:
+			case FRU_BOARD_CUSTOM_DATA_5_REG:
+			case FRU_BOARD_CUSTOM_DATA_6_REG:
+			case FRU_BOARD_CUSTOM_DATA_7_REG:
+			case FRU_BOARD_CUSTOM_DATA_8_REG:
+			case FRU_BOARD_CUSTOM_DATA_9_REG:
+			case FRU_BOARD_CUSTOM_DATA_10_REG: {
+				data->target_rd_msg.msg_length = struct_size;
+				memcpy(data->target_rd_msg.msg,
+				       fru_board_data_table[reg_offset - FRU_BOARD_PART_NUMBER_REG],
+				       struct_size);
+			} break;
+			case FRU_PRODUCT_NAME_REG:
+			case FRU_PRODUCT_PART_NUMBER_REG:
+			case FRU_PRODUCT_PART_VERSION_REG:
+			case FRU_PRODUCT_SERIAL_NUMBER_REG:
+			case FRU_PRODUCT_ASSET_TAG_REG:
+			case FRU_PRODUCT_CUSTOM_DATA_1_REG:
+			case FRU_PRODUCT_CUSTOM_DATA_2_REG: {
+				data->target_rd_msg.msg_length = struct_size;
+				memcpy(data->target_rd_msg.msg,
+				       fru_product_data_table[reg_offset - FRU_PRODUCT_NAME_REG],
+				       struct_size);
+			} break;
 			case CONTROL_VOL_VR_ASIC_P0V75_VDDPHY_HBM0246_REG:
 			case CONTROL_VOL_VR_ASIC_P0V75_VDDPHY_HBM1357_REG:
 			case CONTROL_VOL_VR_ASIC_P1V1_VDDQC_HBM0246_REG:
@@ -723,12 +838,55 @@ static bool command_reply_data_handle(void *arg)
 				memcpy(data->target_rd_msg.msg, &vout, sizeof(vout));
 				data->target_rd_msg.msg_length = 2;
 			} break;
+			case LEVEL_1_PWR_ALERT_THRESHOLD_TIME_REG:
+			case LEVEL_2_PWR_ALERT_THRESHOLD_TIME_REG:
+			case LEVEL_3_PWR_ALERT_THRESHOLD_TIME_REG: {
+				uint8_t lv = 0;
+				uint16_t tmp_value = 0;
+				if (reg_offset == LEVEL_1_PWR_ALERT_THRESHOLD_TIME_REG) {
+					lv = CAPPING_LV_IDX_LV1;
+				} else if (reg_offset == LEVEL_2_PWR_ALERT_THRESHOLD_TIME_REG) {
+					lv = CAPPING_LV_IDX_LV2;
+				} else if (reg_offset == LEVEL_3_PWR_ALERT_THRESHOLD_TIME_REG) {
+					lv = CAPPING_LV_IDX_LV3;
+				}
+				tmp_value = get_power_capping_threshold(CAPPING_VR_IDX_MEDHA0, lv);
+				data->target_rd_msg.msg[0] = tmp_value & 0xFF;
+				data->target_rd_msg.msg[1] = tmp_value >> 8;
+				tmp_value = get_power_capping_time_w(CAPPING_VR_IDX_MEDHA0, lv);
+				data->target_rd_msg.msg[2] = tmp_value & 0xFF;
+				data->target_rd_msg.msg[3] = tmp_value >> 8;
+				tmp_value = get_power_capping_threshold(CAPPING_VR_IDX_MEDHA1, lv);
+				data->target_rd_msg.msg[4] = tmp_value & 0xFF;
+				data->target_rd_msg.msg[5] = tmp_value >> 8;
+				tmp_value = get_power_capping_time_w(CAPPING_VR_IDX_MEDHA1, lv);
+				data->target_rd_msg.msg[6] = tmp_value & 0xFF;
+				data->target_rd_msg.msg[7] = tmp_value >> 8;
+				data->target_rd_msg.msg_length = 8;
+			} break;
 			case VR_POWER_READING_REG: {
 				data->target_rd_msg.msg_length = VR_PWR_BUF_SIZE;
 				vr_power_reading(data->target_rd_msg.msg,
 						 data->target_rd_msg.msg_length);
 				LOG_HEXDUMP_DBG(data->target_rd_msg.msg,
 						data->target_rd_msg.msg_length, "vr power reading");
+			} break;
+			case MEDHA_SENSOR_VALUE_REG: {
+				data->target_rd_msg.msg_length = 4;
+				uint16_t sensor_value;
+				sensor_value = (get_sensor_reading_cache_as_float(
+							SENSOR_NUM_ASIC_P0V85_MEDHA0_VDD_PWR_W) +
+						500) /
+					       1000;
+				memcpy(&data->target_rd_msg.msg[0], &sensor_value,
+				       sizeof(sensor_value));
+				sensor_value = (get_sensor_reading_cache_as_float(
+							SENSOR_NUM_ASIC_P0V85_MEDHA1_VDD_PWR_W) +
+						500) /
+					       1000;
+				memcpy(&data->target_rd_msg.msg[2], &sensor_value,
+				       sizeof(sensor_value));
+
 			} break;
 			case TRAY_INFO_REG: {
 				/* TRAY_INFO_REG:
@@ -777,41 +935,6 @@ static bool command_reply_data_handle(void *arg)
 				data->target_rd_msg.msg[0] = 0xFF;
 				break;
 			}
-		} else if (data->wr_buffer_idx == 3) {
-			LOG_DBG("Received reg offset(write 3 data): 0x%02x",
-				data->target_wr_msg.msg[0]);
-			uint8_t reg_offset = data->target_wr_msg.msg[0];
-			switch (reg_offset) {
-			case LEVEL_1_2_3_PWR_ALERT_THRESHOLD_REG: {
-				data->target_rd_msg.msg_length = 2;
-				uint8_t vr_controller = data->target_wr_msg.msg[1];
-				uint8_t alert_level = data->target_wr_msg.msg[2];
-				get_vr_pwr_alert_data(data->target_rd_msg.msg,
-						      data->target_rd_msg.msg_length, VR_THRESHOLD,
-						      alert_level, vr_controller);
-				LOG_DBG("vr controller: %d, alert level: %d", vr_controller,
-					alert_level);
-				LOG_HEXDUMP_DBG(data->target_rd_msg.msg,
-						data->target_rd_msg.msg_length, "vr threshold");
-			} break;
-			case LEVEL_1_2_3_PWR_ALERT_TIME_WINDOW_REG: {
-				data->target_rd_msg.msg_length = 2;
-				uint8_t vr_controller = data->target_wr_msg.msg[1];
-				uint8_t alert_level = data->target_wr_msg.msg[2];
-				get_vr_pwr_alert_data(data->target_rd_msg.msg,
-						      data->target_rd_msg.msg_length,
-						      VR_TIME_WINDOW, alert_level, vr_controller);
-				LOG_DBG("vr controller: %d, alert level: %d", vr_controller,
-					alert_level);
-				LOG_HEXDUMP_DBG(data->target_rd_msg.msg,
-						data->target_rd_msg.msg_length, "vr time window");
-			} break;
-			default:
-				LOG_ERR("Unknown reg offset: 0x%02x", reg_offset);
-				data->target_rd_msg.msg_length = 1;
-				data->target_rd_msg.msg[0] = 0xFF;
-				break;
-			}
 		} else {
 			LOG_ERR("Received data length: 0x%02x", data->wr_buffer_idx);
 			data->target_rd_msg.msg_length = 1;
@@ -819,7 +942,7 @@ static bool command_reply_data_handle(void *arg)
 		}
 	}
 	LOG_DBG("Reply data length: 0x%02x", data->target_rd_msg.msg_length);
-	return true;
+	return false;
 }
 
 /* I2C target init-config table */
@@ -931,6 +1054,7 @@ void i2c_bridge_command_handler(struct k_work *work_item)
 		memcpy(sensor_data_response->response_data, i2c_msg.data, response_data_len);
 	}
 }
+
 void set_control_voltage_handler(struct k_work *work_item)
 {
 	const plat_control_voltage *sensor_data =
@@ -941,6 +1065,26 @@ void set_control_voltage_handler(struct k_work *work_item)
 
 	plat_set_vout_command(rail, &millivolt, false, false);
 }
+
+void set_power_capping_threshold_time_handler(struct k_work *work_item)
+{
+	const plat_power_capping_threshold_time_t *sensor_data =
+		CONTAINER_OF(work_item, plat_power_capping_threshold_time_t, work);
+	const uint8_t *in_data = sensor_data->in_data;
+	uint8_t lv = sensor_data->lv;
+	uint16_t value = 0;
+
+	value = in_data[0] | (in_data[1] << 8);
+	set_power_capping_threshold(CAPPING_VR_IDX_MEDHA0, lv, value);
+	value = in_data[2] | (in_data[3] << 8);
+	set_power_capping_time_w(CAPPING_VR_IDX_MEDHA0, lv, value);
+
+	value = in_data[4] | (in_data[5] << 8);
+	set_power_capping_threshold(CAPPING_VR_IDX_MEDHA1, lv, value);
+	value = in_data[6] | (in_data[7] << 8);
+	set_power_capping_time_w(CAPPING_VR_IDX_MEDHA1, lv, value);
+}
+
 void plat_master_write_thread_handler()
 {
 	int rc = 0;
@@ -1021,6 +1165,31 @@ void plat_master_write_thread_handler()
 			k_work_init(&sensor_data->work, set_control_voltage_handler);
 			k_work_submit(&sensor_data->work);
 		} break;
+		case LEVEL_1_PWR_ALERT_THRESHOLD_TIME_REG:
+		case LEVEL_2_PWR_ALERT_THRESHOLD_TIME_REG:
+		case LEVEL_3_PWR_ALERT_THRESHOLD_TIME_REG: {
+			if (rlen != 9) {
+				LOG_ERR("Invalid length for offset(write): 0x%02x", reg_offset);
+				break;
+			}
+
+			plat_power_capping_threshold_time_t *sensor_data =
+				malloc(sizeof(plat_power_capping_threshold_time_t));
+			if (!sensor_data) {
+				LOG_ERR("Memory allocation failed!");
+				break;
+			}
+			if (reg_offset == LEVEL_1_PWR_ALERT_THRESHOLD_TIME_REG) {
+				sensor_data->lv = CAPPING_LV_IDX_LV1;
+			} else if (reg_offset == LEVEL_2_PWR_ALERT_THRESHOLD_TIME_REG) {
+				sensor_data->lv = CAPPING_LV_IDX_LV2;
+			} else if (reg_offset == LEVEL_3_PWR_ALERT_THRESHOLD_TIME_REG) {
+				sensor_data->lv = CAPPING_LV_IDX_LV3;
+			}
+			memcpy(sensor_data->in_data, &rdata[1], 8);
+			k_work_init(&sensor_data->work, set_power_capping_threshold_time_handler);
+			k_work_submit(&sensor_data->work);
+		} break;
 		case SET_SENSOR_POLLING_COMMAND_REG: {
 			if (rlen != 8) {
 				LOG_ERR("Invalid length for offset: 0x%02x", reg_offset);
@@ -1048,42 +1217,6 @@ void plat_master_write_thread_handler()
 			sensor_data->set_value = sensor_data->set_value ? true : false;
 			k_work_init(&sensor_data->work, set_sensor_polling_handler);
 			k_work_submit(&sensor_data->work);
-		} break;
-		/*
-		Request Data
-		[0] - VR controller
-			0 - MEDHA0
-			1 - MEDHA1
-		[1] - alert level
-			0 - Level 1
-			1 - Level 2
-			2 - Level 3
-		[2] - alert threshold. Unit: W  (LSB, write only)
-		[3] - alert threshold. Unit: W  (MSB, write only)
-		*/
-		case LEVEL_1_2_3_PWR_ALERT_THRESHOLD_REG: {
-			if (rlen != 5) {
-				LOG_ERR("Invalid length for offset(write threshold): 0x%02x",
-					reg_offset);
-				break;
-			}
-			uint8_t vr_controller = rdata[1];
-			uint8_t alert_level = rdata[2];
-			uint8_t lsb = rdata[3];
-			uint8_t msb = rdata[4];
-			set_vr_pwr_alert_data(vr_controller, alert_level, VR_THRESHOLD, lsb, msb);
-		} break;
-		case LEVEL_1_2_3_PWR_ALERT_TIME_WINDOW_REG: {
-			if (rlen != 5) {
-				LOG_ERR("Invalid length for offset(write time window): 0x%02x",
-					reg_offset);
-				break;
-			}
-			uint8_t vr_controller = rdata[1];
-			uint8_t alert_level = rdata[2];
-			uint8_t lsb = rdata[3];
-			uint8_t msb = rdata[4];
-			set_vr_pwr_alert_data(vr_controller, alert_level, VR_TIME_WINDOW, lsb, msb);
 		} break;
 		default:
 			LOG_WRN("Unknown reg offset(write): 0x%02x", reg_offset);

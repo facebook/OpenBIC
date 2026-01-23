@@ -313,6 +313,8 @@
 #define UPDATE_INTERVAL_60S 60
 #define U200051_IO_ADDR (0x72 >> 1)
 
+#define ONE_STEP_POWER_MAGIC_NUMBER 0x56
+
 enum SENSOR_THREAD_LIST {
 	TEMP_SENSOR_THREAD_ID = 0,
 	VR_SENSOR_THREAD_ID,
@@ -335,10 +337,12 @@ void set_plat_sensor_polling_enable_flag(bool value);
 void set_plat_sensor_ubc_polling_enable_flag(bool value);
 void set_plat_sensor_temp_polling_enable_flag(bool value);
 void set_plat_sensor_vr_polling_enable_flag(bool value);
+void set_plat_sensor_one_step_enable_flag(uint8_t value);
 bool get_plat_sensor_polling_enable_flag();
 bool get_plat_sensor_ubc_polling_enable_flag();
 bool get_plat_sensor_temp_polling_enable_flag();
 bool get_plat_sensor_vr_polling_enable_flag();
+uint8_t get_plat_sensor_one_step_enable_flag();
 bool is_ubc_access(uint8_t sensor_num);
 bool is_temp_access(uint8_t cfg_idx);
 bool is_vr_access(uint8_t sensor_num);

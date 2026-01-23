@@ -33,6 +33,10 @@
 #include "plat_hwmon.h"
 #include "plat_ioexp.h"
 #include "plat_thermal.h"
+#include "plat_gpio.h"
+#include "plat_event.h"
+#include "plat_vr_test_mode.h"
+#include "plat_power_capping.h"
 
 LOG_MODULE_REGISTER(plat_init);
 
@@ -65,11 +69,16 @@ void pal_post_init()
 	pldm_assign_gpio_effecter_id(PLAT_EFFECTER_ID_GPIO_HIGH_BYTE);
 	init_fru_info();
 	plat_adc_rainbow_init();
+	plat_power_capping_init();
 	init_load_eeprom_log();
-	// if board id >= EVB EVT1B(FAB2)
 	if (get_asic_board_id() == ASIC_BOARD_ID_EVB && get_board_rev_id() >= REV_ID_EVT1B) {
+		// if board id >= EVB EVT1B(FAB2)
 		quick_sensor_poll_init();
 		init_U200052_IO();
+		init_U200053_IO();
+		// if board id >= EVB EVT1B(FAB3)
+		if (get_board_rev_id() >= REV_ID_EVT2)
+			init_U200070_IO();
 	}
 	// if board id == EVB
 	if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
@@ -82,6 +91,10 @@ void pal_post_init()
 	plat_telemetry_table_init();
 	ioexp_init();
 	init_thermal_polling();
+	init_vr_test_mode_polling();
+	// check the thermtrip open-circuit
+	if (!gpio_get(FM_ASIC_0_THERMTRIP_R_N))
+		asic_thermtrip_error_log(LOG_ASSERT);
 }
 
 #define DEF_PROJ_GPIO_PRIORITY 78

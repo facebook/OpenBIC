@@ -27,12 +27,14 @@
 
 LOG_MODULE_REGISTER(plat_class);
 
-static uint8_t vr_module = 0;
-static uint8_t ubc_module = 0;
+static uint8_t vr_module = VR_MODULE_UNKNOWN;
+static uint8_t ubc_module = UBC_MODULE_UNKNOWN;
+static uint8_t tmp_module = TMP_TMP432;
+static uint8_t vr_vendor_module = VENDOR_TYPE_UNKNOWN;
 static uint8_t mmc_slot = 0;
 static uint8_t asic_board_id = 0;
 static uint8_t tray_location = 0;
-uint8_t board_rev_id = 0;
+static uint8_t board_rev_id = 0;
 
 bool plat_cpld_eerprom_read(uint8_t *data, uint16_t offset, uint8_t len)
 {
@@ -58,6 +60,43 @@ bool plat_cpld_eerprom_read(uint8_t *data, uint16_t offset, uint8_t len)
 	return true;
 }
 
+void init_vr_vendor_module(void)
+{
+	vr_vendor_module = VENDOR_TYPE_UNKNOWN;
+
+	switch (ubc_module) {
+	case UBC_MODULE_MPS:
+		if (vr_module == VR_MODULE_MPS) {
+			vr_vendor_module = MPS_UBC_AND_MPS_VR;
+		} else if (vr_module == VR_MODULE_RNS) {
+			vr_vendor_module = MPS_UBC_AND_RNS_VR;
+		}
+		break;
+
+	case UBC_MODULE_DELTA:
+		if (vr_module == VR_MODULE_MPS) {
+			vr_vendor_module = DELTA_UBC_AND_MPS_VR;
+		} else if (vr_module == VR_MODULE_RNS) {
+			vr_vendor_module = DELTA_UBC_AND_RNS_VR;
+		}
+		break;
+
+	case UBC_MODULE_LUXSHARE:
+		if (vr_module == VR_MODULE_MPS) {
+			vr_vendor_module = LUXSHURE_UBC_AND_MPS_VR;
+		} else if (vr_module == VR_MODULE_RNS) {
+			vr_vendor_module = LUXSHURE_UBC_AND_RNS_VR;
+		}
+		break;
+
+	default:
+		vr_vendor_module = VENDOR_TYPE_UNKNOWN;
+		break;
+	}
+
+	LOG_INF("vr_vendor_module=%d (ubc=%d, vr=%d)", vr_vendor_module, ubc_module, vr_module);
+}
+
 void init_plat_config()
 {
 	uint8_t module = 0;
@@ -70,7 +109,7 @@ void init_plat_config()
 	uint8_t board_id = 0;
 	plat_read_cpld(CPLD_OFFSET_ASIC_BOARD_ID, &board_id, 1);
 	asic_board_id = board_id & 0x03;
-
+	init_vr_vendor_module();
 	change_sensor_cfg(asic_board_id, vr_module, ubc_module, board_rev_id);
 	// cpld fru offset 0: slot
 	plat_cpld_eerprom_read(&mmc_slot, 0, 1);
@@ -110,4 +149,63 @@ uint8_t get_board_rev_id()
 uint8_t get_tray_location()
 {
 	return tray_location;
+}
+
+void pal_show_board_types(const struct shell *shell)
+{
+	shell_print(shell, "* BOARD_TYPE:    (0x%02X)%s", asic_board_id,
+		    (asic_board_id == ASIC_BOARD_ID_RAINBOW) ? "RAINBOW" :
+		    (asic_board_id == ASIC_BOARD_ID_EVB)     ? "EVB" :
+							       "not supported");
+
+	if (asic_board_id == ASIC_BOARD_ID_EVB) {
+		shell_print(shell, "* BOARD_STAGE:   (0x%02X)%s", board_rev_id,
+			    (board_rev_id == REV_ID_EVT1A) ? "REV_ID_EVT1A" :
+			    (board_rev_id == REV_ID_EVT1B) ? "REV_ID_EVT1B" :
+			    (board_rev_id == REV_ID_EVT2)  ? "REV_ID_EVT2" :
+			    (board_rev_id == REV_ID_DVT)   ? "REV_ID_DVT" :
+			    (board_rev_id == REV_ID_PVT)   ? "REV_ID_PVT" :
+			    (board_rev_id == REV_ID_MP)	   ? "REV_ID_MP" :
+							     "not supported");
+	} else if (asic_board_id == ASIC_BOARD_ID_RAINBOW) {
+		shell_print(shell, "* BOARD_STAGE:   (0x%02X)%s", board_rev_id,
+			    (board_rev_id == REV_ID_EVT1A) ? "REV_ID_EVT1A" :
+			    (board_rev_id == REV_ID_EVT1B) ? "REV_ID_EVT1B" :
+			    (board_rev_id == REV_ID_EVT2)  ? "REV_ID_EVT2" :
+			    (board_rev_id == REV_ID_DVT)   ? "REV_ID_DVT" :
+			    (board_rev_id == REV_ID_PVT)   ? "REV_ID_PVT" :
+			    (board_rev_id == REV_ID_MP)	   ? "REV_ID_MP" :
+							     "not supported");
+	}
+
+	shell_print(shell, "* VR_VENDOR_TYPE:(0x%02X)%s", vr_vendor_module,
+		    (vr_vendor_module == DELTA_UBC_AND_MPS_VR)	  ? "DELTA_UBC_AND_MPS_VR" :
+		    (vr_vendor_module == DELTA_UBC_AND_RNS_VR)	  ? "DELTA_UBC_AND_RNS_VR" :
+		    (vr_vendor_module == MPS_UBC_AND_MPS_VR)	  ? "MPS_UBC_AND_MPS_VR" :
+		    (vr_vendor_module == MPS_UBC_AND_RNS_VR)	  ? "MPS_UBC_AND_RNS_VR" :
+		    (vr_vendor_module == LUXSHURE_UBC_AND_MPS_VR) ? "LUXSHURE_UBC_AND_MPS_VR" :
+		    (vr_vendor_module == LUXSHURE_UBC_AND_RNS_VR) ? "LUXSHURE_UBC_AND_RNS_VR" :
+								    "not supported");
+	shell_print(shell, "* UBC_TYPE:      (0x%02X)%s", ubc_module,
+		    (ubc_module == UBC_MODULE_DELTA)	? "UBC_DELTA_S54SS4P1A2" :
+		    (ubc_module == UBC_MODULE_MPS)	? "UBC_MPS_MPC12109" :
+		    (ubc_module == UBC_MODULE_LUXSHARE) ? "UBC_LUXSHURE_LX6310" :
+							  "not supported");
+
+	shell_print(shell, "* VR_TYPE:       (0x%02X)%s", vr_module,
+		    (vr_module == VR_MODULE_MPS) ? "VR_MPS_MP2971_MP29816C" :
+		    (vr_module == VR_MODULE_RNS) ? "VR_RNS_RAA229140_RAA228249" :
+						   "not supported");
+
+	shell_print(shell, "* TMP_TYPE:      (0x%02X)%s", tmp_module,
+		    (tmp_module == TMP_TMP432) ? "TMP_TMP75_TMP432" : "not supported");
+
+	return;
+}
+
+void pal_show_extra_info(const struct shell *shell)
+{
+	pal_show_board_types(shell);
+
+	return;
 }

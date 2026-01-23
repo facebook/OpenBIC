@@ -17,6 +17,7 @@
 #include "libutil.h"
 #include "plat_util.h"
 #include "plat_i2c.h"
+#include "plat_gpio.h"
 #include <logging/log.h>
 
 LOG_MODULE_REGISTER(plat_util);
@@ -63,4 +64,9 @@ bool plat_i2c_write(uint8_t bus, uint8_t addr, uint8_t offset, uint8_t *data, ui
 		return false;
 	}
 	return true;
+}
+
+bool is_dc_on(void)
+{
+	return gpio_get(RST_IRIS_PWR_ON_PLD_R1_N);
 }

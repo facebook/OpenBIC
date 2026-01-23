@@ -27,6 +27,9 @@
 #include "plat_hook.h"
 #include "plat_class.h"
 #include "plat_pldm_sensor.h"
+#include "tmp431.h"
+#include "plat_gpio.h"
+#include "plat_thermal.h"
 
 LOG_MODULE_REGISTER(plat_log);
 
@@ -249,7 +252,8 @@ void plat_clear_log()
 		k_msleep(EEPROM_MAX_WRITE_TIME);
 	}
 	log_num = 0;
-	next_index = 0;
+	next_index = 1;
+	next_log_position = 1;
 }
 
 bool vr_fault_get_error_data(uint8_t sensor_id, uint8_t *data)
@@ -300,18 +304,43 @@ bool get_error_data(uint16_t error_code, uint8_t *data)
 	CHECK_NULL_ARG_WITH_RETURN(data, false);
 	//  temperature error code
 	uint8_t trigger_case = (error_code >> 13) & 0x07;
-	if (trigger_case == TEMPERATURE_TRIGGER_CAUSE) {
+
+	switch (trigger_case) {
+	case TEMPERATURE_TRIGGER_CAUSE: {
 		uint8_t temperature_sensoor_num = error_code & 0xFF;
 		LOG_WRN("trigger_case: 0x%x, temperature_sensoor_num: 0x%x", trigger_case,
 			temperature_sensoor_num);
-		if (!get_raw_data_from_sensor_id(temperature_sensoor_num, 0x02, data, 1)) {
-			LOG_ERR("Failed to get temperature data");
-			return false;
-		};
+		sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(temperature_sensoor_num);
+		data[0] = get_thermal_status_val_for_log(temperature_sensoor_num);
+		if (data[0] & TEMP_STATUS_OPEN) {
+			if (!tmp432_get_temp_open_status(cfg, &data[1])) {
+				LOG_ERR("Failed to get 0x%02x temperature open status",
+					temperature_sensoor_num);
+				return false;
+			}
+		} else {
+			data[1] = get_thermal_limit_status_val_for_log(temperature_sensoor_num);
+		}
 		// save sensor num to data and keep raw data
-		data[1] = temperature_sensoor_num;
+		data[2] = temperature_sensoor_num;
 		LOG_INF("Temperature status: 0x%x, sensor num: 0x%x", data[0], data[1]);
 		return true;
+	}
+	case ASIC_THERMTRIP_TRIGGER_CAUSE: {
+		uint8_t cpld_data[3];
+		if (!plat_read_cpld(HBM_CATTRIP_LOG_REG, cpld_data, 3)) {
+			LOG_ERR("Failed to get cpld data");
+			return false;
+		}
+		data[0] = cpld_data[0];
+		data[1] = cpld_data[2];
+		return true;
+	}
+	case POWER_ON_SEQUENCE_TRIGGER_CAUSE:
+	case DC_ON_TRIGGER_CAUSE: {
+		data[0] = gpio_get(RST_IRIS_PWR_ON_PLD_R1_N);
+		return true;
+	}
 	}
 
 	// Extract CPLD offset and bit position from the error code
@@ -386,24 +415,20 @@ bool get_error_data(uint16_t error_code, uint8_t *data)
 void error_log_event(uint16_t error_code, bool log_status)
 {
 	bool log_todo = false;
-	// if error_code is not temperature error
-	if (((error_code >> 13) & 0x07) != TEMPERATURE_TRIGGER_CAUSE) {
-		// Check if the error_code is already logged
-		for (uint8_t i = 1; i < ARRAY_SIZE(err_code_caches); i++) {
-			if (err_code_caches[i] == error_code) {
-				if (log_status == LOG_ASSERT) {
-					log_todo = false; // Duplicate error, no need to log again
-					LOG_INF("Duplicate error_code: 0x%x, log_status: %d",
-						error_code, log_status);
-					return;
-				} else if (log_status == LOG_DEASSERT) {
-					log_todo = true; // The error needs to be cleared
-					err_code_caches[i] =
-						0; // Remove the error code from the cache
-					LOG_INF("Duplicate error_code: 0x%x, log_status: %d",
-						error_code, log_status);
-					return;
-				}
+	// Check if the error_code is already logged
+	for (uint8_t i = 1; i < ARRAY_SIZE(err_code_caches); i++) {
+		if (err_code_caches[i] == error_code) {
+			if (log_status == LOG_ASSERT) {
+				log_todo = false; // Duplicate error, no need to log again
+				LOG_INF("Duplicate error_code: 0x%x, log_status: %d", error_code,
+					log_status);
+				return;
+			} else if (log_status == LOG_DEASSERT) {
+				log_todo = true; // The error needs to be cleared
+				err_code_caches[i] = 0; // Remove the error code from the cache
+				LOG_INF("Duplicate error_code: 0x%x, log_status: %d", error_code,
+					log_status);
+				return;
 			}
 		}
 	}

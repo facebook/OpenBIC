@@ -9,6 +9,7 @@
 #include "plat_ioexp.h"
 #include "plat_pldm_sensor.h"
 #include "plat_class.h"
+#include "shell_iris_power.h"
 // iris power command
 
 #define enable 0x01
@@ -219,13 +220,6 @@ static steps_on_struct steps_on[] = {
 	{ 1, VR_CLK_ENABLE_PIN_CTRL_REG, 4, "HAMSA_PCIE_PERST_B_PLD_N",
 	  NO_DEFINED }, //HAMSA_PCIE_PERST_B_PLD_N
 };
-enum PWR_CLOCK_COMPONENT {
-	CLK_BUF_100M_U85,
-	CLK_BUF_100M_U87,
-	CLK_BUF_100M_U88,
-	CLK_GEN_100M_U86,
-	CLK_COMPONENT_MAX
-};
 
 typedef struct pwr_clock_compnt_mapping {
 	uint8_t clock_name_index;
@@ -253,8 +247,6 @@ void clear_clock_status(const struct shell *shell, uint8_t clock_index)
 {
 	I2C_MSG i2c_msg = { 0 };
 	uint8_t retry = 5;
-	int byte_count;
-	k_msleep(100);
 	switch (clock_index) {
 	case CLK_BUF_100M_U85:
 	case CLK_BUF_100M_U87:
@@ -263,29 +255,36 @@ void clear_clock_status(const struct shell *shell, uint8_t clock_index)
 		i2c_msg.target_addr = pwr_clock_compnt_mapping_table[clock_index].addr;
 		i2c_msg.tx_len = 1;
 		i2c_msg.rx_len = 2;
-		i2c_msg.data[0] = CLK_BUF_100M_BYTE_COUNT;
+		i2c_msg.data[0] = CLK_BUF_100M_WRITE_LOCK_CLEAR_LOS_EVENT_OFFSET;
 
 		if (i2c_master_read(&i2c_msg, retry)) {
+			if (!shell) {
+				return;
+			}
 			shell_error(shell, "Failed to read reg, bus: %d, addr: 0x%x, reg: 0x%x",
-				    pwr_clock_compnt_mapping_table[clock_index].bus,
-				    pwr_clock_compnt_mapping_table[clock_index].addr,
-				    CLK_BUF_100M_BYTE_COUNT);
-			return;
-		}
-
-		byte_count = i2c_msg.data[1];
-
-		i2c_msg.tx_len = 3;
-		i2c_msg.rx_len = 0;
-		i2c_msg.data[0] = CLK_BUF_100M_WRITE_LOCK_CLEAR_LOS_EVENT_OFFSET;
-		i2c_msg.data[1] = byte_count;
-		i2c_msg.data[2] = 0x2;
-		if (i2c_master_write(&i2c_msg, retry)) {
-			shell_error(shell, "Failed to write reg, bus: %d, addr: 0x%x, reg: 0x%x",
 				    pwr_clock_compnt_mapping_table[clock_index].bus,
 				    pwr_clock_compnt_mapping_table[clock_index].addr,
 				    CLK_BUF_100M_WRITE_LOCK_CLEAR_LOS_EVENT_OFFSET);
 			return;
+		}
+
+		if (i2c_msg.data[1] & BIT(1)) {
+			i2c_msg.tx_len = 3;
+			i2c_msg.rx_len = 0;
+			i2c_msg.data[0] = CLK_BUF_100M_WRITE_LOCK_CLEAR_LOS_EVENT_OFFSET;
+			i2c_msg.data[1] = 1;
+			i2c_msg.data[2] = 0x2;
+			if (i2c_master_write(&i2c_msg, retry)) {
+				if (!shell) {
+					return;
+				}
+				shell_error(shell,
+					    "Failed to write reg, bus: %d, addr: 0x%x, reg: 0x%x",
+					    pwr_clock_compnt_mapping_table[clock_index].bus,
+					    pwr_clock_compnt_mapping_table[clock_index].addr,
+					    CLK_BUF_100M_WRITE_LOCK_CLEAR_LOS_EVENT_OFFSET);
+				return;
+			}
 		}
 		break;
 	case CLK_GEN_100M_U86:
@@ -293,32 +292,42 @@ void clear_clock_status(const struct shell *shell, uint8_t clock_index)
 		i2c_msg.target_addr = pwr_clock_compnt_mapping_table[clock_index].addr;
 		i2c_msg.tx_len = 1;
 		i2c_msg.rx_len = 2;
-		i2c_msg.data[0] = CLK_BUF_100M_BYTE_COUNT;
+		i2c_msg.data[0] = CLK_GEN_LOSMON_EVENT_OFFSET;
 
 		if (i2c_master_read(&i2c_msg, retry)) {
+			if (!shell) {
+				return;
+			}
 			shell_error(shell, "Failed to read reg, bus: %d, addr: 0x%x, reg: 0x%x",
-				    pwr_clock_compnt_mapping_table[clock_index].bus,
-				    pwr_clock_compnt_mapping_table[clock_index].addr,
-				    CLK_BUF_100M_BYTE_COUNT);
-			return;
-		}
-
-		byte_count = i2c_msg.data[1];
-
-		i2c_msg.tx_len = 3;
-		i2c_msg.rx_len = 0;
-		i2c_msg.data[0] = CLK_GEN_LOSMON_EVENT_OFFSET;
-		i2c_msg.data[1] = byte_count;
-		i2c_msg.data[2] = 0x2;
-		if (i2c_master_write(&i2c_msg, retry)) {
-			shell_error(shell, "Failed to write reg, bus: %d, addr: 0x%x, reg: 0x%x",
 				    pwr_clock_compnt_mapping_table[clock_index].bus,
 				    pwr_clock_compnt_mapping_table[clock_index].addr,
 				    CLK_GEN_LOSMON_EVENT_OFFSET);
 			return;
 		}
+
+		if (i2c_msg.data[1] & BIT(1)) {
+			i2c_msg.tx_len = 3;
+			i2c_msg.rx_len = 0;
+			i2c_msg.data[0] = CLK_GEN_LOSMON_EVENT_OFFSET;
+			i2c_msg.data[1] = 1;
+			i2c_msg.data[2] = 0x2;
+			if (i2c_master_write(&i2c_msg, retry)) {
+				if (!shell) {
+					return;
+				}
+				shell_error(shell,
+					    "Failed to write reg, bus: %d, addr: 0x%x, reg: 0x%x",
+					    pwr_clock_compnt_mapping_table[clock_index].bus,
+					    pwr_clock_compnt_mapping_table[clock_index].addr,
+					    CLK_GEN_LOSMON_EVENT_OFFSET);
+				return;
+			}
+		}
 		break;
 	default:
+		if (!shell) {
+			return;
+		}
 		shell_error(shell, "Type wrong clock");
 	}
 
@@ -358,6 +367,24 @@ ioe_pwr_on ioe_pwr_on_table[] = {
 	{ U200051_IO_I2C_BUS, U200051_IO_ADDR, 4, "FM_P3V3_OSFP_P5_EN" },
 	{ U200051_IO_I2C_BUS, U200051_IO_ADDR, 5, "FM_P3V3_OSFP_P6_EN" },
 };
+
+bool check_p3v3_p5v_pwrgd(void)
+{
+	// read p3v3_pwrgf and p5v_pwrgf
+	// PWRGD_P3V3_R, bit-4, VR_PWRGD_PIN_READING_5_REG
+	uint8_t offset = VR_PWRGD_PIN_READING_5_REG;
+	uint8_t reg_data = 0;
+	if (!plat_read_cpld(offset, &reg_data, 1)) {
+		LOG_ERR("Read CPLD offset 0x%x failed", offset);
+	}
+	uint8_t p3v3_value = (reg_data >> 4) & 0x01;
+	// PWRGD_P5V_R, bit-5, VR_PWRGD_PIN_READING_5_REG
+	uint8_t p5v_value = (reg_data >> 5) & 0x01;
+	//if both p3v3 and p5v are all 1, return true
+	if (p3v3_value == 1 && p5v_value == 1)
+		return true;
+	return false;
+}
 
 void power_on_p3v3_osfp()
 {
@@ -542,6 +569,7 @@ void cmd_iris_power_on(const struct shell *shell, size_t argc, char **argv)
 	if (gpio_get(RST_IRIS_PWR_ON_PLD_R1_N) == GPIO_HIGH) {
 		shell_print(shell, "iris power on success!");
 		set_pwr_steps_on_flag(0);
+		set_plat_sensor_one_step_enable_flag(false);
 	} else {
 		shell_warn(shell, "iris power on fail!");
 	}
@@ -561,6 +589,7 @@ void cmd_iris_power_off(const struct shell *shell, size_t argc, char **argv)
 	power_steps = 0;
 	// init power steps
 	set_pwr_steps_on_flag(0);
+	set_plat_sensor_one_step_enable_flag(false);
 }
 
 void cmd_iris_power_cycle(const struct shell *shell, size_t argc, char **argv)
@@ -571,6 +600,7 @@ void cmd_iris_power_cycle(const struct shell *shell, size_t argc, char **argv)
 	if (!iris_power_control(1))
 		shell_warn(shell, "iris power cycle(on) fail!");
 	set_pwr_steps_on_flag(0);
+	set_plat_sensor_one_step_enable_flag(false);
 }
 
 void cmd_iris_steps_on(const struct shell *shell, size_t argc, char **argv)
@@ -617,9 +647,9 @@ void cmd_iris_steps_on(const struct shell *shell, size_t argc, char **argv)
 			}
 			k_msleep(1000);
 			for (int i = 0; i < CLK_COMPONENT_MAX; i++) {
-				k_msleep(300);
+				k_msleep(100);
 				clear_clock_status(shell, i);
-				k_msleep(300);
+				k_msleep(100);
 				pwr_get_clock_status(shell, i);
 			}
 		}
@@ -716,6 +746,12 @@ void cmd_iris_steps_on(const struct shell *shell, size_t argc, char **argv)
 			    power_good_status_table_for_steps_on[pwrgd_idx].power_rail_name, value);
 	}
 
+	if (strcmp(steps_on[power_steps].name, "FM_P5V_EN") == 0) {
+		if (check_p3v3_p5v_pwrgd()) {
+			set_plat_sensor_one_step_enable_flag(ONE_STEP_POWER_MAGIC_NUMBER);
+		}
+	}
+
 	if (strcmp(steps_on[power_steps].name, "FM_P1V80_EN") == 0) {
 		//if board id is evb, run steps_on_p3v3_osfp
 		if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
@@ -734,6 +770,7 @@ void cmd_iris_disable_steps_on(const struct shell *shell, size_t argc, char **ar
 	set_pwr_steps_on_flag(0);
 	// init value is reverse of power on value
 	uint8_t power_init_value = 0;
+	set_plat_sensor_one_step_enable_flag(false);
 	for (int i = 0; i < MAX_STEPS; i++) {
 		power_init_value = steps_on[i].power_on_value ^ 1;
 		// set all steps on value to init value

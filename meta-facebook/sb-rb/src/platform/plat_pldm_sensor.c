@@ -30,6 +30,7 @@ static bool plat_sensor_polling_enable_flag = true;
 static bool plat_sensor_ubc_polling_enable_flag = true;
 static bool plat_sensor_temp_polling_enable_flag = true;
 static bool plat_sensor_vr_polling_enable_flag = true;
+static uint8_t plat_sensor_one_step_power_enable_flag = 0;
 
 static struct pldm_sensor_thread pal_pldm_sensor_thread[MAX_SENSOR_THREAD_ID] = {
 	// thread id, thread name
@@ -449,7 +450,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
-			.post_sensor_read_hook = post_common_sensor_read,
+			.post_sensor_read_hook = post_tmp432_read,
 		},
 	},
 	{
@@ -518,7 +519,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
-			.post_sensor_read_hook = post_common_sensor_read,
+			.post_sensor_read_hook = post_tmp432_read,
 		},
 	},
 	{
@@ -587,7 +588,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
-			.post_sensor_read_hook = post_common_sensor_read,
+			.post_sensor_read_hook = post_tmp432_read,
 		},
 	},
 	{
@@ -656,7 +657,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
-			.post_sensor_read_hook = post_common_sensor_read,
+			.post_sensor_read_hook = post_tmp432_read,
 		},
 	},
 	{
@@ -725,7 +726,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
-			.post_sensor_read_hook = post_common_sensor_read,
+			.post_sensor_read_hook = post_tmp432_read,
 		},
 	},
 	{
@@ -794,7 +795,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
-			.post_sensor_read_hook = post_common_sensor_read,
+			.post_sensor_read_hook = post_tmp432_read,
 		},
 	},
 	{
@@ -863,7 +864,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
-			.post_sensor_read_hook = post_common_sensor_read,
+			.post_sensor_read_hook = post_tmp432_read,
 		},
 	},
 	{
@@ -932,7 +933,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
-			.post_sensor_read_hook = post_common_sensor_read,
+			.post_sensor_read_hook = post_tmp432_read,
 		},
 	},
 };
@@ -12245,8 +12246,10 @@ bool get_raw_data_from_sensor_id(uint8_t sensor_id, uint8_t offset, uint8_t *val
 
 err:
 	if ((cfg->post_sensor_read_hook)) {
-		if ((cfg->post_sensor_read_hook)(cfg, cfg->post_sensor_read_args, 0) == false) {
-			LOG_DBG("%d read raw value post hook fail!", sensor_id);
+		if ((cfg->post_sensor_read_hook)(cfg, cfg->post_sensor_read_args, 0) == false &&
+		    cfg->cache_status != SENSOR_OPEN_CIRCUIT) {
+			LOG_DBG("%d read raw value post hook fail! %x", sensor_id,
+				cfg->cache_status);
 			return false;
 		}
 	}
@@ -12422,6 +12425,11 @@ void set_plat_sensor_vr_polling_enable_flag(bool value)
 	plat_sensor_vr_polling_enable_flag = value;
 }
 
+void set_plat_sensor_one_step_enable_flag(uint8_t value)
+{
+	plat_sensor_one_step_power_enable_flag = value;
+}
+
 bool get_plat_sensor_polling_enable_flag()
 {
 	return plat_sensor_polling_enable_flag;
@@ -12442,10 +12450,20 @@ bool get_plat_sensor_vr_polling_enable_flag()
 	return plat_sensor_vr_polling_enable_flag;
 }
 
+uint8_t get_plat_sensor_one_step_enable_flag()
+{
+	return plat_sensor_one_step_power_enable_flag;
+}
+
 bool is_ubc_access(uint8_t sensor_num)
 {
-	return (is_dc_access(sensor_num) && get_plat_sensor_ubc_polling_enable_flag() &&
-		get_plat_sensor_polling_enable_flag());
+	if (get_plat_sensor_one_step_enable_flag() == ONE_STEP_POWER_MAGIC_NUMBER) {
+		return (get_plat_sensor_ubc_polling_enable_flag() &&
+			get_plat_sensor_polling_enable_flag());
+	} else {
+		return (is_dc_access(sensor_num) && get_plat_sensor_ubc_polling_enable_flag() &&
+			get_plat_sensor_polling_enable_flag());
+	}
 }
 
 bool is_temp_access(uint8_t cfg_idx)
@@ -12456,8 +12474,14 @@ bool is_temp_access(uint8_t cfg_idx)
 
 bool is_vr_access(uint8_t sensor_num)
 {
-	return (is_dc_access(sensor_num) && get_plat_sensor_vr_polling_enable_flag() &&
-		get_plat_sensor_polling_enable_flag());
+	if (get_plat_sensor_one_step_enable_flag() == ONE_STEP_POWER_MAGIC_NUMBER) {
+		return (get_plat_sensor_vr_polling_enable_flag() &&
+			get_plat_sensor_polling_enable_flag());
+
+	} else {
+		return (is_dc_access(sensor_num) && get_plat_sensor_vr_polling_enable_flag() &&
+			get_plat_sensor_polling_enable_flag());
+	}
 }
 
 void set_ioe_value(uint8_t ioe_addr, uint8_t ioe_reg, uint8_t value)
@@ -12523,7 +12547,7 @@ void init_U200051_IO()
 	// only bit6 is input (1)
 	set_ioe_value(U200051_IO_ADDR, CONFIG, 0x40);
 	// io5,io7 default output 1
-	set_ioe_value(U200051_IO_ADDR, OUTPUT_PORT, 0xA0);
+	set_ioe_value(U200051_IO_ADDR, OUTPUT_PORT, 0x80);
 }
 
 /* quick sensor */
@@ -12536,8 +12560,8 @@ void quick_sensor_poll_handler(void *arug0, void *arug1, void *arug2)
 	uint8_t set_io7_value = 0;
 	uint8_t log_show_flag = 0;
 	while (1) {
-		//check dc on/off
-		if (is_mb_dc_on() == false) {
+		//check dc on/off and polling enable/disable
+		if (is_mb_dc_on() == false || !get_plat_sensor_polling_enable_flag()) {
 			//dc is off, sleep 1 second
 			k_msleep(1000);
 			continue;

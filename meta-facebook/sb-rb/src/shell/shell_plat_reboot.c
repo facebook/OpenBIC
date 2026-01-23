@@ -20,13 +20,10 @@
 #include <zephyr.h>
 #include "util_sys.h"
 #include "plat_pldm_sensor.h"
-
-#define PLAT_WAIT_SENSOR_POLLING_END_DELAY_MS 1000 
+#include "plat_cpld.h"
 
 void cmd_plat_reboot(struct shell *shell, size_t argc, char **argv)
 {
-	set_plat_sensor_polling_enable_flag(false);
-	k_msleep(PLAT_WAIT_SENSOR_POLLING_END_DELAY_MS);
 	submit_bic_warm_reset();
 }
 

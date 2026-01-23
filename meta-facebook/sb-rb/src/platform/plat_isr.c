@@ -30,6 +30,8 @@
 #include "plat_i2c.h"
 #include "shell_iris_power.h"
 #include "plat_class.h"
+#include "plat_vr_test_mode.h"
+#include "plat_power_capping.h"
 
 LOG_MODULE_REGISTER(plat_isr);
 
@@ -91,14 +93,26 @@ void ISR_GPIO_RST_IRIS_PWR_ON_PLD_R1_N()
 	// dc on
 	if (gpio_get(RST_IRIS_PWR_ON_PLD_R1_N)) {
 		ioexp_init();
-		set_bootstrap_table_val_to_ioexp();
 		if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
 			init_U200052_IO();
+			init_U200053_IO();
+			init_U200070_IO();
 			power_on_p3v3_osfp();
 		}
+		for (int i = 0; i < CLK_COMPONENT_MAX; i++) {
+			clear_clock_status(NULL, i);
+		}
+		add_sync_oc_warn_to_work();
 	} else {
 		LOG_INF("dc off, clear io expander init flag");
 		set_ioe_init_flag(0);
+		LOG_INF("dc off, exit the vr test mode");
+		vr_test_mode_enable(false);
+		// when dc offm clear cpld polling alert status
+		uint8_t err_type = CPLD_UNEXPECTED_VAL_TRIGGER_CAUSE;
+		LOG_DBG("cpld_polling_alert_status: true -> false, reset_error_log_states: %x",
+			err_type);
+		reset_error_log_states(err_type);
 	}
 }
 
@@ -125,6 +139,11 @@ void ISR_GPIO_SMB_HAMSA_MMC_LVC33_ALERT_N()
 	for (int i = 0; i < ERROR_CODE_LEN; i++) {
 		LOG_DBG("data[%d] = 0x%x", i, data[i]);
 	}
+}
+
+void ISR_ASIC_THERMTRIP_TRIGGER()
+{
+	asic_thermtrip_error_log(LOG_ASSERT);
 }
 
 bool plat_gpio_immediate_int_cb(uint8_t gpio_num)

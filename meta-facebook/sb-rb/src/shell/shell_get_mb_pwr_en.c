@@ -13,20 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include <shell/shell.h>
-#ifndef PLAT_IRIS_POWER_H
-#define PLAT_IRIS_POWER_H
+#include <stdlib.h>
+#include <logging/log.h>
+#include "plat_cpld.h"
 
-enum PWR_CLOCK_COMPONENT {
-	CLK_BUF_100M_U85,
-	CLK_BUF_100M_U87,
-	CLK_BUF_100M_U88,
-	CLK_GEN_100M_U86,
-	CLK_COMPONENT_MAX
-};
+LOG_MODULE_REGISTER(plat_get_mb_pwr_en_shell, LOG_LEVEL_DBG);
 
-bool check_p3v3_p5v_pwrgd(void);
-void power_on_p3v3_osfp();
-void pwer_gd_get_status(const struct shell *shell);
-void clear_clock_status(const struct shell *shell, uint8_t clock_index);
-#endif
+static int cmd_get_mb_pwr_en(const struct shell *shell, size_t argc, char **argv)
+{
+	uint8_t data = 0;
+
+	if (!plat_read_cpld(VR_EN_PIN_READING_5, &data, 1)) {
+		shell_error(shell, "read CPLD fail 0x%x", VR_EN_PIN_READING_5);
+		return -1;
+	}
+
+	shell_info(shell, "MB PWR_EN : %d", data & BIT(0));
+
+	return 0;
+}
+
+/* Root of command */
+SHELL_CMD_REGISTER(get_mb_pwr_en, NULL, "get MB PWR EN status", cmd_get_mb_pwr_en);

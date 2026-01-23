@@ -23,4 +23,5 @@ void ISR_GPIO_RST_IRIS_PWR_ON_PLD_R1_N();
 void set_pwr_steps_on_flag(uint8_t flag_value);
 uint8_t get_pwr_steps_on_flag(void);
 void ISR_GPIO_SMB_HAMSA_MMC_LVC33_ALERT_N();
+void ISR_ASIC_THERMTRIP_TRIGGER();
 #endif

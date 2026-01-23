@@ -131,9 +131,6 @@ enum PLAT_STRAP_INDEX_E {
 	STRAP_INDEX_HAMSA_LS_STRAP_1,
 	STRAP_INDEX_HAMSA_CRM_STRAP_0,
 	STRAP_INDEX_HAMSA_CRM_STRAP_1,
-	STRAP_INDEX_HAMSA_MFIO12,
-	STRAP_INDEX_HAMSA_MFIO13,
-	STRAP_INDEX_HAMSA_MFIO14,
 	STRAP_INDEX_HAMSA_MFIO7,
 	STRAP_INDEX_HAMSA_MFIO9,
 	STRAP_INDEX_HAMSA_MFIO11,
@@ -162,12 +159,6 @@ enum PLAT_STRAP_INDEX_E {
 	STRAP_INDEX_MEDHA1_TRI_L,
 	STRAP_INDEX_MEDHA1_ATPG_MODE_L,
 	STRAP_INDEX_MEDHA1_DFT_TAP_EN_PLD_L,
-	STRAP_INDEX_MEDHA0_MFIO_12,
-	STRAP_INDEX_MEDHA0_MFIO_13,
-	STRAP_INDEX_MEDHA0_MFIO_14,
-	STRAP_INDEX_MEDHA1_MFIO_12,
-	STRAP_INDEX_MEDHA1_MFIO_13,
-	STRAP_INDEX_MEDHA1_MFIO_14,
 	STRAP_INDEX_FM_JTAG_MEDHA0_JTCE_0_2,
 	STRAP_INDEX_FM_JTAG_MEDHA1_JTCE_0_2,
 	STRAP_INDEX_PLD_OWL_E_DFT_TAP_EN_L,
@@ -235,6 +226,7 @@ extern vr_vout_user_settings user_settings;
 extern vr_vout_range_user_settings_struct vout_range_user_settings;
 extern vr_mapping_sensor vr_rail_table[];
 extern bootstrap_mapping_register bootstrap_table[];
+void set_bootstrap_table_change_setting_value(uint8_t index, uint8_t value);
 bool pre_vr_read(sensor_cfg *cfg, void *args);
 bool post_vr_read(sensor_cfg *cfg, void *args, int *const reading);
 bool is_mb_dc_on();
@@ -275,6 +267,9 @@ bool post_ubc_read(sensor_cfg *cfg, void *args, int *reading);
 bool bootstrap_user_settings_set(void *bootstrap_user_settings);
 bool vr_vout_user_settings_set(void *user_settings_value);
 bool set_bootstrap_table_val_to_ioexp(void);
+bool set_ioexp_val_to_bootstrap_table(void);
 bool set_bootstrap_val_to_device(uint8_t strap, uint8_t val);
 uint8_t get_strap_index_max();
+bool post_tmp432_read(sensor_cfg *cfg, void *args, int *reading);
+bool plat_set_vr_reg(uint8_t rail, uint8_t reg, uint8_t *data, uint8_t len);
 #endif

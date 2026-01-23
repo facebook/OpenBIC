@@ -1,0 +1,48 @@
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#ifndef _PLAT_VR_TEST_MODE_H_
+#define _PLAT_VR_TEST_MODE_H_
+
+#define VR_FAST_OCP_REG 0x46
+#define VR_SLOW_OCP_REG 0xEA
+#define VR_UVP_REG 0x44
+#define VR_OVP_REG 0x40
+#define VR_VOUT_MAX_REG 0x24
+
+#define VR_SLOW_OCP_1_DMA_ADDR 0x00EA
+#define VR_SLOW_OCP_2_DMA_ADDR 0x01EA
+
+typedef struct {
+	uint8_t vr_rail;
+	uint16_t fast_ocp;
+	uint16_t slow_ocp;
+	uint16_t uvp;
+	uint16_t ovp;
+	uint16_t vout_max;
+	uint16_t lcr;
+	uint16_t ucr;
+} vr_test_mode_setting_t;
+
+extern const vr_test_mode_setting_t vr_test_mode_table[];
+extern const vr_test_mode_setting_t vr_test_mode_table_default[];
+extern const uint8_t vr_test_mode_table_size;
+extern const uint8_t vr_test_mode_table_dafault_size;
+
+bool get_vr_test_mode_flag(void);
+void vr_test_mode_enable(bool onoff);
+void init_vr_test_mode_polling(void);
+#endif /* _PLAT_VR_TEST_MODE_H_ */
