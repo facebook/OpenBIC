@@ -36,7 +36,7 @@
 LOG_MODULE_REGISTER(plat_log);
 
 #define LOG_MAX_INDEX 0x0FFF // recount when log index > 0x0FFF
-#define LOG_MAX_NUM 100 // total log amount: 100
+#define LOG_MAX_NUM 50 // total log amount: 50-1
 #define FRU_LOG_START 0x0000 // log offset: 0KB
 #define EEPROM_MAX_WRITE_TIME 5 // the BR24G512 eeprom max write time is 3.5 ms
 #define CPLD_VR_VENDOR_TYPE_REG 0x1C
@@ -501,6 +501,8 @@ void error_log_event(uint16_t error_code, bool log_status)
 
 	// Update the next log position
 	next_log_position = (fru_count % LOG_MAX_NUM) + 1;
+	if (next_log_position == LOG_MAX_NUM)
+		next_log_position = 1;
 	log_num++;
 
 	if (log_num > LOG_MAX_NUM) {
