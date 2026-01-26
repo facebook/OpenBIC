@@ -566,6 +566,8 @@ void find_last_log_position()
 	}
 
 	next_log_position = (last_position % LOG_MAX_NUM) + 1;
+	if (next_log_position == LOG_MAX_NUM)
+		next_log_position = 1;
 	next_index = (max_index % LOG_MAX_INDEX) + 1;
 	LOG_INF("Next log position: %d, next index: %d", next_log_position, next_index);
 }
