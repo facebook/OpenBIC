@@ -2094,3 +2094,73 @@ bool voltage_offset_get(uint8_t rail, uint16_t *vout_offset)
 	*vout_offset = vr_offset_init.vout_offset[rail];
 	return true;
 }
+bool plat_ubc_otw_otp_init(void)
+{
+	uint8_t rev = get_board_rev_id();
+	if (rev != REV_ID_EVT2) {
+		LOG_INF("ubc otw/otp init: skip (board_rev=%u, need=%u)", rev, REV_ID_EVT2);
+		return true;
+	}
+
+	uint8_t ubc_module = get_ubc_module();
+
+	switch (ubc_module) {
+	case UBC_MODULE_DELTA:
+	case UBC_MODULE_LUXSHARE: {
+		const uint8_t sensor_ids[2] = {
+			SENSOR_NUM_UBC1_P12V_TEMP_C,
+			SENSOR_NUM_UBC2_P12V_TEMP_C,
+		};
+
+
+		for (int i = 0; i < ARRAY_SIZE(sensor_ids); i++) {
+			uint8_t id = sensor_ids[i];
+			sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(id);
+			if (!cfg) {
+				LOG_ERR("UBC otp init: sensor cfg not found (sensor_id=0x%02X)", id);
+				continue;
+			}
+
+			uint8_t bus = cfg->port;
+			uint8_t addr = cfg->target_addr;
+
+			uint8_t write_data[2] = { 0 };
+
+			/* remove protection: reg 0x10 = 0x00 */
+			write_data[0] = 0x00;
+
+			if (!plat_i2c_write(bus, addr, 0x10, &write_data[0], 1)) {
+				LOG_ERR("UBC(id=0x%02X bus=%u addr=0x%02X): write 0x10 failed",
+					id, bus, addr);
+				continue;
+			}
+
+			/* set OWL/OTW: reg 0x51 = 0x76 0x00 */
+			write_data[0] = 0x76;
+			write_data[1] = 0x00;
+
+			if (!plat_i2c_write(bus, addr, 0x51, write_data, 2)) {
+				LOG_ERR("UBC(id=0x%02X bus=%u addr=0x%02X): write 0x51 failed",
+					id, bus, addr);
+				continue;
+			}
+
+			/* set OFL/OTP: reg 0x4F = 0x7D 0x00 */
+			write_data[0] = 0x7D;
+			write_data[1] = 0x00;
+
+			if (!plat_i2c_write(bus, addr, 0x4F, write_data, 2)) {
+				LOG_ERR("UBC(id=0x%02X bus=%u addr=0x%02X): write 0x4F failed",
+					id, bus, addr);
+				continue;
+			}
+
+		}
+		break;
+	}
+	default:
+		LOG_INF("ubc otw/otp init: skip (unsupported ubc_module=%u)", ubc_module);
+		return true;
+	}
+	return true;
+}
