@@ -1614,7 +1614,7 @@ bool mp2971_set_uvp_threshold(sensor_cfg *cfg, uint8_t rail, uint16_t *write_uvp
 	return true;
 }
 
-bool mp2971_set_thres_div_en(sensor_cfg *cfg, uint8_t rail, uint16_t *enable)
+bool mp2971_set_thres_div_en(sensor_cfg *cfg, uint8_t rail, const uint16_t *enable)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 
