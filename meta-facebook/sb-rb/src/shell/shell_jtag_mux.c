@@ -28,23 +28,23 @@ void set_cmd_jtag_mux(const struct shell *shell, size_t argc, char **argv)
 	if (strcmp(argv[0], "MEDHA_0") == 0) {
 		write_in_data = MUX_MEDHA_0;
 		plat_write_cpld(ASIC_JTAG_MUX_SEL, &write_in_data);
-		shell_info(shell, "vr_hot set MEDHA_0");
+		shell_info(shell, "jtag_mux set to MEDHA_0");
 	} else if (strcmp(argv[0], "MEDHA_1") == 0) {
 		write_in_data = MUX_MEDHA_1;
 		plat_write_cpld(ASIC_JTAG_MUX_SEL, &write_in_data);
-		shell_info(shell, "vr_hot set MEDHA_1");
+		shell_info(shell, "jtag_mux set to MEDHA_1");
 	} else if (strcmp(argv[0], "OWL_E") == 0) {
 		write_in_data = MUX_OWL_E;
 		plat_write_cpld(ASIC_JTAG_MUX_SEL, &write_in_data);
-		shell_info(shell, "vr_hot set OWL_E");
+		shell_info(shell, "jtag_mux set to OWL_E");
 	} else if (strcmp(argv[0], "OWL_W") == 0) {
 		write_in_data = MUX_OWL_W;
 		plat_write_cpld(ASIC_JTAG_MUX_SEL, &write_in_data);
-		shell_info(shell, "vr_hot set OWL_W");
+		shell_info(shell, "jtag_mux set to OWL_W");
 	} else if (strcmp(argv[0], "HAMSA") == 0) {
 		write_in_data = MUX_HAMSA;
 		plat_write_cpld(ASIC_JTAG_MUX_SEL, &write_in_data);
-		shell_info(shell, "vr_hot set HAMSA");
+		shell_info(shell, "jtag_mux set to HAMSA");
 	}
 
 	else {

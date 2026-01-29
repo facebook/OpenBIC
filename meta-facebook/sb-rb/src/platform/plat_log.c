@@ -21,6 +21,7 @@
 #include "plat_sensor_table.h"
 #include "fru.h"
 #include "plat_fru.h"
+#include "plat_event.h"
 #include "plat_i2c.h"
 #include "plat_log.h"
 #include "plat_cpld.h"
@@ -30,11 +31,12 @@
 #include "tmp431.h"
 #include "plat_gpio.h"
 #include "plat_thermal.h"
+#include "shell_plat_power_sequence.h"
 
 LOG_MODULE_REGISTER(plat_log);
 
 #define LOG_MAX_INDEX 0x0FFF // recount when log index > 0x0FFF
-#define LOG_MAX_NUM 100 // total log amount: 100
+#define LOG_MAX_NUM 50 // total log amount: 50-1
 #define FRU_LOG_START 0x0000 // log offset: 0KB
 #define EEPROM_MAX_WRITE_TIME 5 // the BR24G512 eeprom max write time is 3.5 ms
 #define CPLD_VR_VENDOR_TYPE_REG 0x1C
@@ -336,7 +338,20 @@ bool get_error_data(uint16_t error_code, uint8_t *data)
 		data[1] = cpld_data[2];
 		return true;
 	}
-	case POWER_ON_SEQUENCE_TRIGGER_CAUSE:
+	case POWER_ON_SEQUENCE_TRIGGER_CAUSE: {
+		data[0] = plat_get_power_seq_fail_id();
+		return true;
+	}
+	case ASIC_ERROR_TRIGGER_CAUSE: {
+		plat_asic_error_event *asic_event = plat_get_asic_error_event();
+		CHECK_NULL_ARG_WITH_RETURN(asic_event, false);
+		data[0] = asic_event->event_id_0;
+		data[1] = asic_event->event_id_1;
+		data[2] = asic_event->chip_id;
+		data[3] = asic_event->module_id;
+		return true;
+	}
+	case AC_ON_TRIGGER_CAUSE:
 	case DC_ON_TRIGGER_CAUSE: {
 		data[0] = gpio_get(RST_IRIS_PWR_ON_PLD_R1_N);
 		return true;
@@ -358,8 +373,6 @@ bool get_error_data(uint16_t error_code, uint8_t *data)
 		if (vr_error_callback_info_table[i].cpld_offset == cpld_offset) {
 			device_id = vr_error_callback_info_table[i]
 					    .bit_mapping_vr_sensor_num[bit_position];
-			LOG_DBG("offset: 0x%x found", cpld_offset);
-			LOG_DBG("device_id: 0x%x found", device_id);
 			break;
 		}
 	}
@@ -488,6 +501,8 @@ void error_log_event(uint16_t error_code, bool log_status)
 
 	// Update the next log position
 	next_log_position = (fru_count % LOG_MAX_NUM) + 1;
+	if (next_log_position == LOG_MAX_NUM)
+		next_log_position = 1;
 	log_num++;
 
 	if (log_num > LOG_MAX_NUM) {

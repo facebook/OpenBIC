@@ -45,6 +45,7 @@ typedef struct pldm_sensor_thread {
 	int thread_id;
 	char *thread_name;
 	uint32_t poll_interval_ms;
+	uint8_t still_check_interval;
 } pldm_sensor_thread;
 
 void pldm_sensor_monitor_init();

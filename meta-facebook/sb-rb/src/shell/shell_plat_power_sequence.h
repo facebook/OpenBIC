@@ -127,4 +127,8 @@ typedef struct power_sequence {
 	uint8_t value;
 } power_sequence;
 
+bool plat_find_power_seq_fail();
+uint8_t plat_get_power_seq_fail_id();
+void plat_get_power_seq_fail_name(uint8_t idx, uint8_t **name);
+
 #endif

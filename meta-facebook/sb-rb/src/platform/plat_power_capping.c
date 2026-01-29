@@ -18,6 +18,7 @@
 #include <logging/log.h>
 #include "raa228249.h"
 #include "mp29816a.h"
+#include "pldm_sensor.h"
 #include "plat_adc.h"
 #include "plat_class.h"
 #include "plat_cpld.h"
@@ -44,8 +45,10 @@ static power_capping_info_t power_capping_info = { 0 };
 static const uint16_t cpld_lv1_time_window_list[CPLD_LV1_TIME_WINDOW_NUM] = { 0,  1,  3,  5,
 									      10, 15, 20, 50 };
 static uint8_t prev_set_ucr_status = 0;
-const static uint8_t sensor_id_list[2] = { SENSOR_NUM_ASIC_P0V85_MEDHA0_VDD_VOLT_V,
-					   SENSOR_NUM_ASIC_P0V85_MEDHA1_VDD_VOLT_V };
+const static uint8_t volt_sensor_id_list[2] = { SENSOR_NUM_ASIC_P0V85_MEDHA0_VDD_VOLT_V,
+						SENSOR_NUM_ASIC_P0V85_MEDHA1_VDD_VOLT_V };
+const static uint8_t powr_sensor_id_list[2] = { SENSOR_NUM_ASIC_P0V85_MEDHA0_VDD_PWR_W,
+						SENSOR_NUM_ASIC_P0V85_MEDHA1_VDD_PWR_W };
 
 K_WORK_DELAYABLE_DEFINE(sync_vr_oc_work, power_capping_syn_vr_oc_warn_limit);
 
@@ -56,8 +59,8 @@ void power_capping_syn_vr_oc_warn_limit()
 		return;
 	}
 
-	for (uint8_t i = 0; i < ARRAY_SIZE(sensor_id_list); i++) {
-		uint8_t sensor_id = sensor_id_list[i];
+	for (uint8_t i = 0; i < ARRAY_SIZE(volt_sensor_id_list); i++) {
+		uint8_t sensor_id = volt_sensor_id_list[i];
 		sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
 
 		if (cfg == NULL) {
@@ -132,7 +135,7 @@ void add_sync_oc_warn_to_work()
 
 bool set_power_capping_vr_oc_warn_limit(uint8_t vr_idx, uint16_t value)
 {
-	/* input value unit: 1A */
+	/* input value unit: 1W */
 
 	if (!is_mb_dc_on()) {
 		LOG_WRN("need to DC on!");
@@ -140,7 +143,7 @@ bool set_power_capping_vr_oc_warn_limit(uint8_t vr_idx, uint16_t value)
 	}
 
 	uint8_t ret = false;
-	uint8_t sensor_id = sensor_id_list[vr_idx];
+	uint8_t sensor_id = volt_sensor_id_list[vr_idx];
 	sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
 
 	if (cfg == NULL) {
@@ -169,32 +172,38 @@ bool set_power_capping_vr_oc_warn_limit(uint8_t vr_idx, uint16_t value)
 	}
 
 	if (get_vr_module() == VR_MODULE_MPS) {
-		ret = mp29816a_set_iout_oc_warn_limit(cfg, value);
-		if (!ret) {
-			LOG_ERR("Can't set IOUT_OC_WARN 0x%x", sensor_id);
-		} else {
-			uint16_t voltage_value = 0;
-			float float_value = 0;
-			if (mp29816a_get_vout_command(cfg, 0, &voltage_value)) {
-				float_value = voltage_value / 1000.0;
-				power_capping_info.current_threshold[vr_idx] = value / float_value;
+		uint16_t voltage_value = 0;
+		float float_value = 0;
+		ret = mp29816a_get_vout_command(cfg, 0, &voltage_value);
+		if (ret) {
+			float_value = voltage_value / 1000.0;
+			uint16_t current_val = value / float_value;
+			ret = mp29816a_set_iout_oc_warn_limit(cfg, current_val);
+			if (ret) {
+				mp29816a_get_iout_oc_warn_limit(cfg, &current_val);
+				power_capping_info.current_threshold[vr_idx] = current_val;
 			} else {
-				LOG_ERR("Can't get VOUT_COMMAND: 0x%x", sensor_id);
+				LOG_ERR("Can't set IOUT_OC_WARN 0x%x", sensor_id);
 			}
+		} else {
+			LOG_ERR("Can't get VOUT_COMMAND: 0x%x", sensor_id);
 		}
 	} else if (get_vr_module() == VR_MODULE_RNS) {
-		ret = raa228249_set_iout_oc_warn_limit(cfg, value);
-		if (!ret) {
-			LOG_ERR("Can't set IOUT_OC_WARN 0x%x", sensor_id);
-		} else {
-			uint16_t voltage_value = 0;
-			float float_value = 0;
-			if (raa228249_get_vout_command(cfg, 0, &voltage_value)) {
-				float_value = voltage_value / 1000.0;
-				power_capping_info.current_threshold[vr_idx] = value / float_value;
+		uint16_t voltage_value = 0;
+		float float_value = 0;
+		ret = raa228249_get_vout_command(cfg, 0, &voltage_value);
+		if (ret) {
+			float_value = voltage_value / 1000.0;
+			uint16_t current_val = value / float_value;
+			ret = raa228249_set_iout_oc_warn_limit(cfg, current_val);
+			if (ret) {
+				raa228249_get_iout_oc_warn_limit(cfg, &current_val);
+				power_capping_info.current_threshold[vr_idx] = current_val;
 			} else {
-				LOG_ERR("Can't get VOUT_COMMAND: 0x%x", sensor_id);
+				LOG_ERR("Can't set IOUT_OC_WARN 0x%x", sensor_id);
 			}
+		} else {
+			LOG_ERR("Can't get VOUT_COMMAND: 0x%x", sensor_id);
 		}
 	} else {
 		LOG_ERR("Unknown VR module: %d", get_vr_module());
@@ -308,11 +317,63 @@ void set_power_capping_source(uint8_t value)
 		LOG_ERR("Wrong source %d", value);
 		return;
 	}
-
 	power_capping_info.source = value;
 
 	// reset value
 	adc_poll_init();
+
+	pldm_sensor_info *table = NULL;
+	uint8_t i = 0;
+	uint8_t j = 0;
+	int count = 0;
+	uint8_t volt_rate = 0;
+	uint8_t powr_rate = 0;
+
+	// set polling rate.  VR: PWR is quick.  ADC: VOLT is quick.
+	if (value == CAPPING_SOURCE_VR) {
+		volt_rate = 1;
+		powr_rate = 0;
+	} else if (value == CAPPING_SOURCE_ADC) {
+		volt_rate = 0;
+		powr_rate = 1;
+	}
+
+	table = plat_pldm_sensor_load(QUICK_VR_SENSOR_THREAD_ID);
+	if (table == NULL) {
+		LOG_ERR("No table: %d", QUICK_VR_SENSOR_THREAD_ID);
+		return;
+	}
+	count = plat_pldm_sensor_get_sensor_count(QUICK_VR_SENSOR_THREAD_ID);
+	if (count < 0) {
+		LOG_ERR("0 sensor count: %d", QUICK_VR_SENSOR_THREAD_ID);
+		return;
+	}
+
+	for (i = 0; i < ARRAY_SIZE(volt_sensor_id_list); i++) {
+		uint8_t sensor_id = volt_sensor_id_list[i];
+		for (j = 0; j < count; j++) {
+			if (table[j].pldm_sensor_cfg.num == sensor_id) {
+				table[j].pdr_numeric_sensor.update_interval = (real32_t)volt_rate;
+				break;
+			}
+		}
+		if (j == count) {
+			LOG_ERR("Can't find sensor: 0x%02x", sensor_id);
+		}
+	}
+
+	for (i = 0; i < ARRAY_SIZE(powr_sensor_id_list); i++) {
+		uint8_t sensor_id = powr_sensor_id_list[i];
+		for (j = 0; j < count; j++) {
+			if (table[j].pldm_sensor_cfg.num == sensor_id) {
+				table[j].pdr_numeric_sensor.update_interval = (real32_t)powr_rate;
+				break;
+			}
+		}
+		if (j == count) {
+			LOG_ERR("Can't find sensor: 0x%02x", sensor_id);
+		}
+	}
 }
 
 uint16_t get_power_capping_current_threshold(uint8_t vr_idx)
@@ -528,7 +589,7 @@ void plat_power_capping_init()
 		plat_write_cpld(CPLD_OFFSET_POWER_CLAMP, &data);
 	}
 
-	set_power_capping_source(CAPPING_SOURCE_ADC);
+	set_power_capping_source(CAPPING_SOURCE_VR);
 
 	k_thread_create(&power_capping_thread, power_capping_thread_stack, POWER_CAPPING_STACK_SIZE,
 			power_capping_handler, NULL, NULL, NULL, CONFIG_MAIN_THREAD_PRIORITY, 0,

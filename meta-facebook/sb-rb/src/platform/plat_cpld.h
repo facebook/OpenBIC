@@ -77,10 +77,7 @@ typedef struct _cpld_info_ {
 	uint8_t is_fault_bit_map; //flag for fault
 
 	//flag for 1st polling
-	bool is_first_polling;
-
-	//flag for 1st polling after changing DC status
-	bool is_first_polling_after_dc_change;
+	const bool is_send_bmc;
 
 	//temp data for last polling
 	uint8_t last_polling_value;
@@ -88,8 +85,6 @@ typedef struct _cpld_info_ {
 	bool (*status_changed_cb)(cpld_info *, uint8_t *);
 
 	uint8_t bit_check_mask; //bit check mask
-
-	uint8_t event_type;
 
 } cpld_info;
 

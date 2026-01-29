@@ -200,13 +200,13 @@ static void update_adc_info(uint16_t raw_data, uint8_t base_idx, float vref)
 		// voltage averge
 		float temp_voltage_value = 0;
 		if (base_idx == ADC_RB_IDX_MEDHA0)
-			temp_voltage_value = get_sensor_reading_cache_as_float(
+			temp_voltage_value = get_cached_sensor_reading_by_sensor_number(
 						     SENSOR_NUM_ASIC_P0V85_MEDHA0_VDD_VOLT_V) /
-					     1000;
+					     1000.0;
 		else if (base_idx == ADC_RB_IDX_MEDHA1)
-			temp_voltage_value = get_sensor_reading_cache_as_float(
+			temp_voltage_value = get_cached_sensor_reading_by_sensor_number(
 						     SENSOR_NUM_ASIC_P0V85_MEDHA1_VDD_VOLT_V) /
-					     1000;
+					     1000.0;
 		// transfer to uint16_t
 		uint16_t voltage_packed = float_voltage_transfer_to_uint16(temp_voltage_value);
 		adc->vr_sum -= uint16_voltage_transfer_to_float(adc->vr_voltage_buf[adc->buf_idx]);
@@ -232,13 +232,15 @@ static void update_adc_info(uint16_t raw_data, uint8_t base_idx, float vref)
 
 static void update_vr_base_power_info()
 {
-	float float_value = 0;
+	int int_value = 0;
 	uint16_t val_medha0 = 0;
 	uint16_t val_medha1 = 0;
-	float_value = get_sensor_reading_cache_as_float(SENSOR_NUM_ASIC_P0V85_MEDHA0_VDD_PWR_W);
-	val_medha0 = (float_value + 500) / 1000;
-	float_value = get_sensor_reading_cache_as_float(SENSOR_NUM_ASIC_P0V85_MEDHA1_VDD_PWR_W);
-	val_medha1 = (float_value + 500) / 1000;
+	int_value =
+		get_cached_sensor_reading_by_sensor_number(SENSOR_NUM_ASIC_P0V85_MEDHA0_VDD_PWR_W);
+	val_medha0 = (int_value + 500) / 1000;
+	int_value =
+		get_cached_sensor_reading_by_sensor_number(SENSOR_NUM_ASIC_P0V85_MEDHA1_VDD_PWR_W);
+	val_medha1 = (int_value + 500) / 1000;
 
 	for (uint8_t i = 0; i < ADC_IDX_MAX; i++) {
 		adc_info_t *adc = &adc_info[i];
@@ -279,6 +281,16 @@ void read_adc_info()
 	uint8_t adc_idx = 0;
 	plat_read_cpld(CPLD_OFFSET_ADC_IDX, &adc_idx, 1);
 	adc_idx_read = adc_idx;
+
+	/* read VENDOR_L to determine*/
+	uint8_t value = 0;
+	ad4058_write_reg(0xA8, 0x00, 0);
+	ad4058_read_reg(0x0C, 0, &value);
+	if (value == 0x56) {
+		adc_idx_read = 0;
+	} else {
+		adc_idx_read = 1;
+	}
 }
 
 uint8_t get_adc_type()
@@ -289,6 +301,11 @@ uint8_t get_adc_type()
 float get_adc_vr_pwr(uint8_t idx)
 {
 	return adc_info[idx].pwr_avg_val;
+}
+
+float get_vr_vol_sum(uint8_t idx)
+{
+	return adc_info[idx].vr_sum;
 }
 int ads7066_read_reg(uint8_t reg, uint8_t idx, uint8_t *out_data)
 {
@@ -679,7 +696,7 @@ void ads7066_mode_init()
 		ads7066_write_reg(0, 0x1, i);
 		// if rainbow board revid >= EVT1B, disable internal Volt reference
 		if (get_asic_board_id() == ASIC_BOARD_ID_RAINBOW &&
-		    get_board_rev_id() >= REV_ID_EVT2)
+		    get_board_rev_id() >= REV_ID_DVT)
 			ads7066_write_reg(0x1, 0x2, i);
 		else
 			ads7066_write_reg(0x1, 0x82, i);
@@ -752,7 +769,7 @@ void adc_rainbow_polling_handler(void *p1, void *p2, void *p3)
 		} else if (get_power_capping_source() == CAPPING_SOURCE_VR) {
 			update_vr_base_power_info();
 		}
-		k_msleep(1);
+		k_msleep(0);
 	}
 }
 

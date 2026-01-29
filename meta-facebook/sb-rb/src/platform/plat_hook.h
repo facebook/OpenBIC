@@ -197,6 +197,20 @@ enum STRAP_TYPE_E {
 	STRAP_TYPE_MAX,
 };
 
+enum VR_MP29816_REG_E {
+	UVP_THRESHOLD = 0,
+	UVP,
+	VOUT_MAX,
+	VOUT_COMMAND,
+	VOUT_OFFSET,
+	TOTAL_OCP,
+	OVP_1,
+	OVP_2,
+	OVP_2_ACTION,
+	DIV_EN,
+	VR_MP29816_SET_REG_MAX,
+};
+
 typedef struct vr_vout_range_user_settings_struct {
 	uint16_t default_vout_max[STRAP_INDEX_MAX];
 	uint16_t default_vout_min[STRAP_INDEX_MAX];
@@ -221,6 +235,10 @@ typedef struct bootstrap_user_settings_struct {
 	uint16_t user_setting_value[STRAP_INDEX_MAX];
 } bootstrap_user_settings_struct;
 
+#define OVP2_ACTION_NO_ACTION 0x00 /* 2'b00 */
+#define OVP2_ACTION_LATCH_OFF 0x01 /* 2'b01 */
+#define OVP2_ACTION_UNKNOWN 0xFF
+
 extern bootstrap_user_settings_struct bootstrap_user_settings;
 extern vr_vout_user_settings user_settings;
 extern vr_vout_range_user_settings_struct vout_range_user_settings;
@@ -239,7 +257,7 @@ bool vr_status_enum_get(uint8_t *name, uint8_t *num);
 bool plat_get_vr_status(uint8_t rail, uint8_t vr_status_rail, uint16_t *vr_status);
 bool plat_clear_vr_status(uint8_t rail);
 bool plat_get_vout_command(uint8_t rail, uint16_t *millivolt);
-bool plat_set_vout_command(uint8_t rail, uint16_t *millivolt, bool is_default, bool is_perm);
+bool plat_set_vout_command(uint8_t rail, uint16_t *millivolt);
 bool vr_rail_voltage_peak_get(uint8_t *name, int *peak_value);
 bool vr_rail_voltage_peak_clear(uint8_t rail_index);
 bool plat_set_vout_range_min(uint8_t rail, uint16_t *millivolt);
@@ -247,8 +265,6 @@ bool plat_set_vout_range_max(uint8_t rail, uint16_t *millivolt);
 bool vr_vout_user_settings_get(void *user_settings);
 void user_settings_init(void);
 bool vr_vout_range_user_settings_init(void);
-bool vr_vout_default_settings_init(void);
-bool vr_vout_user_settings_init(void);
 bool temp_threshold_user_settings_get(void *temp_threshold_user_settings);
 bool plat_get_temp_threshold(uint8_t temp_index_threshold_type, uint32_t *millidegree_celsius);
 bool bootstrap_default_settings_init(void);
@@ -265,11 +281,15 @@ bool voltage_command_setting_get(uint8_t rail, uint16_t *vout);
 bool post_sensor_reading_hook_func(uint8_t sensor_number);
 bool post_ubc_read(sensor_cfg *cfg, void *args, int *reading);
 bool bootstrap_user_settings_set(void *bootstrap_user_settings);
-bool vr_vout_user_settings_set(void *user_settings_value);
 bool set_bootstrap_table_val_to_ioexp(void);
 bool set_ioexp_val_to_bootstrap_table(void);
 bool set_bootstrap_val_to_device(uint8_t strap, uint8_t val);
 uint8_t get_strap_index_max();
 bool post_tmp432_read(sensor_cfg *cfg, void *args, int *reading);
 bool plat_set_vr_reg(uint8_t rail, uint8_t reg, uint8_t *data, uint8_t len);
+int get_vr_page(uint8_t rail);
+int get_vr_mp29816a_reg(uint8_t rail, uint16_t *get_data, uint8_t get_reg);
+int set_vr_mp29816a_reg(uint8_t rail, uint16_t *set_value, uint8_t set_reg);
+int get_vr_mp2971_reg(uint8_t rail, uint16_t *get_data, uint8_t get_reg);
+int set_vr_mp2971_reg(uint8_t rail, uint16_t *set_data, uint8_t set_reg);
 #endif

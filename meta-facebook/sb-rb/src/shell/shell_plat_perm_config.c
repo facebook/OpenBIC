@@ -28,20 +28,6 @@ LOG_MODULE_REGISTER(plat_perm_config_shell, LOG_LEVEL_DBG);
 static int cmd_perm_config_get(const struct shell *shell, size_t argc, char **argv)
 {
 	int config_count = 0;
-	for (int i = 0; i < VR_RAIL_E_MAX; i++) {
-		if (get_asic_board_id() != ASIC_BOARD_ID_EVB && (i == VR_RAIL_E_P3V3_OSFP_VOLT_V))
-			continue; // skip osfp p3v3 on BD
-		if (user_settings.vout[i] != 0xffff) {
-			uint8_t *rail_name = NULL;
-			if (!vr_rail_name_get((uint8_t)i, &rail_name)) {
-				LOG_ERR("Can't find vr_rail_name by rail index: %x", i);
-				continue;
-			}
-			shell_print(shell, "[%2d]%-50s val=%d", i, rail_name,
-				    user_settings.vout[i]);
-			config_count++;
-		}
-	}
 	for (int i = 0; i < PLAT_TEMP_INDEX_THRESHOLD_TYPE_MAX; i++) {
 		if (temp_threshold_user_settings.temperature_reg_val[i] != 0xffffffff) {
 			uint8_t *temp_index_threshold_name = NULL;
@@ -142,28 +128,6 @@ static int cmd_perm_config_get(const struct shell *shell, size_t argc, char **ar
 			config_count++;
 		}
 	}
-	/* TODO wait power capping function add
-	for (int i = 0; i < POWER_CAPPING_INDEX_MAX; i++) {
-		if (power_capping_user_settings.user_setting_value[i] != 0xffff) {
-			uint8_t *rail_name = NULL;
-			if (!power_capping_rail_name_get((uint8_t)i, &rail_name)) {
-				LOG_ERR("Can't find power_capping_rail_name by rail index: %x", i);
-				continue;
-			}
-			if (i == POWER_CAPPING_INDEX_SWITCH) {
-				shell_print(shell, "[%2d]%-50s val=%s", i, rail_name,
-					    power_capping_user_settings.user_setting_value[i] ?
-						    "enable" :
-						    "disable");
-				config_count++;
-			} else {
-				shell_print(shell, "[%2d]%-50s val=%d", i, rail_name,
-					    power_capping_user_settings.user_setting_value[i]);
-			}
-			config_count++;
-		}
-	}
-	*/
 
 	if (!config_count) {
 		shell_print(shell, "no perm parameter exist");

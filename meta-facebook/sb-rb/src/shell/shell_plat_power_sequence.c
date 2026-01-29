@@ -131,6 +131,7 @@ power_sequence power_sequence_off_table[] = {
 
 size_t power_sequence_on_table_size = ARRAY_SIZE(power_sequence_on_table);
 size_t power_sequence_off_table_size = ARRAY_SIZE(power_sequence_off_table);
+static uint8_t power_seq_fail_id = 0xFF;
 
 void bubble_sort_power_sequence_table(const struct shell *shell,
 				      const power_sequence *power_sequence_table, size_t size)
@@ -215,6 +216,41 @@ int cmd_power_sequence(const struct shell *shell, size_t argc, char **argv)
 	}
 
 	return 0;
+}
+
+bool plat_find_power_seq_fail()
+{
+	for (uint8_t i = 0; i < power_sequence_on_table_size; i++) {
+		uint8_t data;
+		uint8_t cpld_offset = power_sequence_on_table[i].cpld_offsets;
+
+		if (!plat_read_cpld(cpld_offset, &data, 1)) {
+			LOG_ERR("Fail read cpld reg 0x%x", cpld_offset);
+			power_seq_fail_id = 0xFF;
+			return false;
+		}
+		if (data == 0) {
+			power_seq_fail_id = i;
+			return true;
+		}
+	}
+
+	power_seq_fail_id = 0xFF;
+	return false;
+}
+
+uint8_t plat_get_power_seq_fail_id()
+{
+	return power_seq_fail_id;
+}
+
+void plat_get_power_seq_fail_name(uint8_t idx, uint8_t **name)
+{
+	if ((idx != 0xFF) && (idx < power_sequence_on_table_size)) {
+		*name = power_sequence_on_table[idx].power_rail_name;
+	} else {
+		LOG_ERR("wrong idx: %x", idx);
+	}
 }
 
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_power_sequence_cmds,

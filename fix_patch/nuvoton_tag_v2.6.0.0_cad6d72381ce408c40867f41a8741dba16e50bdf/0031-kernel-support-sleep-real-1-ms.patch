@@ -1,0 +1,24 @@
+From: Young <young.lo@quantatw.com>
+Date: Tue, 6 Jan 2026 17:07:36 +0800
+Subject: Support sleep real 1 ms
+
+Change:
+1. Support sleep real 1 ms
+
+diff --git a/kernel/sched.c b/kernel/sched.c
+index fb78bd8..9f750c1 100644
+--- a/kernel/sched.c
++++ b/kernel/sched.c
+@@ -1221,10 +1221,12 @@ static int32_t z_tick_sleep(k_ticks_t ticks)
+ #endif
+ 
+ 	/* wait of 0 ms is treated as a 'yield' */
++	/* if ticks is 0 -> sleep 1 ms
+ 	if (ticks == 0) {
+ 		k_yield();
+ 		return 0;
+ 	}
++	*/
+ 
+ 	k_timeout_t timeout = Z_TIMEOUT_TICKS(ticks);
+ 	if (Z_TICK_ABS(ticks) <= 0) {

@@ -17,6 +17,7 @@
 #include <stdio.h>
 #include <logging/log.h>
 
+#include "plat_adc.h"
 #include "plat_class.h"
 #include "plat_cpld.h"
 #include "plat_pldm_sensor.h"
@@ -151,8 +152,13 @@ uint8_t get_tray_location()
 	return tray_location;
 }
 
+// clang-format off
+
 void pal_show_board_types(const struct shell *shell)
 {
+	uint8_t adc_type = 0;
+	adc_type = get_adc_type();
+
 	shell_print(shell, "* BOARD_TYPE:    (0x%02X)%s", asic_board_id,
 		    (asic_board_id == ASIC_BOARD_ID_RAINBOW) ? "RAINBOW" :
 		    (asic_board_id == ASIC_BOARD_ID_EVB)     ? "EVB" :
@@ -200,8 +206,14 @@ void pal_show_board_types(const struct shell *shell)
 	shell_print(shell, "* TMP_TYPE:      (0x%02X)%s", tmp_module,
 		    (tmp_module == TMP_TMP432) ? "TMP_TMP75_TMP432" : "not supported");
 
+	shell_print(shell, "* ADC_TYPE:      (0x%02X)%s", adc_type,
+		    (adc_type == ADI_AD4058) ? "ADI_AD4058" :
+		    (adc_type == TIC_ADS7066) ? "TI_ADS7066" : "not supported");
+
 	return;
 }
+
+// clang-format on
 
 void pal_show_extra_info(const struct shell *shell)
 {

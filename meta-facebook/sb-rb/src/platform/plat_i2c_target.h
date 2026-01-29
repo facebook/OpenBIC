@@ -74,6 +74,9 @@
 #define LEVEL_3_PWR_ALERT_THRESHOLD_TIME_REG 0x92
 #define VR_POWER_READING_REG 0x93
 #define MEDHA_SENSOR_VALUE_REG 0x94
+#define POWER_CAPPING_METHOD_REG 0x95
+#define MEDHA_POWER_SOURCE_REG 0x96
+#define POLLING_RATE_TELEMETRY_REG 0x97
 #define TRAY_INFO_REG 0x98
 
 #define SET_SENSOR_POLLING_COMMAND_REG 0xF0
@@ -208,9 +211,13 @@ typedef struct __attribute__((__packed__)) {
 typedef struct __attribute__((__packed__)) {
 	struct k_work work;
 	uint8_t set_value;
+} plat_power_capping_method_t;
+typedef struct __attribute__((__packed__)) {
+	struct k_work work;
+	uint8_t set_value;
 } plat_control_sensor_polling;
 void plat_telemetry_table_init(void);
 void update_sensor_reading_by_sensor_number(uint8_t sensor_number);
 void update_strap_capability_table(void);
-float get_sensor_reading_cache_as_float(uint8_t sensor_number);
+int get_cached_sensor_reading_by_sensor_number(uint8_t sensor_number);
 #endif

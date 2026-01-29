@@ -56,7 +56,7 @@ static int cmd_voltage_get_all(const struct shell *shell, size_t argc, char **ar
 			continue;
 		}
 
-		shell_print(shell, "%4d|%-50s|%4d", i, rail_name, vout);
+		shell_print(shell, "%4d|%-40s|%4d", i, rail_name, vout);
 	}
 
 	return 0;
@@ -64,8 +64,6 @@ static int cmd_voltage_get_all(const struct shell *shell, size_t argc, char **ar
 
 static int cmd_voltage_set(const struct shell *shell, size_t argc, char **argv)
 {
-	bool is_default = false;
-	bool is_perm = false;
 	if (!get_vr_test_mode_flag()) {
 		shell_warn(shell, "This command is only for VR test mode");
 		return -1;
@@ -78,13 +76,9 @@ static int cmd_voltage_set(const struct shell *shell, size_t argc, char **argv)
 		return -1;
 	}
 
-	if (argc == 4) {
-		if (!strcmp(argv[3], "perm")) {
-			is_perm = true;
-		} else {
-			shell_error(shell, "The last argument must be <perm>");
-			return -1;
-		}
+	if (argc >= 4) {
+		shell_error(shell, "voltage set <voltage-rail> <new-voltage>");
+		return -1;
 	}
 
 	/* covert rail string to enum */
@@ -95,33 +89,53 @@ static int cmd_voltage_set(const struct shell *shell, size_t argc, char **argv)
 	}
 
 	uint16_t millivolt = strtol(argv[2], NULL, 0);
-	if (!strcmp(argv[2], "default")) {
-		is_default = true;
-		shell_info(shell, "Set %s(%d) to default, %svolatile\n", argv[1], rail,
-			   (argc == 4) ? "non-" : "");
-	} else {
-		uint16_t vout_max_millivolt = vout_range_user_settings.change_vout_max[rail];
-		uint16_t vout_min_millivolt = vout_range_user_settings.change_vout_min[rail];
-		if (millivolt < vout_min_millivolt || millivolt > vout_max_millivolt) {
-			shell_error(shell, "vout[%d] cannot be less than %dmV or greater than %dmV",
-				    rail, vout_min_millivolt, vout_max_millivolt);
-			return -1;
-		}
-		// can't set voltage for osfp p3v3
-		if (rail == VR_RAIL_E_P3V3_OSFP_VOLT_V) {
-			shell_warn(shell, "OSFP P3V3 can't set voltage");
-			return -1;
-		}
-		shell_info(shell, "Set %s(%d) to %d mV, %svolatile\n", argv[1], rail, millivolt,
-			   (argc == 4) ? "non-" : "");
+	uint16_t vout_max_millivolt = vout_range_user_settings.change_vout_max[rail];
+	uint16_t vout_min_millivolt = vout_range_user_settings.change_vout_min[rail];
+	if (millivolt < vout_min_millivolt || millivolt > vout_max_millivolt) {
+		shell_error(shell, "vout[%d] cannot be less than %dmV or greater than %dmV", rail,
+			    vout_min_millivolt, vout_max_millivolt);
+		return -1;
 	}
+	// can't set voltage for osfp p3v3
+	if (rail == VR_RAIL_E_P3V3_OSFP_VOLT_V) {
+		shell_warn(shell, "OSFP P3V3 can't set voltage");
+		return -1;
+	}
+	shell_info(shell, "Set %s(%d) to %d mV, %svolatile\n", argv[1], rail, millivolt,
+		   (argc == 4) ? "non-" : "");
 
 	/* set the vout */
 	if ((get_asic_board_id() != ASIC_BOARD_ID_EVB) && (rail == VR_RAIL_E_P3V3_OSFP_VOLT_V)) {
 		shell_print(shell, "There is no osfp p3v3");
 		return 0;
 	}
-	if (!plat_set_vout_command(rail, &millivolt, is_default, is_perm)) {
+	// if vr is MPS, read back uvp and keep it >= 200mv
+	uint8_t vr = get_vr_module();
+	if (vr == VR_MODULE_MPS) {
+		if (rail == VR_RAIL_E_ASIC_P0V85_MEDHA0_VDD ||
+		    rail == VR_RAIL_E_ASIC_P0V85_MEDHA1_VDD) {
+			uint16_t uvp = 0;
+			uint16_t vout_offset = 0;
+			if (get_vr_mp29816a_reg(rail, &vout_offset, VOUT_OFFSET)) {
+				shell_error(shell, "get vr %d vout cmd fail", rail);
+				return -1;
+			}
+			if (get_vr_mp29816a_reg(rail, &uvp, UVP)) {
+				shell_error(shell, "get vr %d uvp fail", rail);
+				return -1;
+			}
+			// Vout cmd = 200(limit uvp) + 500(test mode uvp_threshold) - vout offset
+			uint16_t limit_vout_cmd = 200 + 500 - vout_offset;
+			;
+			if (millivolt < limit_vout_cmd) {
+				shell_warn(shell, "uvp is too low, set vr %d vout cmd to %d", rail,
+					   limit_vout_cmd);
+				millivolt = limit_vout_cmd;
+			}
+		}
+	}
+
+	if (!plat_set_vout_command(rail, &millivolt)) {
 		shell_error(shell, "Can't set vout by rail index: %d", rail);
 		return -1;
 	}

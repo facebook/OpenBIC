@@ -882,13 +882,6 @@ bool set_user_settings_delay_module_pg_to_eeprom(void *user_settings, uint8_t da
 }
 bool perm_config_clear(void)
 {
-	/* clear all vout perm parameters */
-	memset(user_settings.vout, 0xFF, sizeof(user_settings.vout));
-	if (!vr_vout_user_settings_set(&user_settings)) {
-		LOG_ERR("The perm_config clear failed");
-		return false;
-	}
-
 	/* clear all temp_threshold perm parameters */
 	memset(temp_threshold_user_settings.temperature_reg_val, 0xFF,
 	       sizeof(temp_threshold_user_settings.temperature_reg_val));
@@ -939,16 +932,6 @@ bool perm_config_clear(void)
 		LOG_ERR("The perm_config clear failed");
 		return false;
 	}
-
-	/* TODO TODO wait power capping function add
-		// clear power capping perm parameter
-		memset(power_capping_user_settings.user_setting_value, 0xFF,
-			sizeof(power_capping_user_settings.user_setting_value));
-		if (!set_user_settings_power_capping_to_eeprom(&power_capping_user_settings)) {
-			LOG_ERR("The perm_config clear failed");
-			return false;
-		}
-	*/
 
 	return true;
 }
@@ -1346,8 +1329,6 @@ bool get_average_power(uint8_t rail, uint32_t *milliwatt)
 }
 void user_settings_init(void)
 {
-	vr_vout_default_settings_init();
-	vr_vout_user_settings_init();
 	bootstrap_default_settings_init();
 	bootstrap_user_settings_init();
 	vr_vout_range_user_settings_init();

@@ -36,8 +36,6 @@
 #include "plat_util.h"
 #include "plat_i2c.h"
 
-#define RESET_CPLD_ON 0x3F
-#define RESET_CPLD_OFF 0x00
 #define IRIS_BOOT0_IMG_SIZE 0x1FFFFB
 #define PLAT_WAIT_SENSOR_POLLING_END_DELAY_MS 1000
 
@@ -118,16 +116,9 @@ void change_spi_node_to_medha1()
 	gpio_set(QSPI_CPLD_SEL_1, 1);
 }
 
-void set_cpld_reset_reg(uint8_t value)
+void plat_set_cpld_reset_reg(uint8_t value)
 {
-	uint8_t temp_data = 0;
-	plat_read_cpld(RESET, &temp_data, 1);
-	LOG_DBG("cpld reset reg: 0x%x", temp_data);
-	temp_data = value; // set cpld reset
-	plat_write_cpld(RESET, &temp_data);
-	// check cpld reset reg
-	plat_read_cpld(RESET, &temp_data, 1);
-	LOG_DBG("check cpld reset reg: 0x%x", temp_data);
+	plat_write_cpld(RESET, &value);
 }
 
 static uint8_t pldm_pre_mtia_flash_update(void *fw_update_param)
@@ -135,7 +126,7 @@ static uint8_t pldm_pre_mtia_flash_update(void *fw_update_param)
 	CHECK_NULL_ARG_WITH_RETURN(fw_update_param, 1);
 
 	pldm_fw_update_param_t *p = (pldm_fw_update_param_t *)fw_update_param;
-	set_cpld_reset_reg(RESET_CPLD_OFF);
+	plat_set_cpld_reset_reg(RESET_CPLD_OFF);
 	uint16_t spi_node = p->comp_id;
 	LOG_DBG("MTIA flash comp id: 0x%x", p->comp_id);
 	switch (spi_node) {
@@ -153,7 +144,7 @@ static uint8_t pldm_pre_mtia_flash_update(void *fw_update_param)
 		break;
 	default:
 		LOG_ERR("Unsupported MTIA flash comp id: 0x%x", p->comp_id);
-		set_cpld_reset_reg(RESET_CPLD_ON);
+		plat_set_cpld_reset_reg(RESET_CPLD_ON);
 		return 1;
 	}
 
@@ -164,7 +155,7 @@ static uint8_t pldm_pre_mtia_flash_update(void *fw_update_param)
 	rc = spi_nor_re_init(flash_dev);
 	if (rc != 0) {
 		LOG_ERR("spi_nor_re_init fail");
-		set_cpld_reset_reg(RESET_CPLD_ON);
+		plat_set_cpld_reset_reg(RESET_CPLD_ON);
 		return 1;
 	}
 
@@ -238,7 +229,7 @@ static uint8_t pldm_post_mtia_flash_update(void *fw_update_param)
 	SAFE_FREE(rxbuf);
 	if (read_fw_image(0x1FFFF8, 3, version_rxbuf, DEVSPI_SPI1_CS1)) {
 		LOG_ERR("read flash : read_fw_image fail");
-		set_cpld_reset_reg(RESET_CPLD_ON);
+		plat_set_cpld_reset_reg(RESET_CPLD_ON);
 		SAFE_FREE(version_rxbuf);
 		return 1;
 	}
@@ -274,120 +265,74 @@ static uint8_t pldm_post_mtia_flash_update(void *fw_update_param)
 	// disable spi node
 	spi_node_disable();
 	LOG_INF("Disable spi node");
-	set_cpld_reset_reg(RESET_CPLD_ON);
+	plat_set_cpld_reset_reg(RESET_CPLD_ON);
 	return 0;
 }
 
-bool plat_get_image_crc_checksum_from_flash(uint8_t index, uint8_t data_type, uint32_t *data)
+bool plat_get_image_crc_checksum_from_flash(uint8_t index, uint32_t *data_ver, uint32_t *data_crc)
 {
+	CHECK_NULL_ARG_WITH_RETURN(data_ver, false);
+	CHECK_NULL_ARG_WITH_RETURN(data_crc, false);
+
 	if (index != COMPNT_HAMSA && index != COMPNT_MEDHA0 && index != COMPNT_MEDHA1) {
 		return false;
-	} else {
-		uint16_t spi_node = index;
-		uint8_t flash_index = 0;
-		LOG_DBG("Read flash comp id: 0x%x", index);
-		switch (spi_node) {
-		case COMPNT_HAMSA:
-			change_spi_node_to_hamsa();
-			LOG_DBG("change spi node to hamsa");
-			flash_index = BOOT0_HAMSA;
-			break;
-		case COMPNT_MEDHA0:
-			change_spi_node_to_medha0();
-			LOG_DBG("change spi node to medha0");
-			flash_index = BOOT0_MEDHA0;
-			break;
-		case COMPNT_MEDHA1:
-			change_spi_node_to_medha1();
-			LOG_DBG("change spi node to medha1");
-			flash_index = BOOT0_MEDHA1;
-			break;
-		default:
-			LOG_ERR("Unsupported read flash comp id: 0x%x", index);
-			set_cpld_reset_reg(RESET_CPLD_ON);
-			return false;
-		}
-		// re-init flash
-		const struct device *flash_dev;
-		flash_dev = device_get_binding("spi_fiu0_cs1");
-		int rc = 0;
-		rc = spi_nor_re_init(flash_dev);
-		if (rc != 0) {
-			LOG_ERR("read flash : spi_nor_re_init fail");
-			set_cpld_reset_reg(RESET_CPLD_ON);
-			return false;
-		}
-		//read data back to combine in Ver and CRC32
-		uint8_t *ver_rxbuf = NULL;
-		uint8_t *crc32_rxbuf = NULL;
-		ver_rxbuf = malloc(128);
-		crc32_rxbuf = malloc(128);
-		/*
-		0x1FFFF8 (Byte 0): VERSION_PATCH = 0x00
-		0x1FFFF9 (Byte 1): VERSION_MINOR  = 0x06
-		0x1FFFFA (Byte 2): VERSION_MAJOR  = 0x01
-		
-		0x1FFFFC: CRC32 byte 0 (LSB)
-		0x1FFFFD: CRC32 byte 1      
-		0x1FFFFE: CRC32 byte 2      
-		0x1FFFFF: CRC32 byte 3 (MSB)
-		
-		VER : 01.06.00 | CRC32 : e9e2b0ba
-		*/
-		int test = read_fw_image(0x1FFFF8, 3, ver_rxbuf, DEVSPI_SPI1_CS1);
-		LOG_DBG("Read flash test: %d", test);
-		if (read_fw_image(0x1FFFF8, 3, ver_rxbuf, DEVSPI_SPI1_CS1)) {
-			LOG_ERR("read flash : read_fw_image fail");
-			set_cpld_reset_reg(RESET_CPLD_ON);
-			SAFE_FREE(ver_rxbuf);
-			SAFE_FREE(crc32_rxbuf);
-			return false;
-		}
-		if (read_fw_image(0x1FFFFC, 4, crc32_rxbuf, DEVSPI_SPI1_CS1)) {
-			LOG_ERR("read flash : read_fw_image fail");
-			set_cpld_reset_reg(RESET_CPLD_ON);
-			SAFE_FREE(ver_rxbuf);
-			SAFE_FREE(crc32_rxbuf);
-			return false;
-		}
-
-		uint32_t ver = 0;
-		ver = ver_rxbuf[0] << 16 | ver_rxbuf[1] << 8 | ver_rxbuf[2];
-		uint32_t crc32 = 0;
-		crc32 = crc32_rxbuf[0] << 24 | crc32_rxbuf[1] << 16 | crc32_rxbuf[2] << 8 |
-			crc32_rxbuf[3];
-		LOG_DBG("VER : 0x%x | CRC32 : 0x%x", ver, crc32);
-		switch (data_type) {
-		case VERSION:
-			set_cpld_reset_reg(RESET_CPLD_ON);
-			*data = ver;
-			LOG_DBG("version flash idx: %d", flash_index);
-			version_boot0[flash_index] = ver;
-			LOG_DBG("version: 0x%x", version_boot0[flash_index]);
-
-			break;
-		case CRC32:
-			set_cpld_reset_reg(RESET_CPLD_ON);
-			*data = crc32;
-			LOG_DBG("crc flash idx: %d", flash_index);
-			crc_boot0[flash_index] = crc32;
-			LOG_DBG("crc: 0x%x", crc_boot0[flash_index]);
-
-			break;
-		default:
-			LOG_ERR("Unsupported data type: 0x%x", data_type);
-			set_cpld_reset_reg(RESET_CPLD_ON);
-			SAFE_FREE(ver_rxbuf);
-			SAFE_FREE(crc32_rxbuf);
-			return false;
-			break;
-		}
-
-		SAFE_FREE(ver_rxbuf);
-		SAFE_FREE(crc32_rxbuf);
-		set_cpld_reset_reg(RESET_CPLD_ON);
-		return true;
 	}
+	uint8_t flash_index = 0;
+
+	switch (index) {
+	case COMPNT_HAMSA:
+		change_spi_node_to_hamsa();
+		flash_index = BOOT0_HAMSA;
+		break;
+	case COMPNT_MEDHA0:
+		change_spi_node_to_medha0();
+		flash_index = BOOT0_MEDHA0;
+		break;
+	case COMPNT_MEDHA1:
+		change_spi_node_to_medha1();
+		flash_index = BOOT0_MEDHA1;
+		break;
+	default:
+		LOG_ERR("wrong id: 0x%x", index);
+		return false;
+	}
+	// re-init flash
+	const struct device *flash_dev;
+	flash_dev = device_get_binding("spi_fiu0_cs1");
+	if (spi_nor_re_init(flash_dev) != 0) {
+		LOG_ERR("spi_nor_re_init fail");
+		spi_node_disable();
+		return false;
+	}
+
+	/*
+	read data back to combine in Ver and CRC32
+	0x1FFFF8 (Byte 0): VERSION_PATCH = 0x00
+	0x1FFFF9 (Byte 1): VERSION_MINOR  = 0x06
+	0x1FFFFA (Byte 2): VERSION_MAJOR  = 0x01
+
+	0x1FFFFC: CRC32 byte 0 (LSB)
+	0x1FFFFD: CRC32 byte 1
+	0x1FFFFE: CRC32 byte 2
+	0x1FFFFF: CRC32 byte 3 (MSB)
+
+	VER : 01.06.00 | CRC32 : e9e2b0ba
+	*/
+
+	uint8_t rxbuf[8] = { 0 };
+	if (read_fw_image(PLAT_FLASH_BOOT0_VER_OFFSET, 8, rxbuf, DEVSPI_SPI1_CS1)) {
+		LOG_ERR("read_fw_image fail");
+		spi_node_disable();
+		return false;
+	}
+
+	*data_ver = rxbuf[0] << 16 | rxbuf[1] << 8 | rxbuf[2];
+	*data_crc = rxbuf[4] << 24 | rxbuf[5] << 16 | rxbuf[6] << 8 | rxbuf[7];
+	version_boot0[flash_index] = *data_ver;
+	crc_boot0[flash_index] = *data_crc;
+
+	spi_node_disable();
+	return true;
 }
 
 int sb_write_byte(uint8_t cmd, uint8_t data)

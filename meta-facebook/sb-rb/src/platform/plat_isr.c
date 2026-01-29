@@ -32,6 +32,7 @@
 #include "plat_class.h"
 #include "plat_vr_test_mode.h"
 #include "plat_power_capping.h"
+#include "plat_hwmon.h"
 
 LOG_MODULE_REGISTER(plat_isr);
 
@@ -71,13 +72,9 @@ void ISR_GPIO_FM_PLD_UBC_EN_R()
 	if (get_pwr_steps_on_flag() == 1)
 		return;
 
-	LOG_DBG("gpio_%d_isr called, val=%d , dir= %d", FM_PLD_UBC_EN_R, gpio_get(FM_PLD_UBC_EN_R),
-		gpio_get_direction(FM_PLD_UBC_EN_R));
-
 	LOG_INF("FM_PLD_UBC_EN_R = %d", gpio_get(FM_PLD_UBC_EN_R));
 
 	if (gpio_get(FM_PLD_UBC_EN_R) == GPIO_HIGH) {
-		//plat_clock_init();
 		plat_set_dc_on_log(LOG_ASSERT);
 	}
 
@@ -103,27 +100,49 @@ void ISR_GPIO_RST_IRIS_PWR_ON_PLD_R1_N()
 			clear_clock_status(NULL, i);
 		}
 		add_sync_oc_warn_to_work();
+		// if board id == EVB , ctrl fan pwm
+		if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
+			LOG_INF("dc on, set fan pwm 65");
+			init_pwm_dev();
+			ast_pwm_set(65, PWM_PORT1);
+			ast_pwm_set(65, PWM_PORT6);
+		}
+		// when dc on clear cpld polling alert status
+		uint8_t err_type = CPLD_UNEXPECTED_VAL_TRIGGER_CAUSE;
+		LOG_DBG("cpld_polling_alert_status: true -> false, reset_error_log_states: %x",
+			err_type);
+		reset_error_log_states(err_type);
 	} else {
 		LOG_INF("dc off, clear io expander init flag");
 		set_ioe_init_flag(0);
 		LOG_INF("dc off, exit the vr test mode");
 		vr_test_mode_enable(false);
-		// when dc offm clear cpld polling alert status
-		uint8_t err_type = CPLD_UNEXPECTED_VAL_TRIGGER_CAUSE;
-		LOG_DBG("cpld_polling_alert_status: true -> false, reset_error_log_states: %x",
-			err_type);
-		reset_error_log_states(err_type);
+
+		// if board id == EVB , ctrl fan pwm
+		if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
+			LOG_INF("dc off, set fan pwm 0");
+			init_pwm_dev();
+			ast_pwm_set(0, PWM_PORT1);
+			ast_pwm_set(0, PWM_PORT6);
+		}
 	}
 }
 
 void ISR_GPIO_SMB_HAMSA_MMC_LVC33_ALERT_N()
 {
-	uint8_t data[8] = { 0 };
+	uint8_t data[ERROR_CODE_LEN] = { 0 };
 	LOG_INF("smb hamsa mmc lvc33 alert triggered");
 	//i2c_burst_read(smb_hamsa_i2c_dev, HAMSA_BOOT1_ADDR, SMBUS_ERROR, data, ERROR_CODE_LEN);
 
 	// bus, uint8_t addr, uint8_t offset, uint8_t *data, uint8_t len
 	plat_i2c_read(I2C_BUS12, HAMSA_BOOT1_ADDR, SMBUS_ERROR, data, ERROR_CODE_LEN);
+	plat_asic_error_event asic_event = { 0 };
+	asic_event.event_id_0 = data[1];
+	asic_event.event_id_1 = data[2];
+	asic_event.chip_id = data[3];
+	asic_event.module_id = data[4];
+	plat_asic_error_error_log(LOG_ASSERT, asic_event);
+
 	struct pldm_addsel_data smb_hamsa_sel_msg = { 0 };
 	smb_hamsa_sel_msg.assert_type = LOG_ASSERT;
 	smb_hamsa_sel_msg.event_type = ASIC_MODULE_ERROR; //ASIC_MODULE_ERROR;
@@ -134,10 +153,6 @@ void ISR_GPIO_SMB_HAMSA_MMC_LVC33_ALERT_N()
 		LOG_ERR("Failed to send hamsa smb error code to bmc, event data: 0x%x 0x%x 0x%x\n",
 			smb_hamsa_sel_msg.event_data_1, smb_hamsa_sel_msg.event_data_2,
 			smb_hamsa_sel_msg.event_data_3);
-	}
-	// print all data received
-	for (int i = 0; i < ERROR_CODE_LEN; i++) {
-		LOG_DBG("data[%d] = 0x%x", i, data[i]);
 	}
 }
 
