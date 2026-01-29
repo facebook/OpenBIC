@@ -1261,14 +1261,22 @@ void plat_master_write_thread_handler()
 				LOG_ERR("Invalid length for offset(write): 0x%02x", reg_offset);
 				break;
 			}
-			if (rdata[1] == 0) {
-				plat_pldm_sensor_set_quick_vr_poll_interval(10);
-			} else if (rdata[1] == 1) {
-				plat_pldm_sensor_set_quick_vr_poll_interval(5);
-			} else if (rdata[1] == 2) {
-				plat_pldm_sensor_set_quick_vr_poll_interval(1);
-			} else {
+			uint8_t capping_source = get_power_capping_source();
+			switch (rdata[1]) {
+			case 0:
+			case 1:
+			case 2:
+			case 3:
+			case 4:
+			case 5:
+			case 6:
+			case 7:
+				plat_pldm_sensor_set_quick_vr_poll_interval(rdata[1],
+									    capping_source);
+				break;
+			default:
 				LOG_ERR("Invalid D: 0x%x, offset(W): 0x%02x", rdata[1], reg_offset);
+				break;
 			}
 		} break;
 		case SET_SENSOR_POLLING_COMMAND_REG: {

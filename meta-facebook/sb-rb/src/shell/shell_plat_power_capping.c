@@ -194,10 +194,35 @@ static int cmd_power_capping_set_threshold(const struct shell *shell, size_t arg
 
 static int cmd_power_capping_set_polling_rate(const struct shell *shell, size_t argc, char **argv)
 {
-	uint32_t poll_rate = strtoul(argv[1], NULL, 10);
+	uint8_t poll_rate = strtoul(argv[1], NULL, 10);
+	uint8_t poll_rate_type = 0;
+	switch (poll_rate) {
+	case 10:
+		poll_rate_type = 0;
+		break;
+	case 5:
+		poll_rate_type = 1;
+		break;
+	case 2:
+		poll_rate_type = 2;
+		break;
+	case 1:
+		poll_rate_type = 3;
+		break;
+	default:
+		shell_error(shell,
+			    "MEDHA0/1_VDD power polling rate should be 10ms, 5ms, 2ms or 1ms");
+		return -1;
+		break;
+	}
 
-	plat_pldm_sensor_set_quick_vr_poll_interval(poll_rate);
-	shell_print(shell, "set polling rate to %d", poll_rate);
+	uint8_t capping_source = get_power_capping_source();
+	if (capping_source >= CAPPING_SOURCE_MAX) {
+		shell_error(shell, "Polling rate src should be VR/ADC");
+		return -1;
+	}
+	plat_pldm_sensor_set_quick_vr_poll_interval(poll_rate_type, capping_source);
+	shell_print(shell, "set polling rate to type%d", poll_rate_type);
 
 	return 0;
 }
