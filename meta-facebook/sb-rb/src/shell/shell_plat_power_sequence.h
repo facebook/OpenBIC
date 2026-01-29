@@ -127,8 +127,16 @@ typedef struct power_sequence {
 	uint8_t value;
 } power_sequence;
 
+typedef struct power_sequence_event_pwrgd {
+	uint8_t index;
+	uint8_t cpld_offsets;
+	uint8_t *power_rail_name;
+	uint8_t bit_location;
+} power_sequence_event_pwrgd;
+
 bool plat_find_power_seq_fail();
 uint8_t plat_get_power_seq_fail_id();
 void plat_get_power_seq_fail_name(uint8_t idx, uint8_t **name);
+void plat_get_power_seq_pwrgd_event_fail_name(uint8_t idx, uint8_t **name);
 
 #endif

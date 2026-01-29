@@ -340,6 +340,15 @@ bool get_error_data(uint16_t error_code, uint8_t *data)
 	}
 	case POWER_ON_SEQUENCE_TRIGGER_CAUSE: {
 		data[0] = plat_get_power_seq_fail_id();
+		uint8_t data_num = 1;
+		for (uint8_t i = PWRGD_EVENT_LATCH_1_REG; i <= PWRGD_EVENT_LATCH_6_REG; i++) {
+			if (!plat_read_cpld(i, &data[data_num], 1)) {
+				LOG_ERR("Fail read cpld reg 0x%x", i);
+				return false;
+			}
+			data_num++;
+		}
+
 		return true;
 	}
 	case ASIC_ERROR_TRIGGER_CAUSE: {

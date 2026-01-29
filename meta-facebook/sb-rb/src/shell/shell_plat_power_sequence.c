@@ -128,9 +128,53 @@ power_sequence power_sequence_off_table[] = {
 	{ 43, P3V3_DOWN_REG, "P3V3", 0x00 },
 	{ 44, P12V_UBC_DOWN_REG, "P12V_UBC", 0x00 },
 };
-
+power_sequence_event_pwrgd power_sequence_event_pwrgd_table[] = {
+	{ 0, PWRGD_EVENT_LATCH_1_REG, "P12V_UBC1", 7 },
+	{ 1, PWRGD_EVENT_LATCH_1_REG, "P12V_UBC2", 6 },
+	{ 2, PWRGD_EVENT_LATCH_1_REG, "P3V3", 5 },
+	{ 3, PWRGD_EVENT_LATCH_1_REG, "P4V2", 4 },
+	{ 4, PWRGD_EVENT_LATCH_1_REG, "P5V", 3 },
+	{ 5, PWRGD_EVENT_LATCH_1_REG, "LDO_IN_1V2", 2 },
+	{ 6, PWRGD_EVENT_LATCH_1_REG, "P1V8", 1 },
+	{ 7, PWRGD_EVENT_LATCH_1_REG, "P0V75_AVDD_HCSL", 0 },
+	{ 8, PWRGD_EVENT_LATCH_2_REG, "HAMSA_VDD", 7 },
+	{ 9, PWRGD_EVENT_LATCH_2_REG, "MEDHA1_VDD", 6 },
+	{ 10, PWRGD_EVENT_LATCH_2_REG, "MEDHA0_VDD", 5 },
+	{ 11, PWRGD_EVENT_LATCH_2_REG, "OWL_E_VDD", 4 },
+	{ 12, PWRGD_EVENT_LATCH_2_REG, "OWL_W_VDD", 3 },
+	{ 13, PWRGD_EVENT_LATCH_2_REG, "MAX_M_VDD", 2 },
+	{ 14, PWRGD_EVENT_LATCH_2_REG, "MAX_N_VDD", 1 },
+	{ 15, PWRGD_EVENT_LATCH_2_REG, "MAX_S_VDD", 0 },
+	{ 16, PWRGD_EVENT_LATCH_3_REG, "OWL_E_TRVDD0P75", 7 },
+	{ 17, PWRGD_EVENT_LATCH_3_REG, "OWL_W_TRVDD0P75", 6 },
+	{ 18, PWRGD_EVENT_LATCH_3_REG, "VDDPHY_HBM0246", 5 },
+	{ 19, PWRGD_EVENT_LATCH_3_REG, "VDDPHY_HBM1357", 4 },
+	{ 20, PWRGD_EVENT_LATCH_3_REG, "P1V5_PLL_VDDA_OWL_W", 3 },
+	{ 21, PWRGD_EVENT_LATCH_3_REG, "P1V5_PLL_VDDA_OWL_E", 2 },
+	{ 22, PWRGD_EVENT_LATCH_3_REG, "P1V5_PLL_VDDA_SOC", 1 },
+	{ 23, PWRGD_EVENT_LATCH_3_REG, "PLL_VDDA15_HBM02", 0 },
+	{ 24, PWRGD_EVENT_LATCH_4_REG, "PLL_VDDA15_HBM1357", 7 },
+	{ 25, PWRGD_EVENT_LATCH_4_REG, "VPP_HBM0246", 6 },
+	{ 26, PWRGD_EVENT_LATCH_4_REG, "VPP_HBM1357", 5 },
+	{ 27, PWRGD_EVENT_LATCH_4_REG, "VDDQC_HBM0246", 4 },
+	{ 28, PWRGD_EVENT_LATCH_4_REG, "VDDQC_HBM1357", 3 },
+	{ 29, PWRGD_EVENT_LATCH_4_REG, "VDDQL_HBM0246", 2 },
+	{ 30, PWRGD_EVENT_LATCH_4_REG, "VDDQL_HBM1357", 1 },
+	{ 31, PWRGD_EVENT_LATCH_4_REG, "VDDPHY_HBM0246", 0 },
+	{ 32, PWRGD_EVENT_LATCH_5_REG, "VDDQL_HBM1357", 7 },
+	{ 33, PWRGD_EVENT_LATCH_5_REG, "HAMSA_AVDD_PCIE", 6 },
+	{ 34, PWRGD_EVENT_LATCH_5_REG, "OWL_E_TRVDD0P9", 5 },
+	{ 35, PWRGD_EVENT_LATCH_5_REG, "OWL_W_TRVDD0P9", 4 },
+	{ 36, PWRGD_EVENT_LATCH_5_REG, "P0V9_OWL_E_PVDD", 3 },
+	{ 37, PWRGD_EVENT_LATCH_5_REG, "P0V9_OWL_W_PVDD", 2 },
+	{ 38, PWRGD_EVENT_LATCH_5_REG, "P1V5_E_RVDD", 1 },
+	{ 39, PWRGD_EVENT_LATCH_5_REG, "P1V5_W_RVDD", 0 },
+	{ 40, PWRGD_EVENT_LATCH_6_REG, "PVDD1P5", 7 },
+	{ 41, PWRGD_EVENT_LATCH_6_REG, "HAMSA_VDDHRXTX_PCIE", 6 },
+};
 size_t power_sequence_on_table_size = ARRAY_SIZE(power_sequence_on_table);
 size_t power_sequence_off_table_size = ARRAY_SIZE(power_sequence_off_table);
+size_t power_sequence_event_pwrgd_table_size = ARRAY_SIZE(power_sequence_event_pwrgd_table);
 static uint8_t power_seq_fail_id = 0xFF;
 
 void bubble_sort_power_sequence_table(const struct shell *shell,
@@ -220,17 +264,19 @@ int cmd_power_sequence(const struct shell *shell, size_t argc, char **argv)
 
 bool plat_find_power_seq_fail()
 {
-	for (uint8_t i = 0; i < power_sequence_on_table_size; i++) {
+	for (uint8_t i = 0; i < power_sequence_event_pwrgd_table_size; i++) {
 		uint8_t data;
-		uint8_t cpld_offset = power_sequence_on_table[i].cpld_offsets;
+		uint8_t cpld_offset = power_sequence_event_pwrgd_table[i].cpld_offsets;
 
 		if (!plat_read_cpld(cpld_offset, &data, 1)) {
 			LOG_ERR("Fail read cpld reg 0x%x", cpld_offset);
 			power_seq_fail_id = 0xFF;
 			return false;
 		}
-		if (data == 0) {
-			power_seq_fail_id = i;
+		LOG_INF("find pwr fail, read offset 0x%x value 0x%x", cpld_offset, data);
+		// if check cpld bit is 0, means fine the first fail pwrgd, updaye power_seq_fail_id
+		if (((data >> power_sequence_event_pwrgd_table[i].bit_location) & 0x1) == 0) {
+			power_seq_fail_id = power_sequence_event_pwrgd_table[i].index;
 			return true;
 		}
 	}
@@ -248,6 +294,15 @@ void plat_get_power_seq_fail_name(uint8_t idx, uint8_t **name)
 {
 	if ((idx != 0xFF) && (idx < power_sequence_on_table_size)) {
 		*name = power_sequence_on_table[idx].power_rail_name;
+	} else {
+		LOG_ERR("wrong idx: %x", idx);
+	}
+}
+
+void plat_get_power_seq_pwrgd_event_fail_name(uint8_t idx, uint8_t **name)
+{
+	if ((idx != 0xFF) && (idx < power_sequence_event_pwrgd_table_size)) {
+		*name = power_sequence_event_pwrgd_table[idx].power_rail_name;
 	} else {
 		LOG_ERR("wrong idx: %x", idx);
 	}
