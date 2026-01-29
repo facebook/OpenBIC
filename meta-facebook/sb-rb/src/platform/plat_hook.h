@@ -289,7 +289,7 @@ bool post_tmp432_read(sensor_cfg *cfg, void *args, int *reading);
 bool plat_set_vr_reg(uint8_t rail, uint8_t reg, uint8_t *data, uint8_t len);
 int get_vr_page(uint8_t rail);
 int get_vr_mp29816a_reg(uint8_t rail, uint16_t *get_data, uint8_t get_reg);
-int set_vr_mp29816a_reg(uint8_t rail, uint16_t *millivolt, uint8_t set_reg);
+int set_vr_mp29816a_reg(uint8_t rail, uint16_t *set_value, uint8_t set_reg);
 int get_vr_mp2971_reg(uint8_t rail, uint16_t *get_data, uint8_t get_reg);
 int set_vr_mp2971_reg(uint8_t rail, uint16_t *set_data, uint8_t set_reg);
 #endif
