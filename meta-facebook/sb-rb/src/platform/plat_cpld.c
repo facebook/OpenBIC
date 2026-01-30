@@ -27,6 +27,7 @@
 #include "plat_class.h"
 #include "plat_ioexp.h"
 #include "shell_plat_power_sequence.h"
+#include "kernel.h"
 
 #define POLLING_CPLD_STACK_SIZE 2048
 #define CPLD_POLLING_INTERVAL_MS 1000 // 1 second polling interval
@@ -50,10 +51,9 @@ bool plat_write_cpld(uint8_t offset, uint8_t *data)
 }
 
 // cpld polling
+K_TIMER_DEFINE(check_ubc_delayed_timer, check_ubc_delayed_timer_handler, NULL);
 void check_cpld_handler();
 K_WORK_DELAYABLE_DEFINE(check_cpld_work, check_cpld_handler);
-
-void check_ubc_delayed_timer_handler(struct k_timer *timer);
 void check_ubc_delayed(struct k_work *work);
 K_WORK_DEFINE(check_ubc_delayed_work, check_ubc_delayed);
 void check_ubc_delayed_timer_handler(struct k_timer *timer)
@@ -61,6 +61,10 @@ void check_ubc_delayed_timer_handler(struct k_timer *timer)
 	k_work_submit(&check_ubc_delayed_work);
 }
 
+struct k_timer *get_ubc_delaytimer()
+{
+	return &check_ubc_delayed_timer;
+}
 K_THREAD_STACK_DEFINE(cpld_polling_stack, POLLING_CPLD_STACK_SIZE);
 struct k_thread cpld_polling_thread;
 k_tid_t cpld_polling_tid;
@@ -458,7 +462,7 @@ void check_cpld_handler()
 void init_cpld_polling(void)
 {
 	check_cpld_polling_alert_status();
-
+	k_timer_start(&check_ubc_delayed_timer, K_MSEC(1000), K_NO_WAIT);
 	k_sem_init(&all_vr_pm_alert_sem, 0, 1);
 	k_timer_start(&ragular_cpld_polling_sem_timer, K_MSEC(1000), K_MSEC(1000));	
 	cpld_polling_tid =

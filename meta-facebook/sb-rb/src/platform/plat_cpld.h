@@ -112,4 +112,5 @@ void give_all_vr_pm_alert_sem();
 void get_cpld_polling_power_info(int *reading);
 void set_cpld_polling_enable_flag(bool status);
 void reset_error_log_states(uint8_t err_type);
+struct k_timer *get_ubc_delaytimer();
 #endif

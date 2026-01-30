@@ -37,7 +37,6 @@
 
 LOG_MODULE_REGISTER(plat_isr);
 
-K_TIMER_DEFINE(check_ubc_delayed_timer, check_ubc_delayed_timer_handler, NULL);
 void pwr_sequence_event_timer_handler(struct k_timer *timer);
 K_TIMER_DEFINE(pwr_sequence_event_work_timer, pwr_sequence_event_timer_handler, NULL);
 void pwr_sequence_event(struct k_work *work);
@@ -120,8 +119,7 @@ void ISR_GPIO_FM_PLD_UBC_EN_R()
 	if (gpio_get(FM_PLD_UBC_EN_R) == GPIO_LOW) {
 		plat_set_dc_on_log(LOG_DEASSERT);
 	}
-
-	k_timer_start(&check_ubc_delayed_timer, K_MSEC(1000), K_NO_WAIT);
+	k_timer_start(get_ubc_delaytimer(), K_MSEC(1000), K_NO_WAIT);
 }
 
 void ISR_GPIO_RST_IRIS_PWR_ON_PLD_R1_N()
