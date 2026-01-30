@@ -23,18 +23,6 @@
 #include "plat_util.h"
 #include "plat_class.h"
 
-static bool cmd_is_not_ready(const struct shell *shell)
-{
-	uint8_t vr = get_vr_module();
-	if (vr == VR_MODULE_MPS)
- 	{
-		shell_warn(shell, "MPS test mode is not ready");
-		return false;
-	}
-
-	return true;
-}
-
 static bool cmd_is_dc_on(const struct shell *shell)
 {
 	if (!is_dc_on()) {
@@ -49,15 +37,11 @@ void cmd_vr_test_mode_start(const struct shell *shell, size_t argc, char **argv)
 {
 	if (!cmd_is_dc_on(shell))
 		return;
-	if (!cmd_is_not_ready(shell))
-		return;
 	vr_test_mode_enable(true);
 }
 void cmd_vr_test_mode_exit(const struct shell *shell, size_t argc, char **argv)
 {
 	if (!cmd_is_dc_on(shell))
-		return;
-	if (!cmd_is_not_ready(shell))
 		return;
 	vr_test_mode_enable(false);
 }
@@ -65,8 +49,6 @@ void cmd_vr_test_mode_exit(const struct shell *shell, size_t argc, char **argv)
 void cmd_vr_test_mode_show_default(const struct shell *shell, size_t argc, char **argv)
 {
 	if (!cmd_is_dc_on(shell))
-		return;
-	if (!cmd_is_not_ready(shell))
 		return;
 	uint8_t vr = get_vr_module();
 	if (vr == VR_MODULE_RNS) {
@@ -101,7 +83,6 @@ void cmd_vr_test_mode_show_default(const struct shell *shell, size_t argc, char 
 			}
 		}
 	} else if (vr == VR_MODULE_MPS) {
-
 		// MPS
 		shell_print(shell, "MPS");
 		shell_print(shell, "%-30s | %-12s | %-7s | %-8s | %-9s | %-9s | %-7s | %-7s ",
@@ -130,8 +111,6 @@ void cmd_vr_test_mode_show_default(const struct shell *shell, size_t argc, char 
 
 void cmd_vr_test_mode_show_val(const struct shell *shell, size_t argc, char **argv)
 {
-	if (!cmd_is_not_ready(shell))
-		return;
 	uint8_t vr = get_vr_module();
 	if (vr == VR_MODULE_RNS) {
 		// RNS
@@ -175,13 +154,13 @@ void cmd_vr_test_mode_show_val(const struct shell *shell, size_t argc, char **ar
 				uint16_t vout = 0;
 				int32_t uvp_show = 0;
 				get_vr_mp2971_reg(rail, &vout, VOUT_COMMAND);
-				if (i >= VR_RAIL_E_ASIC_P0V9_OWL_E_TRVDD){
+				if (i >= VR_RAIL_E_ASIC_P0V9_OWL_E_TRVDD) {
 					/* uvp = vout- 400 mv (default) */
 					uvp_show = (int32_t)vout - 400;
 					if (uvp_show < 0)
 						uvp_show = 0;
 					snprintf(uvp_str, sizeof(uvp_str), "%d", uvp_show);
-				}else{
+				} else {
 					snprintf(uvp_str, sizeof(uvp_str), ">=200");
 				}
 				shell_print(
@@ -209,8 +188,6 @@ static int get_vr_reg_to_int(uint8_t vr_rail, uint8_t reg)
 void cmd_vr_test_mode_show_real(const struct shell *shell, size_t argc, char **argv)
 {
 	if (!cmd_is_dc_on(shell))
-		return;
-	if (!cmd_is_not_ready(shell))
 		return;
 	uint8_t vr = get_vr_module();
 	if (vr == VR_MODULE_RNS) {

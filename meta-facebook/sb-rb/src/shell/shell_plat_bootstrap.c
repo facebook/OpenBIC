@@ -54,22 +54,40 @@ uint8_t read_bits(uint8_t data, uint8_t start_bit, uint8_t end_bit, bool reverse
 }
 static int cmd_bootstrap_get_all(const struct shell *shell, size_t argc, char **argv)
 {
-	shell_print(shell, "%-4s|%-40s|%-25s", "id", "strap name", "hex-value");
-	for (int i = 0; i < get_strap_index_max(); i++) {
-		uint8_t *rail_name = NULL;
-		if (!strap_name_get((uint8_t)i, &rail_name)) {
-			LOG_ERR("Can't find strap_rail_name by rail index: %x", i);
-			continue;
+	if (!strcmp(argv[1], "all")) {
+		shell_print(shell, "%-4s|%-40s|%-25s", "id", "strap name", "hex-value");
+		for (int i = 0; i < get_strap_index_max(); i++) {
+			uint8_t *rail_name = NULL;
+			if (!strap_name_get((uint8_t)i, &rail_name)) {
+				LOG_ERR("Can't find strap_rail_name by rail index: %x", i);
+				continue;
+			}
+
+			int drive_level = -1;
+
+			if (!get_bootstrap_change_drive_level(i, &drive_level)) {
+				LOG_ERR("Can't get_bootstrap_change_drive_level by rail index: %x",
+					i);
+				continue;
+			}
+
+			shell_print(shell, "%-4d|%-40s|0x%-23.2x", i, rail_name, drive_level);
+		}
+	} else {
+		/* covert string to enum */
+		enum PLAT_STRAP_INDEX_E rail;
+		if (strap_enum_get(argv[1], &rail) == false) {
+			shell_error(shell, "Invalid rail name: %s", argv[1]);
+			return -1;
 		}
 
 		int drive_level = -1;
-
-		if (!get_bootstrap_change_drive_level(i, &drive_level)) {
-			LOG_ERR("Can't get_bootstrap_change_drive_level by rail index: %x", i);
-			continue;
+		if (!get_bootstrap_change_drive_level(rail, &drive_level)) {
+			LOG_ERR("Can't get level by index: %x", rail);
+			return -1;
 		}
-
-		shell_print(shell, "%-4d|%-40s|0x%-23.2x", i, rail_name, drive_level);
+		shell_print(shell, "%-4s|%-40s|%-25s", "id", "strap name", "hex-value");
+		shell_print(shell, "%-4d|%-40s|0x%-23.2x", rail, argv[1], drive_level);
 	}
 
 	return 0;
@@ -214,18 +232,12 @@ static void strap_rname_get_(size_t idx, struct shell_static_entry *entry)
 
 SHELL_DYNAMIC_CMD_CREATE(strap_name, strap_rname_get_);
 
-/* level 2 */
-SHELL_STATIC_SUBCMD_SET_CREATE(sub_bootstrap_get_cmds,
-			       SHELL_CMD(all, NULL, "bootstrap get all", cmd_bootstrap_get_all),
-			       SHELL_SUBCMD_SET_END);
-
 /* level 1 */
-SHELL_STATIC_SUBCMD_SET_CREATE(sub_bootstrap_cmds,
-			       SHELL_CMD(get, &sub_bootstrap_get_cmds, "get all", NULL),
-			       SHELL_CMD_ARG(set, &strap_name,
-					     "set <strap-name>|all <hex-value>|default [perm]",
-					     cmd_bootstrap_set, 3, 1),
-			       SHELL_SUBCMD_SET_END);
+SHELL_STATIC_SUBCMD_SET_CREATE(
+	sub_bootstrap_cmds, SHELL_CMD(get, &strap_name, "get <strap-name>", cmd_bootstrap_get_all),
+	SHELL_CMD_ARG(set, &strap_name, "set <strap-name>|all <hex-value>|default [perm]",
+		      cmd_bootstrap_set, 3, 1),
+	SHELL_SUBCMD_SET_END);
 
 /* Root of command test */
 SHELL_CMD_REGISTER(bootstrap, &sub_bootstrap_cmds, "bootstrap set/get commands", NULL);

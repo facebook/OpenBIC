@@ -244,8 +244,13 @@ void cmd_log_dump(const struct shell *shell, size_t argc, char **argv)
 			shell_print(shell, "\tPOWER_ON_SEQUENCE_FAILURE");
 			err_data_len = 1;
 			uint8_t *name = NULL;
-			plat_get_power_seq_fail_name(log.error_data[0], &name);
+			plat_get_power_seq_pwrgd_event_fail_name(log.error_data[0], &name);
 			shell_print(shell, "RAIL: %s", name);
+			shell_print(
+				shell,
+				"PWRGD REG(start from 0xBE): 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x",
+				log.error_data[1], log.error_data[2], log.error_data[3],
+				log.error_data[4], log.error_data[5], log.error_data[6]);
 			break;
 		case AC_ON_TRIGGER_CAUSE:
 			shell_print(shell, "\tAC_ON");
@@ -259,10 +264,10 @@ void cmd_log_dump(const struct shell *shell, size_t argc, char **argv)
 			shell_print(shell, "\tTEMPERATURE_TRIGGER");
 			uint8_t temp_sensor_num = log.err_code & 0xFF;
 			//find name in temp_index_table
-			for (int i = 0; i < TEMP_INDEX_MAX; i++) {
-				if (temp_sensor_num == temp_index_table[i].sensor_id) {
+			for (int j = 0; j < TEMP_INDEX_MAX; j++) {
+				if (temp_sensor_num == temp_index_table[j].sensor_id) {
 					shell_print(shell, "\t\t%s",
-						    temp_index_table[i].sensor_name);
+						    temp_index_table[j].sensor_name);
 					shell_print(shell, "sensor_num 0x%02x status(02h): 0x%02x",
 						    log.error_data[2], log.error_data[0]);
 					// check whether the open status

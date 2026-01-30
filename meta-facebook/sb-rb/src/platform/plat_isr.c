@@ -33,10 +33,47 @@
 #include "plat_vr_test_mode.h"
 #include "plat_power_capping.h"
 #include "plat_hwmon.h"
+#include "shell_plat_power_sequence.h"
 
 LOG_MODULE_REGISTER(plat_isr);
 
-K_TIMER_DEFINE(check_ubc_delayed_timer, check_ubc_delayed_timer_handler, NULL);
+void pwr_sequence_event_timer_handler(struct k_timer *timer);
+K_TIMER_DEFINE(pwr_sequence_event_work_timer, pwr_sequence_event_timer_handler, NULL);
+void pwr_sequence_event(struct k_work *work);
+K_WORK_DEFINE(pwr_sequence_event_work, pwr_sequence_event);
+void pwr_sequence_event_timer_handler(struct k_timer *timer)
+{
+	k_work_submit(&pwr_sequence_event_work);
+}
+
+void pwr_sequence_event(struct k_work *work)
+{
+	bool is_dc_on_status = is_mb_dc_on();
+	//if dc off
+	if (!is_dc_on_status) {
+		plat_find_power_seq_fail();
+		uint8_t idx = plat_get_power_seq_fail_id();
+
+		uint16_t error_code = (POWER_ON_SEQUENCE_TRIGGER_CAUSE << 13);
+		error_log_event(error_code, LOG_ASSERT);
+		LOG_ERR("power on sequence fail, error_code: 0x%x", error_code);
+
+		//send event to bmc
+		struct pldm_addsel_data sel_msg = { 0 };
+		sel_msg.assert_type = LOG_ASSERT;
+		sel_msg.event_type = IRIS_FAULT;
+		sel_msg.event_data_1 = IRIS_POWER_ON_SEQUENCE_FAIL;
+		sel_msg.event_data_2 = idx;
+
+		if (PLDM_SUCCESS != send_event_log_to_bmc(sel_msg)) {
+			LOG_ERR("Send SEL fail: 0x%x 0x%x 0x%x 0x%x", sel_msg.assert_type,
+				sel_msg.event_data_1, sel_msg.event_data_2, sel_msg.event_data_3);
+		} else {
+			LOG_INF("Send SEL: 0x%x 0x%x 0x%x 0x%x", sel_msg.assert_type,
+				sel_msg.event_data_1, sel_msg.event_data_2, sel_msg.event_data_3);
+		}
+	}
+}
 
 uint8_t pwr_steps_on_flag = 0;
 
@@ -76,13 +113,13 @@ void ISR_GPIO_FM_PLD_UBC_EN_R()
 
 	if (gpio_get(FM_PLD_UBC_EN_R) == GPIO_HIGH) {
 		plat_set_dc_on_log(LOG_ASSERT);
+		k_timer_start(&pwr_sequence_event_work_timer, K_MSEC(1000), K_NO_WAIT);
 	}
 
 	if (gpio_get(FM_PLD_UBC_EN_R) == GPIO_LOW) {
 		plat_set_dc_on_log(LOG_DEASSERT);
 	}
-
-	k_timer_start(&check_ubc_delayed_timer, K_MSEC(1000), K_NO_WAIT);
+	k_timer_start(get_ubc_delaytimer(), K_MSEC(1000), K_NO_WAIT);
 }
 
 void ISR_GPIO_RST_IRIS_PWR_ON_PLD_R1_N()

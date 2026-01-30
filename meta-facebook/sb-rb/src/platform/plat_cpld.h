@@ -64,6 +64,12 @@
 #define VR_1STEP_FUNC_EN_REG 0xA9
 #define HBM_CATTRIP_LOG_REG 0x27
 #define ASIC_TEMP_OVER_LOG_REG 0x29
+#define PWRGD_EVENT_LATCH_1_REG 0xBE
+#define PWRGD_EVENT_LATCH_2_REG 0xBF
+#define PWRGD_EVENT_LATCH_3_REG 0xC0
+#define PWRGD_EVENT_LATCH_4_REG 0xC1
+#define PWRGD_EVENT_LATCH_5_REG 0xC2
+#define PWRGD_EVENT_LATCH_6_REG 0xC3
 
 #define CPLD_ADDR (0x4C >> 1)
 #define I2C_BUS_CPLD I2C_BUS11
@@ -106,4 +112,5 @@ void give_all_vr_pm_alert_sem();
 void get_cpld_polling_power_info(int *reading);
 void set_cpld_polling_enable_flag(bool status);
 void reset_error_log_states(uint8_t err_type);
+struct k_timer *get_ubc_delaytimer();
 #endif

@@ -27,6 +27,7 @@
 #include "plat_class.h"
 #include "plat_ioexp.h"
 #include "shell_plat_power_sequence.h"
+#include "kernel.h"
 
 #define POLLING_CPLD_STACK_SIZE 2048
 #define CPLD_POLLING_INTERVAL_MS 1000 // 1 second polling interval
@@ -50,11 +51,9 @@ bool plat_write_cpld(uint8_t offset, uint8_t *data)
 }
 
 // cpld polling
+K_TIMER_DEFINE(check_ubc_delayed_timer, check_ubc_delayed_timer_handler, NULL);
 void check_cpld_handler();
 K_WORK_DELAYABLE_DEFINE(check_cpld_work, check_cpld_handler);
-
-void check_ubc_delayed_timer_handler(struct k_timer *timer);
-K_TIMER_DEFINE(init_ubc_delayed_timer, check_ubc_delayed_timer_handler, NULL);
 void check_ubc_delayed(struct k_work *work);
 K_WORK_DEFINE(check_ubc_delayed_work, check_ubc_delayed);
 void check_ubc_delayed_timer_handler(struct k_timer *timer)
@@ -62,6 +61,10 @@ void check_ubc_delayed_timer_handler(struct k_timer *timer)
 	k_work_submit(&check_ubc_delayed_work);
 }
 
+struct k_timer *get_ubc_delaytimer()
+{
+	return &check_ubc_delayed_timer;
+}
 K_THREAD_STACK_DEFINE(cpld_polling_stack, POLLING_CPLD_STACK_SIZE);
 struct k_thread cpld_polling_thread;
 k_tid_t cpld_polling_tid;
@@ -135,40 +138,7 @@ void check_ubc_delayed(struct k_work *work)
 	 * 0 -> UBC is disabled
 	 */
 	bool is_ubc_enabled = (gpio_get(FM_PLD_UBC_EN_R) == GPIO_HIGH);
-
-	bool is_dc_on_status = is_mb_dc_on();
-
-	if (is_ubc_enabled) {
-		if (is_dc_on_status != is_ubc_enabled) {
-			plat_find_power_seq_fail();
-			uint8_t idx = plat_get_power_seq_fail_id();
-
-			uint16_t error_code = (POWER_ON_SEQUENCE_TRIGGER_CAUSE << 13);
-			error_log_event(error_code, LOG_ASSERT);
-			LOG_ERR("Generated error code: 0x%x", error_code);
-
-			//send event to bmc
-			struct pldm_addsel_data sel_msg = { 0 };
-			sel_msg.assert_type = LOG_ASSERT;
-			sel_msg.event_type = IRIS_FAULT;
-			sel_msg.event_data_1 = IRIS_POWER_ON_SEQUENCE_FAIL;
-			sel_msg.event_data_2 = idx;
-
-			if (PLDM_SUCCESS != send_event_log_to_bmc(sel_msg)) {
-				LOG_ERR("Send SEL fail: 0x%x 0x%x 0x%x 0x%x", sel_msg.assert_type,
-						sel_msg.event_data_1, sel_msg.event_data_2,
-						sel_msg.event_data_3);
-			} else {
-				LOG_INF("Send SEL: 0x%x 0x%x 0x%x 0x%x", sel_msg.assert_type,
-						sel_msg.event_data_1, sel_msg.event_data_2,
-						sel_msg.event_data_3);
-			}
-		}
-	}
-
 	ubc_enabled_delayed_status = is_ubc_enabled;
-
-	LOG_DBG("UBC enabled delayed status: %d", ubc_enabled_delayed_status);
 }
 
 bool is_ubc_enabled_delayed_enabled(void)
@@ -492,8 +462,7 @@ void check_cpld_handler()
 void init_cpld_polling(void)
 {
 	check_cpld_polling_alert_status();
-
-	k_timer_start(&init_ubc_delayed_timer, K_MSEC(1000), K_NO_WAIT);
+	k_timer_start(&check_ubc_delayed_timer, K_MSEC(1000), K_NO_WAIT);
 	k_sem_init(&all_vr_pm_alert_sem, 0, 1);
 	k_timer_start(&ragular_cpld_polling_sem_timer, K_MSEC(1000), K_MSEC(1000));	
 	cpld_polling_tid =
