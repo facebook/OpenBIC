@@ -83,7 +83,6 @@ void cmd_vr_test_mode_show_default(const struct shell *shell, size_t argc, char 
 			}
 		}
 	} else if (vr == VR_MODULE_MPS) {
-
 		// MPS
 		shell_print(shell, "MPS");
 		shell_print(shell, "%-30s | %-12s | %-7s | %-8s | %-9s | %-9s | %-7s | %-7s ",
@@ -155,13 +154,13 @@ void cmd_vr_test_mode_show_val(const struct shell *shell, size_t argc, char **ar
 				uint16_t vout = 0;
 				int32_t uvp_show = 0;
 				get_vr_mp2971_reg(rail, &vout, VOUT_COMMAND);
-				if (i >= VR_RAIL_E_ASIC_P0V9_OWL_E_TRVDD){
+				if (i >= VR_RAIL_E_ASIC_P0V9_OWL_E_TRVDD) {
 					/* uvp = vout- 400 mv (default) */
 					uvp_show = (int32_t)vout - 400;
 					if (uvp_show < 0)
 						uvp_show = 0;
 					snprintf(uvp_str, sizeof(uvp_str), "%d", uvp_show);
-				}else{
+				} else {
 					snprintf(uvp_str, sizeof(uvp_str), ">=200");
 				}
 				shell_print(
