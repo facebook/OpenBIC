@@ -1178,7 +1178,7 @@ static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 		[VR_MODULE_UNKNOWN] = NULL,
 	};
 
-	const char *remain_str_p = ", Remaining Write: ";
+	const char *remain_str_p = ", Remain: ";
 	uint8_t *buf_p = buf;
 	const uint8_t *vr_name_p = vr_name[vr_module];
 	*len = 0;
@@ -1215,6 +1215,26 @@ static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 		buf_p += 4;
 	}
 
+	// // add vr rail name
+	// add VR rail name with a space
+	const uint8_t *vr_rail_name_p = sensor_name;
+	// print VR rail name
+	const char *space_str_p = ", ";
+	if (!vr_rail_name_p) {
+		LOG_ERR("The pointer of VR rail name is NULL");
+		goto err;
+	}
+
+	// add ", " separator
+	memcpy(buf_p, space_str_p, strlen(space_str_p));
+	buf_p += strlen(space_str_p);
+	*len += strlen(space_str_p);
+
+	// copy rail name
+	size_t rail_name_len = strlen((const char *)vr_rail_name_p);
+	memcpy(buf_p, vr_rail_name_p, rail_name_len);
+	buf_p += rail_name_len;
+	*len += rail_name_len;
 	ret = true;
 
 err:

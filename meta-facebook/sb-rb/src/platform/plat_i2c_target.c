@@ -1262,22 +1262,30 @@ void plat_master_write_thread_handler()
 				break;
 			}
 			uint8_t capping_source = get_power_capping_source();
-			switch (rdata[1]) {
-			case 0:
-			case 1:
-			case 2:
-			case 3:
-			case 4:
+			uint8_t polling_rate = rdata[1];
+			uint8_t poll_rate_type = 0;
+			uint8_t flag = 0;
+			switch (polling_rate) {
+			case 10:
+				poll_rate_type = 0;
+				break;
 			case 5:
-			case 6:
-			case 7:
-				plat_pldm_sensor_set_quick_vr_poll_interval(rdata[1],
-									    capping_source);
+				poll_rate_type = 1;
+				break;
+			case 2:
+				poll_rate_type = 2;
+				break;
+			case 1:
+				poll_rate_type = 3;
 				break;
 			default:
-				LOG_ERR("Invalid D: 0x%x, offset(W): 0x%02x", rdata[1], reg_offset);
+				LOG_ERR("Polling rate should be 10ms, 5ms, 2ms or 1ms");
+				flag = 1;
 				break;
 			}
+			if (flag == 0)
+				plat_pldm_sensor_set_quick_vr_poll_interval(poll_rate_type,
+									    capping_source);
 		} break;
 		case SET_SENSOR_POLLING_COMMAND_REG: {
 			if (rlen != 8) {

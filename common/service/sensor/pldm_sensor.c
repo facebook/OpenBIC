@@ -86,7 +86,7 @@ bool pldm_sensor_is_interval_ready(pldm_sensor_info *pldm_sensor_list, uint8_t p
 		current_time = k_uptime_get_32();
 		diff_time = current_time - pldm_sensor_list->update_time_ms;
 
-		if (pldm_sensor_list->poll_interval_ms >= diff_time) {
+		if (pldm_sensor_list->poll_interval_ms > diff_time) {
 			return false;
 		}
 
