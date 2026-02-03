@@ -1123,12 +1123,17 @@ static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 		return ret;
 	}
 
+	if (get_asic_board_id() != ASIC_BOARD_ID_EVB && p->comp_identifier == COMPNT_VR_3V3) {
+		LOG_ERR("only evb support 3V3 vr version get");
+		return ret;
+	}
+
 	sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
 	CHECK_NULL_ARG_WITH_RETURN(cfg, ret);
 
 	if ((cfg->pre_sensor_read_hook)) {
 		if ((cfg->pre_sensor_read_hook)(cfg, cfg->pre_sensor_read_args) == false) {
-			LOG_DBG("%d read vr fw pre hook fail!", sensor_id);
+			LOG_ERR("%d read vr fw pre hook fail!", sensor_id);
 			return false;
 		}
 	};
@@ -1240,7 +1245,7 @@ static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 err:
 	if ((cfg->post_sensor_read_hook)) {
 		if ((cfg->post_sensor_read_hook)(cfg, cfg->post_sensor_read_args, 0) == false) {
-			LOG_DBG("%d read vr fw post hook fail!", sensor_id);
+			LOG_ERR("%d read vr fw post hook fail!", sensor_id);
 			ret = false;
 		}
 	}

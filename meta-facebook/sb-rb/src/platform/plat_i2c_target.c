@@ -890,18 +890,8 @@ static bool command_reply_data_handle(void *arg)
 				data->target_rd_msg.msg_length = 1;
 			} break;
 			case POLLING_RATE_TELEMETRY_REG: {
-				uint32_t interval = plat_pldm_sensor_get_quick_vr_poll_interval();
-				uint8_t value = 0;
-				if (interval == 10) {
-					value = 0;
-				} else if (interval == 5) {
-					value = 1;
-				} else if (interval == 1) {
-					value = 2;
-				} else {
-					value = 4;
-				}
-				data->target_rd_msg.msg[0] = value;
+				uint8_t type_val = get_pwr_capping_polling_rate_type();
+				data->target_rd_msg.msg[0] = type_val;
 				data->target_rd_msg.msg_length = 1;
 			} break;
 			case TRAY_INFO_REG: {
@@ -1262,30 +1252,26 @@ void plat_master_write_thread_handler()
 				break;
 			}
 			uint8_t capping_source = get_power_capping_source();
-			uint8_t polling_rate = rdata[1];
-			uint8_t poll_rate_type = 0;
+			uint8_t poll_rate_type = rdata[1];
 			uint8_t flag = 0;
-			switch (polling_rate) {
-			case 10:
-				poll_rate_type = 0;
-				break;
-			case 5:
-				poll_rate_type = 1;
-				break;
-			case 2:
-				poll_rate_type = 2;
-				break;
+			switch (poll_rate_type) {
+			case 0:
 			case 1:
-				poll_rate_type = 3;
+			case 2:
+			case 3:
+			case 4:
+			case 5:
+			case 6:
+			case 7:
+				if (flag == 0)
+					plat_pldm_sensor_set_quick_vr_poll_interval(poll_rate_type,
+										    capping_source);
 				break;
 			default:
-				LOG_ERR("Polling rate should be 10ms, 5ms, 2ms or 1ms");
+				LOG_ERR("Polling rate type should be 0-7");
 				flag = 1;
 				break;
 			}
-			if (flag == 0)
-				plat_pldm_sensor_set_quick_vr_poll_interval(poll_rate_type,
-									    capping_source);
 		} break;
 		case SET_SENSOR_POLLING_COMMAND_REG: {
 			if (rlen != 8) {

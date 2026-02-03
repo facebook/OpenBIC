@@ -372,4 +372,5 @@ void quick_sensor_poll_init();
 void set_ioe_init_flag(uint8_t flag);
 uint8_t get_ioe_init_flag();
 PDR_numeric_sensor *get_pdr_numeric_sensor_by_sensor_id(uint8_t sensor_id);
+uint8_t get_pwr_capping_polling_rate_type();
 #endif

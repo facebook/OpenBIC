@@ -35,6 +35,7 @@ static uint8_t plat_sensor_one_step_power_enable_flag = 0;
 
 static uint32_t quick_vr_poll_interval = QUICK_POLL_INTERVAL;
 static bool is_quick_vr_poll_changed = false;
+uint8_t pwr_capping_pollng_rate_type = 0;
 
 static struct pldm_sensor_thread pal_pldm_sensor_thread[MAX_SENSOR_THREAD_ID] = {
 	// thread id, thread name
@@ -12632,6 +12633,7 @@ void plat_pldm_sensor_set_quick_vr_poll_interval(uint8_t type, uint8_t src)
 				}
 			}
 		}
+		pwr_capping_pollng_rate_type = type;
 		break;
 	default:
 		LOG_ERR("set quick vr poll interval error, Wrong type %d", type);
@@ -12779,4 +12781,9 @@ void quick_sensor_poll_init()
 					   CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
 	k_thread_name_set(&quick_sensor_poll, "quick_sensor_poll");
 	return;
+}
+
+uint8_t get_pwr_capping_polling_rate_type()
+{
+	return pwr_capping_pollng_rate_type;
 }

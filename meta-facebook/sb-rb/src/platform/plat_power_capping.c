@@ -374,6 +374,8 @@ void set_power_capping_source(uint8_t value)
 			LOG_ERR("Can't find sensor: 0x%02x", sensor_id);
 		}
 	}
+	uint8_t type = get_pwr_capping_polling_rate_type();
+	plat_pldm_sensor_set_quick_vr_poll_interval(type, value);
 }
 
 uint16_t get_power_capping_current_threshold(uint8_t vr_idx)
