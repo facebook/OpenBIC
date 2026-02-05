@@ -12549,7 +12549,7 @@ power_capping_time_setting pwr_capping_setting_table[] = {
 	    VR_DEFAULT_POLLING_INTERVAL_MS, 100 } },
 };
 
-void plat_pldm_sensor_set_quick_vr_poll_interval(uint8_t type, uint8_t src)
+void plat_pldm_sensor_set_quick_vr_poll_interval(uint8_t type, uint8_t capping_source)
 {
 	/*
 	0 default = MEDHA0/1_VDD power every 10ms
@@ -12588,7 +12588,7 @@ void plat_pldm_sensor_set_quick_vr_poll_interval(uint8_t type, uint8_t src)
 			for (uint8_t j = 0; j < table_size; j++) {
 				if (table[i].pldm_sensor_cfg.num ==
 				    pwr_capping_setting_table[j].sensor_id) {
-					if (src == CAPPING_SOURCE_VR) {
+					if (capping_source == CAPPING_SOURCE_VR) {
 						// set vr power polling time
 						if (pwr_capping_setting_table[j].sensor_id ==
 							    SENSOR_NUM_ASIC_P0V85_MEDHA0_VDD_VOLT_V ||
@@ -12597,14 +12597,14 @@ void plat_pldm_sensor_set_quick_vr_poll_interval(uint8_t type, uint8_t src)
 							table[i].poll_interval_ms =
 								VR_DEFAULT_POLLING_INTERVAL_MS;
 						} else {
-							uint16_t *time_index =
+							const uint16_t *time_index =
 								pwr_capping_setting_table[j]
 									.case_time_ms;
 							table[i].poll_interval_ms =
 								time_index[type];
 						}
 
-					} else if (src == CAPPING_SOURCE_ADC) {
+					} else if (capping_source == CAPPING_SOURCE_ADC) {
 						// set vr voltage polling time
 						if (pwr_capping_setting_table[j].sensor_id ==
 							    SENSOR_NUM_ASIC_P0V85_MEDHA0_VDD_PWR_W ||
@@ -12613,7 +12613,7 @@ void plat_pldm_sensor_set_quick_vr_poll_interval(uint8_t type, uint8_t src)
 							table[i].poll_interval_ms =
 								VR_DEFAULT_POLLING_INTERVAL_MS;
 						} else {
-							uint16_t *time_index =
+							const uint16_t *time_index =
 								pwr_capping_setting_table[j]
 									.case_time_ms;
 							table[i].poll_interval_ms =
@@ -12621,7 +12621,7 @@ void plat_pldm_sensor_set_quick_vr_poll_interval(uint8_t type, uint8_t src)
 						}
 					} else {
 						LOG_ERR("set quick vr poll interval error, Wrong source %d",
-							src);
+							capping_source);
 					}
 				}
 			}
