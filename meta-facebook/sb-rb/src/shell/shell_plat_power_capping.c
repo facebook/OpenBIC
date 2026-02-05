@@ -53,8 +53,7 @@ static int cmd_power_capping_get_all(const struct shell *shell, size_t argc, cha
 		    get_power_capping_method());
 	shell_print(shell, "Source: %d ( 0:VR,  1:ADC )\n", capping_source);
 	shell_print(shell, "VR Polling Telemetry: %s", print_str);
-	shell_print(shell, "VR Polling Rate: %11d (ms)\n",
-		    plat_pldm_sensor_get_quick_vr_poll_interval());
+	shell_print(shell, "VR Polling Rate: %11d (ms)\n", get_quick_medha_polling_rate());
 	shell_print(shell, "---------------------MEDHA0---------------------");
 	shell_print(shell, "MEDHA0 LV1 time window: %4d (us)",
 		    get_power_capping_time_w(CAPPING_VR_IDX_MEDHA0, CAPPING_LV_IDX_LV1));

@@ -22,6 +22,7 @@
 #include "plat_adc.h"
 #include "plat_class.h"
 #include "plat_cpld.h"
+#include "plat_hook.h"
 #include <device.h>
 #include "util_sys.h"
 #include "plat_i2c_target.h"
@@ -40,7 +41,7 @@ LOG_MODULE_REGISTER(plat_adc);
 
 K_THREAD_STACK_DEFINE(adc_rainbow_thread_stack, ADC_STACK_SIZE);
 struct k_thread adc_rainbow_poll_thread;
-
+static uint8_t is_adc_init = false;
 static bool adc_poll_flag = true;
 uint8_t adc_idx_read = 0;
 float ad4058_val_0 = 0;
@@ -740,16 +741,25 @@ void ad4058_mode_init()
 
 void adc_rainbow_polling_handler(void *p1, void *p2, void *p3)
 {
-	read_adc_info();
-	LOG_INF("adc index is %d", adc_idx_read);
-	if (adc_idx_read == ADI_AD4058)
-		ad4058_mode_init();
-	else if (adc_idx_read == TIC_ADS7066)
-		ads7066_mode_init();
-	else
-		LOG_ERR("Invalid ADC index %d", adc_idx_read);
-
 	while (1) {
+		if (!is_mb_dc_on()) {
+			k_msleep(1000);
+			continue;
+		}
+
+		if (!is_adc_init) {
+			read_adc_info();
+			LOG_INF("adc index is %d", adc_idx_read);
+			if (adc_idx_read == ADI_AD4058)
+				ad4058_mode_init();
+			else if (adc_idx_read == TIC_ADS7066)
+				ads7066_mode_init();
+			else
+				LOG_ERR("Invalid ADC index %d", adc_idx_read);
+
+			is_adc_init = true;
+		}
+
 		if (get_power_capping_source() == CAPPING_SOURCE_ADC) {
 			if (adc_poll_flag) {
 				switch (adc_idx_read) {
@@ -769,6 +779,8 @@ void adc_rainbow_polling_handler(void *p1, void *p2, void *p3)
 		} else if (get_power_capping_source() == CAPPING_SOURCE_VR) {
 			update_vr_base_power_info();
 		}
+
+		plat_power_capping_give_sem();
 		k_msleep(0);
 	}
 }

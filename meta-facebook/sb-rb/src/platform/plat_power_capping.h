@@ -54,4 +54,5 @@ uint16_t get_power_capping_time_w(uint8_t vr_idx, uint8_t lv);
 void set_power_capping_time_w(uint8_t vr_idx, uint8_t lv, uint16_t value);
 uint16_t get_power_capping_threshold(uint8_t vr_idx, uint8_t lv);
 void set_power_capping_threshold(uint8_t vr_idx, uint8_t lv, uint16_t value);
+void plat_power_capping_give_sem();
 void plat_power_capping_init();

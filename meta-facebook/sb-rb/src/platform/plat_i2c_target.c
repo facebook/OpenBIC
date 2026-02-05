@@ -1080,6 +1080,12 @@ void set_power_capping_threshold_time_handler(struct k_work *work_item)
 	uint8_t lv = sensor_data->lv;
 	uint16_t value = 0;
 
+	if (lv == CAPPING_LV_IDX_LV1) {
+		if ((in_data[2] != in_data[6]) || (in_data[3] != in_data[7])) {
+			LOG_WRN("Time window should be the same for lv1");
+		}
+	}
+
 	value = in_data[0] | (in_data[1] << 8);
 	set_power_capping_threshold(CAPPING_VR_IDX_MEDHA0, lv, value);
 	value = in_data[2] | (in_data[3] << 8);

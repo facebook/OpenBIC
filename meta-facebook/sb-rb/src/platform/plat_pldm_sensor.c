@@ -33,8 +33,6 @@ static bool plat_sensor_temp_polling_enable_flag = true;
 static bool plat_sensor_vr_polling_enable_flag = true;
 static uint8_t plat_sensor_one_step_power_enable_flag = 0;
 
-static uint32_t quick_vr_poll_interval = QUICK_POLL_INTERVAL;
-static bool is_quick_vr_poll_changed = false;
 uint8_t pwr_capping_pollng_rate_type = 0;
 
 static struct pldm_sensor_thread pal_pldm_sensor_thread[MAX_SENSOR_THREAD_ID] = {
@@ -8332,7 +8330,7 @@ pldm_sensor_info plat_pldm_sensor_quick_vr_table[] = {
 			0x00000000, //uint32_t hysteresis;
 			UP_THRESHOLD_CRIT, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
-			0, //real32_t state_transition_interval;
+			UPDATE_INTERVAL_1S, //real32_t state_transition_interval;
 			0, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
@@ -8479,7 +8477,7 @@ pldm_sensor_info plat_pldm_sensor_quick_vr_table[] = {
 			UP_THRESHOLD_CRIT, //uint8_t supported_thresholds;
 			0x00, //uint8_t threshold_and_hysteresis_volatility;
 			0, //real32_t state_transition_interval;
-			0, //real32_t update_interval;
+			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
 			0x04, //uint8_t range_field_format;
@@ -12518,11 +12516,6 @@ bool is_vr_access(uint8_t sensor_num)
 	}
 }
 
-uint32_t plat_pldm_sensor_get_quick_vr_poll_interval()
-{
-	return quick_vr_poll_interval;
-}
-
 power_capping_time_setting pwr_capping_setting_table[] = {
 	{ SENSOR_NUM_ASIC_P0V85_MEDHA0_VDD_PWR_W, { 10, 5, 2, 1, 2, 5, 5, 2 } },
 	{ SENSOR_NUM_ASIC_P0V85_MEDHA1_VDD_PWR_W, { 10, 5, 2, 1, 2, 5, 5, 2 } },
@@ -12643,20 +12636,6 @@ void plat_pldm_sensor_set_quick_vr_poll_interval(uint8_t type, uint8_t src)
 		LOG_INF("set 0x%x: quick vr poll interval is %d ms", table[i].pldm_sensor_cfg.num,
 			table[i].poll_interval_ms);
 	}
-}
-
-void plat_pldm_sensor_change_poll_interval(int thread_id, uint32_t *poll_interval_ms)
-{
-	CHECK_NULL_ARG(poll_interval_ms);
-
-	if (thread_id == QUICK_VR_SENSOR_THREAD_ID) {
-		if (is_quick_vr_poll_changed) {
-			*poll_interval_ms = quick_vr_poll_interval;
-			is_quick_vr_poll_changed = false;
-		}
-	}
-
-	return;
 }
 
 void set_ioe_value(uint8_t ioe_addr, uint8_t ioe_reg, uint8_t value)
@@ -12786,4 +12765,9 @@ void quick_sensor_poll_init()
 uint8_t get_pwr_capping_polling_rate_type()
 {
 	return pwr_capping_pollng_rate_type;
+}
+
+uint16_t get_quick_medha_polling_rate()
+{
+	return pwr_capping_setting_table[0].case_time_ms[pwr_capping_pollng_rate_type];
 }

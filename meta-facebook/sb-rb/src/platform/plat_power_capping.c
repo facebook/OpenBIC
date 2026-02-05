@@ -32,6 +32,7 @@ LOG_MODULE_REGISTER(plat_power_capping);
 #define POWER_CAPPING_STACK_SIZE 1024
 K_THREAD_STACK_DEFINE(power_capping_thread_stack, POWER_CAPPING_STACK_SIZE);
 struct k_thread power_capping_thread;
+static struct k_sem power_capping_sem;
 
 typedef struct {
 	uint8_t method;
@@ -47,8 +48,6 @@ static const uint16_t cpld_lv1_time_window_list[CPLD_LV1_TIME_WINDOW_NUM] = { 0,
 static uint8_t prev_set_ucr_status = 0;
 const static uint8_t volt_sensor_id_list[2] = { SENSOR_NUM_ASIC_P0V85_MEDHA0_VDD_VOLT_V,
 						SENSOR_NUM_ASIC_P0V85_MEDHA1_VDD_VOLT_V };
-const static uint8_t powr_sensor_id_list[2] = { SENSOR_NUM_ASIC_P0V85_MEDHA0_VDD_PWR_W,
-						SENSOR_NUM_ASIC_P0V85_MEDHA1_VDD_PWR_W };
 
 K_WORK_DELAYABLE_DEFINE(sync_vr_oc_work, power_capping_syn_vr_oc_warn_limit);
 
@@ -322,58 +321,6 @@ void set_power_capping_source(uint8_t value)
 	// reset value
 	adc_poll_init();
 
-	pldm_sensor_info *table = NULL;
-	uint8_t i = 0;
-	uint8_t j = 0;
-	int count = 0;
-	uint8_t volt_rate = 0;
-	uint8_t powr_rate = 0;
-
-	// set polling rate.  VR: PWR is quick.  ADC: VOLT is quick.
-	if (value == CAPPING_SOURCE_VR) {
-		volt_rate = 1;
-		powr_rate = 0;
-	} else if (value == CAPPING_SOURCE_ADC) {
-		volt_rate = 0;
-		powr_rate = 1;
-	}
-
-	table = plat_pldm_sensor_load(QUICK_VR_SENSOR_THREAD_ID);
-	if (table == NULL) {
-		LOG_ERR("No table: %d", QUICK_VR_SENSOR_THREAD_ID);
-		return;
-	}
-	count = plat_pldm_sensor_get_sensor_count(QUICK_VR_SENSOR_THREAD_ID);
-	if (count < 0) {
-		LOG_ERR("0 sensor count: %d", QUICK_VR_SENSOR_THREAD_ID);
-		return;
-	}
-
-	for (i = 0; i < ARRAY_SIZE(volt_sensor_id_list); i++) {
-		uint8_t sensor_id = volt_sensor_id_list[i];
-		for (j = 0; j < count; j++) {
-			if (table[j].pldm_sensor_cfg.num == sensor_id) {
-				table[j].pdr_numeric_sensor.update_interval = (real32_t)volt_rate;
-				break;
-			}
-		}
-		if (j == count) {
-			LOG_ERR("Can't find sensor: 0x%02x", sensor_id);
-		}
-	}
-
-	for (i = 0; i < ARRAY_SIZE(powr_sensor_id_list); i++) {
-		uint8_t sensor_id = powr_sensor_id_list[i];
-		for (j = 0; j < count; j++) {
-			if (table[j].pldm_sensor_cfg.num == sensor_id) {
-				table[j].pdr_numeric_sensor.update_interval = (real32_t)powr_rate;
-				break;
-			}
-		}
-		if (j == count) {
-			LOG_ERR("Can't find sensor: 0x%02x", sensor_id);
-		}
-	}
 	uint8_t type = get_pwr_capping_polling_rate_type();
 	plat_pldm_sensor_set_quick_vr_poll_interval(type, value);
 }
@@ -525,7 +472,7 @@ void set_power_capping_threshold(uint8_t vr_idx, uint8_t lv, uint16_t value)
 void power_capping_handler(void *p1, void *p2, void *p3)
 {
 	while (1) {
-		k_msleep(1);
+		k_sem_take(&power_capping_sem, K_FOREVER);
 
 		if (get_power_capping_method() == CAPPING_M_LOOK_UP_TABLE) {
 			uint8_t final_ucr_status = get_final_ucr_status();
@@ -544,8 +491,15 @@ void power_capping_handler(void *p1, void *p2, void *p3)
 	}
 }
 
+void plat_power_capping_give_sem()
+{
+	k_sem_give(&power_capping_sem);
+}
+
 void plat_power_capping_init()
 {
+	k_sem_init(&power_capping_sem, 0, 1);
+
 	// sync avg_times
 	uint8_t data = 0;
 	if (plat_read_cpld(CPLD_OFFSET_POWER_CAPPING_LV1_TIME, &data, 1)) {

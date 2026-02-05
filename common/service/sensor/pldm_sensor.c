@@ -458,7 +458,11 @@ void pldm_sensor_polling_handler(void *arug0, void *arug1, void *arug2)
 	}
 
 	if (pldm_sensor_thread_list[thread_id].poll_interval_ms != 0) {
-		poll_interval_ms = pldm_sensor_thread_list[thread_id].poll_interval_ms;
+		if (pldm_sensor_thread_list[thread_id].poll_interval_ms == 0xFF) {
+			poll_interval_ms = 0;
+		} else {
+			poll_interval_ms = pldm_sensor_thread_list[thread_id].poll_interval_ms;
+		}
 	}
 
 	is_need_check = pldm_sensor_thread_list[thread_id].still_check_interval == 0 ? false : true;
