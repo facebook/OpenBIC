@@ -95,14 +95,17 @@ static int cmd_voltage_range_get(const struct shell *shell, size_t argc, char **
 
 static void vr_rname_get_for_get_voltrage(size_t idx, struct shell_static_entry *entry)
 {
-	if ((get_asic_board_id() == ASIC_BOARD_ID_EVB))
-		idx++;
-
 	uint8_t *name = NULL;
 	vr_rail_name_get((uint8_t)idx, &name);
 
-	if (idx == VR_RAIL_E_MAX)
-		name = (uint8_t *)"all";
+	if ((get_asic_board_id() == ASIC_BOARD_ID_EVB)){
+		if (idx == VR_RAIL_E_MAX)
+			name = (uint8_t *)"all";
+	}
+	else{
+		if (idx == 	VR_RAIL_E_P3V3_OSFP_VOLT_V)
+			name = (uint8_t *)"all";
+	}
 
 	entry->syntax = (name) ? (const char *)name : NULL;
 	entry->handler = NULL;
