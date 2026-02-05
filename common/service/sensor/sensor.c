@@ -1221,7 +1221,7 @@ bool me_access(uint8_t sensor_num)
 	}
 }
 
-bool vr_access(uint8_t sensor_num)
+__weak bool vr_access(uint8_t sensor_num)
 {
 	if (get_DC_on_delayed_status() == false) {
 		return false;

@@ -590,3 +590,12 @@ bool disable_dimm_pmic_sensor(uint8_t sensor_num)
 	       sensor_num);
 	return false;
 }
+
+bool vr_access(uint8_t sensor_num)
+{
+	if (gpio_get(PWRGD_SYS_PWROK) != GPIO_HIGH) {
+		return false;
+	}
+
+	return get_vr_monitor_status();
+}
