@@ -29,6 +29,9 @@
 void cmd_test(const struct shell *shell, size_t argc, char **argv)
 {
 	shell_print(shell, "Hello world!");
+	uint8_t type = strtoul(argv[1], NULL, 16);
+	uint8_t src = strtoul(argv[2], NULL, 16);
+	plat_pldm_sensor_set_quick_vr_poll_interval(type, src);
 }
 
 void cmd_read_raw(const struct shell *shell, size_t argc, char **argv)
@@ -191,7 +194,6 @@ void cmd_info(const struct shell *shell, size_t argc, char **argv)
 	shell_warn(shell, "adc idx: %d (0:ADI, 1:TI)", adc_idx);
 	shell_warn(shell, "tray location: %d", tray_loc);
 }
-
 
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_cpld_cmds, SHELL_CMD(dump, NULL, "cpld dump", cmd_cpld_dump),
 			       SHELL_CMD(write, NULL, "write cpld register", cmd_cpld_write),

@@ -1440,7 +1440,7 @@ static uint8_t get_firmware_parameter(void *mctp_inst, uint8_t *buf, uint16_t le
 		(struct pldm_get_firmware_parameters_resp *)resp;
 
 	*resp_len = 1;
-
+	uint8_t *resp_end = resp + PLDM_MAX_DATA_SIZE;
 	if (len != 0) {
 		resp_p->completion_code = PLDM_ERROR_INVALID_LENGTH;
 		return PLDM_SUCCESS;
@@ -1465,13 +1465,31 @@ static uint8_t get_firmware_parameter(void *mctp_inst, uint8_t *buf, uint16_t le
 	for (uint8_t i = 0; i < comp_config_count; i++) {
 		if (!comp_config[i].get_fw_version_fn)
 			continue;
+		// calculate needed length to avoid overflow
+		uint16_t need_len = sizeof(struct component_parameter_table);
+		uint8_t tmp_ver_len = 0;
+		if (!comp_config[i].get_fw_version_fn(&comp_config[i], NULL, &tmp_ver_len)) {
+			tmp_ver_len = sizeof(error_code);
+		}
+		need_len += tmp_ver_len;
 
-		if (sizeof(struct pldm_get_firmware_parameters_resp) + cnt_len >
+		if (comp_config[i].pending_version_p) {
+			need_len += strlen(comp_config[i].pending_version_p);
+		}
+		// size guard
+		if (sizeof(struct pldm_get_firmware_parameters_resp) + cnt_len + need_len >
 		    PLDM_MAX_DATA_SIZE) {
-			LOG_ERR("Data length %d is over PLDM_MAX_DATA_SIZE define size %d",
-				sizeof(struct pldm_get_firmware_parameters_resp) + cnt_len,
+			LOG_ERR("PLDM overflow: used=%d need=%d max=%d", cnt_len, need_len,
 				PLDM_MAX_DATA_SIZE);
+
 			resp_p->completion_code = PLDM_ERROR;
+			*resp_len = sizeof(struct pldm_get_firmware_parameters_resp);
+			return PLDM_SUCCESS;
+		}
+		if (ver_str_p + need_len > resp_end) {
+			LOG_ERR("PLDM pointer overflow");
+			resp_p->completion_code = PLDM_ERROR;
+			*resp_len = sizeof(struct pldm_get_firmware_parameters_resp);
 			return PLDM_SUCCESS;
 		}
 
