@@ -48,6 +48,7 @@ extern struct tca9548 mux_conf_addr_0xe2[];
 extern isl69259_pre_proc_arg isl69259_pre_read_args[];
 extern pmic_pre_proc_arg pmic_pre_read_args[];
 extern dimm_pre_proc_arg dimm_pre_proc_args[];
+extern ina233_init_arg ina233_init_args[];
 
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK FUNC
