@@ -702,20 +702,16 @@ void get_fw_version_boot0_from_asic()
 		version_boot0[2] = data_p;
 	}
 }
-bool get_fw_version_boot1_from_asic(uint8_t *data)
+uint32_t get_fw_version_boot1_from_asic()
 {
-	CHECK_NULL_ARG_WITH_RETURN(data, false);
 	I2C_MSG i2c_msg = { .bus = I2C_BUS12, .target_addr = 0x32 };
 	i2c_msg.tx_len = 1;
 	i2c_msg.rx_len = 11;
 	i2c_msg.data[0] = ASIC_VERSION_BYTE;
 	i2c_master_read(&i2c_msg, I2C_MAX_RETRY);
-
 	LOG_INF(" boot1 VER : %02d.%02d.%02d", i2c_msg.data[2], i2c_msg.data[3], i2c_msg.data[4]);
-	uint32_t data_p = i2c_msg.data[2] << 16 | i2c_msg.data[3] << 8 | i2c_msg.data[4];
-	memcpy(data, &data_p, 4);
-
-	return true;
+	uint32_t version = i2c_msg.data[2] << 16 | i2c_msg.data[3] << 8 | i2c_msg.data[4];
+	return version;
 }
 
 static bool get_boot1_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
@@ -728,8 +724,7 @@ static bool get_boot1_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 	memcpy(buf_p, remain_str_p, strlen(remain_str_p));
 	buf_p += strlen(remain_str_p);
 	*len += strlen(remain_str_p);
-	uint8_t *version_tmp = NULL;
-	uint32_t version = get_fw_version_boot1_from_asic(version_tmp);
+	uint32_t version = get_fw_version_boot1_from_asic();
 
 	*len += bin2hex((uint8_t *)&version, 4, buf_p, 4);
 	buf_p += 4;
@@ -1277,13 +1272,13 @@ void plat_reset_prepare()
 				     "I2C_6", "I2C_7", "I2C_8", "I2C_9", "I2C_10", "I2C_11" };
 
 	for (int i = 0; i < ARRAY_SIZE(i2c_labels); i++) {
-		const struct device *i2c_dev = device_get_binding(i2c_labels[i]);
-		if (!i2c_dev) {
+		const struct device *check_i2c_dev_by_bus = device_get_binding(i2c_labels[i]);
+		if (!check_i2c_dev_by_bus) {
 			LOG_ERR("Failed to get binding for %s", i2c_labels[i]);
 			continue;
 		}
 
-		int ret = i2c_npcm_device_disable(i2c_dev);
+		int ret = i2c_npcm_device_disable(check_i2c_dev_by_bus);
 		if (ret) {
 			LOG_ERR("Failed to disable %s (ret=%d)", i2c_labels[i], ret);
 		} else {
