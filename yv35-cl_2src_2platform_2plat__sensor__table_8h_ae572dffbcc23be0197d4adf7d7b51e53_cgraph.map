@@ -1,0 +1,10 @@
+<map id="pal_get_extend_sensor_config" name="pal_get_extend_sensor_config">
+<area shape="rect" id="node1" title=" " alt="" coords="5,74,160,115"/>
+<area shape="rect" id="node2" href="$gc2-es_2src_2platform_2plat__sensor__table_8c.html#a27d80151140f2515b79d867ef7ea7446" title=" " alt="" coords="225,31,332,57"/>
+<area shape="rect" id="node6" href="$at-cb_2src_2platform_2plat__class_8c.html#a177b22525ca1657da5ced816317de219" title=" " alt="" coords="213,81,344,108"/>
+<area shape="rect" id="node7" href="$gt-cc_2src_2platform_2plat__class_8c.html#a824da554c9ce9ac4fd81c4849e3a5ec0" title=" " alt="" coords="208,132,349,159"/>
+<area shape="rect" id="node3" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="399,5,517,32"/>
+<area shape="rect" id="node5" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="397,56,519,83"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="567,31,709,57"/>
+<area shape="rect" id="node8" href="$hal__gpio_8c.html#af700ee50de3d113e223c2b011c41f966" title=" " alt="" coords="423,132,493,159"/>
+</map>

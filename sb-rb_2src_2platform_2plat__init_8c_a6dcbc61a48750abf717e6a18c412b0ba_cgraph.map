@@ -1,0 +1,13 @@
+<map id="pal_pre_init" name="pal_pre_init">
+<area shape="rect" id="node1" title=" " alt="" coords="5,132,93,159"/>
+<area shape="rect" id="node2" href="$hal__i2c__target_8c.html#a0735e316a62a2116e6c3311aa8e9e9f8" title=" " alt="" coords="150,5,275,32"/>
+<area shape="rect" id="node4" href="$sb-rb_2src_2platform_2plat__class_8c.html#aecdd6402720f77139625e22f7f4e59dd" title=" " alt="" coords="159,56,267,83"/>
+<area shape="rect" id="node8" href="$plat__pwm_8c.html#a197d90dab0965102ec73b65bfa58c604" title=" " alt="" coords="161,107,264,133"/>
+<area shape="rect" id="node9" href="$minerva-ag_2src_2platform_2plat__led_8c.html#a1fef3b2dc83568fefd8d63567c11ab0e" title=" " alt="" coords="167,157,258,184"/>
+<area shape="rect" id="node10" href="$minerva-ag_2src_2platform_2plat__hook_8c.html#aec23c0c85db41c28c74b286d17e0853d" title=" " alt="" coords="141,208,284,235"/>
+<area shape="rect" id="node11" href="$minerva-ag_2src_2platform_2plat__hook_8c.html#a464ddcbdb80616d061d88894d5167968" title=" " alt="" coords="163,259,262,285"/>
+<area shape="rect" id="node3" href="$hal__i2c__target_8c.html#a2f708033f90c1afa66581d9ca8a965fb" title=" " alt="" coords="332,5,479,32"/>
+<area shape="rect" id="node5" href="$minerva-ag_2src_2platform_2plat__class_8c.html#ab8ed1e1192e4346f34a2396e50d9f1aa" title=" " alt="" coords="352,56,459,83"/>
+<area shape="rect" id="node6" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="527,56,645,83"/>
+<area shape="rect" id="node7" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="693,56,836,83"/>
+</map>
