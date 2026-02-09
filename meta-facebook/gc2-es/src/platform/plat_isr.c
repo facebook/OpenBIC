@@ -559,3 +559,79 @@ void ISR_NMI()
 		}
 	}
 }
+
+static bool send_smi_sel(event_state_t state)
+{
+    common_addsel_msg_t sel_msg = {0};
+
+    sel_msg.InF_target    = BMC_IPMB;
+    sel_msg.sensor_type   = IPMI_OEM_SENSOR_TYPE_SYS_STA;
+    sel_msg.sensor_number = SENSOR_NUM_SYSTEM_STATUS;
+    sel_msg.event_type = (state == ASSERT) ?
+                         IPMI_EVENT_TYPE_SENSOR_SPECIFIC :
+                         IPMI_OEM_EVENT_TYPE_DEASSERT;
+    sel_msg.event_data1 = IPMI_OEM_EVENT_OFFSET_SYS_SMI90s;
+    sel_msg.event_data2 = 0xFF;
+    sel_msg.event_data3 = 0xFF;
+
+    return common_add_sel_evt_record(&sel_msg);
+}
+
+static volatile bool smi_stuck_active;
+static volatile bool smi_assert_sent;
+
+void smi_handler()
+{
+    if (gpio_get(RST_PLTRST_PLD_N) != GPIO_HIGH ||
+        gpio_get(PWRGD_CPU_LVC3)   != GPIO_HIGH) {
+        return;
+    }
+
+    if (gpio_get(IRQ_SMI_ACTIVE_BMC_N) == GPIO_LOW) {
+        smi_stuck_active = true;
+
+        if (!smi_assert_sent) {
+            if (send_smi_sel(ASSERT)) {
+                smi_assert_sent = true;
+                LOG_WRN("SMI+");
+            } else {
+                LOG_ERR("Failed to add SMI assertion SEL");
+            }
+        }
+    }
+}
+
+
+K_WORK_DELAYABLE_DEFINE(smi_work, smi_handler);
+void ISR_SMI(void)
+{
+	/* Refer to "16.6 I/O Signal Planes and States"
+	 *,which is in "6th Generation Intel® Core™ Processor Families I/O Platform".
+	 *
+	 * BIC doesn't need to check SMI GPIO in "during reset" and "S5 power off"
+	 *states
+	 */
+    if (gpio_get(RST_PLTRST_PLD_N) != GPIO_HIGH ||
+        gpio_get(PWRGD_CPU_LVC3)   != GPIO_HIGH) {
+        return;
+    }
+
+    if (gpio_get(IRQ_SMI_ACTIVE_BMC_N) == GPIO_LOW) {
+        if (!k_work_delayable_is_pending(&smi_work) && !smi_stuck_active) {
+            k_work_schedule_for_queue(&plat_work_q, &smi_work,
+                                      K_SECONDS(DETECT_SMI_DELAY_90S));
+        }
+    } else {
+        smi_stuck_active = false;
+        (void)k_work_cancel_delayable(&smi_work);
+
+        if (smi_assert_sent) {
+            if (send_smi_sel(DEASSERT)) {
+                smi_assert_sent = false;
+                LOG_WRN("SMI-");
+            } else {
+                LOG_ERR("Failed to add SMI deassertion SEL");
+            }
+        }
+    }
+}
