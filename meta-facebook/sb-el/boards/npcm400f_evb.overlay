@@ -1,0 +1,193 @@
+&twd0 {
+	status = "disabled";
+};
+
+&adc0 {
+    status = "disabled";
+};
+
+&uart0 {
+	status = "okay";
+	current-speed = <57600>;
+};
+
+&i2c1a {
+	clock-frequency = <I2C_BITRATE_FAST>;
+    scllt = <65>;
+	sclht = <60>;
+	status = "okay";
+};
+
+&i2c1b {
+    status = "disabled";
+};
+
+&i2c2a {
+	clock-frequency = <I2C_BITRATE_FAST>;
+	scllt = <65>;
+	sclht = <60>;
+	status = "okay";
+};
+
+&i2c3a {
+	clock-frequency = <I2C_BITRATE_FAST>;
+	scllt = <65>;
+    sclht = <60>;
+	status = "okay";
+};
+
+&i2c4a {
+    status = "disabled";
+};
+
+&i2c4b {
+	clock-frequency = <I2C_BITRATE_FAST>;
+    scllt = <65>;
+	sclht = <60>;
+	status = "okay";
+};
+
+&i2c5a {
+	clock-frequency = <I2C_BITRATE_FAST>;
+    scllt = <65>;
+	sclht = <60>;
+	status = "okay";
+};
+
+&i2c6a {
+    clock-frequency = <I2C_BITRATE_STANDARD>;
+    status = "okay";
+    multi-master = <1>;
+    wait_free_time = <1000>;
+};
+
+&i2c6b {
+    status = "disabled";
+};
+
+&i2c7a {
+	clock-frequency = <I2C_BITRATE_FAST>;
+    scllt = <65>;
+	sclht = <60>;
+	status = "okay";
+};
+
+&i2c8a {
+	clock-frequency = <I2C_BITRATE_FAST>;
+    scllt = <65>;
+	sclht = <60>;
+	status = "okay";
+};
+
+&i2c9a {
+	clock-frequency = <I2C_BITRATE_FAST>;
+    scllt = <65>;
+	sclht = <60>;
+	status = "okay";
+};
+
+&i2c10a {
+	clock-frequency = <I2C_BITRATE_FAST>;
+    scllt = <65>;
+	sclht = <60>;
+	status = "okay";
+};
+
+&i2c11a {
+    clock-frequency = <I2C_BITRATE_FAST>;
+    scllt = <65>;
+	sclht = <60>;
+    status = "okay";
+};
+
+&i2c12a {
+	clock-frequency = <I2C_BITRATE_FAST>;
+    scllt = <65>;
+	sclht = <60>;
+	status = "okay";
+};
+
+&spip1 {
+    status = "okay";
+};
+
+&usbd0 {
+    status = "disabled";
+};
+
+&jtag1 {
+    status = "disabled";
+};
+
+&i3c4 {
+    status = "disabled";
+};
+
+&peci0 {
+    status = "disabled";
+};
+
+&espi0 {
+    status = "disabled";
+};
+
+&kcs1 {
+    status = "disabled";
+};
+
+&kcs2 {
+    status = "disabled";
+};
+
+&kcs3 {
+    status = "disabled";
+};
+
+&kcs4 {
+    status = "disabled";
+};
+
+&spi_fiu0 {
+    status = "okay";
+    pinctrl-0 = < &pinctrl_shd_spi_default>;
+};
+
+&spi_fiu0_cs1 {
+	status = "okay";
+    spi-max-buswidth = < 1 >;
+    spi-max-frequency = < 24000000 >;
+    re-init-support;
+};
+
+&pcc {
+       clock-frequency = <DT_FREQ_M(96)>; /* OFMCLK runs at 96MHz */
+       core-prescaler = <1>; /* CORE_CLK runs at 96MHz */
+       apb1-prescaler = <8>; /* APB1_CLK runs at 12MHz */
+       apb2-prescaler = <1>; /* APB2_CLK runs at 96MHz */
+       apb3-prescaler = <1>; /* APB3_CLK runs at 96MHz */
+       fiu-prescaler = <4>; /* FIU_CLK runs at 24MHz */
+};
+
+&i3c5 {
+	status = "disabled";
+};
+
+&pwm1 {
+    status = "okay";
+};
+
+&pwm4 {
+    status = "disabled";
+};
+
+&pwm5 {
+    status = "disabled";
+};
+
+&pwm6 {
+    status = "okay";
+};
+
+&gpio7 {
+    label = "GPIO_7";
+};
