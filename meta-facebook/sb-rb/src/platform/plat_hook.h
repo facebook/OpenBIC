@@ -212,10 +212,10 @@ enum VR_MP29816_REG_E {
 };
 
 typedef struct vr_vout_range_user_settings_struct {
-	uint16_t default_vout_max[STRAP_INDEX_MAX];
-	uint16_t default_vout_min[STRAP_INDEX_MAX];
-	uint16_t change_vout_max[STRAP_INDEX_MAX];
-	uint16_t change_vout_min[STRAP_INDEX_MAX];
+	uint16_t default_vout_max[VR_RAIL_E_MAX];
+	uint16_t default_vout_min[VR_RAIL_E_MAX];
+	uint16_t change_vout_max[VR_RAIL_E_MAX];
+	uint16_t change_vout_min[VR_RAIL_E_MAX];
 } vr_vout_range_user_settings_struct;
 typedef struct vr_vout_user_settings {
 	uint16_t vout[VR_RAIL_E_MAX];
