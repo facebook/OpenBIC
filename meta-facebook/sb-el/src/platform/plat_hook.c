@@ -399,3 +399,39 @@ bool post_common_sensor_read(sensor_cfg *cfg, void *args, int *const reading)
 		return false;
 	return true;
 }
+
+// struct vr_vout_user_settings voltage_command_get = { 0 };
+vr_vout_range_user_settings_struct vout_range_user_settings = { 0 };
+
+bool plat_get_vout_range(uint8_t rail, uint16_t *vout_max_millivolt, uint16_t *vout_min_millivolt)
+{
+	CHECK_NULL_ARG_WITH_RETURN(vout_max_millivolt, false);
+	CHECK_NULL_ARG_WITH_RETURN(vout_min_millivolt, false);
+
+	uint8_t sensor_id = vr_rail_table[rail].sensor_id;
+	PDR_numeric_sensor *pdr_sensor = get_pdr_numeric_sensor_by_sensor_id(sensor_id);
+	CHECK_NULL_ARG_WITH_RETURN(pdr_sensor, false);
+
+	*vout_max_millivolt = (uint16_t)pdr_sensor->critical_high;
+	*vout_min_millivolt = (uint16_t)pdr_sensor->critical_low;
+
+	return true;
+}
+
+bool vr_vout_range_user_settings_init(void)
+{
+	for (int i = 0; i < VR_RAIL_E_MAX; i++) {
+		uint16_t vout_max = 0;
+		uint16_t vout_min = 0;
+		if (!plat_get_vout_range(i, &vout_max, &vout_min)) {
+			LOG_ERR("Can't find vout range default by rail index: %d", i);
+			return false;
+		}
+		vout_range_user_settings.default_vout_max[i] = vout_max;
+		vout_range_user_settings.default_vout_min[i] = vout_min;
+		vout_range_user_settings.change_vout_max[i] = vout_max;
+		vout_range_user_settings.change_vout_min[i] = vout_min;
+	}
+
+	return true;
+}

@@ -430,10 +430,8 @@ static void ad4058_read_voltage(uint8_t idx)
 	uint16_t raw_value = (uint16_t)((high << 8) | low);
 	if (idx == ADC_EL_IDX_NUWA0) {
 		ad4058_val_0 = (float)raw_value / 65536 * ad4058_vref;
-		LOG_INF("NUWA0 ad4058 value: 0x%04x", raw_value);
 	} else if (idx == ADC_EL_IDX_NUWA1) {
 		ad4058_val_1 = (float)raw_value / 65536 * ad4058_vref;
-		LOG_INF("NUWA1 ad4058 value: 0x%04x", raw_value);
 	}
 
 	// set cnv_pin to high
@@ -500,7 +498,8 @@ void adc_electra_polling_handler(void *p1, void *p2, void *p3)
 	else
 		LOG_ERR("Invalid ADC index %d", adc_idx_read);
 
-	while (1) {
+	// waiting for power capping function
+	while (false) {
 			switch (adc_idx_read) {
 			case ADI_AD4058:
 				ad4058_read_voltage(ADC_EL_IDX_NUWA0);
@@ -514,7 +513,7 @@ void adc_electra_polling_handler(void *p1, void *p2, void *p3)
 				LOG_DBG("Invalid ADC index %d", adc_idx_read);
 				break;
 			}
-		k_msleep(2000);
+		k_msleep(0);
 	}
 }
 
