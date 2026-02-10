@@ -1123,7 +1123,7 @@ void plat_master_write_thread_handler()
 	while (1) {
 		uint8_t rdata[MAX_I2C_TARGET_BUFF] = { 0 };
 		uint16_t rlen = 0;
-		rc = i2c_target_read(I2C_TARGET_BUS_ASIC, rdata, sizeof(rdata), &rlen);
+		rc = i2c_target_read(I2C_TARGET_BUS_ASIC, rdata, sizeof(rdata), &rlen, K_FOREVER);
 		if (rc) {
 			LOG_ERR("i2c_target_read fail, ret %d", rc);
 			continue;

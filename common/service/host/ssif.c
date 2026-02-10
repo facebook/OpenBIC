@@ -678,7 +678,7 @@ static bool ssif_write_data(void *arg)
 {
 	CHECK_NULL_ARG_WITH_RETURN(arg, false);
 
-	struct i2c_target_data *data = (struct i2c_target_data *)arg;
+	struct i2c_target_data const *data = (struct i2c_target_data *)arg;
 
 	if (data->wr_buffer_idx == 1) {
 		if (ssif_collect_data(data->target_wr_msg.msg[0], data->i2c_bus) == false)
@@ -822,7 +822,7 @@ static void ssif_read_task(void *arvg0, void *arvg1, void *arvg2)
 				goto cold_reset;
 			}
 
-			struct ssif_wr_start *wr_start_msg = (struct ssif_wr_start *)(rdata + 1);
+			struct ssif_wr_start const *wr_start_msg = (struct ssif_wr_start *)(rdata + 1);
 			if (wr_start_msg->len !=
 			    (rlen - 2 - is_pec_exist)) { // exclude smb_cmd, len, pec
 				LOG_WRN("SSIF[%d] received invalid length byte for smb command %d",
@@ -861,7 +861,7 @@ static void ssif_read_task(void *arvg0, void *arvg1, void *arvg2)
 				goto cold_reset;
 			}
 
-			struct ssif_wr_middle *wr_middle_msg = (struct ssif_wr_middle *)(rdata + 1);
+			struct ssif_wr_middle const *wr_middle_msg = (struct ssif_wr_middle *)(rdata + 1);
 			if (wr_middle_msg->len !=
 			    (rlen - 2 - is_pec_exist)) { // exclude smb_cmd, len, pec
 				LOG_WRN("SSIF[%d] received invalid length byte for smb command %d",
