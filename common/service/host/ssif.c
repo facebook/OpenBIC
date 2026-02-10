@@ -779,7 +779,7 @@ static void ssif_read_task(void *arvg0, void *arvg1, void *arvg2)
 	while (1) {
 		uint8_t rdata[SSIF_BUFF_SIZE] = { 0 };
 		uint16_t rlen = 0;
-		rc = i2c_target_read(ssif_inst->i2c_bus, rdata, sizeof(rdata), &rlen);
+		rc = i2c_target_read(ssif_inst->i2c_bus, rdata, sizeof(rdata), &rlen, K_FOREVER);
 		if (rc) {
 			LOG_ERR("SSIF[%d] i2c_target_read failed, ret %d\n", ssif_inst->index, rc);
 			ssif_error_record(ssif_inst->index, SSIF_STATUS_TARGET_WR_RD_ERROR);
