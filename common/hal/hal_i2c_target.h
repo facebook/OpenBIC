@@ -24,7 +24,7 @@
 #define MAX_TARGET_NUM 16
 #define I2C_DEVICE_PREFIX "I2C_"
 #define I2C_CONTROLLER_NAME_GET(inst) I2C_DEVICE_PREFIX #inst
-#define I2C_TARGET_MULTI_BUS_SKIP -1
+
 struct __attribute__((__packed__)) i2c_msg_package {
 	uint16_t msg_length;
 	uint8_t msg[MAX_I2C_TARGET_BUFF];
@@ -90,6 +90,7 @@ enum i2c_target_api_error_status {
 	I2C_TARGET_API_MEMORY_ERR,
 	I2C_TARGET_API_MSGQ_ERR,
 	I2C_TARGET_API_BUS_GET_FAIL,
+	I2C_TARGET_MULTI_BUS_SKIP,
 	I2C_TARGET_API_UNKNOWN_ERR = 0xFF
 };
 
