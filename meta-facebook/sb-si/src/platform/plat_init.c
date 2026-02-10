@@ -24,14 +24,11 @@
 
 #include "plat_sensor_table.h"
 #include "plat_class.h"
-#include "plat_isr.h"
 #include "plat_led.h"
 #include "plat_gpio.h"
 #include "plat_mctp.h"
-#include "plat_pldm_monitor.h"
 #include "plat_hook.h"
 #include <logging/log.h>
-#include "plat_event.h"
 #include "plat_i2c.h"
 #include "plat_i2c_target.h"
 
@@ -49,8 +46,7 @@ void pal_pre_init()
 	init_platform_config();
 	plat_led_init();
 	vr_mutex_init();
-	plat_i3c_set_pid();
-
+	// plat_i3c_set_pid();
 }
 
 void pal_set_sys_status()

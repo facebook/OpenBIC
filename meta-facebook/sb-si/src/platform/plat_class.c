@@ -24,6 +24,7 @@
 #include "plat_class.h"
 #include "plat_pldm_sensor.h"
 #include "hal_i3c.h"
+#include "hal_i2c.h"
 #include "plat_i3c.h"
 #include <drivers/flash.h>
 
@@ -55,7 +56,9 @@ void init_vr_vendor_type(void)
 	i2c_msg.rx_len = 1;
 	i2c_msg.data[0] = 0x00;
 
-	if (i2c_master_read(&i2c_msg, retry)) {
+	int ret = i2c_master_read(&i2c_msg, retry);
+
+	if (0 == ret) {
 		vr_type = VR_MPS_MP2971_MP2891;
 	} else {
 		vr_type = VR_RNS_ISL69260_RAA228249;
@@ -73,7 +76,9 @@ void init_tmp_type()
 	i2c_msg.rx_len = 1;
 	i2c_msg.data[0] = 0xFE; //MFG ID REG
 
-	if (i2c_master_read(&i2c_msg, retry)) {
+	int ret = i2c_master_read(&i2c_msg, retry);
+
+	if (0 == ret) {
 		LOG_INF("Assume TMP is EMC1413 by address check");
 		tmp_type = TMP_EMC1413;
 		return;
