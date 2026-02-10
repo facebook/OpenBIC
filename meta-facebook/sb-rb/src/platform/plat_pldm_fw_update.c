@@ -692,8 +692,8 @@ void get_fw_version_boot0_from_asic()
 	i2c_msg.data[0] = ASIC_VERSION_BYTE;
 	i2c_master_read(&i2c_msg, I2C_MAX_RETRY);
 
-	LOG_INF(" boot0 VER : %02d.%02d.%02d", i2c_msg.data[9], i2c_msg.data[8], i2c_msg.data[7]);
-	uint32_t data_p = i2c_msg.data[9] << 16 | i2c_msg.data[8] << 8 | i2c_msg.data[7];
+	LOG_INF(" boot0 VER : %02d.%02d.%02d", i2c_msg.data[8], i2c_msg.data[7], i2c_msg.data[6]);
+	uint32_t data_p = i2c_msg.data[8] << 16 | i2c_msg.data[7] << 8 | i2c_msg.data[6];
 	if (data_p) {
 		// update temp data
 		LOG_INF("update boot0 version read from asic");
@@ -709,8 +709,8 @@ uint32_t get_fw_version_boot1_from_asic()
 	i2c_msg.rx_len = 11;
 	i2c_msg.data[0] = ASIC_VERSION_BYTE;
 	i2c_master_read(&i2c_msg, I2C_MAX_RETRY);
-	LOG_INF(" boot1 VER : %02d.%02d.%02d", i2c_msg.data[2], i2c_msg.data[3], i2c_msg.data[4]);
-	uint32_t version = i2c_msg.data[2] << 16 | i2c_msg.data[3] << 8 | i2c_msg.data[4];
+	LOG_INF(" boot1 VER : %02d.%02d.%02d", i2c_msg.data[1], i2c_msg.data[2], i2c_msg.data[3]);
+	uint32_t version = i2c_msg.data[1] << 16 | i2c_msg.data[2] << 8 | i2c_msg.data[3];
 	return version;
 }
 

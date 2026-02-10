@@ -888,6 +888,38 @@ bool bootstrap_default_settings_init(void)
 			bootstrap_table[i].change_setting_value =
 				reverse_bits(bootstrap_table[i].change_setting_value,
 					     bootstrap_table[i].bit_count);
+		/*
+		set default bootstrap value
+		
+		EVT:
+		HAMSA_LS_STRAP 1
+		MEDHA0_CHIP_STRAP_0 1
+		MEDHA1_CHIP_STRAP_0 1
+		
+		>= DVT:
+		HAMSA_LS_STRAP 0
+		MEDHA0_CHIP_STRAP_0 0
+		MEDHA1_CHIP_STRAP_0 0
+		*/
+		uint8_t rev_id = get_board_rev_id();
+		if (rev_id < REV_ID_DVT) {
+			if (bootstrap_table[i].index == STRAP_INDEX_HAMSA_LS_STRAP_0)
+				bootstrap_table[i].default_setting_value = 0x01;
+			else if (bootstrap_table[i].index == STRAP_INDEX_MEDHA0_CHIP_STRAP_0)
+				bootstrap_table[i].default_setting_value = 0x01;
+			else if (bootstrap_table[i].index == STRAP_INDEX_MEDHA1_CHIP_STRAP_0)
+				bootstrap_table[i].default_setting_value = 0x01;
+		} else if (rev_id >= REV_ID_DVT && rev_id < MAX_REV_ID) {
+			if (bootstrap_table[i].index == STRAP_INDEX_HAMSA_LS_STRAP_0)
+				bootstrap_table[i].default_setting_value = 0x00;
+			else if (bootstrap_table[i].index == STRAP_INDEX_MEDHA0_CHIP_STRAP_0)
+				bootstrap_table[i].default_setting_value = 0x00;
+			else if (bootstrap_table[i].index == STRAP_INDEX_MEDHA1_CHIP_STRAP_0)
+				bootstrap_table[i].default_setting_value = 0x00;
+		} else {
+			LOG_ERR("Invalid rev_id when setting bootstrap init: %d", rev_id);
+			return false;
+		}
 	}
 
 	// read io-exp value and write to bootstrap_table
