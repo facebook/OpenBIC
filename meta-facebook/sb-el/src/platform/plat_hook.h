@@ -110,6 +110,13 @@ enum VR_STAUS_E {
 	VR_STAUS_E_MAX,
 };
 
+typedef struct vr_vout_range_user_settings_struct {
+	uint16_t default_vout_max[VR_RAIL_E_MAX];
+	uint16_t default_vout_min[VR_RAIL_E_MAX];
+	uint16_t change_vout_max[VR_RAIL_E_MAX];
+	uint16_t change_vout_min[VR_RAIL_E_MAX];
+} vr_vout_range_user_settings_struct;
+
 typedef struct vr_mapping_status {
 	uint8_t index;
 	uint16_t pmbus_reg;
@@ -128,6 +135,8 @@ typedef struct vr_mapping_sensor {
 	int peak_value;
 } vr_mapping_sensor;
 
+extern vr_vout_range_user_settings_struct vout_range_user_settings;
+
 bool pre_vr_read(sensor_cfg *cfg, void *args);
 bool post_vr_read(sensor_cfg *cfg, void *args, int *const reading);
 bool is_mb_dc_on();
@@ -140,4 +149,5 @@ bool vr_status_enum_get(uint8_t *name, uint8_t *num);
 bool plat_get_vr_status(uint8_t rail, uint8_t vr_status_rail, uint16_t *vr_status);
 bool plat_clear_vr_status(uint8_t rail);
 bool post_common_sensor_read(sensor_cfg *cfg, void *args, int *const reading);
+bool vr_vout_range_user_settings_init(void);
 #endif
