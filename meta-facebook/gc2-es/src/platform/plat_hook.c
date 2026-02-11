@@ -319,7 +319,53 @@ bool post_cpu_margin_read(sensor_cfg *cfg, void *args, int *reading)
 		return check_reading_pointer_null_is_allowed(cfg);
 
 	sensor_val *sval = (sensor_val *)reading;
+	if (sval->integer == 1) {
+		sval->integer = 0;
+	}
 	sval->integer = -sval->integer; /* for BMC minus */
+	return true;
+}
+
+static bool get_cpu_tjmax(uint8_t addr, int *reading)
+{
+	if (!reading) {
+		LOG_ERR("Invalid argument");
+		return false;
+	}
+
+	const uint16_t param = 0x00;
+	const uint8_t rlen = 0x05;
+	uint8_t rbuf[rlen];
+	memset(rbuf, 0, sizeof(rbuf));
+
+	int ret = peci_read(PECI_CMD_RD_PKG_CFG0, addr, RDPKG_IDX_TJMAX_TEMP, param, rlen, rbuf);
+	if (ret != 0) {
+		LOG_ERR("PECI read error");
+		return false;
+	}
+
+	sensor_val *sval = (sensor_val *)reading;
+	sval->integer = rbuf[3];
+	return true;
+}
+
+bool post_cpu_read(sensor_cfg *cfg, void *args, int *reading)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	ARG_UNUSED(args);
+	if (!reading)
+		return check_reading_pointer_null_is_allowed(cfg);
+
+	sensor_val *sval = (sensor_val *)reading;
+
+	sensor_val tjmax_sval = { 0 };
+	if (get_cpu_tjmax(CPU_PECI_ADDR, (int *)&tjmax_sval) == false) {
+		return false;
+	}
+
+	if (sval->integer == (tjmax_sval.integer + 1)) {
+		sval->integer = tjmax_sval.integer;
+	}
 	return true;
 }
 
