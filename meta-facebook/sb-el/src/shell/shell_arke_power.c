@@ -9,7 +9,7 @@
 // #include "plat_ioexp.h"
 #include "plat_pldm_sensor.h"
 #include "plat_class.h"
-// #include "shell_arke_power.h"
+#include "shell_arke_power.h"
 #include "plat_gpio.h"
 // arke power command
 
@@ -222,118 +222,103 @@
 // 	  NO_DEFINED }, //HAMSA_PCIE_PERST_B_PLD_N
 // };
 
-// typedef struct pwr_clock_compnt_mapping {
-// 	uint8_t clock_name_index;
-// 	uint8_t addr;
-// 	uint8_t bus;
-// 	uint8_t *clock_name;
-// } pwr_clock_compnt_mapping;
+pwr_clock_compnt_mapping pwr_clock_compnt_mapping_table[] = {
+	{ CLK_BUF_100M_U85, CLK_BUF_U85_ADDR, I2C_BUS1, "LOS_EVT_CLK_BUF_100M_U85" },
+	{ CLK_BUF_100M_U690, CLK_BUF_U690_ADDR, I2C_BUS1, "LOS_EVT_CLK_BUF_100M_U690" },
+	{ CLK_BUF_100M_U88, CLK_BUF_U88_ADDR, I2C_BUS3, "LOS_EVT_CLK_BUF_100M_U88" },
+	{ CLK_GEN_100M_U86, CLK_GEN_100M_U86_ADDR, I2C_BUS3, "LOS_EVT_CLK_GEN_100M_U86" },
+};
 
-// #define CLK_BUF_U85_ADDR (0xCE >> 1)
-// #define CLK_BUF_U87_ADDR (0xD8 >> 1)
-// #define CLK_BUF_U88_ADDR (0xDE >> 1)
-// #define CLK_GEN_100M_U86_ADDR 0x9
-// #define CLK_BUF_100M_WRITE_LOCK_CLEAR_LOS_EVENT_OFFSET 0x27
-// #define CLK_GEN_LOSMON_EVENT_OFFSET 0x5a
-// #define CLK_BUF_100M_BYTE_COUNT 0x7
+void clear_clock_status(const struct shell *shell, uint8_t clock_index)
+{
+	I2C_MSG i2c_msg = { 0 };
+	uint8_t retry = 5;
+	switch (clock_index) {
+	case CLK_BUF_100M_U85:
+	case CLK_BUF_100M_U690:
+	case CLK_BUF_100M_U88:
+		i2c_msg.bus = pwr_clock_compnt_mapping_table[clock_index].bus;
+		i2c_msg.target_addr = pwr_clock_compnt_mapping_table[clock_index].addr;
+		i2c_msg.tx_len = 1;
+		i2c_msg.rx_len = 2;
+		i2c_msg.data[0] = CLK_BUF_100M_WRITE_LOCK_CLEAR_LOS_EVENT_OFFSET;
 
-// pwr_clock_compnt_mapping pwr_clock_compnt_mapping_table[] = {
-// 	{ CLK_BUF_100M_U85, CLK_BUF_U85_ADDR, I2C_BUS1, "LOS_EVT_CLK_BUF_100M_U85" },
-// 	{ CLK_BUF_100M_U87, CLK_BUF_U87_ADDR, I2C_BUS1, "LOS_EVT_CLK_BUF_100M_U87" },
-// 	{ CLK_BUF_100M_U88, CLK_BUF_U88_ADDR, I2C_BUS3, "LOS_EVT_CLK_BUF_100M_U88" },
-// 	{ CLK_GEN_100M_U86, CLK_GEN_100M_U86_ADDR, I2C_BUS3, "LOS_EVT_CLK_GEN_100M_U86" },
-// };
+		if (i2c_master_read(&i2c_msg, retry)) {
+			if (!shell) {
+				return;
+			}
+			shell_error(shell, "Failed to read reg, bus: %d, addr: 0x%x, reg: 0x%x",
+				    pwr_clock_compnt_mapping_table[clock_index].bus,
+				    pwr_clock_compnt_mapping_table[clock_index].addr,
+				    CLK_BUF_100M_WRITE_LOCK_CLEAR_LOS_EVENT_OFFSET);
+			return;
+		}
 
-// void clear_clock_status(const struct shell *shell, uint8_t clock_index)
-// {
-// 	I2C_MSG i2c_msg = { 0 };
-// 	uint8_t retry = 5;
-// 	switch (clock_index) {
-// 	case CLK_BUF_100M_U85:
-// 	case CLK_BUF_100M_U87:
-// 	case CLK_BUF_100M_U88:
-// 		i2c_msg.bus = pwr_clock_compnt_mapping_table[clock_index].bus;
-// 		i2c_msg.target_addr = pwr_clock_compnt_mapping_table[clock_index].addr;
-// 		i2c_msg.tx_len = 1;
-// 		i2c_msg.rx_len = 2;
-// 		i2c_msg.data[0] = CLK_BUF_100M_WRITE_LOCK_CLEAR_LOS_EVENT_OFFSET;
+		if (i2c_msg.data[1] & BIT(1)) {
+			i2c_msg.tx_len = 3;
+			i2c_msg.rx_len = 0;
+			i2c_msg.data[0] = CLK_BUF_100M_WRITE_LOCK_CLEAR_LOS_EVENT_OFFSET;
+			i2c_msg.data[1] = 1;
+			i2c_msg.data[2] = 0x2;
+			if (i2c_master_write(&i2c_msg, retry)) {
+				if (!shell) {
+					return;
+				}
+				shell_error(shell,
+					    "Failed to write reg, bus: %d, addr: 0x%x, reg: 0x%x",
+					    pwr_clock_compnt_mapping_table[clock_index].bus,
+					    pwr_clock_compnt_mapping_table[clock_index].addr,
+					    CLK_BUF_100M_WRITE_LOCK_CLEAR_LOS_EVENT_OFFSET);
+				return;
+			}
+		}
+		break;
+	case CLK_GEN_100M_U86:
+		i2c_msg.bus = pwr_clock_compnt_mapping_table[clock_index].bus;
+		i2c_msg.target_addr = pwr_clock_compnt_mapping_table[clock_index].addr;
+		i2c_msg.tx_len = 1;
+		i2c_msg.rx_len = 2;
+		i2c_msg.data[0] = CLK_GEN_LOSMON_EVENT_OFFSET;
 
-// 		if (i2c_master_read(&i2c_msg, retry)) {
-// 			if (!shell) {
-// 				return;
-// 			}
-// 			shell_error(shell, "Failed to read reg, bus: %d, addr: 0x%x, reg: 0x%x",
-// 				    pwr_clock_compnt_mapping_table[clock_index].bus,
-// 				    pwr_clock_compnt_mapping_table[clock_index].addr,
-// 				    CLK_BUF_100M_WRITE_LOCK_CLEAR_LOS_EVENT_OFFSET);
-// 			return;
-// 		}
+		if (i2c_master_read(&i2c_msg, retry)) {
+			if (!shell) {
+				return;
+			}
+			shell_error(shell, "Failed to read reg, bus: %d, addr: 0x%x, reg: 0x%x",
+				    pwr_clock_compnt_mapping_table[clock_index].bus,
+				    pwr_clock_compnt_mapping_table[clock_index].addr,
+				    CLK_GEN_LOSMON_EVENT_OFFSET);
+			return;
+		}
 
-// 		if (i2c_msg.data[1] & BIT(1)) {
-// 			i2c_msg.tx_len = 3;
-// 			i2c_msg.rx_len = 0;
-// 			i2c_msg.data[0] = CLK_BUF_100M_WRITE_LOCK_CLEAR_LOS_EVENT_OFFSET;
-// 			i2c_msg.data[1] = 1;
-// 			i2c_msg.data[2] = 0x2;
-// 			if (i2c_master_write(&i2c_msg, retry)) {
-// 				if (!shell) {
-// 					return;
-// 				}
-// 				shell_error(shell,
-// 					    "Failed to write reg, bus: %d, addr: 0x%x, reg: 0x%x",
-// 					    pwr_clock_compnt_mapping_table[clock_index].bus,
-// 					    pwr_clock_compnt_mapping_table[clock_index].addr,
-// 					    CLK_BUF_100M_WRITE_LOCK_CLEAR_LOS_EVENT_OFFSET);
-// 				return;
-// 			}
-// 		}
-// 		break;
-// 	case CLK_GEN_100M_U86:
-// 		i2c_msg.bus = pwr_clock_compnt_mapping_table[clock_index].bus;
-// 		i2c_msg.target_addr = pwr_clock_compnt_mapping_table[clock_index].addr;
-// 		i2c_msg.tx_len = 1;
-// 		i2c_msg.rx_len = 2;
-// 		i2c_msg.data[0] = CLK_GEN_LOSMON_EVENT_OFFSET;
+		if (i2c_msg.data[1] & BIT(1)) {
+			i2c_msg.tx_len = 3;
+			i2c_msg.rx_len = 0;
+			i2c_msg.data[0] = CLK_GEN_LOSMON_EVENT_OFFSET;
+			i2c_msg.data[1] = 1;
+			i2c_msg.data[2] = 0x2;
+			if (i2c_master_write(&i2c_msg, retry)) {
+				if (!shell) {
+					return;
+				}
+				shell_error(shell,
+					    "Failed to write reg, bus: %d, addr: 0x%x, reg: 0x%x",
+					    pwr_clock_compnt_mapping_table[clock_index].bus,
+					    pwr_clock_compnt_mapping_table[clock_index].addr,
+					    CLK_GEN_LOSMON_EVENT_OFFSET);
+				return;
+			}
+		}
+		break;
+	default:
+		if (!shell) {
+			return;
+		}
+		shell_error(shell, "Type wrong clock");
+	}
 
-// 		if (i2c_master_read(&i2c_msg, retry)) {
-// 			if (!shell) {
-// 				return;
-// 			}
-// 			shell_error(shell, "Failed to read reg, bus: %d, addr: 0x%x, reg: 0x%x",
-// 				    pwr_clock_compnt_mapping_table[clock_index].bus,
-// 				    pwr_clock_compnt_mapping_table[clock_index].addr,
-// 				    CLK_GEN_LOSMON_EVENT_OFFSET);
-// 			return;
-// 		}
-
-// 		if (i2c_msg.data[1] & BIT(1)) {
-// 			i2c_msg.tx_len = 3;
-// 			i2c_msg.rx_len = 0;
-// 			i2c_msg.data[0] = CLK_GEN_LOSMON_EVENT_OFFSET;
-// 			i2c_msg.data[1] = 1;
-// 			i2c_msg.data[2] = 0x2;
-// 			if (i2c_master_write(&i2c_msg, retry)) {
-// 				if (!shell) {
-// 					return;
-// 				}
-// 				shell_error(shell,
-// 					    "Failed to write reg, bus: %d, addr: 0x%x, reg: 0x%x",
-// 					    pwr_clock_compnt_mapping_table[clock_index].bus,
-// 					    pwr_clock_compnt_mapping_table[clock_index].addr,
-// 					    CLK_GEN_LOSMON_EVENT_OFFSET);
-// 				return;
-// 			}
-// 		}
-// 		break;
-// 	default:
-// 		if (!shell) {
-// 			return;
-// 		}
-// 		shell_error(shell, "Type wrong clock");
-// 	}
-
-// 	return;
-// }
+	return;
+}
 
 // typedef struct ioe_power_good_status {
 // 	uint8_t bus;
@@ -486,81 +471,83 @@
 // 	}
 // }
 
-// void pwr_get_clock_status(const struct shell *shell, uint8_t clock_index)
-// {
-// 	uint8_t addr = 0;
-// 	uint8_t bus = 0;
-// 	uint8_t *temp_clock_name = "";
+void pwr_get_clock_status(const struct shell *shell, uint8_t clock_index)
+{
+	uint8_t addr = 0;
+	uint8_t bus = 0;
+	uint8_t *temp_clock_name = "";
 
-// 	for (int i = 0;
-// 	     i < sizeof(pwr_clock_compnt_mapping_table) / sizeof(pwr_clock_compnt_mapping_table[0]);
-// 	     i++) {
-// 		if (pwr_clock_compnt_mapping_table[i].clock_name_index == clock_index) {
-// 			addr = pwr_clock_compnt_mapping_table[i].addr;
-// 			bus = pwr_clock_compnt_mapping_table[i].bus;
-// 			temp_clock_name = pwr_clock_compnt_mapping_table[i].clock_name;
-// 			break;
-// 		}
-// 	}
-// 	//shell_info(shell, "clock index: %d, addr: 0x%x, bus: %d", clock_index, addr, bus); //dbg info
+	for (int i = 0;
+	     i < sizeof(pwr_clock_compnt_mapping_table) / sizeof(pwr_clock_compnt_mapping_table[0]);
+	     i++) {
+		if (pwr_clock_compnt_mapping_table[i].clock_name_index == clock_index) {
+			addr = pwr_clock_compnt_mapping_table[i].addr;
+			bus = pwr_clock_compnt_mapping_table[i].bus;
+			temp_clock_name = pwr_clock_compnt_mapping_table[i].clock_name;
+			break;
+		}
+	}
+	//shell_info(shell, "clock index: %d, addr: 0x%x, bus: %d", clock_index, addr, bus); //dbg info
 
-// 	I2C_MSG i2c_msg = { 0 };
-// 	uint8_t retry = 5;
-// 	switch (clock_index) {
-// 	case CLK_BUF_100M_U85:
-// 	case CLK_BUF_100M_U87:
-// 	case CLK_BUF_100M_U88:
-// 		i2c_msg.bus = bus;
-// 		i2c_msg.target_addr = addr;
-// 		i2c_msg.tx_len = 1;
-// 		i2c_msg.rx_len = 2; //first byte is data length because it is block read
-// 		i2c_msg.data[0] = CLK_BUF_100M_WRITE_LOCK_CLEAR_LOS_EVENT_OFFSET;
-// 		if (i2c_master_read(&i2c_msg, retry)) {
-// 			shell_error(shell, "Failed to read reg, bus: %d, addr: 0x%x, reg: 0x%x",
-// 				    bus, addr, CLK_BUF_100M_WRITE_LOCK_CLEAR_LOS_EVENT_OFFSET);
-// 			return;
-// 		}
-// 		//print clock name and value and status
-// 		if (!i2c_msg.data[1]) {
-// 			shell_print(shell, "%s : 0x%x %35s", temp_clock_name, i2c_msg.data[1],
-// 				    "success");
-// 		} else {
-// 			shell_print(shell, "%s : 0x%x %35s", temp_clock_name, i2c_msg.data[1],
-// 				    "fail");
-// 		}
+	I2C_MSG i2c_msg = { 0 };
+	uint8_t retry = 5;
+	switch (clock_index) {
+	case CLK_BUF_100M_U85:
+	case CLK_BUF_100M_U690:
+	case CLK_BUF_100M_U88:
+		i2c_msg.bus = bus;
+		i2c_msg.target_addr = addr;
+		i2c_msg.tx_len = 1;
+		i2c_msg.rx_len = 2; //first byte is data length because it is block read
+		i2c_msg.data[0] = CLK_BUF_100M_WRITE_LOCK_CLEAR_LOS_EVENT_OFFSET;
+		if (i2c_master_read(&i2c_msg, retry)) {
+			shell_error(shell, "Failed to read reg, bus: %d, addr: 0x%x, reg: 0x%x",
+				    bus, addr, CLK_BUF_100M_WRITE_LOCK_CLEAR_LOS_EVENT_OFFSET);
+			return;
+		}
+		//print clock name and value and status
+		if (!i2c_msg.data[1]) {
+			shell_print(shell, "%s : 0x%x %35s", temp_clock_name, i2c_msg.data[1],
+				    "success");
+		} else {
+			shell_print(shell, "%s : 0x%x %35s", temp_clock_name, i2c_msg.data[1],
+				    "fail");
+		}
 
-// 		break;
-// 	case CLK_GEN_100M_U86:
-// 		i2c_msg.bus = bus;
-// 		i2c_msg.target_addr = addr;
-// 		i2c_msg.tx_len = 1;
-// 		i2c_msg.rx_len = 2; //first byte is data length because it is block read
-// 		i2c_msg.data[0] = CLK_GEN_LOSMON_EVENT_OFFSET;
-// 		if (i2c_master_read(&i2c_msg, retry)) {
-// 			shell_error(shell, "Failed to read reg, bus: %d, addr: 0x%x, reg: 0x%x",
-// 				    bus, addr, CLK_GEN_LOSMON_EVENT_OFFSET);
-// 			return;
-// 		}
-// 		if (!i2c_msg.data[1]) {
-// 			shell_print(shell, "%s : 0x%x %35s", temp_clock_name, i2c_msg.data[1],
-// 				    "success");
-// 		} else {
-// 			shell_print(shell, "%s : 0x%x %35s", temp_clock_name, i2c_msg.data[1],
-// 				    "fail");
-// 		}
-// 		break;
-// 	default:
-// 		shell_error(shell, "Type wrong clock index: %d", clock_index);
-// 	}
-// }
+		break;
+	case CLK_GEN_100M_U86:
+		i2c_msg.bus = bus;
+		i2c_msg.target_addr = addr;
+		i2c_msg.tx_len = 1;
+		i2c_msg.rx_len = 2; //first byte is data length because it is block read
+		i2c_msg.data[0] = CLK_GEN_LOSMON_EVENT_OFFSET;
+		if (i2c_master_read(&i2c_msg, retry)) {
+			shell_error(shell, "Failed to read reg, bus: %d, addr: 0x%x, reg: 0x%x",
+				    bus, addr, CLK_GEN_LOSMON_EVENT_OFFSET);
+			return;
+		}
+		if (!i2c_msg.data[1]) {
+			shell_print(shell, "%s : 0x%x %35s", temp_clock_name, i2c_msg.data[1],
+				    "success");
+		} else {
+			shell_print(shell, "%s : 0x%x %35s", temp_clock_name, i2c_msg.data[1],
+				    "fail");
+		}
+		break;
+	default:
+		shell_error(shell, "Type wrong clock index: %d", clock_index);
+	}
+}
 
 // #define MAX_STEPS (sizeof(steps_on) / sizeof(steps_on[0]))
 // int power_steps = 0;
+
 static bool arke_power_control(uint8_t onoff)
 {
 	uint8_t tmp = onoff ? 0x80 : 0x00;
 	return plat_write_cpld(0x38, &tmp);
 }
+
 void cmd_arke_power_on(const struct shell *shell, size_t argc, char **argv)
 {
 	if (!arke_power_control(1))
