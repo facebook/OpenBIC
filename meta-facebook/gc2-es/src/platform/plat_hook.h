@@ -60,6 +60,8 @@ bool pre_vol_bat3v_read(sensor_cfg *cfg, void *args);
 bool pre_intel_peci_dimm_read(sensor_cfg *cfg, void *args);
 bool post_vol_bat3v_read(sensor_cfg *cfg, void *args, int *reading);
 bool post_cpu_margin_read(sensor_cfg *cfg, void *args, int *reading);
+bool post_mp5998_voltage_read(sensor_cfg *cfg, void *args, int *reading);
+bool post_mp5998_power_read(sensor_cfg *cfg, void *args, int *reading);
 bool post_adm1278_power_read(sensor_cfg *cfg, void *args, int *reading);
 bool post_adm1278_current_read(sensor_cfg *cfg, void *args, int *reading);
 bool post_ltc4286_read(sensor_cfg *cfg, void *args, int *reading);

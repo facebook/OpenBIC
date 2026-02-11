@@ -25,6 +25,8 @@
 #include "libutil.h"
 #include "plat_gpio.h"
 #include "plat_i2c.h"
+#include "plat_sensor_table.h"
+#include "pmbus.h"
 
 static uint8_t system_class = SYS_CLASS_1;
 static uint8_t system_sku = 0;
@@ -156,11 +158,61 @@ bool get_adc_voltage(int channel, float *voltage)
 
 void init_hsc_module()
 {
-	hsc_module = HSC_MODULE_ADM1278;
+	read_adm1278_model();
+	if (hsc_module == HSC_MODULE_UNKNOWN) {
+		read_mp5990_model();
+	}
 }
 
 void init_platform_config()
 {
-	// default just let hsc_module be ADM1278
 	init_hsc_module();
+}
+
+void read_adm1278_model()
+{
+	uint8_t retry = 5;
+	I2C_MSG msg = { 0 };
+
+	msg.bus = I2C_BUS2;
+	msg.target_addr = ADI_ADM1278_ADDR;
+	msg.tx_len = 1;
+	msg.rx_len = 8;
+	msg.data[0] = PMBUS_MFR_MODEL;
+
+	int ret = i2c_master_read(&msg, retry);
+	if (ret != 0) {
+		return;
+	}
+
+	char model_str[8] = { 0 };
+	memcpy(model_str, &msg.data[1], 7);
+	if (strncmp(model_str, "ADM1278", 7) == 0 || strncmp(model_str, "ADM1281", 7) == 0) {
+		hsc_module = HSC_MODULE_ADM1278;
+	} else {
+		return;
+	}
+}
+
+void read_mp5990_model()
+{
+	uint8_t retry = 5;
+	I2C_MSG msg = { 0 };
+
+	msg.bus = I2C_BUS2;
+	msg.target_addr = MPS_MP5990_ADDR;
+	msg.tx_len = 1;
+	msg.rx_len = 6;
+	msg.data[0] = PMBUS_MFR_MODEL;
+
+	int ret = i2c_master_read(&msg, retry);
+	if (ret != 0) {
+		return;
+	}
+
+	char model_str[6] = { 0 };
+	memcpy(model_str, &msg.data[2], 4);
+	if (strncmp(model_str, "8995", 4) == 0) {
+		hsc_module = HSC_MODULE_MP5990;
+	}
 }
