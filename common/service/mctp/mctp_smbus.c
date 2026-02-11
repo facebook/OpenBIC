@@ -139,7 +139,7 @@ static uint16_t mctp_smbus_read(void *mctp_p, uint8_t *buf, uint32_t len,
 	uint16_t rlen = 0;
 
 	uint8_t ret = 0;
-	ret = i2c_target_read(mctp_inst->medium_conf.smbus_conf.bus, rdata, 256, &rlen, K_FOREVER);
+	ret = i2c_target_read(mctp_inst->medium_conf.smbus_conf.bus, rdata, 256, &rlen);
 	if (ret) {
 		LOG_ERR("i2c_target_read fail, ret %d", ret);
 		return 0;

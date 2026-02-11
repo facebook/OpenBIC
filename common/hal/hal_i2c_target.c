@@ -336,8 +336,8 @@ uint8_t i2c_target_status_print(uint8_t bus_num)
       * 0, if no error
       * others, get error(check "i2c_target_api_error_status")
 */
-uint8_t i2c_target_read(uint8_t bus_num, uint8_t *buff, uint16_t buff_len, uint16_t *msg_len,
-			k_timeout_t timeout)
+uint8_t multi_bus_i2c_target_read(uint8_t bus_num, uint8_t *buff, uint16_t buff_len,
+				  uint16_t *msg_len, k_timeout_t timeout)
 {
 	CHECK_NULL_ARG_WITH_RETURN(buff, I2C_TARGET_API_INPUT_ERR);
 	CHECK_NULL_ARG_WITH_RETURN(msg_len, I2C_TARGET_API_INPUT_ERR);
@@ -391,6 +391,10 @@ uint8_t i2c_target_read(uint8_t bus_num, uint8_t *buff, uint16_t buff_len, uint1
 	return I2C_TARGET_API_NO_ERR;
 }
 
+uint8_t i2c_target_read(uint8_t bus_num, uint8_t *buff, uint16_t buff_len, uint16_t *msg_len)
+{
+	return multi_bus_i2c_target_read(bus_num, buff, buff_len, msg_len, K_FOREVER);
+}
 /*
   - Name: i2c_target_write
   - Description: Try to put message to i2c target message queue.
