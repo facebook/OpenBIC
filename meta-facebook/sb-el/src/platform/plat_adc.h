@@ -45,6 +45,7 @@ uint16_t get_adc_averge_times(uint8_t idx);
 uint16_t get_adc_ucr(uint8_t idx);
 void set_adc_ucr(uint8_t idx, uint16_t ucr);
 bool get_adc_ucr_status(uint8_t idx);
+uint8_t get_adc_type();
 int ads7066_read_reg(uint8_t reg, uint8_t idx, uint8_t *out_data);
 int ads7066_write_reg(uint8_t reg, uint8_t write_val, uint8_t idx);
 int ad4058_read_reg(uint8_t reg, uint8_t idx, uint8_t *out_data);
