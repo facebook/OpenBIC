@@ -1127,8 +1127,8 @@ void plat_master_write_thread_handler()
 		uint8_t rdata[MAX_I2C_TARGET_BUFF] = { 0 };
 		uint16_t rlen = 0;
 		for (int i = 0; i < ASIC_I2C_BUS_IDX_MAX; i++) {
-			rc = i2c_target_read(target_bus_list[i].i2c_bus, rdata, sizeof(rdata),
-					     &rlen, K_MSEC(5));
+			rc = multi_bus_i2c_target_read(target_bus_list[i].i2c_bus, rdata,
+						       sizeof(rdata), &rlen, K_MSEC(5));
 			if (rc == I2C_TARGET_MULTI_BUS_SKIP) {
 				// skip this bus
 				continue;
