@@ -169,6 +169,12 @@ void read_adc_info()
 		adc_idx_read = 1;
 	}
 }
+
+uint8_t get_adc_type()
+{
+	return adc_idx_read;
+}
+
 static void ads7066_read_voltage(uint8_t idx)
 {
 	spi_dev = device_get_binding("SPIP");
