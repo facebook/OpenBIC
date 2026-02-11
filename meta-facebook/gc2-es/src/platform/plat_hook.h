@@ -17,6 +17,10 @@
 #ifndef PLAT_HOOK_H
 #define PLAT_HOOK_H
 
+#include "pmbus.h"
+#include "sensor.h"
+#include "common_i2c_mux.h"
+
 typedef struct _isl69259_pre_proc_arg {
 	/* vr page to set */
 	uint8_t vr_page;
@@ -49,6 +53,7 @@ extern isl69259_pre_proc_arg isl69259_pre_read_args[];
 extern pmic_pre_proc_arg pmic_pre_read_args[];
 extern dimm_pre_proc_arg dimm_pre_proc_args[];
 extern ina233_init_arg ina233_init_args[];
+extern vr_page_cfg xdpe15284_page[];
 
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK FUNC
@@ -67,5 +72,7 @@ bool post_adm1278_power_read(sensor_cfg *cfg, void *args, int *reading);
 bool post_adm1278_current_read(sensor_cfg *cfg, void *args, int *reading);
 bool post_ltc4286_read(sensor_cfg *cfg, void *args, int *reading);
 bool post_ltc4282_read(sensor_cfg *cfg, void *args, int *reading);
+bool pre_xdpe15284_read(sensor_cfg *cfg, void *args);
+bool post_xdpe15284_read(sensor_cfg *cfg, void *args, int *reading);
 
 #endif

@@ -25,8 +25,8 @@
 #include "libutil.h"
 #include "plat_gpio.h"
 #include "plat_i2c.h"
-#include "plat_sensor_table.h"
 #include "pmbus.h"
+#include "plat_sensor_table.h"
 
 static uint8_t system_class = SYS_CLASS_1;
 static uint8_t system_sku = 0;
@@ -34,6 +34,8 @@ static uint8_t board_revision = 0x0F;
 static uint8_t hsc_module = HSC_MODULE_UNKNOWN;
 static CARD_STATUS _1ou_status = { false, TYPE_1OU_UNKNOWN };
 static CARD_STATUS _2ou_status = { false, TYPE_2OU_UNKNOWN };
+
+static uint8_t vr_module = VR_MODULE_UNKNOWN;
 
 uint8_t get_system_class()
 {
@@ -164,9 +166,59 @@ void init_hsc_module()
 	}
 }
 
+static uint8_t detect_vr_module_via_pmbus(void)
+{
+	uint8_t retry = 5;
+	I2C_MSG msg;
+	memset(&msg, 0, sizeof(msg));
+
+	// PVCCD_HV as the representative VR (adjusted based on actual hardware)
+	msg.bus = I2C_BUS5;
+	msg.target_addr = PVCCD_HV_ADDR;
+	msg.tx_len = 1;
+	msg.rx_len = 7;
+	msg.data[0] = PMBUS_IC_DEVICE_ID;
+
+	if (i2c_master_read(&msg, retry) != 0) {
+		return VR_MODULE_ISL69259; // Read failed, conservatively return ISL
+	}
+
+	// TPS53689
+	if ((msg.data[0] == 0x06) && (msg.data[1] == 0x54) && (msg.data[2] == 0x49) &&
+	    (msg.data[3] == 0x53) && (msg.data[4] == 0x68) && (msg.data[5] == 0x90) &&
+	    (msg.data[6] == 0x00)) {
+		return VR_MODULE_TPS53689;
+	}
+	// XDPE15284
+	if ((msg.data[0] == 0x02) && (msg.data[2] == 0x8A)) {
+		return VR_MODULE_XDPE15284D;
+	}
+	// ISL69259
+	if ((msg.data[0] == 0x04) && (msg.data[1] == 0x00) && (msg.data[2] == 0x81) &&
+	    (msg.data[3] == 0xD2) && (msg.data[4] == 0x49)) {
+		return VR_MODULE_ISL69259;
+	}
+
+	return VR_MODULE_ISL69259;
+}
+
+static void init_vr_module(void)
+{
+	// If the board has a strap pin, you can change this to GPIO detection.
+	vr_module = detect_vr_module_via_pmbus();
+}
+
+uint8_t get_vr_module(void)
+{
+	return vr_module;
+}
+
 void init_platform_config()
 {
 	init_hsc_module();
+	
+	// Initialize VR module (for use by pal_extend_sensor_config)
+	init_vr_module();
 }
 
 void read_adm1278_model()
