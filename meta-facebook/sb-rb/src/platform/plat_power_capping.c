@@ -48,8 +48,15 @@ static const uint16_t cpld_lv1_time_window_list[CPLD_LV1_TIME_WINDOW_NUM] = { 0,
 static uint8_t prev_set_ucr_status = 0;
 const static uint8_t volt_sensor_id_list[2] = { SENSOR_NUM_ASIC_P0V85_MEDHA0_VDD_VOLT_V,
 						SENSOR_NUM_ASIC_P0V85_MEDHA1_VDD_VOLT_V };
+// only record bit 0-3, lv_switch_en
+static uint8_t lv_switch_en_val = 0;
 
 K_WORK_DELAYABLE_DEFINE(sync_vr_oc_work, power_capping_syn_vr_oc_warn_limit);
+
+void set_power_capping_lv_switch_en_val(uint8_t val)
+{
+	lv_switch_en_val = val & 0x0F;
+}
 
 void power_capping_syn_vr_oc_warn_limit()
 {
@@ -288,21 +295,22 @@ void set_power_capping_method(uint8_t value)
 	uint8_t data = 0;
 	if (!plat_read_cpld(CPLD_OFFSET_POWER_CLAMP, &data, 1)) {
 		LOG_ERR("Can't r cpld offset 0x%02x", CPLD_OFFSET_POWER_CLAMP);
+		return;
 	}
 
 	if (value == CAPPING_M_LOOK_UP_TABLE) {
 		data = (data & 0x09) | 0x06;
-		if (!plat_write_cpld(CPLD_OFFSET_POWER_CLAMP, &data)) {
-			LOG_ERR("Can't w cpld offset 0x%02x", CPLD_OFFSET_POWER_CLAMP);
-		}
 	} else if (value == CAPPING_M_CREDIT_BASE) {
 		data = (data & 0x09);
-		if (!plat_write_cpld(CPLD_OFFSET_POWER_CLAMP, &data)) {
-			LOG_ERR("Can't w cpld offset 0x%02x", CPLD_OFFSET_POWER_CLAMP);
-		} else {
-			prev_set_ucr_status = 0;
-		}
 	}
+
+	// save lv_switch_en in MMC
+	set_power_capping_lv_switch_en_val(data & 0x0F);
+
+	if (!plat_write_cpld(CPLD_OFFSET_POWER_CLAMP, &data)) {
+		LOG_ERR("Can't w cpld offset 0x%02x", CPLD_OFFSET_POWER_CLAMP);
+	}
+	prev_set_ucr_status = 0;
 }
 
 uint8_t get_power_capping_source()
@@ -478,11 +486,7 @@ void power_capping_handler(void *p1, void *p2, void *p3)
 			uint8_t final_ucr_status = get_final_ucr_status();
 			if (prev_set_ucr_status != final_ucr_status) {
 				uint8_t data = 0;
-				if (!plat_read_cpld(CPLD_OFFSET_POWER_CLAMP, &data, 1)) {
-					continue;
-				}
-
-				data = (data & 0x0F) | final_ucr_status;
+				data = (lv_switch_en_val & 0x0F) | final_ucr_status;
 				if (plat_write_cpld(CPLD_OFFSET_POWER_CLAMP, &data)) {
 					prev_set_ucr_status = final_ucr_status;
 				}
@@ -543,6 +547,8 @@ void plat_power_capping_init()
 	if (plat_read_cpld(CPLD_OFFSET_POWER_CLAMP, &data, 1)) {
 		data = (data & 0x0F);
 		plat_write_cpld(CPLD_OFFSET_POWER_CLAMP, &data);
+		// save lv_switch_en in MMC
+		set_power_capping_lv_switch_en_val(data);
 	}
 
 	set_power_capping_source(CAPPING_SOURCE_VR);
