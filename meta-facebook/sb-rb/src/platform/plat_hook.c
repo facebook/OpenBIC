@@ -253,8 +253,8 @@ bootstrap_mapping_register bootstrap_table[] = {
 	  true },
 	{ STRAP_INDEX_HAMSA_CRM_STRAP_1, STRAP_TYPE_CPLD, 0x16, "HAMSA_CRM_STRAP_1", 0, 1, 0x0, 0x0,
 	  true },
-	{ STRAP_INDEX_HAMSA_MFIO7, STRAP_TYPE_CPLD, 0x17, "HAMSA_MFIO7", 4, 1, 0x01, 0x01, false },
-	{ STRAP_INDEX_HAMSA_MFIO9, STRAP_TYPE_CPLD, 0x17, "HAMSA_MFIO9", 3, 1, 0x0, 0x0, false },
+	{ STRAP_INDEX_HAMSA_MFIO7, STRAP_TYPE_CPLD, 0x17, "HAMSA_MFIO7", 4, 1, 0x00, 0x01, false },
+	{ STRAP_INDEX_HAMSA_MFIO9, STRAP_TYPE_CPLD, 0x17, "HAMSA_MFIO9", 3, 1, 0x1, 0x0, false },
 	{ STRAP_INDEX_HAMSA_MFIO11, STRAP_TYPE_CPLD, 0x17, "HAMSA_MFIO11", 2, 1, 0x0, 0x0, false },
 	{ STRAP_INDEX_HAMSA_MFIO17, STRAP_TYPE_CPLD, 0x17, "HAMSA_MFIO17", 1, 1, 0x0, 0x0, false },
 	{ STRAP_INDEX_HAMSA_MFIO18, STRAP_TYPE_CPLD, 0x17, "HAMSA_MFIO18", 0, 1, 0x01, 0x01,
@@ -276,7 +276,7 @@ bootstrap_mapping_register bootstrap_table[] = {
 	  0x0, true },
 	{ STRAP_INDEX_MEDHA0_CHIP_STRAP_0, STRAP_TYPE_CPLD, 0x1a, "MEDHA0_CHIP_STRAP_0", 1, 1, 0x01,
 	  0x01, true },
-	{ STRAP_INDEX_MEDHA0_CHIP_STRAP_1, STRAP_TYPE_CPLD, 0x1a, "MEDHA0_CHIP_STRAP_1", 0, 1, 0x01,
+	{ STRAP_INDEX_MEDHA0_CHIP_STRAP_1, STRAP_TYPE_CPLD, 0x1a, "MEDHA0_CHIP_STRAP_1", 0, 1, 0x00,
 	  0x01, true },
 	{ STRAP_INDEX_MEDHA0_CORE_TAP_CTRL_PLD_L, STRAP_TYPE_CPLD, 0x1b,
 	  "MEDHA0_CORE_TAP_CTRL_PLD_L", 3, 1, 0x01, 0x01, false },
@@ -294,7 +294,7 @@ bootstrap_mapping_register bootstrap_table[] = {
 	  0x0, true },
 	{ STRAP_INDEX_MEDHA1_CHIP_STRAP_0, STRAP_TYPE_CPLD, 0x1c, "MEDHA1_CHIP_STRAP_0", 1, 1, 0x01,
 	  0x01, true },
-	{ STRAP_INDEX_MEDHA1_CHIP_STRAP_1, STRAP_TYPE_CPLD, 0x1c, "MEDHA1_CHIP_STRAP_1", 0, 1, 0x01,
+	{ STRAP_INDEX_MEDHA1_CHIP_STRAP_1, STRAP_TYPE_CPLD, 0x1c, "MEDHA1_CHIP_STRAP_1", 0, 1, 0x00,
 	  0x01, true },
 	{ STRAP_INDEX_MEDHA1_CORE_TAP_CTRL_PLD_L, STRAP_TYPE_CPLD, 0x1d,
 	  "MEDHA1_CORE_TAP_CTRL_PLD_L", 3, 1, 0x01, 0x01, false },
@@ -888,21 +888,6 @@ bool bootstrap_default_settings_init(void)
 			bootstrap_table[i].change_setting_value =
 				reverse_bits(bootstrap_table[i].change_setting_value,
 					     bootstrap_table[i].bit_count);
-		/*
-			set default bootstrap value
-			HAMSA_MFIO7 = 0
-			HAMSA_MFIO9 = 1
-			MEDHA0_CHIP_STRAP_1 = 0
-			MEDHA1_CHIP_STRAP_1 = 0
-		*/
-		if (bootstrap_table[i].index == STRAP_INDEX_HAMSA_MFIO7)
-			bootstrap_table[i].default_setting_value = 0;
-		if (bootstrap_table[i].index == STRAP_INDEX_HAMSA_MFIO9)
-			bootstrap_table[i].default_setting_value = 1;
-		if (bootstrap_table[i].index == STRAP_INDEX_MEDHA0_CHIP_STRAP_1)
-			bootstrap_table[i].default_setting_value = 0;
-		if (bootstrap_table[i].index == STRAP_INDEX_MEDHA1_CHIP_STRAP_1)
-			bootstrap_table[i].default_setting_value = 0;
 	}
 	// read io-exp value and write to bootstrap_table
 	return set_ioexp_val_to_bootstrap_table();
