@@ -152,8 +152,8 @@ vr_error_callback_info vr_error_callback_info_table[] = {
 		  PWRGD_P0V9_OWL_W_PVDD_FAULT, // bit2
 		  PWRGD_P0V9_OWL_E_PVDD_FAULT, // bit3
 		  PWRGD_PLL_VDDA15_HBM5_HBM7_FAULT, // bit4
-		  PWRGD_PLL_VDDA15_HBM4_HBM6_FAULT, // bit5
-		  PWRGD_PLL_VDDA15_HBM1_HBM3_FAULT, // bit6
+		  PWRGD_PLL_VDDA15_HBM1_HBM3_FAULT, // bit5
+		  PWRGD_PLL_VDDA15_HBM4_HBM6_FAULT, // bit6
 		  PWRGD_PLL_VDDA15_HBM0_HBM2_FAULT // bit7
 	  } }, // to_do not sure
 	{ VR_POWER_FAULT_5_REG,
