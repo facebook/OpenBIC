@@ -25,7 +25,7 @@
 
 LOG_MODULE_REGISTER(plat_pldm_sensor);
 
-static bool plat_sensor_polling_enable_flag = false;
+static bool plat_sensor_polling_enable_flag = true;
 static bool plat_sensor_ubc_polling_enable_flag = true;
 static bool plat_sensor_temp_polling_enable_flag = true;
 static bool plat_sensor_vr_polling_enable_flag = true;

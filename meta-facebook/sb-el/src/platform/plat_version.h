@@ -19,7 +19,7 @@
 
 #include "version.h"
 
-#define PLATFORM_NAME "SantaBrabara"
+#define PLATFORM_NAME "SantaBarbara"
 #define PROJECT_NAME "Electra"
 #define PROJECT_STAGE POC
 
