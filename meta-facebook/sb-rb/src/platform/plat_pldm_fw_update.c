@@ -35,6 +35,7 @@
 #include "plat_iris_smbus.h"
 #include "plat_util.h"
 #include "plat_i2c.h"
+#include "shell_iris_power.h"
 
 #define IRIS_BOOT0_IMG_SIZE 0x1FFFFB
 #define PLAT_WAIT_SENSOR_POLLING_END_DELAY_MS 1000
@@ -1110,7 +1111,7 @@ static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 	uint8_t sensor_id = 0;
 	char sensor_name[MAX_AUX_SENSOR_NAME_LEN] = { 0 };
 
-	if (is_mb_dc_on() == false)
+	if (check_p3v3_p5v_pwrgd() == false)
 		return ret;
 
 	if (!find_sensor_id_and_name_by_firmware_comp_id(p->comp_identifier, &sensor_id,
