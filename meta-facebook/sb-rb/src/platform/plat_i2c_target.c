@@ -890,18 +890,8 @@ static bool command_reply_data_handle(void *arg)
 				data->target_rd_msg.msg_length = 1;
 			} break;
 			case POLLING_RATE_TELEMETRY_REG: {
-				uint32_t interval = plat_pldm_sensor_get_quick_vr_poll_interval();
-				uint8_t value = 0;
-				if (interval == 10) {
-					value = 0;
-				} else if (interval == 5) {
-					value = 1;
-				} else if (interval == 1) {
-					value = 2;
-				} else {
-					value = 4;
-				}
-				data->target_rd_msg.msg[0] = value;
+				uint8_t type_val = get_pwr_capping_polling_rate_type();
+				data->target_rd_msg.msg[0] = type_val;
 				data->target_rd_msg.msg_length = 1;
 			} break;
 			case TRAY_INFO_REG: {
@@ -1090,6 +1080,12 @@ void set_power_capping_threshold_time_handler(struct k_work *work_item)
 	uint8_t lv = sensor_data->lv;
 	uint16_t value = 0;
 
+	if (lv == CAPPING_LV_IDX_LV1) {
+		if ((in_data[2] != in_data[6]) || (in_data[3] != in_data[7])) {
+			LOG_WRN("Time window should be the same for lv1");
+		}
+	}
+
 	value = in_data[0] | (in_data[1] << 8);
 	set_power_capping_threshold(CAPPING_VR_IDX_MEDHA0, lv, value);
 	value = in_data[2] | (in_data[3] << 8);
@@ -1261,14 +1257,26 @@ void plat_master_write_thread_handler()
 				LOG_ERR("Invalid length for offset(write): 0x%02x", reg_offset);
 				break;
 			}
-			if (rdata[1] == 0) {
-				plat_pldm_sensor_set_quick_vr_poll_interval(10);
-			} else if (rdata[1] == 1) {
-				plat_pldm_sensor_set_quick_vr_poll_interval(5);
-			} else if (rdata[1] == 2) {
-				plat_pldm_sensor_set_quick_vr_poll_interval(1);
-			} else {
-				LOG_ERR("Invalid D: 0x%x, offset(W): 0x%02x", rdata[1], reg_offset);
+			uint8_t capping_source = get_power_capping_source();
+			uint8_t poll_rate_type = rdata[1];
+			uint8_t flag = 0;
+			switch (poll_rate_type) {
+			case 0:
+			case 1:
+			case 2:
+			case 3:
+			case 4:
+			case 5:
+			case 6:
+			case 7:
+				if (flag == 0)
+					plat_pldm_sensor_set_quick_vr_poll_interval(poll_rate_type,
+										    capping_source);
+				break;
+			default:
+				LOG_ERR("Polling rate type should be 0-7");
+				flag = 1;
+				break;
 			}
 		} break;
 		case SET_SENSOR_POLLING_COMMAND_REG: {
