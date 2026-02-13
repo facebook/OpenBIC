@@ -106,5 +106,7 @@ uint8_t get_hsc_module();
 bool get_adc_voltage(int channel, float *voltage);
 void init_hsc_module();
 void init_platform_config();
+void read_adm1278_model();
+void read_mp5990_model();
 
 #endif

@@ -57,8 +57,8 @@ adm1278_init_arg adm1278_init_args[] = {
 	[0] = { .is_init = false, .config = { 0x3F1C }, .r_sense = 1 }
 };
 mp5990_init_arg mp5990_init_args[] = { [0] = { .is_init = false,
-					       .iout_cal_gain = 0x0104,
-					       .iout_oc_fault_limit = 0x0028,
+					       .iout_cal_gain = 0xFFFF,
+					       .iout_oc_fault_limit = 0xFFFF,
 					       .ocw_sc_ref = 0xFFFF },
 				       [1] = { .is_init = false,
 					       .iout_cal_gain = 0x01BF,
@@ -320,6 +320,40 @@ bool post_cpu_margin_read(sensor_cfg *cfg, void *args, int *reading)
 
 	sensor_val *sval = (sensor_val *)reading;
 	sval->integer = -sval->integer; /* for BMC minus */
+	return true;
+}
+
+bool post_mp5998_voltage_read(sensor_cfg *cfg, void *args, int *reading)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	ARG_UNUSED(args);
+
+	if (!reading)
+		return check_reading_pointer_null_is_allowed(cfg);
+
+	sensor_val *sval = (sensor_val *)reading;
+	float val = (float)sval->integer + (sval->fraction / 1000.0);
+
+	val = val * 0.5; //lsb = 1/64 V
+	sval->integer = (int)val & 0xFFFF;
+	sval->fraction = (val - sval->integer) * 1000;
+	return true;
+}
+
+bool post_mp5998_power_read(sensor_cfg *cfg, void *args, int *reading)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	ARG_UNUSED(args);
+
+	if (!reading)
+		return check_reading_pointer_null_is_allowed(cfg);
+
+	sensor_val *sval = (sensor_val *)reading;
+	float val = (float)sval->integer + (sval->fraction / 1000.0);
+
+	val = val * 0.5; //lsb = 0.5 W
+	sval->integer = (int)val & 0xFFFF;
+	sval->fraction = (val - sval->integer) * 1000;
 	return true;
 }
 
