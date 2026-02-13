@@ -107,7 +107,7 @@ static void mctp_smbus_read_hook(uint8_t *data, uint16_t *len)
 	CHECK_NULL_ARG(data);
 	CHECK_NULL_ARG(len);
 
-	smbus_hdr *hdr = (smbus_hdr *)data;
+	smbus_hdr const *hdr = (smbus_hdr *)data;
 
 	if (hdr->byte_count != *len - sizeof(smbus_hdr)) {
 		LOG_HEXDUMP_DBG(data, *len, "Data before move:");
@@ -156,7 +156,7 @@ static uint16_t mctp_smbus_read(void *mctp_p, uint8_t *buf, uint32_t len,
    */
 	mctp_smbus_read_hook(rdata, &rlen);
 
-	smbus_hdr *hdr = (smbus_hdr *)rdata;
+	smbus_hdr const *hdr = (smbus_hdr *)rdata;
 
 	/**
    * Does read data include pec?
