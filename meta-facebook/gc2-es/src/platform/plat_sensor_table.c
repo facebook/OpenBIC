@@ -88,7 +88,7 @@ sensor_cfg plat_sensor_config[] = {
 	// NVME
 	{ SENSOR_NUM_TEMP_SSD0, sensor_dev_nvme, I2C_BUS2, SSD0_ADDR, SSD0_OFFSET, m2_access, 0, 0,
 	  SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS,
-	  pre_nvme_read, &mux_conf_addr_0xe2[1], NULL, NULL, NULL },
+	  NULL, NULL, NULL, NULL, NULL },
 
 	// PECI
 	{ SENSOR_NUM_TEMP_CPU, sensor_dev_intel_peci, NONE, CPU_PECI_ADDR, PECI_TEMP_CPU,
