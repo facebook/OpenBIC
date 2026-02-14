@@ -1,0 +1,25 @@
+var plat__power__capping_8c =
+[
+    [ "power_capping_info_t", "structpower__capping__info__t.html", "structpower__capping__info__t" ],
+    [ "POWER_CAPPING_STACK_SIZE", "plat__power__capping_8c.html#a81e3083f99edfc12e0c64739c78fab64", null ],
+    [ "add_sync_oc_warn_to_work", "plat__power__capping_8c.html#acec9c15a479b0a7cae578b57f4675491", null ],
+    [ "find_cpld_lv1_time_window_idx_by_value", "plat__power__capping_8c.html#a4b90106c405ae73f83fea0c067b0da3d", null ],
+    [ "get_power_capping_avg_power", "plat__power__capping_8c.html#a4a9fea12cce4f2d044c41e38a6b53d4f", null ],
+    [ "get_power_capping_current_threshold", "plat__power__capping_8c.html#abac9afa8b646d5c97d3e2e588255ca7b", null ],
+    [ "get_power_capping_method", "plat__power__capping_8c.html#a05b1ab76ce9bdf0b45904abfecde331d", null ],
+    [ "get_power_capping_source", "plat__power__capping_8c.html#a383bf1cec4321c6e15aa03cf25bd377c", null ],
+    [ "get_power_capping_threshold", "plat__power__capping_8c.html#a3e1db6056fbaa5fbcc4265f5f1f0245a", null ],
+    [ "get_power_capping_time_w", "plat__power__capping_8c.html#a743bd683499b1f0ac55273c651f76bea", null ],
+    [ "K_THREAD_STACK_DEFINE", "plat__power__capping_8c.html#adb52b85abf0dc3b4fb5d415d004fe7a5", null ],
+    [ "K_WORK_DELAYABLE_DEFINE", "plat__power__capping_8c.html#a0fd119fa923caa61b66ccdcea89b4401", null ],
+    [ "LOG_MODULE_REGISTER", "plat__power__capping_8c.html#a5f537063bed1d4145e5203755bf99c9e", null ],
+    [ "plat_power_capping_init", "plat__power__capping_8c.html#acee988bc8f6777e7b4a2ad28c5992216", null ],
+    [ "power_capping_handler", "plat__power__capping_8c.html#af0549c11782ac96a39cfcece2a4ab09f", null ],
+    [ "power_capping_syn_vr_oc_warn_limit", "plat__power__capping_8c.html#afc1df6b3024484548b4e238b92cf70ef", null ],
+    [ "set_power_capping_method", "plat__power__capping_8c.html#a2397031e05bdc3075ad6c02b3bcade66", null ],
+    [ "set_power_capping_source", "plat__power__capping_8c.html#a0edff448fcf565e0a5d03bdc1cdedee2", null ],
+    [ "set_power_capping_threshold", "plat__power__capping_8c.html#ae258c4ebd9473b87d936944b7b966e4b", null ],
+    [ "set_power_capping_time_w", "plat__power__capping_8c.html#af45c1604e87ef86f09360f63d1a88305", null ],
+    [ "set_power_capping_vr_oc_warn_limit", "plat__power__capping_8c.html#a69d6451905b0b65f107bd0f77a27a4b9", null ],
+    [ "power_capping_thread", "plat__power__capping_8c.html#a85d8711433eed1b7a54270d244a3558f", null ]
+];

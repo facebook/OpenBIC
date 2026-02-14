@@ -1,0 +1,16 @@
+<map id="adc_rainbow_polling_handler" name="adc_rainbow_polling_handler">
+<area shape="rect" id="node1" title=" " alt="" coords="5,150,144,191"/>
+<area shape="rect" id="node2" href="$plat__adc_8c.html#a24e0a5fc3565038c26322ea8befdd6e7" title=" " alt="" coords="219,56,345,83"/>
+<area shape="rect" id="node5" href="$plat__adc_8c.html#a918ed225b2c38d1db815591b7da00d32" title=" " alt="" coords="215,183,349,209"/>
+<area shape="rect" id="node10" href="$plat__power__capping_8c.html#a383bf1cec4321c6e15aa03cf25bd377c" title=" " alt="" coords="192,233,372,260"/>
+<area shape="rect" id="node11" href="$plat__adc_8c.html#a53031b60dc8ec3c955930ea0634d4cbc" title=" " alt="" coords="231,107,333,133"/>
+<area shape="rect" id="node3" href="$plat__adc_8c.html#a76346c2ebbadc651c21c63d5c72e3955" title=" " alt="" coords="425,56,546,83"/>
+<area shape="rect" id="node4" href="$plat__adc_8c.html#a34738f7e8f1ebaccda5ee117c4da9895" title=" " alt="" coords="423,5,547,32"/>
+<area shape="rect" id="node6" href="$plat__adc_8c.html#ab4547f1f445c22bf2ce57deb5071b20d" title=" " alt="" coords="421,208,549,235"/>
+<area shape="rect" id="node7" href="$plat__adc_8c.html#ad339629d6046676cc605ed1d2ac50fd0" title=" " alt="" coords="420,259,551,285"/>
+<area shape="rect" id="node8" href="$sb-rb_2src_2platform_2plat__class_8c.html#a9d3145ec260256885f5ad7ae0fee1381" title=" " alt="" coords="422,309,549,336"/>
+<area shape="rect" id="node9" href="$sb-rb_2src_2platform_2plat__class_8c.html#ac75907698060d09869954dde878eb3cd" title=" " alt="" coords="425,157,546,184"/>
+<area shape="rect" id="node12" href="$minerva-ag_2src_2platform_2plat__class_8c.html#ab8ed1e1192e4346f34a2396e50d9f1aa" title=" " alt="" coords="432,107,539,133"/>
+<area shape="rect" id="node13" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="599,107,717,133"/>
+<area shape="rect" id="node14" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="765,107,908,133"/>
+</map>

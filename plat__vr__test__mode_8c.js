@@ -1,0 +1,26 @@
+var plat__vr__test__mode_8c =
+[
+    [ "dma_read_vr", "plat__vr__test__mode_8c.html#a4d5ee86aab39c48e65037006ec9344e9", null ],
+    [ "dma_write_vr", "plat__vr__test__mode_8c.html#ac5a85e9575cf17f5e0953f2331bb8ef4", null ],
+    [ "get_vr_fixed_uvp_ovp_enable", "plat__vr__test__mode_8c.html#ac1f597b4599e0987e61a887a1f734abf", null ],
+    [ "get_vr_offset_uvp_ovp", "plat__vr__test__mode_8c.html#a2c7556993876bfb82f1502ffee3c6b2c", null ],
+    [ "get_vr_test_mode_flag", "plat__vr__test__mode_8c.html#abe472c1ffb05e6f8e960f622c9223b79", null ],
+    [ "init_vr_test_mode_polling", "plat__vr__test__mode_8c.html#a0aa750bc430ea0e81e0f796853d5334c", null ],
+    [ "K_KERNEL_STACK_MEMBER", "plat__vr__test__mode_8c.html#a54f9c0949af104f634041df55e51c4b8", null ],
+    [ "LOG_MODULE_REGISTER", "plat__vr__test__mode_8c.html#a76b34c3307bf658fcbc07b0f6410ad80", null ],
+    [ "set_vr_fixed_uvp_ovp_enable", "plat__vr__test__mode_8c.html#a432c50208209586113b396c3343d0699", null ],
+    [ "use_offset_uvp_ovp", "plat__vr__test__mode_8c.html#a258f9b8bf1f16d01aac859c72edcae7f", null ],
+    [ "vr_test_mode_enable", "plat__vr__test__mode_8c.html#a2073baabe6988d050ab88d7ca0b7bf1c", null ],
+    [ "vr_test_mode_handler", "plat__vr__test__mode_8c.html#a3335b18e676bdac3ef8bea0954246ca4", null ],
+    [ "vr_mps_normal_mode_table", "plat__vr__test__mode_8c.html#a57e5aa0f2cbf04668f98aa4a97ead483", null ],
+    [ "vr_mps_normal_mode_table_size", "plat__vr__test__mode_8c.html#a8ca50eb86137bfde9004d6e6922d3002", null ],
+    [ "vr_mps_test_mode_table", "plat__vr__test__mode_8c.html#af336c4cffdcc2373c02e9579ac33bcde", null ],
+    [ "vr_mps_test_mode_table_size", "plat__vr__test__mode_8c.html#a9f9ba31bd795d160240aedc568f3814b", null ],
+    [ "vr_test_mode_flag", "plat__vr__test__mode_8c.html#a11c0eb9f07cdb72add8847eaa58f45d5", null ],
+    [ "vr_test_mode_table", "plat__vr__test__mode_8c.html#a16c96dabbd84aedbb9376bf2849900ac", null ],
+    [ "vr_test_mode_table_dafault_size", "plat__vr__test__mode_8c.html#a335c55742d9d5f5e4845349c260312cb", null ],
+    [ "vr_test_mode_table_default", "plat__vr__test__mode_8c.html#addeffaf194ceafaf6b99c739f2d18508", null ],
+    [ "vr_test_mode_table_size", "plat__vr__test__mode_8c.html#ac4e551e59adae959ddd26ffd3cc486f6", null ],
+    [ "vr_test_mode_thread", "plat__vr__test__mode_8c.html#a227d7ec0577964c73802e207b810ec34", null ],
+    [ "vr_test_mode_tid", "plat__vr__test__mode_8c.html#a0186c544fe7c3dc36471ad5c8f6353ef", null ]
+];

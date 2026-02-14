@@ -1,0 +1,10 @@
+<map id="read_pmic_error_when_dc_off" name="read_pmic_error_when_dc_off">
+<area shape="rect" id="node1" title=" " alt="" coords="5,49,159,90"/>
+<area shape="rect" id="node2" href="$gc2-es_2src_2platform_2plat__pmic_8c.html#a863b56a09a70bbc171519c97f3830454" title=" " alt="" coords="221,5,361,32"/>
+<area shape="rect" id="node3" href="$yv4-sd_2src_2platform_2plat__dimm_8c.html#a36d60944b5529102f93ed7b4b9a30070" title=" " alt="" coords="435,56,565,83"/>
+<area shape="rect" id="node4" href="$yv4-sd_2src_2platform_2plat__pmic_8c.html#a84debda77032ea192083841eff9ba1ae" title=" " alt="" coords="207,107,375,133"/>
+<area shape="rect" id="node5" href="$power__status_8c.html#abeff55e3cd2e8563760154b81f37f286" title=" " alt="" coords="443,107,557,133"/>
+<area shape="rect" id="node6" href="$gc2-es_2src_2platform_2plat__pmic_8c.html#af33feea8a08ae270156e7128f4b3f04f" title=" " alt="" coords="423,157,577,184"/>
+<area shape="rect" id="node7" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="625,157,747,184"/>
+<area shape="rect" id="node8" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="795,157,937,184"/>
+</map>

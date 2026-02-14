@@ -1,0 +1,11 @@
+<map id="cmd_adc_set_averge_times" name="cmd_adc_set_averge_times">
+<area shape="rect" id="node1" title=" " alt="" coords="5,57,152,98"/>
+<area shape="rect" id="node2" href="$plat__power__capping_8c.html#af45c1604e87ef86f09360f63d1a88305" title=" " alt="" coords="200,64,383,91"/>
+<area shape="rect" id="node3" href="$plat__adc_8c.html#afb4f04bb1fa84495d01589dce2fc425b" title=" " alt="" coords="431,5,585,32"/>
+<area shape="rect" id="node5" href="$plat__power__capping_8c.html#a4b90106c405ae73f83fea0c067b0da3d" title=" " alt="" coords="431,57,585,98"/>
+<area shape="rect" id="node6" href="$plat__cpld_8c.html#a5de87122b83dfeeda681f4f3d927038f" title=" " alt="" coords="453,123,563,149"/>
+<area shape="rect" id="node4" href="$plat__adc_8c.html#ad7785b714d8e0e304a204c9687f1f8a1" title=" " alt="" coords="637,5,732,32"/>
+<area shape="rect" id="node7" href="$minerva-ag_2src_2platform_2plat__isr_8c.html#a99dfe1bff0c2df0fa9632a165a6fcd3f" title=" " alt="" coords="633,123,736,149"/>
+<area shape="rect" id="node8" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="784,123,905,149"/>
+<area shape="rect" id="node9" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="953,123,1096,149"/>
+</map>

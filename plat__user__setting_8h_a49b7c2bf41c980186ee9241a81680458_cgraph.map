@@ -1,0 +1,10 @@
+<map id="get_user_settings_alert_level_from_eeprom" name="get_user_settings_alert_level_from_eeprom">
+<area shape="rect" id="node1" title=" " alt="" coords="5,23,163,65"/>
+<area shape="rect" id="node2" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="539,5,658,32"/>
+<area shape="rect" id="node4" href="$aalc-rpu_2src_2platform_2plat__fru_8c.html#a84caf23c50d29935801d48317ea8ace8" title=" " alt="" coords="211,56,336,83"/>
+<area shape="rect" id="node3" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="885,31,1028,57"/>
+<area shape="rect" id="node5" href="$eeprom_8c.html#af84d506534770494cca55b2db24730ba" title=" " alt="" coords="384,56,481,83"/>
+<area shape="rect" id="node8" href="$fru_8c.html#a4694b8ef2f5e4e98917fc28fe989a2d9" title=" " alt="" coords="385,107,481,133"/>
+<area shape="rect" id="node6" href="$eeprom_8c.html#ac470cc411f066d8f6bc2c1d7a74c8a5a" title=" " alt="" coords="529,56,668,83"/>
+<area shape="rect" id="node7" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="716,56,837,83"/>
+</map>
