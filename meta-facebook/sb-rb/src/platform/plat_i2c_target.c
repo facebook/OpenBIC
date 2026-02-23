@@ -537,7 +537,6 @@ void vr_power_reading(uint8_t *buffer, size_t buf_size)
 	for (size_t i = 0; i < ARRAY_SIZE(vr_pwr_sensor_table); i++) {
 		if (get_asic_board_id() != ASIC_BOARD_ID_EVB &&
 		    vr_pwr_sensor_table[i] == SENSOR_NUM_P3V3_OSFP_PWR_W) {
-			LOG_WRN("Skip sensor 0x%x", vr_pwr_sensor_table[i]);
 			continue;
 		}
 
