@@ -348,7 +348,18 @@ bool get_error_data(uint16_t error_code, uint8_t *data)
 			}
 			data_num++;
 		}
-
+		// if have sensor num, read status word(0x79, 2 bytes) and save to data[7:8]
+		uint8_t sensor_num = get_pwrgd_sequence_fail_sensor_num(data[0]);
+		uint8_t status_word[2];
+		if (sensor_num != NO_SENSOR_NUM) {
+			if (!vr_fault_get_error_data(sensor_num, status_word)) {
+				LOG_ERR("Failed to get VR status word for sensor_num: 0x%x",
+					sensor_num);
+				return false;
+			}
+			data[7] = status_word[0];
+			data[8] = status_word[1];
+		}
 		return true;
 	}
 	case ASIC_ERROR_TRIGGER_CAUSE: {
