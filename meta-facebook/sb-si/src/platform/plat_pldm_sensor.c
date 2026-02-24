@@ -1469,7 +1469,7 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 			0x0000, // uint16_t container_id;
 			0x00, // uint8_t sensor_init;
 			0x01, // uint8_t sensor_auxiliary_names_pdr;
-			0x02, // uint8_t base_unit;  // unit
+			0x05, // uint8_t base_unit;  // unit
 			-3, // int8_t unit_modifier;
 			0x00, // uint8_t rate_unit;
 			0x00, // uint8_t base_oem_unit_handle;
@@ -1539,7 +1539,7 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 			0x0000, // uint16_t container_id;
 			0x00, // uint8_t sensor_init;
 			0x01, // uint8_t sensor_auxiliary_names_pdr;
-			0x02, // uint8_t base_unit;  // unit
+			0x05, // uint8_t base_unit;  // unit
 			-3, // int8_t unit_modifier;
 			0x00, // uint8_t rate_unit;
 			0x00, // uint8_t base_oem_unit_handle;
@@ -1609,7 +1609,7 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 			0x0000, // uint16_t container_id;
 			0x00, // uint8_t sensor_init;
 			0x01, // uint8_t sensor_auxiliary_names_pdr;
-			0x02, // uint8_t base_unit;  // unit
+			0x05, // uint8_t base_unit;  // unit
 			-3, // int8_t unit_modifier;
 			0x00, // uint8_t rate_unit;
 			0x00, // uint8_t base_oem_unit_handle;
@@ -1679,7 +1679,7 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 			0x0000, // uint16_t container_id;
 			0x00, // uint8_t sensor_init;
 			0x01, // uint8_t sensor_auxiliary_names_pdr;
-			0x02, // uint8_t base_unit;  // unit
+			0x05, // uint8_t base_unit;  // unit
 			-3, // int8_t unit_modifier;
 			0x00, // uint8_t rate_unit;
 			0x00, // uint8_t base_oem_unit_handle;
@@ -1749,7 +1749,7 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 			0x0000, // uint16_t container_id;
 			0x00, // uint8_t sensor_init;
 			0x01, // uint8_t sensor_auxiliary_names_pdr;
-			0x02, // uint8_t base_unit;  // unit
+			0x05, // uint8_t base_unit;  // unit
 			-3, // int8_t unit_modifier;
 			0x00, // uint8_t rate_unit;
 			0x00, // uint8_t base_oem_unit_handle;
@@ -1819,7 +1819,7 @@ pldm_sensor_info plat_pldm_sensor_adc_table[] = {
 			0x0000, // uint16_t container_id;
 			0x00, // uint8_t sensor_init;
 			0x01, // uint8_t sensor_auxiliary_names_pdr;
-			0x02, // uint8_t base_unit;  // unit
+			0x05, // uint8_t base_unit;  // unit
 			-3, // int8_t unit_modifier;
 			0x00, // uint8_t rate_unit;
 			0x00, // uint8_t base_oem_unit_handle;
