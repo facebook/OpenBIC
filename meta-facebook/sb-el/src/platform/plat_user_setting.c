@@ -14,9 +14,11 @@
  * limitations under the License.
  */
 
- #include "plat_hook.h"
+#include "plat_hook.h"
 
- void user_settings_init(void)
+void user_settings_init(void)
 {
 	vr_vout_range_user_settings_init();
+	bootstrap_default_settings_init();
+	bootstrap_user_settings_init();
 }
