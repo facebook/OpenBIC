@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 
+#define CPLD_OFFSET_ASIC_RESET 0x00
 #define CPLD_OFFSET_BOARD_REV_ID 0x14
 #define CPLD_OFFSET_VR_VENDER_TYPE 0x15
 #define CPLD_OFFSET_POWER_CLAMP 0x25
@@ -37,6 +38,7 @@ typedef struct _cpld_info_ {
 
 bool plat_read_cpld(uint8_t offset, uint8_t *data, uint8_t len);
 bool plat_write_cpld(uint8_t offset, uint8_t *data);
+bool set_cpld_bit(uint8_t cpld_offset, uint8_t bit, uint8_t value);
 void init_cpld_polling(void);
 void check_cpld_polling_alert_status(void);
 void get_cpld_polling_power_info(int *reading);

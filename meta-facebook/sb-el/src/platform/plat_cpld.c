@@ -27,6 +27,56 @@ bool plat_write_cpld(uint8_t offset, uint8_t *data)
 	return plat_i2c_write(I2C_BUS_CPLD, CPLD_ADDR, offset, data, 1);
 }
 
+bool set_cpld_bit(uint8_t cpld_offset, uint8_t bit, uint8_t value)
+{
+	if (bit > 8) {
+		LOG_ERR("Invalid bit index %d", bit);
+		return false;
+	}
+
+	if (value != 0 && value != 1) {
+		LOG_ERR("Invalid value %d", value);
+		return false;
+	}
+
+	uint8_t original_value = 0;
+	if (!plat_read_cpld(cpld_offset, &original_value, 1)) {
+		LOG_ERR("offset = 0x%x, bit = %d, value = %d, read cpld fail", cpld_offset, bit,
+			value);
+		return false;
+	}
+
+	if (value) {
+		original_value |= BIT(bit);
+	} else {
+		original_value &= ~BIT(bit);
+	}
+
+	if (!plat_write_cpld(cpld_offset, &original_value)) {
+		LOG_ERR("offset = 0x%x, bit = %d, value = %d, write cpld fail", cpld_offset, bit,
+			value);
+		return false;
+	}
+
+	// check if write success
+	uint8_t check_value = 0;
+	if (!plat_read_cpld(cpld_offset, &check_value, 1)) {
+		LOG_ERR("offset = 0x%x, bit = %d, value = %d, read cpld fail", cpld_offset, bit,
+			value);
+		return false;
+	}
+
+	LOG_DBG("original_value = 0x%x, check_value = 0x%x", original_value, check_value);
+
+	if (check_value != original_value) {
+		LOG_ERR("offset = 0x%x, bit = %d, value = %d, set_cpld_bit fail", cpld_offset, bit,
+			value);
+		return false;
+	}
+
+	return true;
+}
+
 // cpld polling
 void check_cpld_handler();
 K_WORK_DELAYABLE_DEFINE(check_cpld_work, check_cpld_handler);
