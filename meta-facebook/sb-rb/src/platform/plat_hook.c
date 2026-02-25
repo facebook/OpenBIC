@@ -874,6 +874,71 @@ bool bootstrap_default_settings_init(void)
 {
 	// read cpld value and write to bootstrap_table
 	for (int i = 0; i <= STRAP_INDEX_OWL_W_DVT_ENABLE; i++) {
+		// set default value first then read back from cpld
+		/*
+		For all boards
+			HAMSA_MFIO7 = 0
+			HAMSA_MFIO9 = 1
+			MEDHA0_CHIP_STRAP_1 = 0
+			MEDHA1_CHIP_STRAP_1 = 0
+
+		For Rainbow <=fab 2
+			HAMSA_LS_STRAP_0 = 0x1
+			MEDHA0_CHIP_STRAP_0 = 0x1
+			MEDHA1_CHIP_STRAP_0 = 0x1
+
+		For Rainbow >=fab 3
+			HAMSA_LS_STRAP_0 = 0x0
+			MEDHA0_CHIP_STRAP_0 = 0x0
+			MEDHA1_CHIP_STRAP_0 = 0x0
+		*/
+		uint8_t asic_board_id = get_asic_board_id();
+		uint8_t rev_id = get_board_rev_id();
+		uint8_t hamsa_ls_strap_defauilt_setting = 0;
+		uint8_t medha0_chip_strap_defauilt_setting = 0;
+		uint8_t medha1_chip_strap_defauilt_setting = 0;
+		if (asic_board_id == ASIC_BOARD_ID_RAINBOW) {
+			if (rev_id <= REV_ID_EVT2) {
+				hamsa_ls_strap_defauilt_setting = 0x1;
+				medha0_chip_strap_defauilt_setting = 0x1;
+				medha1_chip_strap_defauilt_setting = 0x1;
+			} else {
+				hamsa_ls_strap_defauilt_setting = 0x0;
+				medha0_chip_strap_defauilt_setting = 0x0;
+				medha1_chip_strap_defauilt_setting = 0x0;
+			}
+		}
+		if (bootstrap_table[i].index == STRAP_INDEX_HAMSA_LS_STRAP_0) {
+			bootstrap_table[i].default_setting_value = hamsa_ls_strap_defauilt_setting;
+			if (!set_cpld_bit(bootstrap_table[i].cpld_offsets,
+					  bootstrap_table[i].bit_offset,
+					  bootstrap_table[i].default_setting_value)) {
+				LOG_ERR("Failed to set cpld bit for HAMSA_LS_STRAP_0");
+				return false;
+			}
+		}
+
+		if (bootstrap_table[i].index == STRAP_INDEX_MEDHA0_CHIP_STRAP_0) {
+			bootstrap_table[i].default_setting_value =
+				medha0_chip_strap_defauilt_setting;
+			if (!set_cpld_bit(bootstrap_table[i].cpld_offsets,
+					  bootstrap_table[i].bit_offset,
+					  bootstrap_table[i].default_setting_value)) {
+				LOG_ERR("Failed to set cpld bit for MEDHA0_CHIP_STRAP_0");
+				return false;
+			}
+		}
+		if (bootstrap_table[i].index == STRAP_INDEX_MEDHA1_CHIP_STRAP_0) {
+			bootstrap_table[i].default_setting_value =
+				medha1_chip_strap_defauilt_setting;
+			if (!set_cpld_bit(bootstrap_table[i].cpld_offsets,
+					  bootstrap_table[i].bit_offset,
+					  bootstrap_table[i].default_setting_value)) {
+				LOG_ERR("Failed to set cpld bit for MEDHA1_CHIP_STRAP_0");
+				return false;
+			}
+		}
+
 		uint8_t data = 0;
 		if (!plat_read_cpld(bootstrap_table[i].cpld_offsets, &data, 1)) {
 			LOG_ERR("Can't find bootstrap default by rail index from cpld: %d", i);
