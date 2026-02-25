@@ -97,12 +97,20 @@ enum SYSTEM_SKU {
 	SYS_TYPE_EMR = 6,
 };
 
+enum VR_MODULE {
+	VR_MODULE_UNKNOWN = 0,
+	VR_MODULE_ISL69259,
+	VR_MODULE_XDPE15284D,
+	VR_MODULE_TPS53689,
+};
+
 uint8_t get_system_class();
 uint8_t get_system_sku();
 CARD_STATUS get_1ou_status();
 CARD_STATUS get_2ou_status();
 uint8_t get_board_revision();
 uint8_t get_hsc_module();
+uint8_t get_vr_module(void);
 bool get_adc_voltage(int channel, float *voltage);
 void init_hsc_module();
 void init_platform_config();

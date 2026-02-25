@@ -35,6 +35,7 @@
 #include "xdpe15284.h"
 #include "util_sys.h"
 #include "plat_class.h"
+#include "util_pmbus.h"
 
 #include "i2c-mux-tca9548.h"
 
@@ -47,6 +48,8 @@ LOG_MODULE_REGISTER(plat_hook);
 #define ADJUST_LTC4286_CURRENT(x) ((x * 0.97) - 0.4)
 #define ADJUST_LTC4282_POWER(x) ((x * 0.98) - 0.2)
 #define ADJUST_LTC4282_CURRENT(x) ((x * 0.99) - 0.2)
+
+struct k_mutex xdpe15284_mutex;
 
 /**************************************************************************************************
  * INIT ARGS
@@ -104,6 +107,11 @@ isl69259_pre_proc_arg isl69259_pre_read_args[] = {
 	[1] = { 0x1 },
 };
 
+vr_page_cfg xdpe15284_page[] = {
+	[0] = { .vr_page = PMBUS_PAGE_0 },
+	[1] = { .vr_page = PMBUS_PAGE_1 },
+};
+
 dimm_pre_proc_arg dimm_pre_proc_args[] = {
 	[0] = { .is_present_checked = false }, [1] = { .is_present_checked = false },
 	[2] = { .is_present_checked = false }, [3] = { .is_present_checked = false },
@@ -145,6 +153,51 @@ ina233_init_arg ina233_init_args[] = {
 	},
 };
 
+bool init_vr_write_protect(uint8_t bus, uint8_t addr, uint8_t default_val)
+{
+	int ret = 0;
+	uint8_t page = 0;
+	uint8_t reg_val = 0;
+
+	xdpe15284_set_write_protect_default_val(default_val);
+	ret = pmbus_read_command(bus, addr, PMBUS_PAGE, &reg_val, 1);
+	if (ret != 0) {
+		LOG_ERR("Get bus: 0x%x, addr: 0x%x, page fail", bus, addr);
+		return false;
+	}
+
+	page = reg_val;
+	if (xdpe15284_set_write_protect(bus, addr, XDPE15284_ENABLE_WRITE_PROTECT) != true) {
+		LOG_ERR("Initialize page: 0x%x write protect to 0x%x fail", page, default_val);
+		return false;
+	}
+
+	page = (page == PMBUS_PAGE_0 ? PMBUS_PAGE_1 : PMBUS_PAGE_0);
+	ret = pmbus_set_page(bus, addr, page);
+	if (ret != 0) {
+		LOG_ERR("Set bus: 0x%x, addr: 0x%x to page: 0x%x fail", bus, addr, page);
+		return false;
+	}
+
+	ret = pmbus_read_command(bus, addr, PMBUS_PAGE, &reg_val, 1);
+	if (ret != 0) {
+		LOG_ERR("Get bus: 0x%x, addr: 0x%x, page fail", bus, addr);
+		return false;
+	}
+
+	if (reg_val != page) {
+		LOG_ERR("Set page to 0x%x fail", page);
+		return false;
+	}
+
+	if (xdpe15284_set_write_protect(bus, addr, XDPE15284_ENABLE_WRITE_PROTECT) != true) {
+		LOG_ERR("Initialize page: 0x%x write protect to 0x%x fail", page, default_val);
+		return false;
+	}
+
+	return true;
+}
+
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK FUNC
  **************************************************************************************************/
@@ -177,6 +230,104 @@ bool pre_isl69259_read(sensor_cfg *cfg, void *args)
 		LOG_ERR("pre_isl69259_read, set page fail");
 		return false;
 	}
+	return true;
+}
+
+K_MUTEX_DEFINE(xdpe15284_mutex);
+extern vr_page_cfg xdpe15284_page[];
+
+/* Initialization state of each XDPE VR chip's WP (unique bus+addr) */
+typedef struct {
+	uint8_t bus;
+	uint8_t addr;
+	bool wp_initialized;
+} xdpe_vr_state;
+
+static xdpe_vr_state xdpe_wp_states[] = {
+	{ I2C_BUS5, PVCCD_HV_ADDR, false }, // 0x62
+	{ I2C_BUS5, PVCCINFAON_ADDR, false }, // 0x76
+	{ I2C_BUS5, PVCCIN_ADDR, false }, // 0x60
+};
+
+static inline xdpe_vr_state *get_xdpe_vr_state(uint8_t bus, uint8_t addr)
+{
+	for (size_t i = 0; i < ARRAY_SIZE(xdpe_wp_states); ++i) {
+		if (xdpe_wp_states[i].bus == bus && xdpe_wp_states[i].addr == addr) {
+			return &xdpe_wp_states[i];
+		}
+	}
+	return NULL;
+}
+
+/* All WP initialization states reset after a 12V cycle (DC power off/on). */
+void xdpe_reset_wp_states_after_power_cycle(void)
+{
+	for (size_t i = 0; i < ARRAY_SIZE(xdpe_wp_states); ++i) {
+		xdpe_wp_states[i].wp_initialized = false;
+	}
+}
+
+/* XDPE15284 pre read function
+ *
+ * Purpose:
+ *   - Some XDPE parts enable write-protect by default and reject PAGE command.
+ *   - This hook first configures write-protect per VR device (once per device),
+ *     then sets the PMBus PAGE. It also locks a mutex to serialize page switching.
+ *
+ * Behavior:
+ *   1) For the current VR (bus+addr), if write-protect is not initialized yet,
+ *      call init_vr_write_protect() to allow PAGE command, then mark initialized.
+ *   2) Lock the xdpe15284_mutex to avoid concurrent PAGE changes.
+ *   3) Send PMBUS_PAGE (0x00) with the page value provided in args.
+ *
+ * @param cfg   pointer to sensor_cfg of this VR sensor (must not be NULL)
+ * @param args  pointer to vr_page_cfg, where args->vr_page is PAGE value
+ * @retval true  if PAGE is successfully written (mutex remains locked and will be released in post)
+ * @retval false if mutex lock fails or PAGE write fails (mutex is unlocked on failure)
+ */
+bool pre_xdpe15284_read(sensor_cfg *cfg, void *args)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(args, false);
+
+	vr_page_cfg *xdpe15284_vr_page = (vr_page_cfg *)args;
+	I2C_MSG msg = { 0 };
+	int retry = 3;
+
+	/* Per-device write-protect init (once per device) */
+	xdpe_vr_state *st = get_xdpe_vr_state(cfg->port, cfg->target_addr);
+	if (st != NULL && st->wp_initialized == false) {
+		bool wp_ok = init_vr_write_protect(
+			cfg->port, cfg->target_addr,
+			XDPE15284_DISABLE_ALL_WRITE_EXCEPT_THREE_COMMANDS_VAL);
+		if (wp_ok != true) {
+			LOG_WRN("XDPE: init write protect fail, try PAGE anyway, sensor: 0x%x",
+				cfg->num);
+		} else {
+			st->wp_initialized = true;
+		}
+	}
+
+	/* Serialize page switching with a mutex */
+	int mret = k_mutex_lock(&xdpe15284_mutex, K_MSEC(MUTEX_LOCK_INTERVAL_MS));
+	if (mret != 0) {
+		LOG_ERR("XDPE: mutex lock fail, status: %d, sensor: 0x%x", mret, cfg->num);
+		return false;
+	}
+
+	/* Set PMBUS_PAGE to the requested page */
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
+	msg.tx_len = 2;
+	msg.data[0] = PMBUS_PAGE;
+	msg.data[1] = xdpe15284_vr_page->vr_page;
+
+	if (i2c_master_write(&msg, retry) != 0) {
+		LOG_ERR("XDPE: set PAGE fail, sensor: 0x%x", cfg->num);
+		k_mutex_unlock(&xdpe15284_mutex);
+		return false;
+	}
+
 	return true;
 }
 
@@ -541,5 +692,32 @@ bool post_ltc4282_read(sensor_cfg *cfg, void *args, int *reading)
 
 	sval->integer = (int)val & 0xFFFF;
 	sval->fraction = (val - sval->integer) * 1000;
+	return true;
+}
+
+/* XDPE15284 post read function
+ *
+ * Purpose:
+ *   - Release the mutex locked in pre_xdpe15284_read().
+ *   - No value adjustment here; only synchronization clean-up.
+ *
+ * @param cfg      pointer to sensor_cfg of this VR sensor (must not be NULL)
+ * @param args     pointer to NULL (unused)
+ * @param reading  pointer to reading from previous step (unused here)
+ * @retval true  if mutex is successfully released or was not locked
+ * @retval false if mutex unlock fails
+ */
+bool post_xdpe15284_read(sensor_cfg *cfg, void *args, int *reading)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	ARG_UNUSED(args);
+	ARG_UNUSED(reading);
+
+	int uret = k_mutex_unlock(&xdpe15284_mutex);
+	if (uret != 0) {
+		LOG_ERR("XDPE: mutex unlock fail, status: %d, sensor: 0x%x", uret, cfg->num);
+		return false;
+	}
+
 	return true;
 }
