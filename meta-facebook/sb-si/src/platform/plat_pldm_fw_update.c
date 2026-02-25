@@ -45,6 +45,7 @@ LOG_MODULE_REGISTER(plat_fwupdate);
 
 static uint8_t pldm_pre_vr_update(void *fw_update_param);
 static uint8_t pldm_post_vr_update(void *fw_update_param);
+static uint8_t pldm_pre_bic_update(void *fw_update_param);
 static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len);
 static bool get_pcie_switch_fw_version(void *info_p, uint8_t *buf, uint8_t *len);
 static uint8_t plat_pldm_pre_pcie_switch_update(void *fw_update_param);
@@ -65,6 +66,16 @@ si_compnt_mapping_sensor si_pcie_switch_compnt_mapping_sensor_table[] = {
 	{ SI_COMPNT_PEX90144, SENSOR_NUM_PCIE_SWITCH_PEX90144_TEMP_C, "SI_PEX90144" },
 };
 
+static uint8_t pldm_pre_bic_update(void *fw_update_param)
+{
+	ARG_UNUSED(fw_update_param);
+
+	/* Stop sensor polling */
+	set_plat_sensor_polling_enable_flag(false);
+	LOG_INF("Stop pldm sensor polling");
+	return 0;
+}
+
 /* PLDM FW update table */
 pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
 	{
@@ -72,7 +83,7 @@ pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
 		.comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,
 		.comp_identifier = SI_COMPNT_BIC,
 		.comp_classification_index = 0x00,
-		.pre_update_func = NULL,
+		.pre_update_func = pldm_pre_bic_update,
 		.update_func = pldm_bic_update,
 		.pos_update_func = NULL,
 		.inf = COMP_UPDATE_VIA_SPI,
