@@ -50,7 +50,9 @@ enum NUMBER_DIMM_TEMP {
 
 uint8_t sensor_num_map_dimm_id(uint8_t sensor_num);
 uint8_t get_dimm_present(uint8_t dimm_id);
-void create_init_ddr_slot_info_thread(void);
+void create_init_ddr_slot_info_thread(uint8_t cxl_id);
+void dimm_cxl1_slot_info_init_handler();
+void dimm_cxl2_slot_info_init_handler();
 
 #endif
 

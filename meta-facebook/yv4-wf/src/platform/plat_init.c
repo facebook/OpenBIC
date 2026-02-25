@@ -70,11 +70,9 @@ void pal_set_sys_status()
 		}
 		set_P12V_E1S_power_status(PWRGD_P12V_E1S_0_R);
 		create_check_cxl_ready_thread();
-	}
-	else {
+	} else {
 		LOG_ERR("PG_CARD_OK not ready, skip set_sys_status");
 	}
-	create_init_ddr_slot_info_thread();
 	set_sys_ready_pin(BIC_READY_R);
 }
 

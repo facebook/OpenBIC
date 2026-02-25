@@ -243,17 +243,18 @@ bool pre_dimm_read(sensor_cfg *cfg, void *args)
 	ARG_UNUSED(args);
 
 	uint8_t cxl_id = cfg->port;
+	uint8_t dimm_idx = cfg->target_addr;
 
-	if (!g_ddr_slot_cache.valid) {
-		LOG_WRN("DDR slot info cache is not valid");
+	if (!g_ddr_slot_cache.valid[cxl_id]) {
+		LOG_WRN("CXL%d DDR slot info cache is not valid", cxl_id + 1);
 		return true; // Do not stop sensor polling
 	}
 
 	uint8_t dimm_id = cfg->target_addr;
-	dimm_id = cxl_id * MAX_DIMM_PER_CXL + dimm_id;
+	dimm_id = cxl_id * MAX_DIMM_PER_CXL + dimm_idx;
 	if (get_dimm_present(dimm_id) ==
 	    DIMM_NOT_PRSNT) { // Stop monitoring DIMM when it is not present.
-			LOG_ERR("CXL_%d DIMM_%d not present", cxl_id, dimm_id);
+		LOG_ERR("CXL%d DIMM_%d not present", cxl_id + 1, dimm_id);
 		return false;
 	}
 
