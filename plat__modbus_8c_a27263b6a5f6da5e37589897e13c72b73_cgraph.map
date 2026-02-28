@@ -1,0 +1,5 @@
+<map id="modbus_set_manual_flag" name="modbus_set_manual_flag">
+<area shape="rect" id="node1" title=" " alt="" coords="5,31,175,57"/>
+<area shape="rect" id="node2" href="$plat__status_8c.html#aa601af4f53236dc9df9b4db1735f94de" title=" " alt="" coords="243,5,353,32"/>
+<area shape="rect" id="node3" href="$plat__pwm_8c.html#ae204f6e945ada61e249f046641766b7a" title=" " alt="" coords="223,56,373,83"/>
+</map>

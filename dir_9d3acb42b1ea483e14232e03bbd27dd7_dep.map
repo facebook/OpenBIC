@@ -1,0 +1,13 @@
+<map id="common/service/cci" name="common/service/cci">
+<area shape="rect" id="node1" href="dir_1e4b3142070af86292ae12c35b50aa22.html" title="sensor" alt="" coords="27,148,99,196"/>
+<area shape="rect" id="node4" href="dir_913229d03cb660fb95c0f2ea29d516b6.html" title="lib" alt="" coords="75,244,147,292"/>
+<area shape="rect" id="edge1-headlabel" href="dir_000017_000005.html" title="6" alt="" coords="85,217,93,231"/>
+<area shape="rect" id="node2" href="dir_943fcf3ea01ab0b6c15e78d1506ef20b.html" title="mctp" alt="" coords="123,148,195,196"/>
+<area shape="rect" id="edge3-headlabel" href="dir_000013_000005.html" title="3" alt="" coords="134,224,142,239"/>
+<area shape="rect" id="node3" href="dir_9d3acb42b1ea483e14232e03bbd27dd7.html" title="cci" alt="" coords="123,52,195,100"/>
+<area shape="rect" id="edge4-headlabel" href="dir_000008_000017.html" title="1" alt="" coords="101,134,109,149"/>
+<area shape="rect" id="edge6-headlabel" href="dir_000008_000013.html" title="2" alt="" coords="163,122,171,137"/>
+<area shape="rect" id="edge5-headlabel" href="dir_000008_000005.html" title="1" alt="" coords="163,247,171,261"/>
+<area shape="rect" id="edge2-headlabel" href="dir_000005_000017.html" title="3" alt="" coords="80,209,88,224"/>
+<area shape="rect" id="clust1" href="dir_692042c7f74d5c5ea85af01a467df1b3.html" title="service" alt="" coords="16,16,205,207"/>
+</map>

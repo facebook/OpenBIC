@@ -1,0 +1,8 @@
+<map id="cmd_adc_set_ucr" name="cmd_adc_set_ucr">
+<area shape="rect" id="node1" title=" " alt="" coords="5,35,131,61"/>
+<area shape="rect" id="node2" href="$plat__power__capping_8c.html#ae258c4ebd9473b87d936944b7b966e4b" title=" " alt="" coords="179,35,373,61"/>
+<area shape="rect" id="node3" href="$plat__adc_8c.html#a1666c96a47bdccd202a7f2763dc5601e" title=" " alt="" coords="451,5,544,32"/>
+<area shape="rect" id="node4" href="$plat__power__capping_8c.html#a69d6451905b0b65f107bd0f77a27a4b9" title=" " alt="" coords="421,57,573,98"/>
+<area shape="rect" id="node5" href="$gt-cc_2src_2platform_2plat__hook_8c.html#abda0c3d7a63cc6f68d1ed88e1d36729d" title=" " alt="" coords="621,64,720,91"/>
+<area shape="rect" id="node6" href="$hal__gpio_8c.html#af700ee50de3d113e223c2b011c41f966" title=" " alt="" coords="768,64,839,91"/>
+</map>

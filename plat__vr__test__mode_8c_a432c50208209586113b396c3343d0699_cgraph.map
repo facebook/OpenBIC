@@ -1,0 +1,13 @@
+<map id="set_vr_fixed_uvp_ovp_enable" name="set_vr_fixed_uvp_ovp_enable">
+<area shape="rect" id="node1" title=" " alt="" coords="5,82,152,123"/>
+<area shape="rect" id="node2" href="$sb-rb_2src_2platform_2plat__pldm__sensor_8c.html#a46562a6841a76e40467323c3cff0e651" title=" " alt="" coords="200,39,396,65"/>
+<area shape="rect" id="node8" href="$sb-rb_2src_2platform_2plat__hook_8c.html#a0ad2a01d30df7b691768f502b3d07af5" title=" " alt="" coords="243,89,353,116"/>
+<area shape="rect" id="node11" href="$plat__vr__test__mode_8c.html#a258f9b8bf1f16d01aac859c72edcae7f" title=" " alt="" coords="229,140,367,167"/>
+<area shape="rect" id="node3" href="$minerva-ag_2src_2platform_2plat__pldm__sensor_8c.html#acbdf6ec80f10c919325e5e571427cf6c" title=" " alt="" coords="444,64,639,91"/>
+<area shape="rect" id="node5" href="$minerva-ag_2src_2platform_2plat__isr_8c.html#ad8887b1d0c4bbc7a6f1c25870a6d9051" title=" " alt="" coords="492,13,591,40"/>
+<area shape="rect" id="node4" href="$minerva-ag_2src_2platform_2plat__pldm__sensor_8c.html#a18272dc8dce4f373b85555817c2cc6f3" title=" " alt="" coords="687,57,836,98"/>
+<area shape="rect" id="node6" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="702,5,821,32"/>
+<area shape="rect" id="node7" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="884,64,1027,91"/>
+<area shape="rect" id="node9" href="$minerva-ag_2src_2platform_2plat__isr_8c.html#a99dfe1bff0c2df0fa9632a165a6fcd3f" title=" " alt="" coords="490,119,593,145"/>
+<area shape="rect" id="node10" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="701,123,822,149"/>
+</map>

@@ -1,0 +1,8 @@
+<map id="mp2985_set_power_regular_mode" name="mp2985_set_power_regular_mode">
+<area shape="rect" id="node1" title=" " alt="" coords="5,81,225,108"/>
+<area shape="rect" id="node2" href="$libutil_8c.html#a143d81b4bb1c57a0fbba65823e309d11" title=" " alt="" coords="273,5,433,32"/>
+<area shape="rect" id="node3" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="483,56,601,83"/>
+<area shape="rect" id="node5" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="481,107,603,133"/>
+<area shape="rect" id="node6" href="$util__pmbus_8c.html#ad75fb62ca838939edf30c5b10656c03e" title=" " alt="" coords="293,157,414,184"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="651,81,793,108"/>
+</map>

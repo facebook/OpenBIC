@@ -1,0 +1,6 @@
+<map id="vr_power_reading" name="vr_power_reading">
+<area shape="rect" id="node1" title=" " alt="" coords="5,64,129,91"/>
+<area shape="rect" id="node2" href="$sb-rb_2src_2platform_2plat__class_8c.html#a9d3145ec260256885f5ad7ae0fee1381" title=" " alt="" coords="207,5,333,32"/>
+<area shape="rect" id="node3" href="$sb-rb_2src_2platform_2plat__i2c__target_8c.html#a8a0bd46e9c77ddec35234c98f6df04d9" title=" " alt="" coords="178,57,362,98"/>
+<area shape="rect" id="node4" href="$plat__cpld_8c.html#a5fa92a28b8fdee738d07d69b6cce29bc" title=" " alt="" coords="177,123,363,149"/>
+</map>

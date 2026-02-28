@@ -1,0 +1,10 @@
+<map id="plat_set_power_capping_command" name="plat_set_power_capping_command">
+<area shape="rect" id="node1" title=" " alt="" coords="5,79,168,121"/>
+<area shape="rect" id="node2" href="$minerva-ag_2src_2platform_2plat__hook_8c.html#a8c5739df584fa684a8dd2ef2853a1247" title=" " alt="" coords="242,7,405,33"/>
+<area shape="rect" id="node6" href="$minerva-ag_2src_2platform_2plat__hook_8c.html#a37382c6e62f7fd56b95c9ad0fc0a6768" title=" " alt="" coords="479,57,645,98"/>
+<area shape="rect" id="node7" href="$minerva-ag_2src_2platform_2plat__hook_8c.html#a09bd680b3ffd917d429850ce72673f6e" title=" " alt="" coords="216,112,431,139"/>
+<area shape="rect" id="node8" href="$minerva-ag_2src_2platform_2plat__hook_8c.html#a08b9065f68600d032cfa095d6e0ea00c" title=" " alt="" coords="246,163,401,205"/>
+<area shape="rect" id="node3" href="$minerva-ag_2src_2platform_2plat__isr_8c.html#a99dfe1bff0c2df0fa9632a165a6fcd3f" title=" " alt="" coords="511,5,613,32"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="693,35,815,61"/>
+<area shape="rect" id="node5" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="863,35,1005,61"/>
+</map>

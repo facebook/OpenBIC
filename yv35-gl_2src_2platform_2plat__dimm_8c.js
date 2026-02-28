@@ -1,0 +1,28 @@
+var yv35_gl_2src_2platform_2plat__dimm_8c =
+[
+    [ "all_brocast_ccc", "yv35-gl_2src_2platform_2plat__dimm_8c.html#a232c98cb8d149335d1e22d60ae94bdc9", null ],
+    [ "clear_unaccessible_dimm_data", "yv35-gl_2src_2platform_2plat__dimm_8c.html#a556085cf5be96ff22fe2b89fa98c80bc", null ],
+    [ "get_dimm_info_handler", "yv35-gl_2src_2platform_2plat__dimm_8c.html#a792c9e629ce4059455353c138f8166ed", null ],
+    [ "get_dimm_presence_status", "yv35-gl_2src_2platform_2plat__dimm_8c.html#a8e973172e82f76cca4505e51d181498b", null ],
+    [ "get_pmic_error_raw_data", "yv35-gl_2src_2platform_2plat__dimm_8c.html#ae37a8c35d5da8239bdec9bf15520dd01", null ],
+    [ "get_pmic_power_raw_data", "yv35-gl_2src_2platform_2plat__dimm_8c.html#a112fecf6dabc55aa3b60d0583aca3935", null ],
+    [ "get_spd_temp_raw_data", "yv35-gl_2src_2platform_2plat__dimm_8c.html#a8d13df90a47804699f216f33007c8714", null ],
+    [ "init_i3c_dimm_prsnt_status", "yv35-gl_2src_2platform_2plat__dimm_8c.html#aa95159747cdd27e8a9bcd4bedff08910", null ],
+    [ "is_dimm_prsnt_inited", "yv35-gl_2src_2platform_2plat__dimm_8c.html#a7d7fead9114156a2f470108bc8c520ee", null ],
+    [ "is_dimm_ready_monitor", "yv35-gl_2src_2platform_2plat__dimm_8c.html#a7ae4a67a7204ee407770a4ec4bf723e6", null ],
+    [ "K_THREAD_STACK_DEFINE", "yv35-gl_2src_2platform_2plat__dimm_8c.html#a6658d42e12dfb1e76e81e3bde3d754ee", null ],
+    [ "LOG_MODULE_REGISTER", "yv35-gl_2src_2platform_2plat__dimm_8c.html#a37a4ecc10394efa3f607e8dade061acd", null ],
+    [ "pal_cal_total_dimm_power", "yv35-gl_2src_2platform_2plat__dimm_8c.html#a51ecc33beb23b1d2768d9847966943dd", null ],
+    [ "pal_get_pmic_pwr", "yv35-gl_2src_2platform_2plat__dimm_8c.html#a4ff34d6a1dc8c61d2d26d26d5dfc0077", null ],
+    [ "pal_get_spd_temp", "yv35-gl_2src_2platform_2plat__dimm_8c.html#a5449ac19e3c5b56530e44cd0139f0ef8", null ],
+    [ "sensor_num_map_dimm_id", "yv35-gl_2src_2platform_2plat__dimm_8c.html#a545cbdd256c04a92bcbf599f0f18e507", null ],
+    [ "set_dimm_presence_status", "yv35-gl_2src_2platform_2plat__dimm_8c.html#a6a7e3adf5cc1a2f15222a5459b981d04", null ],
+    [ "start_get_dimm_info_thread", "yv35-gl_2src_2platform_2plat__dimm_8c.html#a174240252aa6fab79f2b809d5446475b", null ],
+    [ "switch_i3c_dimm_mux", "yv35-gl_2src_2platform_2plat__dimm_8c.html#adde7250a3e530cd984b097cd967ed556", null ],
+    [ "dimm_data", "yv35-gl_2src_2platform_2plat__dimm_8c.html#a97c218f25acda3727575a83ac0fba56e", null ],
+    [ "get_dimm_info_thread", "yv35-gl_2src_2platform_2plat__dimm_8c.html#aa07013493fed10e1aa64c675937ce0fe", null ],
+    [ "get_dimm_info_tid", "yv35-gl_2src_2platform_2plat__dimm_8c.html#a9f8e221744b135a9b13a1cf179b48b83", null ],
+    [ "i3c_dimm_mutex", "yv35-gl_2src_2platform_2plat__dimm_8c.html#a6e82dd82063fc828f68e9104f73823d3", null ],
+    [ "pmic_i3c_addr_list", "yv35-gl_2src_2platform_2plat__dimm_8c.html#a967b043b243ae81b4da9d6e7af9e6bcd", null ],
+    [ "spd_i3c_addr_list", "yv35-gl_2src_2platform_2plat__dimm_8c.html#ac9eba50103e0f66dce140a40d7f772c5", null ]
+];

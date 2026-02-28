@@ -1,0 +1,9 @@
+<map id="power_capping_comparator_handler" name="power_capping_comparator_handler">
+<area shape="rect" id="node1" title=" " alt="" coords="5,71,187,112"/>
+<area shape="rect" id="node2" href="$minerva-ag_2src_2platform_2plat__hook_8c.html#ab5c12fa94b1ae1c90b781e6a0a00f49c" title=" " alt="" coords="241,5,391,47"/>
+<area shape="rect" id="node3" href="$minerva-ag_2src_2platform_2plat__hook_8c.html#a878da343813cb15210fa6f16e1fb0831" title=" " alt="" coords="241,71,391,112"/>
+<area shape="rect" id="node4" href="$minerva-ag_2src_2platform_2plat__hook_8c.html#a8c5739df584fa684a8dd2ef2853a1247" title=" " alt="" coords="235,137,397,163"/>
+<area shape="rect" id="node5" href="$minerva-ag_2src_2platform_2plat__isr_8c.html#a99dfe1bff0c2df0fa9632a165a6fcd3f" title=" " alt="" coords="445,137,548,163"/>
+<area shape="rect" id="node6" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="596,137,717,163"/>
+<area shape="rect" id="node7" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="765,137,908,163"/>
+</map>

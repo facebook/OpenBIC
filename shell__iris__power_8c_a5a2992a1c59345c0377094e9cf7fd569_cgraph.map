@@ -1,0 +1,6 @@
+<map id="pwer_gd_get_status" name="pwer_gd_get_status">
+<area shape="rect" id="node1" title=" " alt="" coords="5,13,144,39"/>
+<area shape="rect" id="node2" href="$plat__ioexp_8c.html#ac080827d1752b9dc20adb6fceb655121" title=" " alt="" coords="192,5,336,47"/>
+<area shape="rect" id="node3" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="384,13,503,39"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="551,13,693,39"/>
+</map>

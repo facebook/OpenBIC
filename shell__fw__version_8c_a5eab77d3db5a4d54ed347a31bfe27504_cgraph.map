@@ -1,0 +1,19 @@
+<map id="cmd_get_fw_version_vr" name="cmd_get_fw_version_vr">
+<area shape="rect" id="node1" title=" " alt="" coords="5,265,165,292"/>
+<area shape="rect" id="node2" href="$shell__iris__power_8c.html#a5fb8a025031360c47a9c0f0ed2ab89b2" title=" " alt="" coords="229,5,392,32"/>
+<area shape="rect" id="node6" href="$minerva-ag_2src_2platform_2plat__pldm__fw__update_8c.html#a67e42a26b005ba14811c6dc61e3886dd" title=" " alt="" coords="214,57,407,98"/>
+<area shape="rect" id="node7" href="$sb-rb_2src_2platform_2plat__class_8c.html#a9d3145ec260256885f5ad7ae0fee1381" title=" " alt="" coords="247,123,374,149"/>
+<area shape="rect" id="node8" href="$minerva-ag_2src_2platform_2plat__pldm__sensor_8c.html#af612fa91659722bb5ba98e3752572ced" title=" " alt="" coords="231,174,390,215"/>
+<area shape="rect" id="node9" href="$minerva-ag_2src_2platform_2plat__pldm__sensor_8c.html#acbdf6ec80f10c919325e5e571427cf6c" title=" " alt="" coords="213,240,408,267"/>
+<area shape="rect" id="node11" href="$mp2971_8c.html#a796944da880207a5a27efca286441a77" title=" " alt="" coords="231,291,391,317"/>
+<area shape="rect" id="node12" href="$mp29816a_8c.html#ab509738683c12a366c9bf503dc11b4f9" title=" " alt="" coords="222,341,399,368"/>
+<area shape="rect" id="node15" href="$raa228249_8c.html#acc19bb4dedbc32674a63175c4c81680a" title=" " alt="" coords="245,392,377,419"/>
+<area shape="rect" id="node16" href="$raa228249_8c.html#ae88e587e5a4fc2f19f5176cce98a4e48" title=" " alt="" coords="215,443,406,469"/>
+<area shape="rect" id="node17" href="$minerva-ag_2src_2platform_2plat__pldm__sensor_8c.html#a9229c6224b9029726a4240164e574765" title=" " alt="" coords="231,494,390,535"/>
+<area shape="rect" id="node3" href="$minerva-ag_2src_2platform_2plat__class_8c.html#ab8ed1e1192e4346f34a2396e50d9f1aa" title=" " alt="" coords="477,89,584,116"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="655,295,773,321"/>
+<area shape="rect" id="node5" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="823,320,965,347"/>
+<area shape="rect" id="node10" href="$minerva-ag_2src_2platform_2plat__pldm__sensor_8c.html#a18272dc8dce4f373b85555817c2cc6f3" title=" " alt="" coords="456,229,605,270"/>
+<area shape="rect" id="node13" href="$mp29816a_8c.html#ae1b19256354a8abbc0d79e36678499d7" title=" " alt="" coords="459,345,602,372"/>
+<area shape="rect" id="node14" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="653,345,775,372"/>
+</map>

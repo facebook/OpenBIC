@@ -1,0 +1,4 @@
+<map id="modbus_get_2nd_boot_update_flag" name="modbus_get_2nd_boot_update_flag">
+<area shape="rect" id="node1" title=" " alt="" coords="5,5,159,47"/>
+<area shape="rect" id="node2" href="$plat__status_8c.html#aa601af4f53236dc9df9b4db1735f94de" title=" " alt="" coords="207,13,317,39"/>
+</map>

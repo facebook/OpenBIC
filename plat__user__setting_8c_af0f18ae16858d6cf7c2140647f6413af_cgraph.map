@@ -1,0 +1,9 @@
+<map id="plat_get_temp_status" name="plat_get_temp_status">
+<area shape="rect" id="node1" title=" " alt="" coords="5,63,152,90"/>
+<area shape="rect" id="node2" href="$minerva-ag_2src_2platform_2plat__pldm__sensor_8c.html#acbdf6ec80f10c919325e5e571427cf6c" title=" " alt="" coords="200,13,395,39"/>
+<area shape="rect" id="node4" href="$minerva-ag_2src_2platform_2plat__class_8c.html#ab8ed1e1192e4346f34a2396e50d9f1aa" title=" " alt="" coords="244,63,351,90"/>
+<area shape="rect" id="node7" href="$tmp431_8c.html#a00cc24b37c2521664aee015454bd26ef" title=" " alt="" coords="213,114,382,141"/>
+<area shape="rect" id="node3" href="$minerva-ag_2src_2platform_2plat__pldm__sensor_8c.html#a18272dc8dce4f373b85555817c2cc6f3" title=" " alt="" coords="443,5,592,47"/>
+<area shape="rect" id="node5" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="458,93,577,119"/>
+<area shape="rect" id="node6" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="640,93,783,119"/>
+</map>

@@ -1,0 +1,4 @@
+<map id="print_efuse_data" name="print_efuse_data">
+<area shape="rect" id="node1" title="Print efuse data with formatted output." alt="" coords="5,5,124,32"/>
+<area shape="rect" id="node2" href="$plat__athena__shell_8c.html#a10021af47b54eee6d26bf0a4be12c03c" title="Print efuse field with raw hex and interpreted value." alt="" coords="172,5,288,32"/>
+</map>

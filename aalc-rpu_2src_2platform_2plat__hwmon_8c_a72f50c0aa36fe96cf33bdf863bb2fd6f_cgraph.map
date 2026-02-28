@@ -1,0 +1,10 @@
+<map id="hsc_adm1272_pwr_ctrl" name="hsc_adm1272_pwr_ctrl">
+<area shape="rect" id="node1" title=" " alt="" coords="5,27,161,54"/>
+<area shape="rect" id="node2" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="618,19,739,46"/>
+<area shape="rect" id="node4" href="$aalc-rpu_2src_2platform_2plat__hook_8c.html#a53e0e4851d2e8c312a4e58efdffb52b5" title=" " alt="" coords="209,27,360,54"/>
+<area shape="rect" id="node6" href="$aalc-rpu_2src_2platform_2plat__hook_8c.html#a332648030bbf2cafa2dd1d7ca74fd5f5" title=" " alt="" coords="213,78,356,104"/>
+<area shape="rect" id="node3" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="812,48,955,75"/>
+<area shape="rect" id="node5" href="$aalc-rpu_2src_2platform_2plat__hook_8c.html#a030290ba9bdfb95ddad14883664cf46a" title=" " alt="" coords="408,27,545,54"/>
+<area shape="rect" id="node7" href="$common__i2c__mux_8c.html#a06ee477158d07a45f98e42dc563641aa" title=" " alt="" coords="415,78,538,104"/>
+<area shape="rect" id="node8" href="$hal__i2c_8c.html#ae12ca95f786ad6cc2dfe16be7d73f862" title=" " alt="" coords="593,70,764,112"/>
+</map>

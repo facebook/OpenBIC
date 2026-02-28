@@ -1,0 +1,15 @@
+<map id="cmd_get_fw_version_asic_from_flash" name="cmd_get_fw_version_asic_from_flash">
+<area shape="rect" id="node1" title=" " alt="" coords="5,216,148,257"/>
+<area shape="rect" id="node2" href="$sb-rb_2src_2platform_2plat__pldm__fw__update_8c.html#a5a41356e9b5572a20365f278a48799e0" title=" " alt="" coords="198,165,354,207"/>
+<area shape="rect" id="node9" href="$sb-rb_2src_2platform_2plat__pldm__fw__update_8c.html#a37c8d1c136106e0b485fb73951d1c059" title=" " alt="" coords="196,253,356,279"/>
+<area shape="rect" id="node3" href="$sb-rb_2src_2platform_2plat__pldm__fw__update_8c.html#aa7eac217a278126d34d528d24303e5fb" title=" " alt="" coords="404,5,545,47"/>
+<area shape="rect" id="node5" href="$sb-rb_2src_2platform_2plat__pldm__fw__update_8c.html#ac82b1d21cffd47201d7b6bc3026dd46c" title=" " alt="" coords="404,71,545,112"/>
+<area shape="rect" id="node6" href="$sb-rb_2src_2platform_2plat__pldm__fw__update_8c.html#a6fd9059095831aef4e97f80b3c256628" title=" " alt="" coords="404,136,545,177"/>
+<area shape="rect" id="node7" href="$util__spi_8c.html#a90e1b44cc394b7ecb7a898d2fc31b55d" title=" " alt="" coords="419,202,530,229"/>
+<area shape="rect" id="node8" href="$sb-rb_2src_2platform_2plat__pldm__fw__update_8c.html#af39eb6db70a72052f9f9fa11de3543ba" title=" " alt="" coords="413,253,536,279"/>
+<area shape="rect" id="node4" href="$hal__gpio_8c.html#ab1b576cbfd9eddaaf57a5aa5fc383dd1" title=" " alt="" coords="609,111,680,138"/>
+<area shape="rect" id="node10" href="$plat__cpld_8c.html#a5de87122b83dfeeda681f4f3d927038f" title=" " alt="" coords="420,303,529,330"/>
+<area shape="rect" id="node11" href="$minerva-ag_2src_2platform_2plat__isr_8c.html#a99dfe1bff0c2df0fa9632a165a6fcd3f" title=" " alt="" coords="593,303,696,330"/>
+<area shape="rect" id="node12" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="744,303,865,330"/>
+<area shape="rect" id="node13" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="913,303,1056,330"/>
+</map>

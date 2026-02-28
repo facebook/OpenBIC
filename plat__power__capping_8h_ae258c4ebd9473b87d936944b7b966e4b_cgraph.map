@@ -1,0 +1,7 @@
+<map id="set_power_capping_threshold" name="set_power_capping_threshold">
+<area shape="rect" id="node1" title=" " alt="" coords="5,35,200,61"/>
+<area shape="rect" id="node2" href="$plat__adc_8c.html#a1666c96a47bdccd202a7f2763dc5601e" title=" " alt="" coords="277,5,371,32"/>
+<area shape="rect" id="node3" href="$plat__power__capping_8c.html#a69d6451905b0b65f107bd0f77a27a4b9" title=" " alt="" coords="248,57,400,98"/>
+<area shape="rect" id="node4" href="$gt-cc_2src_2platform_2plat__hook_8c.html#abda0c3d7a63cc6f68d1ed88e1d36729d" title=" " alt="" coords="448,64,547,91"/>
+<area shape="rect" id="node5" href="$hal__gpio_8c.html#af700ee50de3d113e223c2b011c41f966" title=" " alt="" coords="595,64,665,91"/>
+</map>

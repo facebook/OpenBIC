@@ -1,0 +1,17 @@
+<map id="check_thermal_handler" name="check_thermal_handler">
+<area shape="rect" id="node1" title=" " alt="" coords="5,147,161,174"/>
+<area shape="rect" id="node2" href="$minerva-ag_2src_2platform_2plat__pldm__sensor_8c.html#af612fa91659722bb5ba98e3752572ced" title=" " alt="" coords="228,5,387,47"/>
+<area shape="rect" id="node3" href="$sb-rb_2src_2platform_2plat__pldm__sensor_8c.html#a46562a6841a76e40467323c3cff0e651" title=" " alt="" coords="209,122,405,149"/>
+<area shape="rect" id="node4" href="$minerva-ag_2src_2platform_2plat__pldm__sensor_8c.html#acbdf6ec80f10c919325e5e571427cf6c" title=" " alt="" coords="453,122,648,149"/>
+<area shape="rect" id="node9" href="$minerva-ag_2src_2platform_2plat__hook_8c.html#af0f18ae16858d6cf7c2140647f6413af" title=" " alt="" coords="234,223,381,250"/>
+<area shape="rect" id="node12" href="$sb-rb_2src_2platform_2plat__event_8c.html#a22e6e0f8d413de7483f3d7b8506fd209" title=" " alt="" coords="243,317,371,359"/>
+<area shape="rect" id="node15" href="$plat__thermal_8c.html#a0d307a02561400f0a640198da0b660d2" title=" " alt="" coords="244,173,371,199"/>
+<area shape="rect" id="node6" href="$minerva-ag_2src_2platform_2plat__isr_8c.html#ad8887b1d0c4bbc7a6f1c25870a6d9051" title=" " alt="" coords="501,173,600,199"/>
+<area shape="rect" id="node5" href="$minerva-ag_2src_2platform_2plat__pldm__sensor_8c.html#a18272dc8dce4f373b85555817c2cc6f3" title=" " alt="" coords="696,115,845,156"/>
+<area shape="rect" id="node7" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="711,223,830,250"/>
+<area shape="rect" id="node8" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="893,223,1036,250"/>
+<area shape="rect" id="node10" href="$emc1413_8c.html#afdec49346182fe17ed1cb231ab47f50f" title=" " alt="" coords="461,223,640,250"/>
+<area shape="rect" id="node11" href="$tmp431_8c.html#a00cc24b37c2521664aee015454bd26ef" title=" " alt="" coords="466,274,635,301"/>
+<area shape="rect" id="node13" href="$aalc-rpu_2src_2platform_2plat__log_8c.html#a103e33f69b37672107c44bcf36accc6b" title=" " alt="" coords="495,325,606,351"/>
+<area shape="rect" id="node14" href="$sb-rb_2src_2platform_2plat__led_8c.html#a285fa22ff058631a40f9a4554c3c05f5" title=" " alt="" coords="505,375,596,402"/>
+</map>

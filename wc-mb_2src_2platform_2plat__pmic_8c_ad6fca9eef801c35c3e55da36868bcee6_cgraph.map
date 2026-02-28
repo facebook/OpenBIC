@@ -1,0 +1,5 @@
+<map id="add_pmic_error_sel" name="add_pmic_error_sel">
+<area shape="rect" id="node1" title=" " alt="" coords="5,13,140,39"/>
+<area shape="rect" id="node2" href="$ipmi_8c.html#a40681786f36bd1836cdb473b7050dda1" title=" " alt="" coords="188,5,337,47"/>
+<area shape="rect" id="node3" href="$ipmb_8h.html#a260c07ba372e6648a635b20dbb790fa9" title=" " alt="" coords="385,13,468,39"/>
+</map>

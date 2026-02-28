@@ -1,0 +1,8 @@
+<map id="set_throttle_user_settings" name="set_throttle_user_settings">
+<area shape="rect" id="node1" title=" " alt="" coords="5,29,177,56"/>
+<area shape="rect" id="node2" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="603,29,724,56"/>
+<area shape="rect" id="node4" href="$plat__cpld_8c.html#a5de87122b83dfeeda681f4f3d927038f" title=" " alt="" coords="225,29,335,56"/>
+<area shape="rect" id="node6" href="$minerva-ag_2src_2platform_2plat__hook_8c.html#a15f947a771c92f1d07cd36e83e8abf64" title=" " alt="" coords="383,80,555,122"/>
+<area shape="rect" id="node3" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="772,29,915,56"/>
+<area shape="rect" id="node5" href="$minerva-ag_2src_2platform_2plat__isr_8c.html#a99dfe1bff0c2df0fa9632a165a6fcd3f" title=" " alt="" coords="417,29,520,56"/>
+</map>

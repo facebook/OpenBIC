@@ -1,0 +1,7 @@
+<map id="plat_pldm_sensor_change_cpu_bus" name="plat_pldm_sensor_change_cpu_bus">
+<area shape="rect" id="node1" title=" " alt="" coords="5,27,179,69"/>
+<area shape="rect" id="node2" href="$yv4-sd_2src_2platform_2plat__class_8c.html#a77fab2f8167a9eb32f8d848d1bb1ef53" title=" " alt="" coords="249,5,353,32"/>
+<area shape="rect" id="node5" href="$minerva-ag_2src_2platform_2plat__pldm__sensor_8c.html#a18272dc8dce4f373b85555817c2cc6f3" title=" " alt="" coords="227,57,376,98"/>
+<area shape="rect" id="node3" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="424,5,543,32"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="591,5,733,32"/>
+</map>

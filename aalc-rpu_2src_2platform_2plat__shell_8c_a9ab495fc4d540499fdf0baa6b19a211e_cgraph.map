@@ -1,0 +1,8 @@
+<map id="cmd_nct7363_fb" name="cmd_nct7363_fb">
+<area shape="rect" id="node1" title=" " alt="" coords="5,42,124,69"/>
+<area shape="rect" id="node2" href="$sensor_8c.html#a52fcbd96358bec7eff3e368a4da4a292" title=" " alt="" coords="172,15,368,42"/>
+<area shape="rect" id="node4" href="$nct7363_8c.html#a33d1b854149a2acac4ef2e214fa60bf5" title=" " alt="" coords="187,67,353,94"/>
+<area shape="rect" id="node3" href="$sensor_8c.html#ae224ad26413eb100f2abef7a1907a547" title=" " alt="" coords="416,5,553,47"/>
+<area shape="rect" id="node5" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="425,71,544,98"/>
+<area shape="rect" id="node6" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="601,71,744,98"/>
+</map>

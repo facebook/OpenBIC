@@ -1,0 +1,7 @@
+<map id="ina238_init" name="ina238_init">
+<area shape="rect" id="node1" title=" " alt="" coords="5,21,89,48"/>
+<area shape="rect" id="node2" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="279,21,397,48"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="277,72,399,99"/>
+<area shape="rect" id="node5" href="$ina238_8c.html#aba2b023a60fb3157d390fc0aec345c5d" title=" " alt="" coords="137,21,229,48"/>
+<area shape="rect" id="node3" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="447,47,589,73"/>
+</map>

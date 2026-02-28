@@ -1,0 +1,12 @@
+<map id="plat_mctp_init" name="plat_mctp_init">
+<area shape="rect" id="node1" title=" " alt="" coords="5,132,108,159"/>
+<area shape="rect" id="node2" href="$at-cb_2src_2platform_2plat__mctp_8c.html#aa3e8f617a363df0ea160a41500fc6fd5" title=" " alt="" coords="193,5,333,32"/>
+<area shape="rect" id="node4" href="$hal__i2c__target_8c.html#a0735e316a62a2116e6c3311aa8e9e9f8" title=" " alt="" coords="200,56,325,83"/>
+<area shape="rect" id="node6" href="$mctp_8c.html#ab1905bb0879c3549e5c9cdc7af7ac542" title=" " alt="" coords="225,107,300,133"/>
+<area shape="rect" id="node8" href="$mctp_8c.html#a1960807c9a26babd71ade5525dc94401" title=" " alt="" coords="156,157,369,184"/>
+<area shape="rect" id="node9" href="$mctp_8c.html#a3dc8f55c76c313ec5842bbf2a7f07b0c" title=" " alt="" coords="184,208,341,235"/>
+<area shape="rect" id="node10" href="$mctp_8c.html#ade34a751d16b88e65d2b0a359f47e119" title=" " alt="" coords="169,259,357,285"/>
+<area shape="rect" id="node3" href="$at-cb_2src_2platform_2plat__mctp_8c.html#aa91b2fdee8959aa54116d3b9b3b6c031" title=" " alt="" coords="419,5,563,32"/>
+<area shape="rect" id="node5" href="$hal__i2c__target_8c.html#a2f708033f90c1afa66581d9ca8a965fb" title=" " alt="" coords="417,56,564,83"/>
+<area shape="rect" id="node7" href="$mctp_8c.html#a7d61df854b09dc8825dd057fe3ca07cd" title=" " alt="" coords="445,107,537,133"/>
+</map>

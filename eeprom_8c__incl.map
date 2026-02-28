@@ -1,0 +1,14 @@
+<map id="common/dev/eeprom.c" name="common/dev/eeprom.c">
+<area shape="rect" id="node1" title=" " alt="" coords="143,5,297,32"/>
+<area shape="rect" id="node2" title=" " alt="" coords="19,80,79,107"/>
+<area shape="rect" id="node3" href="$eeprom_8h.html" title=" " alt="" coords="99,155,173,181"/>
+<area shape="rect" id="node7" href="$fru_8h.html" title=" " alt="" coords="155,80,202,107"/>
+<area shape="rect" id="node8" href="$hal__i2c_8h.html" title=" " alt="" coords="226,80,299,107"/>
+<area shape="rect" id="node11" title=" " alt="" coords="324,80,388,107"/>
+<area shape="rect" id="node12" title=" " alt="" coords="413,80,507,107"/>
+<area shape="rect" id="node4" title=" " alt="" coords="5,229,80,256"/>
+<area shape="rect" id="node5" title=" " alt="" coords="104,229,168,256"/>
+<area shape="rect" id="node6" title=" " alt="" coords="193,229,271,256"/>
+<area shape="rect" id="node9" title=" " alt="" coords="207,155,299,181"/>
+<area shape="rect" id="node10" title=" " alt="" coords="323,155,482,181"/>
+</map>

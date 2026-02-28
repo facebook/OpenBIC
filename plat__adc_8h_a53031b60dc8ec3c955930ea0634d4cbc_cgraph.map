@@ -1,0 +1,8 @@
+<map id="read_adc_info" name="read_adc_info">
+<area shape="rect" id="node1" title=" " alt="" coords="5,56,108,83"/>
+<area shape="rect" id="node2" href="$plat__adc_8c.html#a76346c2ebbadc651c21c63d5c72e3955" title=" " alt="" coords="157,5,279,32"/>
+<area shape="rect" id="node3" href="$plat__adc_8c.html#a34738f7e8f1ebaccda5ee117c4da9895" title=" " alt="" coords="156,56,280,83"/>
+<area shape="rect" id="node4" href="$minerva-ag_2src_2platform_2plat__class_8c.html#ab8ed1e1192e4346f34a2396e50d9f1aa" title=" " alt="" coords="165,107,271,133"/>
+<area shape="rect" id="node5" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="328,107,447,133"/>
+<area shape="rect" id="node6" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="495,107,637,133"/>
+</map>

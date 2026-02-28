@@ -1,0 +1,5 @@
+<map id="is_i3c_mux_to_bic" name="is_i3c_mux_to_bic">
+<area shape="rect" id="node1" title=" " alt="" coords="5,5,135,32"/>
+<area shape="rect" id="node2" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="183,5,301,32"/>
+<area shape="rect" id="node3" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="349,5,492,32"/>
+</map>

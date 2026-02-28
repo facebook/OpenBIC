@@ -1,0 +1,11 @@
+<map id="set_cmd_vr_hot_switch_enable" name="set_cmd_vr_hot_switch_enable">
+<area shape="rect" id="node1" title=" " alt="" coords="5,23,165,65"/>
+<area shape="rect" id="node2" href="$plat__cpld_8c.html#a9499cab43403852499e3199117bfc94e" title=" " alt="" coords="213,31,305,57"/>
+<area shape="rect" id="node3" href="$plat__cpld_8c.html#ae2158527dc59da6acbe7d119b1602f98" title=" " alt="" coords="355,5,461,32"/>
+<area shape="rect" id="node7" href="$plat__cpld_8c.html#a5de87122b83dfeeda681f4f3d927038f" title=" " alt="" coords="353,56,463,83"/>
+<area shape="rect" id="node4" href="$minerva-ag_2src_2platform_2plat__isr_8c.html#ad8887b1d0c4bbc7a6f1c25870a6d9051" title=" " alt="" coords="513,5,611,32"/>
+<area shape="rect" id="node5" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="663,5,781,32"/>
+<area shape="rect" id="node6" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="831,31,973,57"/>
+<area shape="rect" id="node8" href="$minerva-ag_2src_2platform_2plat__isr_8c.html#a99dfe1bff0c2df0fa9632a165a6fcd3f" title=" " alt="" coords="511,56,613,83"/>
+<area shape="rect" id="node9" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="661,56,783,83"/>
+</map>

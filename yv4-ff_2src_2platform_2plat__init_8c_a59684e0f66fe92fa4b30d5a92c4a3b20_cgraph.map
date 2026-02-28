@@ -1,0 +1,12 @@
+<map id="pal_set_sys_status" name="pal_set_sys_status">
+<area shape="rect" id="node1" title=" " alt="" coords="5,132,140,159"/>
+<area shape="rect" id="node2" href="$yv4-ff_2src_2platform_2plat__power__seq_8c.html#a88c532b9991148bea0913926b65ced69" title=" " alt="" coords="215,5,341,32"/>
+<area shape="rect" id="node3" href="$hal__gpio_8c.html#af700ee50de3d113e223c2b011c41f966" title=" " alt="" coords="623,157,693,184"/>
+<area shape="rect" id="node4" href="$power__status_8c.html#aa3406c25950a307fb61cec9e156605c3" title=" " alt="" coords="188,107,368,133"/>
+<area shape="rect" id="node5" href="$power__status_8c.html#a4482f69c1ee4e17e699b46c3ea5cf05e" title=" " alt="" coords="224,157,332,184"/>
+<area shape="rect" id="node6" href="$yv4-ff_2src_2platform_2plat__power__seq_8c.html#af91bcc3107d5dc12defd0c6529e6f464" title=" " alt="" coords="213,208,343,235"/>
+<area shape="rect" id="node8" href="$util__sys_8c.html#aca86a097f05abd7ef54232449f0e7121" title=" " alt="" coords="213,259,343,285"/>
+<area shape="rect" id="node7" href="$gt-cc_2src_2platform_2plat__hook_8c.html#abda0c3d7a63cc6f68d1ed88e1d36729d" title=" " alt="" coords="446,208,545,235"/>
+<area shape="rect" id="node9" href="$sensor_8c.html#aa833d5d8408e30693b88d6b16beacbcf" title=" " alt="" coords="416,259,575,285"/>
+<area shape="rect" id="node10" href="$hal__gpio_8c.html#ab1b576cbfd9eddaaf57a5aa5fc383dd1" title=" " alt="" coords="460,309,531,336"/>
+</map>

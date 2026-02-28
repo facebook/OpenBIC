@@ -1,0 +1,10 @@
+<map id="add_sel_log_to_bmc_handler" name="add_sel_log_to_bmc_handler">
+<area shape="rect" id="node1" title=" " alt="" coords="5,39,147,80"/>
+<area shape="rect" id="node2" href="$at-mc_2src_2ipmi_2plat__ipmi_8c.html#a90bef9b9682b63b91c0cc002f8186cbe" title=" " alt="" coords="199,5,330,47"/>
+<area shape="rect" id="node3" href="$at-cb_2src_2platform_2plat__mctp_8c.html#a33ce9397125587861d5cf82cd2800142" title=" " alt="" coords="195,71,335,112"/>
+<area shape="rect" id="node4" href="$at-cb_2src_2platform_2plat__mctp_8c.html#aa3e8f617a363df0ea160a41500fc6fd5" title=" " alt="" coords="383,27,523,54"/>
+<area shape="rect" id="node6" href="$pldm_8c.html#a90114495fe7507fbfbdcd388f02911aa" title=" " alt="" coords="393,78,512,105"/>
+<area shape="rect" id="node8" href="$pldm__oem_8c.html#acdcd72cd46e1f10b7be19781bb1b9866" title=" " alt="" coords="417,129,488,155"/>
+<area shape="rect" id="node5" href="$at-cb_2src_2platform_2plat__mctp_8c.html#aa91b2fdee8959aa54116d3b9b3b6c031" title=" " alt="" coords="580,27,724,54"/>
+<area shape="rect" id="node7" href="$pldm_8c.html#a41d615349cd666a0f5372f4f4f0c9507" title=" " alt="" coords="571,78,733,105"/>
+</map>

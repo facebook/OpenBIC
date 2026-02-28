@@ -1,0 +1,6 @@
+<map id="plat_get_cpld_fru_data" name="plat_get_cpld_fru_data">
+<area shape="rect" id="node1" title=" " alt="" coords="5,5,159,32"/>
+<area shape="rect" id="node2" href="$sb-rb_2src_2platform_2plat__class_8c.html#a73d863737f90a26fb5407e78c7af3e45" title=" " alt="" coords="207,5,367,32"/>
+<area shape="rect" id="node3" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="415,5,533,32"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="581,5,724,32"/>
+</map>
