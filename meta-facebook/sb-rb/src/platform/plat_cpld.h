@@ -105,7 +105,6 @@ bool is_ubc_enabled_delayed_enabled(void);
 bool plat_read_cpld(uint8_t offset, uint8_t *data, uint8_t len);
 bool plat_write_cpld(uint8_t offset, uint8_t *data);
 void init_cpld_polling(void);
-void check_cpld_polling_alert_status(void);
 void check_ubc_delayed_timer_handler(struct k_timer *timer);
 bool set_cpld_bit(uint8_t cpld_offset, uint8_t bit, uint8_t value);
 void give_all_vr_pm_alert_sem();

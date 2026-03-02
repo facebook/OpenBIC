@@ -97,7 +97,6 @@ void ISR_GPIO_ALL_VR_PM_ALERT_R_N()
 	LOG_DBG("gpio_%d_isr called, val=%d , dir= %d", ALL_VR_PM_ALERT_R_N,
 		gpio_get(ALL_VR_PM_ALERT_R_N), gpio_get_direction(ALL_VR_PM_ALERT_R_N));
 
-	check_cpld_polling_alert_status();
 	if (gpio_get(ALL_VR_PM_ALERT_R_N) == GPIO_LOW) {
 		give_all_vr_pm_alert_sem();
 	}
@@ -146,8 +145,6 @@ void ISR_GPIO_RST_IRIS_PWR_ON_PLD_R1_N()
 		}
 		// when dc on clear cpld polling alert status
 		uint8_t err_type = CPLD_UNEXPECTED_VAL_TRIGGER_CAUSE;
-		LOG_DBG("cpld_polling_alert_status: true -> false, reset_error_log_states: %x",
-			err_type);
 		reset_error_log_states(err_type);
 	} else {
 		LOG_INF("dc off, clear io expander init flag");
