@@ -12,6 +12,24 @@
 #define CPLD_OFFSET_USERCODE 0x32
 #define CPLD_OFFSET_ASIC_BOARD_ID 0x3C
 
+#define VR_AND_CLK_EN 0x3E
+#define VR_1_EN 0x3F
+#define VR_2_EN 0x40
+#define VR_3_EN 0x41
+#define VR_4_EN 0x42
+
+#define VR_AND_CLK_EN_PIN_CTRL 0xA1
+#define VR_PWRGD_PIN_READING_1_REG 0x07
+#define VR_PWRGD_PIN_READING_2_REG 0x08
+#define VR_PWRGD_PIN_READING_3_REG 0x09
+#define VR_PWRGD_PIN_READING_4_REG 0x0A
+#define VR_PWRGD_PIN_READING_5_REG 0x0B
+#define VR_PWRGD_PIN_READING_6_REG 0x0C
+#define VR_CLK_ENABLE_PIN_CTRL_REG 0xA1 // pin control (1-step only)
+#define CPLD_ASIC_RESET_STATUS_REG 0xA2
+
+#define VR_1STEP_FUNC_EN_REG 0xA9
+
 typedef struct _cpld_info_ cpld_info;
 
 typedef struct _cpld_info_ {
