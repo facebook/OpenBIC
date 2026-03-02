@@ -18,6 +18,8 @@
 #define PLAT_ISR_H
 
 void ISR_GPIO_ALL_VR_PM_ALERT_R_N();
-void ISR_GPIO_RST_IRIS_PWR_ON_PLD_R1_N();
+void ISR_GPIO_RST_ARKE_PWR_ON_PLD_R1_N();
+void set_pwr_steps_on_flag(uint8_t flag_value);
+uint8_t get_pwr_steps_on_flag(void);
 
 #endif

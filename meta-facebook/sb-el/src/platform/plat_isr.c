@@ -33,7 +33,7 @@ void ISR_GPIO_ALL_VR_PM_ALERT_R_N()
 	check_cpld_polling_alert_status();
 }
 
-void ISR_GPIO_RST_IRIS_PWR_ON_PLD_R1_N()
+void ISR_GPIO_RST_ARKE_PWR_ON_PLD_R1_N()
 {
 	// dc on
 	if (gpio_get(RST_ARKE_PWR_ON_PLD_R1_N)) {
@@ -52,4 +52,21 @@ void ISR_GPIO_RST_IRIS_PWR_ON_PLD_R1_N()
 		LOG_INF("dc off");
 		// set_ioe_init_flag(0);
 	}
+}
+
+uint8_t pwr_steps_on_flag = 0;
+
+void set_pwr_steps_on_flag(uint8_t flag_value)
+{
+	pwr_steps_on_flag = flag_value;
+	LOG_DBG("set pwr_steps_on_flag = %d", pwr_steps_on_flag);
+	//check value
+	if (pwr_steps_on_flag != flag_value)
+		LOG_ERR("set pwr_steps_on_flag failed, now pwr_steps_on_flag = %d",
+			pwr_steps_on_flag);
+}
+
+uint8_t get_pwr_steps_on_flag(void)
+{
+	return pwr_steps_on_flag;
 }
