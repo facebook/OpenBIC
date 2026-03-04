@@ -40,6 +40,7 @@
 #include "plat_ioexp.h"
 #include "plat_fru.h"
 #include "plat_power_capping.h"
+#include "plat_adc.h"
 
 LOG_MODULE_REGISTER(plat_i2c_target);
 
@@ -546,14 +547,33 @@ void vr_power_reading(uint8_t *buffer, size_t buf_size)
 		val = (milivolt + 500) / 1000;
 
 		switch (vr_pwr_sensor_table[i]) {
-		case SENSOR_NUM_ASIC_P0V85_MEDHA0_VDD_PWR_W:
-			memcpy(&buffer[6], &val, 2);
-			medha0 = milivolt;
+		case SENSOR_NUM_ASIC_P0V85_MEDHA0_VDD_PWR_W: {
+			if (get_power_capping_source() == CAPPING_SOURCE_ADC) {
+				/* ADC instant power in W */
+				float pwr_w = get_adc_medha_inst_pwr_w(ADC_RB_IDX_MEDHA0);
+				uint16_t adc_w = (uint16_t)(pwr_w + 0.5f);
+				memcpy(&buffer[6], &adc_w, 2);
+				medha0 = (int)(pwr_w * 1000.0f + 0.5f);
+			} else {
+				memcpy(&buffer[6], &val, 2);
+				medha0 = milivolt;
+			}
 			break;
-		case SENSOR_NUM_ASIC_P0V85_MEDHA1_VDD_PWR_W:
-			memcpy(&buffer[8], &val, 2);
-			medha1 = milivolt;
+		}
+		case SENSOR_NUM_ASIC_P0V85_MEDHA1_VDD_PWR_W: {
+			if (get_power_capping_source() == CAPPING_SOURCE_ADC) {
+				float pwr_w = get_adc_medha_inst_pwr_w(ADC_RB_IDX_MEDHA1);
+
+				uint16_t adc_w = (uint16_t)(pwr_w + 0.5f);
+				memcpy(&buffer[8], &adc_w, 2);
+
+				medha1 = (int)(pwr_w * 1000.0f + 0.5f);
+			} else {
+				memcpy(&buffer[8], &val, 2);
+				medha1 = milivolt;
+			}
 			break;
+		}
 		case SENSOR_NUM_ASIC_P1V1_VDDQC_HBM0246_PWR_W:
 			memcpy(&buffer[10], &val, 2);
 			break;
@@ -867,20 +887,28 @@ static bool command_reply_data_handle(void *arg)
 			} break;
 			case MEDHA_SENSOR_VALUE_REG: {
 				data->target_rd_msg.msg_length = 4;
-				uint16_t sensor_value;
-				sensor_value = (get_cached_sensor_reading_by_sensor_number(
-							SENSOR_NUM_ASIC_P0V85_MEDHA0_VDD_PWR_W) +
-						500) /
-					       1000;
-				memcpy(&data->target_rd_msg.msg[0], &sensor_value,
-				       sizeof(sensor_value));
-				sensor_value = (get_cached_sensor_reading_by_sensor_number(
-							SENSOR_NUM_ASIC_P0V85_MEDHA1_VDD_PWR_W) +
-						500) /
-					       1000;
-				memcpy(&data->target_rd_msg.msg[2], &sensor_value,
-				       sizeof(sensor_value));
+				uint16_t sensor_value = 0;
 
+				if (get_power_capping_source() == CAPPING_SOURCE_ADC) {
+					/* ADC instant power in W */
+					float pwr_w0 = get_adc_medha_inst_pwr_w(ADC_RB_IDX_MEDHA0);
+					float pwr_w1 = get_adc_medha_inst_pwr_w(ADC_RB_IDX_MEDHA1);
+
+					sensor_value = (uint16_t)(pwr_w0 + 0.5f);
+					memcpy(&data->target_rd_msg.msg[0], &sensor_value, sizeof(sensor_value));
+
+					sensor_value = (uint16_t)(pwr_w1 + 0.5f);
+					memcpy(&data->target_rd_msg.msg[2], &sensor_value, sizeof(sensor_value));
+				} else {
+					/* VR sensor cache power in W */
+					sensor_value = (get_cached_sensor_reading_by_sensor_number(
+								SENSOR_NUM_ASIC_P0V85_MEDHA0_VDD_PWR_W) + 500) / 1000;
+					memcpy(&data->target_rd_msg.msg[0], &sensor_value, sizeof(sensor_value));
+
+					sensor_value = (get_cached_sensor_reading_by_sensor_number(
+								SENSOR_NUM_ASIC_P0V85_MEDHA1_VDD_PWR_W) + 500) / 1000;
+					memcpy(&data->target_rd_msg.msg[2], &sensor_value, sizeof(sensor_value));
+				}
 			} break;
 			case POWER_CAPPING_METHOD_REG: {
 				data->target_rd_msg.msg[0] = get_power_capping_method();

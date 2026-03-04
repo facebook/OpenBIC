@@ -46,8 +46,12 @@ static bool adc_poll_flag = true;
 uint8_t adc_idx_read = 0;
 float ad4058_val_0 = 0;
 float ad4058_val_1 = 0;
+static uint16_t ad4058_raw_0 = 0;
+static uint16_t ad4058_raw_1 = 0;
 float ads7066_val_0 = 0;
 float ads7066_val_1 = 0;
+static uint16_t ads7066_raw_0 = 0;
+static uint16_t ads7066_raw_1 = 0;
 const float ads7066_vref = 2.5;
 const float ad4058_vref = 2.5;
 static uint8_t adc_good_status[2] = { 0xFF, 0xFF };
@@ -136,6 +140,48 @@ void adc_set_averge_times(uint8_t idx, uint16_t time)
 	}
 }
 
+float get_adc_medha_inst_pwr_w(uint8_t medha_idx)
+{
+	uint16_t raw = 0;
+	float v = 0.0f;
+	float vref = 0.0f;
+
+	switch (get_adc_type()) {
+	case TIC_ADS7066:
+		vref = ads7066_vref;
+		if (medha_idx == ADC_RB_IDX_MEDHA0) {
+			raw = ads7066_raw_0;
+			v = ads7066_val_0;
+		} else if (medha_idx == ADC_RB_IDX_MEDHA1) {
+			raw = ads7066_raw_1;
+			v = ads7066_val_1;
+		} else {
+			return 0.0f;
+		}
+		break;
+	case ADI_AD4058:
+        vref = ad4058_vref;
+        if (medha_idx == ADC_RB_IDX_MEDHA0) {
+            raw = ad4058_raw_0;
+            v = ad4058_val_0;
+        } else if (medha_idx == ADC_RB_IDX_MEDHA1) {
+            raw = ad4058_raw_1;
+            v = ad4058_val_1;
+        } else {
+            return 0.0f;
+        }
+        break;
+	default:
+		return 0.0f;
+	}
+
+	/* current (mA) */
+	float cur_ma = adc_raw_v_to_apms(raw, vref);
+
+	/* power = V * mA = mW -> convert to W */
+	return (v * cur_ma) / 1000.0f;
+}
+
 uint16_t get_adc_ucr(uint8_t idx)
 {
 	return adc_info[idx].ucr;
@@ -154,7 +200,7 @@ void set_adc_ucr_status(uint8_t idx, bool status)
 	adc_info[idx].ucr_status = status;
 }
 
-float adc_raw_mv_to_apms(uint16_t v, float vref)
+float adc_raw_v_to_apms(uint16_t v, float vref)
 {
 	float temp_v = ((float)v / 0xffff) * vref;
 	return (get_vr_module() == VR_MODULE_MPS) ? 1000 * temp_v * 0.796 : 1000 * temp_v * 0.797;
@@ -215,7 +261,7 @@ static void update_adc_info(uint16_t raw_data, uint8_t base_idx, float vref)
 		adc->vr_sum += uint16_voltage_transfer_to_float(adc->vr_voltage_buf[adc->buf_idx]);
 		// average pwr = average voltage * average current
 		adc->pwr_avg_val =
-			(adc->vr_sum / adc->avg_times) * adc_raw_mv_to_apms(adc->avg_val, vref);
+			(adc->vr_sum / adc->avg_times) * adc_raw_v_to_apms(adc->avg_val, vref);
 
 		// decrease buffer idx
 		adc->buf_idx = (adc->buf_idx + 1) % adc->avg_times;
@@ -480,9 +526,11 @@ static void ads7066_read_voltage(uint8_t idx)
 	uint16_t raw_value = out_buf[0] << 8 | out_buf[1];
 	if (idx == ADC_RB_IDX_MEDHA0) {
 		ads7066_val_0 = ((float)raw_value / 65536) * ads7066_vref;
+		ads7066_raw_0 = raw_value;
 		update_adc_info(raw_value, ADC_RB_IDX_MEDHA0, ads7066_vref);
 	} else if (idx == ADC_RB_IDX_MEDHA1) {
 		ads7066_val_1 = ((float)raw_value / 65536) * ads7066_vref;
+		ads7066_raw_1 = raw_value;
 		update_adc_info(raw_value, ADC_RB_IDX_MEDHA1, ads7066_vref);
 	}
 
@@ -677,9 +725,11 @@ static void ad4058_read_voltage(uint8_t idx)
 	uint16_t raw_value = (uint16_t)((high << 8) | low);
 	if (idx == ADC_RB_IDX_MEDHA0) {
 		ad4058_val_0 = (float)raw_value / 65536 * ad4058_vref;
+		ad4058_raw_0 = raw_value;
 		update_adc_info(raw_value, ADC_RB_IDX_MEDHA0, ad4058_vref);
 	} else if (idx == ADC_RB_IDX_MEDHA1) {
 		ad4058_val_1 = (float)raw_value / 65536 * ad4058_vref;
+		ad4058_raw_1 = raw_value;
 		update_adc_info(raw_value, ADC_RB_IDX_MEDHA1, ad4058_vref);
 	}
 
