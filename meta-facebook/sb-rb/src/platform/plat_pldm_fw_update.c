@@ -44,6 +44,7 @@ LOG_MODULE_REGISTER(plat_fwupdate);
 
 static uint8_t pldm_pre_vr_update(void *fw_update_param);
 static uint8_t pldm_post_vr_update(void *fw_update_param);
+static uint8_t plat_pldm_vr_update(void *fw_update_param);
 static uint8_t pldm_pre_bic_update(void *fw_update_param);
 static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len);
 static bool get_boot0_hamsa_fw_version(void *info_p, uint8_t *buf, uint8_t *len);
@@ -842,7 +843,7 @@ static bool get_boot0_medha1_fw_version(void *info_p, uint8_t *buf, uint8_t *len
 	{                                                                                          \
 		.enable = true, .comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,                 \
 		.comp_identifier = comp_id, .comp_classification_index = 0x00,                     \
-		.pre_update_func = pldm_pre_vr_update, .update_func = pldm_vr_update,              \
+		.pre_update_func = pldm_pre_vr_update, .update_func = plat_pldm_vr_update,              \
 		.pos_update_func = pldm_post_vr_update, .inf = COMP_UPDATE_VIA_I2C,                \
 		.activate_method = COMP_ACT_AC_PWR_CYCLE, .self_act_func = NULL,                   \
 		.get_fw_version_fn = get_vr_fw_version, .self_apply_work_func = NULL,              \
@@ -1089,6 +1090,51 @@ static uint8_t pldm_pre_vr_update(void *fw_update_param)
 
 	return 0;
 }
+
+static uint8_t plat_pldm_vr_update(void *fw_update_param){
+
+	uint8_t ret = 1;
+	CHECK_NULL_ARG_WITH_RETURN(fw_update_param, 1);
+	pldm_fw_update_param_t *p = (pldm_fw_update_param_t *)fw_update_param;
+	uint8_t sensor_id = 0;
+	char sensor_name[MAX_AUX_SENSOR_NAME_LEN] = { 0 };
+
+	if (!find_sensor_id_and_name_by_firmware_comp_id(p->comp_id, &sensor_id, sensor_name)) {
+		LOG_ERR("Can't find sensor id and name by comp id: 0x%x", p->comp_id);
+		return 1;
+	}
+
+	sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
+	CHECK_NULL_ARG_WITH_RETURN(cfg, 1);
+
+	if(cfg->type == sensor_dev_mp29816a){
+		if (strncmp(p->comp_version_str, KEYWORD_VR_MP29816A,
+				ARRAY_SIZE(KEYWORD_VR_MP29816A) - 1)) {
+			LOG_ERR("Wrong VR module stop FW update!");
+			goto exit;
+		}
+	}
+	else if(cfg->type == sensor_dev_mp2971){
+		if(strncmp(p->comp_version_str, KEYWORD_VR_MP2971,
+				ARRAY_SIZE(KEYWORD_VR_MP2971) - 1)) {
+			LOG_ERR("Wrong VR module stop FW update!");
+			goto exit;
+		}
+	}
+	else if(cfg->type == sensor_dev_raa228249){
+		if(strncmp(p->comp_version_str, KEYWORD_VR_RAA228249,
+				ARRAY_SIZE(KEYWORD_VR_RAA228249) - 1)) {
+			LOG_ERR("Wrong VR module stop FW update!");
+			goto exit;
+		}
+	}
+
+	ret = pldm_vr_update(fw_update_param);
+
+exit:
+	return ret;
+}
+
 static uint8_t pldm_post_vr_update(void *fw_update_param)
 {
 	ARG_UNUSED(fw_update_param);
