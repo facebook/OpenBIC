@@ -22,6 +22,7 @@
 uint8_t get_hsc_pwr_reading(int *reading);
 
 void OEM_NM_SENSOR_READ(ipmi_msg *msg);
+void OEM_GET_80PORT_RECORD(ipmi_msg *msg);
 
 #ifdef CONFIG_ESPI
 void OEM_SET_SYSTEM_GUID(ipmi_msg *msg);

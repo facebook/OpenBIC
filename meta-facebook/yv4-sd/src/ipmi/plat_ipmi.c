@@ -741,6 +741,7 @@ void OEM_1S_SET_POSTCODE_FILTER(ipmi_msg *msg)
 	}
 
 	plat_pcc_set_filter_enable(val ? true : false);
+	plat_pcc_set_filter_valid(1);
 
 	msg->data_len = 0;
 	msg->completion_code = CC_SUCCESS;
@@ -777,7 +778,7 @@ void OEM_1S_GET_FILTERED_AMD_POST_CODE(ipmi_msg *msg)
 		return;
 	}
 
-	#define MAX_FILTERED_AMD_POSTCODES 15
+#define MAX_FILTERED_AMD_POSTCODES 15
 	uint32_t codes[MAX_FILTERED_AMD_POSTCODES] = { 0 };
 	uint8_t count = plat_pcc_copy_filtered_postcodes(codes, MAX_FILTERED_AMD_POSTCODES);
 
@@ -786,7 +787,7 @@ void OEM_1S_GET_FILTERED_AMD_POST_CODE(ipmi_msg *msg)
 	for (uint8_t i = 0; i < count; i++) {
 		uint32_t v = codes[i];
 		uint8_t base = 1 + (i * 4);
-		
+
 		msg->data[base + 0] = (uint8_t)(v & 0xFF);
 		msg->data[base + 1] = (uint8_t)((v >> 8) & 0xFF);
 		msg->data[base + 2] = (uint8_t)((v >> 16) & 0xFF);
@@ -797,3 +798,90 @@ void OEM_1S_GET_FILTERED_AMD_POST_CODE(ipmi_msg *msg)
 	msg->completion_code = CC_SUCCESS;
 }
 
+void OEM_GET_80PORT_RECORD(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+
+	/* Legacy compatible:
+     *  - len==0: Get
+     *  - len==1: legacy Set (0=Disable, 1=Enable), treat as OS/BMC override => valid=1
+     *
+     * New format:
+     *  - len==3: action/setting/valid
+     *      action : 0=Get, 1=Set
+     *      setting: 0=None, 1=Enable, 2=Disable
+     *      valid  : 0=BIOS knob, 1=OS/BMC
+     *
+     * Response (always 2 bytes):
+     *  data[0]=CurrSetting (0/1)
+     *  data[1]=Valid       (0/1)
+     */
+
+	/* Debug: request snapshot */
+	LOG_INF("0x30/0x49 req: len=%u b0=%02x b1=%02x b2=%02x (curr=%u valid=%u)", msg->data_len,
+		(msg->data_len > 0) ? msg->data[0] : 0, (msg->data_len > 1) ? msg->data[1] : 0,
+		(msg->data_len > 2) ? msg->data[2] : 0, plat_pcc_get_filter_enable() ? 1 : 0,
+		plat_pcc_get_filter_valid() ? 1 : 0);
+
+	if (msg->data_len == 0) {
+		/* Get only */
+	} else if (msg->data_len == 1) {
+		/* Legacy set: data[0]=0/1 */
+		uint8_t new_setting = msg->data[0];
+		if (new_setting > 1) {
+			msg->completion_code = CC_INVALID_DATA_FIELD;
+			msg->data_len = 0;
+			LOG_WRN("0x30/0x49 legacy set invalid: b0=%02x", new_setting);
+			return;
+		}
+
+		plat_pcc_set_filter_enable(new_setting ? true : false);
+
+		/* Legacy ipmitool usually implies OS/BMC override, mark valid as 1 */
+		plat_pcc_set_filter_valid(1);
+
+	} else if (msg->data_len == 3) {
+		uint8_t action = msg->data[0];
+		uint8_t setting = msg->data[1];
+		uint8_t valid = msg->data[2];
+
+		if (action > 1 || setting > 2 || valid > 1) {
+			msg->completion_code = CC_INVALID_DATA_FIELD;
+			msg->data_len = 0;
+			LOG_WRN("0x30/0x49 newfmt invalid: action=%u setting=%u valid=%u", action,
+				setting, valid);
+			return;
+		}
+
+		if (action == 1) {
+			/* Set */
+			if (setting == 1) {
+				plat_pcc_set_filter_enable(true);
+			} else if (setting == 2) {
+				plat_pcc_set_filter_enable(false);
+			} else {
+				/* setting==0 (None): Keep current enable/disable, only update owner/valid */
+			}
+
+			plat_pcc_set_filter_valid(valid);
+		} else {
+			/* action==0: Get only */
+		}
+
+	} else {
+		msg->completion_code = CC_INVALID_LENGTH;
+		msg->data_len = 0;
+		LOG_WRN("0x30/0x49 invalid length: len=%u", msg->data_len);
+		return;
+	}
+
+	/* Response: always 2 bytes */
+	msg->data[0] = plat_pcc_get_filter_enable() ? 1 : 0; /* CurrSetting */
+	msg->data[1] = plat_pcc_get_filter_valid() ? 1 : 0; /* Valid */
+	msg->data_len = 2;
+	msg->completion_code = CC_SUCCESS;
+
+	/* Debug: response snapshot */
+	LOG_INF("0x30/0x49 rsp: cc=0x%02x curr=%u valid=%u", msg->completion_code, msg->data[0],
+		msg->data[1]);
+}

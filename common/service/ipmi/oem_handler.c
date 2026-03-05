@@ -379,6 +379,9 @@ void IPMI_OEM_handler(ipmi_msg *msg)
 		LOG_DBG("Received Get Http boot attribute command");
 		OEM_GET_HTTP_BOOT_ATTR(msg);
 		break;
+	case CMD_OEM_GET_80PORT_RECORD:
+		OEM_GET_80PORT_RECORD(msg);
+		break;
 	default:
 		LOG_ERR("invalid OEM msg netfn: %x, cmd: %x", msg->netfn, msg->cmd);
 		msg->data_len = 0;
@@ -386,4 +389,11 @@ void IPMI_OEM_handler(ipmi_msg *msg)
 		break;
 	}
 	return;
+}
+
+__weak void OEM_GET_80PORT_RECORD(ipmi_msg *msg)
+{
+	CHECK_NULL_ARG(msg);
+	msg->data_len = 0;
+	msg->completion_code = CC_INVALID_CMD;
 }
