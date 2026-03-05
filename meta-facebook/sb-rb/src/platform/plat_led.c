@@ -74,15 +74,10 @@ void heartbeat_led_handler(struct k_work *work)
 			continue;
 		}
 
-		uint16_t candidate_interval = 500;
+		uint16_t candidate_interval = 0;
 		if (cache_reading <= 70000) { //70 degree C
-			if (led_set_flag) {
-				// event occurred, set the interval to 2s per sec
-				candidate_interval = 1000;
-			} else {
-				// normal, set the interval to 1s per sec
-				candidate_interval = 500;
-			}
+			// normal, set the interval to 1 time per sec
+			candidate_interval = 500;
 		} else if (cache_reading <= 100000) { //100 degree C
 			candidate_interval = 250; // 0.5 time per sec
 		} else {
@@ -93,9 +88,10 @@ void heartbeat_led_handler(struct k_work *work)
 		if (candidate_interval < overall_interval) {
 			overall_interval = candidate_interval;
 		}
-
-		LOG_DBG("Sensor 0x%x reading: %d, candidate interval: %d ms", sensor_id,
-			cache_reading, candidate_interval);
+		}
+	if (overall_interval == 500 && led_set_flag) {
+		// event occurred, set the interval to 2 times per sec
+		overall_interval = 1000;
 	}
 
 	LOG_DBG("Overall heartbeat interval: %d ms", overall_interval);
