@@ -104,6 +104,12 @@ enum VR_MODULE {
 	VR_MODULE_TPS53689,
 };
 
+enum E1S_BOOT_DRIVE_MODULE {
+	E1S_BOOT_DRIVE_MODULE_UNKNOWN = 0,
+	E1S_BOOT_DRIVE_MODULE_INA233,
+	E1S_BOOT_DRIVE_MODULE_SQ52205,
+};
+
 uint8_t get_system_class();
 uint8_t get_system_sku();
 CARD_STATUS get_1ou_status();
@@ -111,8 +117,10 @@ CARD_STATUS get_2ou_status();
 uint8_t get_board_revision();
 uint8_t get_hsc_module();
 uint8_t get_vr_module(void);
+uint8_t get_e1s_boot_drive_module();
 bool get_adc_voltage(int channel, float *voltage);
 void init_hsc_module();
+void init_e1s_boot_drive_module();
 void init_platform_config();
 void read_adm1278_model();
 void read_mp5990_model();

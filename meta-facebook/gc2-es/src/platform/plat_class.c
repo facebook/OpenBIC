@@ -36,6 +36,7 @@ static CARD_STATUS _1ou_status = { false, TYPE_1OU_UNKNOWN };
 static CARD_STATUS _2ou_status = { false, TYPE_2OU_UNKNOWN };
 
 static uint8_t vr_module = VR_MODULE_UNKNOWN;
+static uint8_t e1s_boot_drive_module = E1S_BOOT_DRIVE_MODULE_UNKNOWN;
 
 uint8_t get_system_class()
 {
@@ -65,6 +66,11 @@ uint8_t get_board_revision()
 uint8_t get_hsc_module()
 {
 	return hsc_module;
+}
+
+uint8_t get_e1s_boot_drive_module()
+{
+	return e1s_boot_drive_module;
 }
 
 /* ADC information for each channel
@@ -158,6 +164,39 @@ bool get_adc_voltage(int channel, float *voltage)
 	return true;
 }
 
+static uint8_t detect_e1s_boot_drive_module_via_pmbus()
+{
+	uint8_t retry = 5;
+	I2C_MSG msg;
+	memset(&msg, 0, sizeof(msg));
+
+	msg.bus = I2C_BUS2;
+	msg.target_addr = ADDR_E1S_BOOT_INA233;
+	msg.tx_len = 1;
+	msg.rx_len = 7;
+	msg.data[0] = PMBUS_MFR_MODEL;
+
+	if (i2c_master_read(&msg, retry) != 0) {
+		return E1S_BOOT_DRIVE_MODULE_SQ52205;
+	}
+	char model_str[7] = { 0 };
+	memcpy(model_str, &msg.data[1], 7);
+
+	// INA233
+	if (strncmp(model_str, "INA233", 6) == 0) {
+		return E1S_BOOT_DRIVE_MODULE_INA233;
+	}
+	// SQ52205
+	else {
+		return E1S_BOOT_DRIVE_MODULE_SQ52205;
+	}
+}
+
+void init_e1s_boot_drive_module()
+{
+	e1s_boot_drive_module = detect_e1s_boot_drive_module_via_pmbus();
+}
+
 void init_hsc_module()
 {
 	read_adm1278_model();
@@ -216,9 +255,10 @@ uint8_t get_vr_module(void)
 void init_platform_config()
 {
 	init_hsc_module();
-	
+
 	// Initialize VR module (for use by pal_extend_sensor_config)
 	init_vr_module();
+	init_e1s_boot_drive_module();
 }
 
 void read_adm1278_model()
