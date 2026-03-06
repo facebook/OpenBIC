@@ -121,10 +121,48 @@ void ISR_GPIO_FM_PLD_UBC_EN_R()
 	k_timer_start(get_ubc_delaytimer(), K_MSEC(1000), K_NO_WAIT);
 }
 
+/* Pin A12 (GPIO73 / SPIP1_CS) dynamic mux switching
+ *
+ * Hardware mux: SCFG DEVALTC register, SPIP1_SL bit (bit 1):
+ *   DEVALTC[1] = 0 → GPIO66/67/70/73/76/77 on pads   (A12 = GPIO73)
+ *   DEVALTC[1] = 1 → SPIP1 signals on pads           (A12 = SPIP1_CS)
+*/
+#define NPCM4XX_SCFG_BASE DT_REG_ADDR_BY_NAME(DT_NODELABEL(scfg), scfg)
+#define NPCM4XX_DEVALTC 0x1C
+#define NPCM4XX_SPIP1_SEL 1 /* DEVALTC bit1: 0=GPIO73, 1=SPIP1_CS    */
+
+#define NPCM4XX_GPIO7_BASE (REG_GPIO_BASE + 0xE000) /* GPIO_7 register base  */
+#define NPCM4XX_GPIO7_PDOUT 0x00 /* Port data output offset               */
+#define NPCM4XX_GPIO7_PDIR 0x02 /* Port direction offset                 */
+#define NPCM4XX_GPIO73_BIT 3 /* GPIO73 = port-7 bit-3                 */
+
+void plat_switch_pin_a12(bool use_gpio73)
+{
+	uint8_t devaltc = sys_read8(NPCM4XX_SCFG_BASE + NPCM4XX_DEVALTC);
+
+	if (use_gpio73) {
+		sys_write8(sys_read8(NPCM4XX_GPIO7_BASE + NPCM4XX_GPIO7_PDOUT) &
+				   ~BIT(NPCM4XX_GPIO73_BIT),
+			   NPCM4XX_GPIO7_BASE + NPCM4XX_GPIO7_PDOUT);
+		sys_write8(sys_read8(NPCM4XX_GPIO7_BASE + NPCM4XX_GPIO7_PDIR) |
+				   BIT(NPCM4XX_GPIO73_BIT),
+			   NPCM4XX_GPIO7_BASE + NPCM4XX_GPIO7_PDIR);
+		sys_write8(devaltc & ~BIT(NPCM4XX_SPIP1_SEL), NPCM4XX_SCFG_BASE + NPCM4XX_DEVALTC);
+		printk("[PIN_A12] A12 -> GPIO73 (output LOW)\n");
+	} else {
+		sys_write8(devaltc | BIT(NPCM4XX_SPIP1_SEL), NPCM4XX_SCFG_BASE + NPCM4XX_DEVALTC);
+		sys_write8(sys_read8(NPCM4XX_GPIO7_BASE + NPCM4XX_GPIO7_PDIR) &
+				   ~BIT(NPCM4XX_GPIO73_BIT),
+			   NPCM4XX_GPIO7_BASE + NPCM4XX_GPIO7_PDIR);
+		printk("[PIN_A12] A12 -> SPIP1_CS\n");
+	}
+}
+
 void ISR_GPIO_RST_IRIS_PWR_ON_PLD_R1_N()
 {
 	// dc on
 	if (gpio_get(RST_IRIS_PWR_ON_PLD_R1_N)) {
+		plat_switch_pin_a12(false); /* HIGH -> A12 = SPIP1_CS */
 		ioexp_init();
 		if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
 			init_U200052_IO();
@@ -147,6 +185,9 @@ void ISR_GPIO_RST_IRIS_PWR_ON_PLD_R1_N()
 		uint8_t err_type = CPLD_UNEXPECTED_VAL_TRIGGER_CAUSE;
 		reset_error_log_states(err_type);
 	} else {
+		plat_switch_pin_a12(true); /* LOW -> A12 = GPIO73 output low */
+		gpio_conf(SPI_ADC_CS1_N, GPIO_OUTPUT);
+		gpio_set(SPI_ADC_CS1_N, 0);
 		LOG_INF("dc off, clear io expander init flag");
 		set_ioe_init_flag(0);
 		LOG_INF("dc off, exit the vr test mode");

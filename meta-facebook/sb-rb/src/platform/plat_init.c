@@ -37,11 +37,18 @@
 #include "plat_event.h"
 #include "plat_vr_test_mode.h"
 #include "plat_power_capping.h"
+#include "plat_isr.h"
 
 LOG_MODULE_REGISTER(plat_init);
 
 void pal_pre_init()
 {
+	// check if dc off, set CS0 to outout low
+	if (!is_mb_dc_on()) {
+		// set pinmux for A12 to default gpio output low
+		plat_switch_pin_a12(true); /* LOW -> A12 = GPIO73 output low */
+	}
+
 	/* init i2c target */
 	for (int index = 0; index < MAX_TARGET_NUM; index++) {
 		if (I2C_TARGET_ENABLE_TABLE[index])

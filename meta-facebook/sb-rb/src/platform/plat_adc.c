@@ -795,6 +795,7 @@ void adc_rainbow_polling_handler(void *p1, void *p2, void *p3)
 		if (!is_mb_dc_on()) {
 			gpio_set(MEDHA0_CNV, 0);
 			gpio_set(MEDHA1_CNV, 0);
+			gpio_set(SPI_ADC_CS1_N, 0);
 			k_msleep(1000);
 			continue;
 		}
