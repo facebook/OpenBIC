@@ -4,6 +4,25 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <zephyr.h>
+
+// VR power fault registers
+#define VR_POWER_FAULT_1_REG 0x0D
+#define VR_POWER_FAULT_2_REG 0x0E
+#define VR_POWER_FAULT_3_REG 0x0F
+#define VR_POWER_FAULT_4_REG 0x10
+#define VR_POWER_FAULT_5_REG 0x11
+
+// ASIC fault registers
+#define LEAK_DETECT_REG 0x24
+#define VR_SMBUS_ALERT_EVENT_LOG_REG 0x26
+#define HBM_CATTRIP_REG 0x27
+#define SYSTEM_ALERT_FAULT_REG 0x28
+#define ASIC_TEMP_OVER_REG 0x29
+#define TEMP_IC_OVER_FAULT_REG 0x2A
+
+// CPLD VR hot registers
+#define ASIC_VR_HOT_SWITCH 0x12
 
 #define CPLD_OFFSET_ASIC_RESET 0x00
 #define VR_EN_PIN_READING_5 0x05
@@ -32,6 +51,9 @@
 
 #define VR_1STEP_FUNC_EN_REG 0xA9
 
+// PDB1 power reading registers
+#define CPLD_POWER_INFO_0_REG 0xB6
+#define CPLD_POWER_INFO_1_REG 0xB7
 typedef struct _cpld_info_ cpld_info;
 
 typedef struct _cpld_info_ {
@@ -41,11 +63,8 @@ typedef struct _cpld_info_ {
 	bool is_fault_log; // if true, check the value is defaut or not
 	uint8_t is_fault_bit_map; //flag for fault
 
-	//flag for 1st polling
-	bool is_first_polling;
-
-	//flag for 1st polling after changing DC status
-	bool is_first_polling_after_dc_change;
+	/* is_send_bmc in rainbow */
+	bool send_to_bmc_flag; //flag for sending alert to bmc
 
 	//temp data for last polling
 	uint8_t last_polling_value;
@@ -60,7 +79,6 @@ bool plat_read_cpld(uint8_t offset, uint8_t *data, uint8_t len);
 bool plat_write_cpld(uint8_t offset, uint8_t *data);
 bool set_cpld_bit(uint8_t cpld_offset, uint8_t bit, uint8_t value);
 void init_cpld_polling(void);
-void check_cpld_polling_alert_status(void);
 void get_cpld_polling_power_info(int *reading);
 void set_cpld_polling_enable_flag(bool status);
 

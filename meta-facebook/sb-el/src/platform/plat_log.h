@@ -30,12 +30,6 @@
 #define LOG_ASSERT 1
 #define LOG_DEASSERT 0
 
-#define VR_POWER_FAULT_1_REG 0x0D
-#define VR_POWER_FAULT_2_REG 0x0E
-#define VR_POWER_FAULT_3_REG 0x0F
-#define VR_POWER_FAULT_4_REG 0x10
-#define VR_POWER_FAULT_5_REG 0x11
-
 uint16_t error_log_count(void);
 void init_load_eeprom_log(void);
 
@@ -44,6 +38,7 @@ void error_log_event(uint16_t error_code, bool log_status);
 uint8_t plat_log_get_num(void);
 void plat_clear_log();
 void reset_error_log_event(uint8_t err_type);
+bool check_temp_status_bit(uint8_t bit_num);
 
 typedef struct __attribute__((packed)) _plat_err_log_mapping {
 	uint16_t index;

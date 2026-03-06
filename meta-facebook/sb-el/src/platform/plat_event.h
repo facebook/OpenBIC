@@ -13,3 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+#include "plat_cpld.h"
+
+typedef struct _vr_fault_info {
+	uint8_t mtia_event_source;
+	uint8_t cpld_reg_offset;
+	uint8_t cpld_reg_bit;
+	bool is_pmbus_vr;
+	uint8_t rail_id;
+} vr_fault_info;
+
+ void process_mtia_vr_power_fault_sel(cpld_info *cpld_info, uint8_t *current_cpld_value);

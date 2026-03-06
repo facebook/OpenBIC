@@ -5,15 +5,21 @@
 #include "plat_gpio.h"
 #include "plat_log.h"
 #include "plat_hook.h"
+#include "plat_event.h"
+#include "plat_kernel_obj.h"
+#include "plat_led.h"
 #include <logging/log.h>
 
 #define CPLD_ADDR (0x4C >> 1)
 #define I2C_BUS_CPLD I2C_BUS11
 
 #define POLLING_CPLD_STACK_SIZE 2048
-#define CPLD_POLLING_INTERVAL_MS 1000 // 1 second polling interval
 
 #define CHECK_ALL_BITS 0xFF
+#define CHECK_BITS_6 0x40
+#define CHECK_BITS_678 0xE0
+#define CHECK_BITS_78 0xC0
+#define CHECK_BITS_8 0x80
 
 LOG_MODULE_REGISTER(plat_cpld);
 
@@ -81,15 +87,6 @@ bool set_cpld_bit(uint8_t cpld_offset, uint8_t bit, uint8_t value)
 void check_cpld_handler();
 K_WORK_DELAYABLE_DEFINE(check_cpld_work, check_cpld_handler);
 
-void check_ubc_delayed_timer_handler(struct k_timer *timer);
-K_TIMER_DEFINE(init_ubc_delayed_timer, check_ubc_delayed_timer_handler, NULL);
-void check_ubc_delayed(struct k_work *work);
-K_WORK_DEFINE(check_ubc_delayed_work, check_ubc_delayed);
-void check_ubc_delayed_timer_handler(struct k_timer *timer)
-{
-	k_work_submit(&check_ubc_delayed_work);
-}
-
 K_THREAD_STACK_DEFINE(cpld_polling_stack, POLLING_CPLD_STACK_SIZE);
 struct k_thread cpld_polling_thread;
 k_tid_t cpld_polling_tid;
@@ -108,20 +105,21 @@ bool vr_error_callback(cpld_info *cpld_info, uint8_t *current_cpld_value);
 
 // clang-format off
 cpld_info cpld_info_table[] = {
-	{ VR_POWER_FAULT_1_REG, 			0x00, 0x00, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
-	{ VR_POWER_FAULT_2_REG, 			0x00, 0x00, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
-	{ VR_POWER_FAULT_3_REG, 			0x00, 0x00, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
-	{ VR_POWER_FAULT_4_REG, 			0x00, 0x00, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
-	{ VR_POWER_FAULT_5_REG, 			0x00, 0x00, true, 0x00, false, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
+	{ VR_POWER_FAULT_1_REG, 			0x00, 0x00, true, 0x00, true, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
+	{ VR_POWER_FAULT_2_REG, 			0x00, 0x00, true, 0x00, true, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
+	{ VR_POWER_FAULT_3_REG, 			0x00, 0x00, true, 0x00, true, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
+	{ VR_POWER_FAULT_4_REG, 			0x00, 0x00, true, 0x00, true, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
+	{ VR_POWER_FAULT_5_REG, 			0x00, 0x00, true, 0x00, true, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
+	{ VR_SMBUS_ALERT_EVENT_LOG_REG, 	0xFF, 0xFF, true, 0x00, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
+	{ LEAK_DETECT_REG, 					0xFF, 0xFF, true, 0x00, false, 0x00, .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_BITS_6 },
+	{ HBM_CATTRIP_REG, 					0xFF, 0xFF, true, 0x00, true, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_BITS_78 },
+	{ SYSTEM_ALERT_FAULT_REG, 			0xFF, 0xFF, true, 0x00, false, 0x00, .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_BITS_8 },
+	{ ASIC_TEMP_OVER_REG, 				0xFF, 0xFF, true, 0x00, true, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_BITS_8 },
+	{ TEMP_IC_OVER_FAULT_REG, 			0xFF, 0xFF, true, 0x00, false, 0x00, .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_BITS_678 },
 };
 
-bool cpld_polling_alert_status = false; // only polling cpld when alert status is true
 bool cpld_polling_enable_flag = true;
 
-void check_cpld_polling_alert_status(void)
-{
-	cpld_polling_alert_status = (gpio_get(ALL_VR_PM_ALERT_R_N) == 0);
-}
 
 void set_cpld_polling_enable_flag(bool status)
 {
@@ -131,37 +129,6 @@ void set_cpld_polling_enable_flag(bool status)
 bool get_cpld_polling_enable_flag(void)
 {
 	return cpld_polling_enable_flag;
-}
-
-bool ubc_enabled_delayed_status = false;
-
-void check_ubc_delayed(struct k_work *work)
-{
-	/* FM_PLD_UBC_EN_R
-	 * 1 -> UBC is enabled
-	 * 0 -> UBC is disabled
-	 */
-	bool is_ubc_enabled = (gpio_get(FM_PLD_UBC_EN_R) == GPIO_HIGH);
-
-	bool is_dc_on = is_mb_dc_on();
-
-	if (is_ubc_enabled) {
-		if (is_dc_on != is_ubc_enabled) {
-			//send event to bmc
-			uint16_t error_code = (POWER_ON_SEQUENCE_TRIGGER_CAUSE << 13);
-			error_log_event(error_code, LOG_ASSERT);
-			LOG_ERR("Generated error code: 0x%x", error_code);
-		}
-	}
-
-	ubc_enabled_delayed_status = is_ubc_enabled;
-
-	LOG_DBG("UBC enabled delayed status: %d", ubc_enabled_delayed_status);
-
-	/* cpld tbd
-	if (is_ubc_enabled == true) {
-		k_work_submit(&vr_vout_work);
-	} */
 }
 
 void reset_error_log_states(uint8_t err_type)
@@ -185,7 +152,7 @@ bool vr_error_callback(cpld_info *cpld_info, uint8_t *current_cpld_value)
 
 	// Get the expected value based on the current UBC status
 	uint8_t expected_val =
-		ubc_enabled_delayed_status ? cpld_info->dc_on_defaut : cpld_info->dc_off_defaut;
+		plat_get_ubc_status() ? cpld_info->dc_on_defaut : cpld_info->dc_off_defaut;
 
 	// Calculate current faults and new faults
 	uint8_t current_fault = (*current_cpld_value ^ expected_val) & cpld_info->bit_check_mask;
@@ -227,69 +194,112 @@ bool vr_error_callback(cpld_info *cpld_info, uint8_t *current_cpld_value)
 	return true;
 }
 
-void poll_cpld_registers()
+/* pdb1 power info get from bmc through CPLD */
+uint16_t power_info = 0;
+void get_cpld_polling_power_info(int* reading)
 {
+	*reading = power_info;
+}
+void plat_get_pdb1_pwr_from_bmc(void){
+	uint8_t pwr_value_lsb = 0;
+	uint8_t pwr_value_msb = 0;
+	if (!plat_read_cpld(CPLD_POWER_INFO_0_REG, &pwr_value_lsb, 1)){
+		LOG_ERR("LSB read from CPLD fail");
+	}
+	if (!plat_read_cpld(CPLD_POWER_INFO_1_REG, &pwr_value_msb, 1)){
+		LOG_ERR("MSB read from CPLD fail");
+	}
+	power_info = (pwr_value_msb<<8)|pwr_value_lsb;
+}
+
+void plat_poll_cpld_info_table(void){
 	uint8_t data = 0;
-	bool prev_alert_status = false;
 
-	while (1) {
-		/* Sleep for the polling interval */
-		k_msleep(CPLD_POLLING_INTERVAL_MS);
+	for (size_t i = 0; i < ARRAY_SIZE(cpld_info_table); i++) {
+		uint8_t expected_val = plat_get_ubc_status() ?
+							cpld_info_table[i].dc_on_defaut :
+							cpld_info_table[i].dc_off_defaut;
 
-		LOG_DBG("cpld_polling_alert_status = %d, cpld_polling_enable_flag = %d",
-			cpld_polling_alert_status, cpld_polling_enable_flag);
-
-		// Check for falling edge of cpld_polling_alert_status (true -> false)
-		if (prev_alert_status && !cpld_polling_alert_status) {
-			uint8_t err_type = CPLD_UNEXPECTED_VAL_TRIGGER_CAUSE;
-			LOG_DBG("cpld_polling_alert_status: true -> false, reset_error_log_states: %x",
-				err_type);
-			reset_error_log_states(err_type);
+		// Read from CPLD
+		if (!plat_read_cpld(cpld_info_table[i].cpld_offset, &data, 1)) {
+			LOG_DBG("Failed to read CPLD register 0x%02X",
+				cpld_info_table[i].cpld_offset);
+			continue;
 		}
-		// Save current alert status for next loop comparison
-		prev_alert_status = cpld_polling_alert_status;
 
-		if (!cpld_polling_alert_status || !cpld_polling_enable_flag)
+		LOG_DBG("Polling CPLD 0x%02X raw=0x%02X, expected=0x%02X, mask=0x%02X",
+			cpld_info_table[i].cpld_offset, data, expected_val,
+			cpld_info_table[i].bit_check_mask);
+
+		if (!cpld_info_table[i].is_fault_log)
 			continue;
 
-		LOG_DBG("Polling CPLD registers");
+		uint8_t new_fault_map =
+			(data ^ expected_val) & cpld_info_table[i].bit_check_mask;
 
-		for (size_t i = 0; i < ARRAY_SIZE(cpld_info_table); i++) {
-			uint8_t expected_val = ubc_enabled_delayed_status ?
-						       cpld_info_table[i].dc_on_defaut :
-						       cpld_info_table[i].dc_off_defaut;
+		// get unrecorded fault bit map
+		uint8_t is_status_changed =
+			new_fault_map ^ cpld_info_table[i].is_fault_bit_map;
 
-			// Read from CPLD
-			if (!plat_read_cpld(cpld_info_table[i].cpld_offset, &data, 1)) {
-				LOG_DBG("Failed to read CPLD register 0x%02X",
-					cpld_info_table[i].cpld_offset);
-				continue;
+		if (is_status_changed) {
+			if (cpld_info_table[i].status_changed_cb) {
+				cpld_info_table[i].status_changed_cb(
+					&cpld_info_table[i], &data);
 			}
-
-			LOG_DBG("Polling CPLD 0x%02X raw=0x%02X, expected=0x%02X, mask=0x%02X",
-				cpld_info_table[i].cpld_offset, data, expected_val,
-				cpld_info_table[i].bit_check_mask);
-
-			if (!cpld_info_table[i].is_fault_log)
-				continue;
-
-			uint8_t new_fault_map =
-				(data ^ expected_val) & cpld_info_table[i].bit_check_mask;
-
-			// get unrecorded fault bit map
-			uint8_t is_status_changed =
-				new_fault_map ^ cpld_info_table[i].is_fault_bit_map;
-
-			if (is_status_changed) {
-				if (cpld_info_table[i].status_changed_cb) {
-					cpld_info_table[i].status_changed_cb(
-						&cpld_info_table[i], &data);
+			if (cpld_info_table[i].send_to_bmc_flag) {
+				process_mtia_vr_power_fault_sel(&cpld_info_table[i],
+								&data);
+				set_led_flag(true);
+			}
+			if (cpld_info_table[i].cpld_offset == VR_SMBUS_ALERT_EVENT_LOG_REG) {
+				//get sensor pmbus alert status(if status_word temperature bit-2 is 1)
+				uint8_t temp_data = 0;
+				plat_read_cpld(VR_SMBUS_ALERT_EVENT_LOG_REG, &temp_data, 1);
+				// check which VR_SMBUS_ALERT_EVENT_LOG_REG bit is changed
+				LOG_INF("VR_SMBUS_ALERT_EVENT_LOG_REG: 0x%x", temp_data);
+				for (int j = 0; j < 8; j++) {
+					if (j == 0)
+						continue; // skip bit-0
+					// if temp data is changed
+					if ((temp_data & BIT(j)) == 0)
+					{
+						LOG_WRN("SMBUS_ALERT_REG changed, bit-%d is changed", j);
+						if(!check_temp_status_bit(j))
+						{
+							// electra board uses CPLD to control VR_HOT
+							if (!plat_read_cpld(ASIC_VR_HOT_SWITCH, &data, 1)) {
+								LOG_ERR("Failed to read ASIC_VR_HOT_SWITCH");
+							}
+							data |= BIT(0);
+							if (!plat_write_cpld(ASIC_VR_HOT_SWITCH, &data)) {
+								LOG_ERR("Failed to write ASIC_VR_HOT_SWITCH");
+							}
+							LOG_WRN("Temperature bit-%d is 1, write CPLD ASIC_VR_HOT_SWITCH bit-0 to 1", j);
+							set_led_flag(true);
+							break;
+						}
+					}
 				}
-				// update map
-				cpld_info_table[i].is_fault_bit_map = new_fault_map;
-				cpld_info_table[i].last_polling_value = data;
 			}
+			// update map
+			cpld_info_table[i].is_fault_bit_map = new_fault_map;
+			cpld_info_table[i].last_polling_value = data;
 		}
+	}
+}
+
+void plat_poll_cpld_registers()
+{
+	// Note: cpld_polling_alert_status is abort due to the trigger mechanism change
+	while (1) {
+		plat_wait_for_cpld_polling_trigger();
+
+		if (!is_update_state_idle() || !cpld_polling_enable_flag) {
+			continue;
+		}
+
+		plat_get_pdb1_pwr_from_bmc();
+		plat_poll_cpld_info_table();
 	}
 }
 
@@ -308,11 +318,11 @@ void check_cpld_handler()
 
 void init_cpld_polling(void)
 {
-	check_cpld_polling_alert_status();
-
+	plat_update_ubc_status();
+	plat_activate_cpld_polling_semaphore_timer();
 	cpld_polling_tid =
 		k_thread_create(&cpld_polling_thread, cpld_polling_stack,
-				K_THREAD_STACK_SIZEOF(cpld_polling_stack), poll_cpld_registers,
+				K_THREAD_STACK_SIZEOF(cpld_polling_stack), plat_poll_cpld_registers,
 				NULL, NULL, NULL, CONFIG_MAIN_THREAD_PRIORITY, 0, K_MSEC(1000));
 	k_thread_name_set(&cpld_polling_thread, "cpld_polling_thread");
 }

@@ -22,6 +22,7 @@
 #include "plat_gpio.h"
 #include "plat_cpld.h"
 #include "shell_arke_power.h"
+#include "plat_kernel_obj.h"
 
 LOG_MODULE_REGISTER(plat_isr);
 
@@ -30,7 +31,29 @@ void ISR_GPIO_ALL_VR_PM_ALERT_R_N()
 	LOG_DBG("gpio_%d_isr called, val=%d , dir= %d", ALL_VR_PM_ALERT_R_N,
 		gpio_get(ALL_VR_PM_ALERT_R_N), gpio_get_direction(ALL_VR_PM_ALERT_R_N));
 
-	check_cpld_polling_alert_status();
+	if (gpio_get(ALL_VR_PM_ALERT_R_N) == GPIO_LOW) {
+		plat_trigger_cpld_polling();
+	}
+}
+
+void ISR_GPIO_FM_PLD_UBC_EN_R()
+{
+	// check step on setting flag
+	// if (get_pwr_steps_on_flag() == 1)
+	// 	return;
+
+	LOG_INF("FM_PLD_UBC_EN_R = %d\nDC ON", gpio_get(FM_PLD_UBC_EN_R));
+
+	// if (gpio_get(FM_PLD_UBC_EN_R) == GPIO_HIGH) {
+	// 	plat_set_dc_on_log(LOG_ASSERT);
+	// 	k_timer_start(&pwr_sequence_event_work_timer, K_MSEC(1000), K_NO_WAIT);
+	// }
+
+	// if (gpio_get(FM_PLD_UBC_EN_R) == GPIO_LOW) {
+	// 	plat_set_dc_on_log(LOG_DEASSERT);
+	// }
+
+	plat_update_ubc_status();
 }
 
 void ISR_GPIO_RST_ARKE_PWR_ON_PLD_R1_N()
