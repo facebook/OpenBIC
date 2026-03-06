@@ -31,7 +31,7 @@
 LOG_MODULE_REGISTER(plat_log);
 
 #define LOG_MAX_INDEX 0x0FFF // recount when log index > 0x0FFF
-#define LOG_MAX_NUM 100 // total log amount: 100
+#define LOG_MAX_NUM 50 // total log amount: 50-1
 #define FRU_LOG_START 0x0000 // log offset: 0KB
 #define EEPROM_MAX_WRITE_TIME 5 // the BR24G512 eeprom max write time is 3.5 ms
 #define CPLD_VR_VENDOR_TYPE_REG 0x1C
@@ -48,6 +48,36 @@ typedef struct _vr_ubc_device_table_ {
 	uint8_t sensor_num_1;
 	uint8_t sensor_num_2;
 } vr_ubc_device_table;
+
+typedef struct vr_smbus_alrt_sensor_map {
+	uint8_t bit_number;
+	uint8_t vr_rail_1_page_0;
+	uint8_t vr_rail_1_page_1;
+	uint8_t vr_rail_2_page_0;
+	uint8_t vr_rail_2_page_1;
+} vr_smbus_alrt_sensor_map;
+
+
+vr_smbus_alrt_sensor_map vr_smbus_alrt_sensor_map_table[] = {
+	{ 0 },
+	{ 1, VR_RAIL_E_ASIC_P0V75_MAX_N_VDD, VR_RAIL_E_ASIC_P0V8_HAMSA_AVDD_PCIE,
+	  VR_RAIL_E_ASIC_P1V2_HAMSA_VDDHRXTX_PCIE, VR_RAIL_E_ASIC_P0V85_HAMSA_VDD },
+	{ 2, VR_RAIL_E_ASIC_P1V05_VDDQC_HBM0246, VR_RAIL_E_ASIC_P1V8_VPP_HBM0246,
+	  VR_RAIL_E_ASIC_P0V4_VDDQL_HBM0246, VR_RAIL_E_ASIC_P0V75_VDDPHY_HBM0246 },
+	{ 3, VR_RAIL_E_ASIC_P0V75_MAX_M_VDD, VR_RAIL_E_ASIC_P0V75_VDDPHY_HBM1357,
+	  VR_RAIL_E_ASIC_P1V05_VDDQC_HBM1357, VR_RAIL_E_ASIC_P1V8_VPP_HBM1357 },
+	{
+		4,
+		VR_RAIL_E_ASIC_P0V9_OWL_W_TRVDD,
+		VR_RAIL_E_ASIC_P0V75_OWL_W_TRVDD,
+		VR_RAIL_E_ASIC_P0V75_OWL_W_VDD,
+		VR_RAIL_E_ASIC_P0V75_MAX_S_VDD,
+	},
+	{ 5, VR_RAIL_E_ASIC_P0V9_OWL_E_TRVDD, VR_RAIL_E_ASIC_P0V75_OWL_E_TRVDD,
+	  VR_RAIL_E_ASIC_P0V75_OWL_E_VDD, VR_RAIL_E_ASIC_P0V4_VDDQL_HBM1357 },
+	{ 6, VR_RAIL_E_ASIC_P0V75_NUWA1_VDD },
+	{ 7, VR_RAIL_E_ASIC_P0V75_NUWA0_VDD },
+};
 
 vr_ubc_device_table vr_device_table[] = {
 	// index, sensor_num_1(page 0), sensor_num_2(page 1)
@@ -395,4 +425,32 @@ void init_load_eeprom_log(void)
 
 	// Determine the next log position
 	find_last_log_position();
+}
+
+bool check_temp_status_bit(uint8_t bit_num)
+{
+	const vr_smbus_alrt_sensor_map *entry = &vr_smbus_alrt_sensor_map_table[bit_num];
+	uint16_t status_word;
+	uint8_t vr_sensor_num_list[4] = {
+		entry->vr_rail_1_page_0,
+		entry->vr_rail_1_page_1,
+		entry->vr_rail_2_page_0,
+		entry->vr_rail_2_page_1,
+	};
+	for (int i = 0; i < 4; i++) {
+		if (vr_sensor_num_list[i] == 0)
+			continue; // Skip empty entries
+
+		if (!plat_get_vr_status(vr_sensor_num_list[i], VR_STAUS_E_STATUS_WORD,
+					&status_word)) {
+			LOG_ERR("SMBus alert: Failed to get VR[%d] status word",
+				vr_sensor_num_list[i]);
+		}
+
+		// check bit-2 is 1 or not
+		if ((status_word >> 2) & 0x01)
+			return false;
+	}
+
+	return true;
 }

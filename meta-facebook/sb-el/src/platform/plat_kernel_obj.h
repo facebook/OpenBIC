@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-#ifndef PLAT_ISR_H
-#define PLAT_ISR_H
+#include <zephyr.h>
 
-void ISR_GPIO_ALL_VR_PM_ALERT_R_N();
-void ISR_GPIO_FM_PLD_UBC_EN_R();
-void ISR_GPIO_RST_ARKE_PWR_ON_PLD_R1_N();
-void set_pwr_steps_on_flag(uint8_t flag_value);
-uint8_t get_pwr_steps_on_flag(void);
+/* semaphore CPLD polling semaphore */
+void plat_ragular_cpld_polling_sem_handler(struct k_timer *timer);
+void plat_activate_cpld_polling_semaphore_timer();
+void plat_wait_for_cpld_polling_trigger(void);
+void plat_trigger_cpld_polling(void);
 
-#endif
+/* Timer for dc status checking */
+void plat_update_ubc_status(void);
+bool plat_get_ubc_status(void);
