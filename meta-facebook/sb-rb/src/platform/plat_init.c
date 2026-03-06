@@ -43,10 +43,16 @@ LOG_MODULE_REGISTER(plat_init);
 
 void pal_pre_init()
 {
-	// check if dc off, set CS0 to outout low
-	if (!is_mb_dc_on()) {
+	// check if dc off
+	if (is_mb_dc_on() == false) {
 		// set pinmux for A12 to default gpio output low
 		plat_switch_pin_a12(true); /* LOW -> A12 = GPIO73 output low */
+
+	}
+	// if DC on
+	else {
+		plat_switch_pin_a12(false); /* HIGH -> A12 = SPIP1_CS */
+		set_clock_u87_u88_lphcsl_amp_ctrl_to_1v();
 	}
 
 	/* init i2c target */

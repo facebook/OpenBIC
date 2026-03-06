@@ -40,7 +40,8 @@ LOG_MODULE_REGISTER(plat_user_setting);
 
 #define EEPROM_MAX_WRITE_TIME 5 // the BR24G512 eeprom max write time is 3.5 ms
 #define TMP75_ALERT_CPLD_OFFSET 0x2F
-
+#define CLOCK_LPHCSL_AMP_CTRL_REG 0x11
+#define CLOCK_LPHCSL_AMP_CTRL_TO_1V 0xF7
 int32_t alert_level_mA_default = 180000;
 int32_t alert_level_mA_user_setting = 180000;
 static bool uart_pwr_event_is_enable = true;
@@ -1326,6 +1327,48 @@ bool get_average_power(uint8_t rail, uint32_t *milliwatt)
 		real_power, integer_part, fraction_part, *milliwatt);
 
 	return true;
+}
+
+clock_compnt_mapping clock_buffer_mapping_table[] = {
+	{ CLK_BUF_U87, CLK_BUF_U87_ADDR, I2C_BUS1 },
+	{ CLK_BUF_U88, CLK_BUF_U88_ADDR, I2C_BUS3 },
+};
+
+void set_clock_value(uint8_t clock_index, uint8_t write_offset, uint8_t write_length, uint8_t *data)
+{
+	if (write_length == 0) {
+		LOG_ERR("write_length is 0");
+		return;
+	}
+	uint8_t byte_count = write_length;
+	I2C_MSG i2c_msg = { 0 };
+	uint8_t retry = 5;
+	i2c_msg.bus = clock_buffer_mapping_table[clock_index].bus;
+	i2c_msg.target_addr = clock_buffer_mapping_table[clock_index].addr;
+	i2c_msg.tx_len = write_length + 2;
+	i2c_msg.rx_len = 0;
+
+	i2c_msg.data[0] = write_offset;
+	i2c_msg.data[1] = byte_count;
+	for (int i = 2; i < i2c_msg.tx_len; i++) {
+		i2c_msg.data[i] = data[i - 2];
+	}
+
+	if (i2c_master_write(&i2c_msg, retry)) {
+		LOG_ERR("Failed to write clock reg, bus: %d, addr: 0x%x, reg: 0x%x", i2c_msg.bus,
+			i2c_msg.target_addr, write_offset);
+		return;
+	}
+
+	LOG_INF("Set clock reg success, bus: %d, addr: 0x%x, reg: 0x%x", i2c_msg.bus,
+		i2c_msg.target_addr, write_offset);
+}
+
+void set_clock_u87_u88_lphcsl_amp_ctrl_to_1v()
+{
+	uint8_t write_data = CLOCK_LPHCSL_AMP_CTRL_TO_1V;
+	set_clock_value(CLK_BUF_U87, CLOCK_LPHCSL_AMP_CTRL_REG, 1, &write_data);
+	set_clock_value(CLK_BUF_U88, CLOCK_LPHCSL_AMP_CTRL_REG, 1, &write_data);
 }
 void user_settings_init(void)
 {

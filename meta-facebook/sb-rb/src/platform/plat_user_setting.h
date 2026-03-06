@@ -34,6 +34,10 @@
 
 #define CPLD_THROTTLE_SWITCH_ADDR 0x25
 #define CPLD_THERMALTRIP_SWITCH_ADDR 0x3A
+
+#define CLK_BUF_U87_ADDR (0xD8 >> 1)
+#define CLK_BUF_U88_ADDR (0xDE >> 1)
+
 enum USER_SETTING_OFFSET_E {
 	THERMALTRIP,
 };
@@ -88,6 +92,14 @@ enum PLAT_TEMP_INDEX_THRESHOLD_TYPE_E {
 	ASIC_HAMSA_LS_HIGH_LIMIT,
 	PLAT_TEMP_INDEX_THRESHOLD_TYPE_MAX,
 };
+
+enum CLOCK_BUFF_COMPONENT { CLK_BUF_U87, CLK_BUF_U88, CLOCK_BUFF_COMPONENT_MAX };
+
+typedef struct clock_compnt_mapping {
+	uint8_t clock_name_index;
+	uint8_t addr;
+	uint8_t bus;
+} clock_compnt_mapping;
 
 typedef struct temp_mapping_sensor {
 	uint8_t index;
@@ -145,7 +157,9 @@ bool post_vr_read(sensor_cfg *cfg, void *args, int *const reading);
 bool ubc_vr_rail_name_get(uint8_t rail, uint8_t **name);
 bool ubc_vr_rail_enum_get(uint8_t *name, uint8_t *num);
 void pwr_level_mutex_init(void);
-bool set_user_settings_delay_pcie_perst_to_eeprom(void *user_settings, uint8_t data_length, uint8_t user_settings_offset);
+bool set_user_settings_delay_pcie_perst_to_eeprom(void *user_settings, uint8_t data_length,
+						  uint8_t user_settings_offset);
 bool set_user_settings_delay_asic_rst_to_eeprom(void *user_settings, uint8_t data_length);
 bool set_user_settings_delay_module_pg_to_eeprom(void *user_settings, uint8_t data_length);
+void set_clock_u87_u88_lphcsl_amp_ctrl_to_1v();
 #endif

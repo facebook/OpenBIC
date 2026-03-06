@@ -34,6 +34,7 @@
 #include "plat_power_capping.h"
 #include "plat_hwmon.h"
 #include "shell_plat_power_sequence.h"
+#include "plat_user_setting.h"
 
 LOG_MODULE_REGISTER(plat_isr);
 
@@ -148,13 +149,13 @@ void plat_switch_pin_a12(bool use_gpio73)
 				   BIT(NPCM4XX_GPIO73_BIT),
 			   NPCM4XX_GPIO7_BASE + NPCM4XX_GPIO7_PDIR);
 		sys_write8(devaltc & ~BIT(NPCM4XX_SPIP1_SEL), NPCM4XX_SCFG_BASE + NPCM4XX_DEVALTC);
-		printk("[PIN_A12] A12 -> GPIO73 (output LOW)\n");
+		LOG_INF("[PIN_A12] A12 -> GPIO73 (output LOW)");
 	} else {
 		sys_write8(devaltc | BIT(NPCM4XX_SPIP1_SEL), NPCM4XX_SCFG_BASE + NPCM4XX_DEVALTC);
 		sys_write8(sys_read8(NPCM4XX_GPIO7_BASE + NPCM4XX_GPIO7_PDIR) &
 				   ~BIT(NPCM4XX_GPIO73_BIT),
 			   NPCM4XX_GPIO7_BASE + NPCM4XX_GPIO7_PDIR);
-		printk("[PIN_A12] A12 -> SPIP1_CS\n");
+		LOG_INF("[PIN_A12] A12 -> SPIP1_CS");
 	}
 }
 
@@ -162,6 +163,7 @@ void ISR_GPIO_RST_IRIS_PWR_ON_PLD_R1_N()
 {
 	// dc on
 	if (gpio_get(RST_IRIS_PWR_ON_PLD_R1_N)) {
+		set_clock_u87_u88_lphcsl_amp_ctrl_to_1v();
 		plat_switch_pin_a12(false); /* HIGH -> A12 = SPIP1_CS */
 		ioexp_init();
 		if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
@@ -190,8 +192,10 @@ void ISR_GPIO_RST_IRIS_PWR_ON_PLD_R1_N()
 		gpio_set(SPI_ADC_CS1_N, 0);
 		LOG_INF("dc off, clear io expander init flag");
 		set_ioe_init_flag(0);
-		LOG_INF("dc off, exit the vr test mode");
-		vr_test_mode_enable(false);
+		if (get_vr_test_mode_flag() == true) {
+			LOG_INF("dc off, exit the vr test mode");
+			vr_test_mode_enable(false);
+		}
 
 		// if board id == EVB , ctrl fan pwm
 		if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {

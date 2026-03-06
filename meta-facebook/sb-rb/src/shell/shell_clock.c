@@ -106,7 +106,9 @@ bool clock_enum_get(uint8_t *name, uint8_t *num)
 void cmd_set_clock(const struct shell *shell, size_t argc, char **argv)
 {
 	if (argc < 4) {
-		shell_warn(shell, "Help: set <clock> <reg-offset> <value>|default");
+		shell_warn(
+			shell,
+			"Help: set <clock> <reg-offset> <byte count> <byte data1> <byte data2>...");
 		return;
 	}
 
