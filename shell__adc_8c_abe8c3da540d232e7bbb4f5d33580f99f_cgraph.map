@@ -1,0 +1,13 @@
+<map id="cmd_adc_get_averge_val" name="cmd_adc_get_averge_val">
+<area shape="rect" id="node1" title=" " alt="" coords="5,183,176,209"/>
+<area shape="rect" id="node2" href="$shell__adc_8c.html#a971fc6a7fc99187edee24cc6ca920184" title=" " alt="" coords="224,183,396,209"/>
+<area shape="rect" id="node3" href="$plat__adc_8c.html#a148d5d31233ebcd16f9a2dd706f0f113" title=" " alt="" coords="444,5,597,32"/>
+<area shape="rect" id="node5" href="$plat__adc_8c.html#a492bd954bffcc9a01201f1a666a0b20a" title=" " alt="" coords="461,56,580,83"/>
+<area shape="rect" id="node6" href="$plat__adc_8c.html#ae991ba79bfbfce86a88860b7d18e28f9" title=" " alt="" coords="444,107,597,133"/>
+<area shape="rect" id="node7" href="$plat__adc_8c.html#ae6564a6e2e1b32389105d6ade606905b" title=" " alt="" coords="451,157,590,184"/>
+<area shape="rect" id="node8" href="$plat__adc_8c.html#a5c09e0ed533278d070bbb94831d94e6d" title=" " alt="" coords="471,208,570,235"/>
+<area shape="rect" id="node9" href="$plat__adc_8c.html#a871855119c3d7204a77a3b18c562723c" title=" " alt="" coords="463,259,578,285"/>
+<area shape="rect" id="node10" href="$plat__adc_8c.html#aeeba4230ed290086d94b1b2b0cc8c64d" title=" " alt="" coords="458,309,583,336"/>
+<area shape="rect" id="node11" href="$plat__adc_8c.html#a33cc8cfdf148b4f19eb8ba9b811157b1" title=" " alt="" coords="463,360,578,387"/>
+<area shape="rect" id="node4" href="$at-cb_2src_2platform_2plat__class_8c.html#aad0cbd7758d1df323ed1cc0928dadb25" title=" " alt="" coords="645,5,752,32"/>
+</map>

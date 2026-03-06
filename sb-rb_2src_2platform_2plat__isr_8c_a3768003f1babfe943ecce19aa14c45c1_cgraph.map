@@ -1,0 +1,12 @@
+<map id="pwr_sequence_event" name="pwr_sequence_event">
+<area shape="rect" id="node1" title=" " alt="" coords="5,107,151,133"/>
+<area shape="rect" id="node2" href="$aalc-rpu_2src_2platform_2plat__log_8c.html#a103e33f69b37672107c44bcf36accc6b" title=" " alt="" coords="225,5,336,32"/>
+<area shape="rect" id="node3" href="$gt-cc_2src_2platform_2plat__hook_8c.html#abda0c3d7a63cc6f68d1ed88e1d36729d" title=" " alt="" coords="231,56,330,83"/>
+<area shape="rect" id="node5" href="$shell__plat__power__sequence_8c.html#aca4e722d48a47636d0467657dde1402a" title=" " alt="" coords="199,107,363,133"/>
+<area shape="rect" id="node9" href="$shell__plat__power__sequence_8c.html#ada5a5165083f8e30b88b0d8112f97b65" title=" " alt="" coords="211,158,350,199"/>
+<area shape="rect" id="node10" href="$pldm__oem_8h.html#abfa67ccc03b5a09b8503f95d5f8e5c5f" title=" " alt="" coords="199,224,362,251"/>
+<area shape="rect" id="node4" href="$hal__gpio_8c.html#af700ee50de3d113e223c2b011c41f966" title=" " alt="" coords="429,56,499,83"/>
+<area shape="rect" id="node6" href="$minerva-ag_2src_2platform_2plat__class_8c.html#ab8ed1e1192e4346f34a2396e50d9f1aa" title=" " alt="" coords="411,107,517,133"/>
+<area shape="rect" id="node7" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="565,107,684,133"/>
+<area shape="rect" id="node8" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="732,107,875,133"/>
+</map>

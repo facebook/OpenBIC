@@ -1,0 +1,6 @@
+<map id="post_common_sensor_read" name="post_common_sensor_read">
+<area shape="rect" id="node1" title=" " alt="" coords="5,13,188,39"/>
+<area shape="rect" id="node2" href="$sb-rb_2src_2platform_2plat__hook_8c.html#a371a92bb88125e1cd8f79ea25003385b" title=" " alt="" coords="236,5,379,47"/>
+<area shape="rect" id="node3" href="$sb-rb_2src_2platform_2plat__i2c__target_8c.html#a6bbd7e44de3f620f177cafbb724a8632" title=" " alt="" coords="427,5,583,47"/>
+<area shape="rect" id="node4" href="$pldm__sensor_8h.html#a17597d30b940a33d2608a54ccadd949f" title=" " alt="" coords="631,5,801,47"/>
+</map>
