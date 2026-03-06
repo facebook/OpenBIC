@@ -895,19 +895,29 @@ static bool command_reply_data_handle(void *arg)
 					float pwr_w1 = get_adc_medha_inst_pwr_w(ADC_RB_IDX_MEDHA1);
 
 					sensor_value = (uint16_t)(pwr_w0 + 0.5f);
-					memcpy(&data->target_rd_msg.msg[0], &sensor_value, sizeof(sensor_value));
+					memcpy(&data->target_rd_msg.msg[0], &sensor_value,
+					       sizeof(sensor_value));
 
 					sensor_value = (uint16_t)(pwr_w1 + 0.5f);
-					memcpy(&data->target_rd_msg.msg[2], &sensor_value, sizeof(sensor_value));
+					memcpy(&data->target_rd_msg.msg[2], &sensor_value,
+					       sizeof(sensor_value));
 				} else {
 					/* VR sensor cache power in W */
-					sensor_value = (get_cached_sensor_reading_by_sensor_number(
-								SENSOR_NUM_ASIC_P0V85_MEDHA0_VDD_PWR_W) + 500) / 1000;
-					memcpy(&data->target_rd_msg.msg[0], &sensor_value, sizeof(sensor_value));
+					sensor_value =
+						(get_cached_sensor_reading_by_sensor_number(
+							 SENSOR_NUM_ASIC_P0V85_MEDHA0_VDD_PWR_W) +
+						 500) /
+						1000;
+					memcpy(&data->target_rd_msg.msg[0], &sensor_value,
+					       sizeof(sensor_value));
 
-					sensor_value = (get_cached_sensor_reading_by_sensor_number(
-								SENSOR_NUM_ASIC_P0V85_MEDHA1_VDD_PWR_W) + 500) / 1000;
-					memcpy(&data->target_rd_msg.msg[2], &sensor_value, sizeof(sensor_value));
+					sensor_value =
+						(get_cached_sensor_reading_by_sensor_number(
+							 SENSOR_NUM_ASIC_P0V85_MEDHA1_VDD_PWR_W) +
+						 500) /
+						1000;
+					memcpy(&data->target_rd_msg.msg[2], &sensor_value,
+					       sizeof(sensor_value));
 				}
 			} break;
 			case POWER_CAPPING_METHOD_REG: {

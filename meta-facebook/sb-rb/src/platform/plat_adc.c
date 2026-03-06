@@ -160,17 +160,17 @@ float get_adc_medha_inst_pwr_w(uint8_t medha_idx)
 		}
 		break;
 	case ADI_AD4058:
-        vref = ad4058_vref;
-        if (medha_idx == ADC_RB_IDX_MEDHA0) {
-            raw = ad4058_raw_0;
-            v = ad4058_val_0;
-        } else if (medha_idx == ADC_RB_IDX_MEDHA1) {
-            raw = ad4058_raw_1;
-            v = ad4058_val_1;
-        } else {
-            return 0.0f;
-        }
-        break;
+		vref = ad4058_vref;
+		if (medha_idx == ADC_RB_IDX_MEDHA0) {
+			raw = ad4058_raw_0;
+			v = ad4058_val_0;
+		} else if (medha_idx == ADC_RB_IDX_MEDHA1) {
+			raw = ad4058_raw_1;
+			v = ad4058_val_1;
+		} else {
+			return 0.0f;
+		}
+		break;
 	default:
 		return 0.0f;
 	}

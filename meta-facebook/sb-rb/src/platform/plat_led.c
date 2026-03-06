@@ -88,7 +88,7 @@ void heartbeat_led_handler(struct k_work *work)
 		if (candidate_interval < overall_interval) {
 			overall_interval = candidate_interval;
 		}
-		}
+	}
 	if (overall_interval == 500 && led_set_flag) {
 		// event occurred, set the interval to 2 times per sec
 		overall_interval = 1000;
