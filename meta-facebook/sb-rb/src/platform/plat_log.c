@@ -515,8 +515,6 @@ void error_log_event(uint16_t error_code, bool log_status)
 	if (!plat_eeprom_write(write_address, (uint8_t *)&err_log_data[fru_count],
 			       sizeof(plat_err_log_mapping))) {
 		LOG_ERR("Write Log failed with Error code: %02x", error_code);
-	} else {
-		k_msleep(EEPROM_MAX_WRITE_TIME); // wait 5ms to write EEPROM
 	}
 
 	// Update the next log position
