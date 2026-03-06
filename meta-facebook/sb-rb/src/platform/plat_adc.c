@@ -56,6 +56,8 @@ const float ads7066_vref = 2.5;
 const float ad4058_vref = 2.5;
 static uint8_t adc_good_status[2] = { 0xFF, 0xFF };
 static uint8_t final_ucr_status = 0;
+static float inst_medha0 = 0;
+static float inst_medha1 = 0;
 
 typedef struct {
 	uint16_t avg_times; // 20ms at a time
@@ -151,10 +153,10 @@ float get_adc_medha_inst_pwr_w(uint8_t medha_idx)
 		vref = ads7066_vref;
 		if (medha_idx == ADC_RB_IDX_MEDHA0) {
 			raw = ads7066_raw_0;
-			v = ads7066_val_0;
+			v = inst_medha0;
 		} else if (medha_idx == ADC_RB_IDX_MEDHA1) {
 			raw = ads7066_raw_1;
-			v = ads7066_val_1;
+			v = inst_medha1;
 		} else {
 			return 0.0f;
 		}
@@ -163,10 +165,10 @@ float get_adc_medha_inst_pwr_w(uint8_t medha_idx)
 		vref = ad4058_vref;
 		if (medha_idx == ADC_RB_IDX_MEDHA0) {
 			raw = ad4058_raw_0;
-			v = ad4058_val_0;
+			v = inst_medha0;
 		} else if (medha_idx == ADC_RB_IDX_MEDHA1) {
 			raw = ad4058_raw_1;
-			v = ad4058_val_1;
+			v = inst_medha1;
 		} else {
 			return 0.0f;
 		}
@@ -177,7 +179,6 @@ float get_adc_medha_inst_pwr_w(uint8_t medha_idx)
 
 	/* current (mA) */
 	float cur_ma = adc_raw_v_to_apms(raw, vref);
-
 	/* power = V * mA = mW -> convert to W */
 	return (v * cur_ma) / 1000.0f;
 }
@@ -246,14 +247,17 @@ static void update_adc_info(uint16_t raw_data, uint8_t base_idx, float vref)
 		adc->avg_val = adc->sum / adc->avg_times;
 		// voltage averge
 		float temp_voltage_value = 0;
-		if (base_idx == ADC_RB_IDX_MEDHA0)
+		if (base_idx == ADC_RB_IDX_MEDHA0) {
 			temp_voltage_value = get_cached_sensor_reading_by_sensor_number(
 						     SENSOR_NUM_ASIC_P0V85_MEDHA0_VDD_VOLT_V) /
 					     1000.0;
-		else if (base_idx == ADC_RB_IDX_MEDHA1)
+			inst_medha0 = temp_voltage_value;
+		} else if (base_idx == ADC_RB_IDX_MEDHA1) {
 			temp_voltage_value = get_cached_sensor_reading_by_sensor_number(
 						     SENSOR_NUM_ASIC_P0V85_MEDHA1_VDD_VOLT_V) /
 					     1000.0;
+			inst_medha1 = temp_voltage_value;
+		}
 		// transfer to uint16_t
 		uint16_t voltage_packed = float_voltage_transfer_to_uint16(temp_voltage_value);
 		adc->vr_sum -= uint16_voltage_transfer_to_float(adc->vr_voltage_buf[adc->buf_idx]);
