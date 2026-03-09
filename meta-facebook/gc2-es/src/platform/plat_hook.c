@@ -488,7 +488,6 @@ bool post_cpu_margin_read(sensor_cfg *cfg, void *args, int *reading)
 	if (sval->integer == 1) {
 		sval->integer = 0;
 	}
-	sval->integer = -sval->integer; /* for BMC minus */
 	return true;
 }
 
