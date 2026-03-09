@@ -147,6 +147,7 @@ float get_adc_medha_inst_pwr_w(uint8_t medha_idx)
 	uint16_t raw = 0;
 	float v = 0.0f;
 	float vref = 0.0f;
+	uint8_t adc_type = get_adc_type();
 
 	switch (get_adc_type()) {
 	case TIC_ADS7066:
@@ -158,6 +159,7 @@ float get_adc_medha_inst_pwr_w(uint8_t medha_idx)
 			raw = ads7066_raw_1;
 			v = inst_medha1;
 		} else {
+			LOG_WRN("ADC pwr: invalid medha_idx=%d", medha_idx);
 			return 0.0f;
 		}
 		break;
@@ -170,17 +172,20 @@ float get_adc_medha_inst_pwr_w(uint8_t medha_idx)
 			raw = ad4058_raw_1;
 			v = inst_medha1;
 		} else {
+			LOG_WRN("ADC pwr: invalid medha_idx=%d", medha_idx);
 			return 0.0f;
 		}
 		break;
 	default:
+		LOG_WRN("ADC pwr: unsupported adc_type=%d", adc_type);
 		return 0.0f;
 	}
 
-	/* current (mA) */
-	float cur_ma = adc_raw_v_to_apms(raw, vref);
-	/* power = V * mA = mW -> convert to W */
-	return (v * cur_ma) / 1000.0f;
+	/* current (A) */
+	float cur = adc_raw_v_to_apms(raw, vref);
+
+	/* power(W) */
+	return v * cur;
 }
 
 uint16_t get_adc_ucr(uint8_t idx)
@@ -200,7 +205,7 @@ void set_adc_ucr_status(uint8_t idx, bool status)
 {
 	adc_info[idx].ucr_status = status;
 }
-
+/* current (A) */
 float adc_raw_v_to_apms(uint16_t v, float vref)
 {
 	float temp_v = ((float)v / 0xffff) * vref;
