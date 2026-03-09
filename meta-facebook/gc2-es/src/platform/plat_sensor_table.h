@@ -137,9 +137,10 @@
 #define POLL_TIME_BAT3V 3600 // sec
 
 #define ADDR_E1S_BOOT_INA233 (0x8A >> 1)
-#define MB_INA233_E1S_Boot_VOLT_V 0x2F
-#define MB_INA233_E1S_Boot_CURR_A 0x36
-#define MB_INA233_E1S_Boot_PWR_W 0x44
+#define ADDR_E1S_BOOT_SQ52205 (0x8A >> 1)
+#define MB_PMON_E1S_Boot_VOLT_V 0x2F
+#define MB_PMON_E1S_Boot_CURR_A 0x36
+#define MB_PMON_E1S_Boot_PWR_W 0x44
 
 typedef struct _dimm_pmic_mapping_cfg {
 	uint8_t dimm_sensor_num;

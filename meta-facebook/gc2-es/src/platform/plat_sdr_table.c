@@ -2653,7 +2653,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		"MB_SOC_PACKAGE_PWR_W",
 	},
 	{
-		// MB_INA233_E1S_Boot_VOLT_V
+		// MB_PMON_E1S_Boot_VOLT_V
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -2662,7 +2662,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		MB_INA233_E1S_Boot_VOLT_V, // sensor number
+		MB_PMON_E1S_Boot_VOLT_V, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -2711,10 +2711,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"MB_INA233_E1S_Boot_VOLT_V",
+		"MB_PMON_E1S_Boot_VOLT_V",
 	},
 	{
-		// MB_INA233_E1S_Boot_CURR_A
+		// MB_PMON_E1S_Boot_CURR_A
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -2723,7 +2723,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		MB_INA233_E1S_Boot_CURR_A, // sensor number
+		MB_PMON_E1S_Boot_CURR_A, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -2772,10 +2772,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"MB_INA233_E1S_Boot_CURR_A",
+		"MB_PMON_E1S_Boot_CURR_A",
 	},
 	{
-		// MB_INA233_E1S_Boot_PWR_W
+		// MB_PMON_E1S_Boot_PWR_W
 		0x00,
 		0x00, // record ID
 		IPMI_SDR_VER_15, // SDR ver
@@ -2784,7 +2784,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 
 		SELF_I2C_ADDRESS << 1, // owner id
 		0x00, // owner lun
-		MB_INA233_E1S_Boot_PWR_W, // sensor number
+		MB_PMON_E1S_Boot_PWR_W, // sensor number
 
 		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
 		0x00, // entity instance
@@ -2833,7 +2833,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // reserved
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
-		"MB_INA233_E1S_Boot_PWR_W",
+		"MB_PMON_E1S_Boot_PWR_W",
 	}
 
 };

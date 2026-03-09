@@ -32,6 +32,7 @@
 #include "pmbus.h"
 #include "tmp431.h"
 #include "libutil.h"
+#include "sq52205.h"
 #include <logging/log.h>
 
 LOG_MODULE_REGISTER(plat_sensor_table);
@@ -70,20 +71,6 @@ sensor_cfg plat_sensor_config[] = {
 	{ SENSOR_NUM_TEMP_TMP75_IN, sensor_dev_tmp75, I2C_BUS2, TMP75_IN_ADDR, TMP75_TEMP_OFFSET,
 	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
 	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, NULL },
-
-	// E1S_BOOT
-	{ MB_INA233_E1S_Boot_VOLT_V, sensor_dev_ina233, I2C_BUS2, ADDR_E1S_BOOT_INA233,
-	  PMBUS_READ_VOUT, post_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
-	  &ina233_init_args[2] },
-	{ MB_INA233_E1S_Boot_CURR_A, sensor_dev_ina233, I2C_BUS2, ADDR_E1S_BOOT_INA233,
-	  PMBUS_READ_IOUT, post_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
-	  &ina233_init_args[2] },
-	{ MB_INA233_E1S_Boot_PWR_W, sensor_dev_ina233, I2C_BUS2, ADDR_E1S_BOOT_INA233,
-	  PMBUS_READ_POUT, post_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
-	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
-	  &ina233_init_args[2] },
 
 	// NVME
 	{ SENSOR_NUM_TEMP_SSD0, sensor_dev_nvme, I2C_BUS2, SSD0_ADDR, SSD0_OFFSET, m2_access, 0, 0,
@@ -440,6 +427,36 @@ sensor_cfg vr_isl69259_sensor_config_table[] = {
 	  &isl69259_pre_read_args[1], NULL, NULL, NULL },
 };
 
+sensor_cfg ina233_sensor_config_table[] = {
+	{ MB_PMON_E1S_Boot_VOLT_V, sensor_dev_ina233, I2C_BUS2, ADDR_E1S_BOOT_INA233,
+	  PMBUS_READ_VOUT, post_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
+	  &ina233_init_args[2] },
+	{ MB_PMON_E1S_Boot_CURR_A, sensor_dev_ina233, I2C_BUS2, ADDR_E1S_BOOT_INA233,
+	  PMBUS_READ_IOUT, post_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
+	  &ina233_init_args[2] },
+	{ MB_PMON_E1S_Boot_PWR_W, sensor_dev_ina233, I2C_BUS2, ADDR_E1S_BOOT_INA233,
+	  PMBUS_READ_POUT, post_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
+	  &ina233_init_args[2] },
+};
+
+sensor_cfg sq52205_sensor_config_table[] = {
+	{ MB_PMON_E1S_Boot_VOLT_V, sensor_dev_sq52205, I2C_BUS2, ADDR_E1S_BOOT_SQ52205,
+	  SQ52205_READ_VOL_OFFSET, post_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
+	  &sq52205_init_args[0] },
+	{ MB_PMON_E1S_Boot_CURR_A, sensor_dev_sq52205, I2C_BUS2, ADDR_E1S_BOOT_SQ52205,
+	  SQ52205_READ_CUR_OFFSET, post_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
+	  &sq52205_init_args[0] },
+	{ MB_PMON_E1S_Boot_PWR_W, sensor_dev_sq52205, I2C_BUS2, ADDR_E1S_BOOT_SQ52205,
+	  SQ52205_READ_PWR_OFFSET, post_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
+	  &sq52205_init_args[0] },
+};
+
 const int SENSOR_CONFIG_SIZE = ARRAY_SIZE(plat_sensor_config);
 
 void load_sensor_config(void)
@@ -456,6 +473,7 @@ uint8_t pal_get_extend_sensor_config()
 	uint8_t extend_sensor_config_size = 0;
 	uint8_t hsc_module = get_hsc_module();
 	uint8_t vr_module = get_vr_module();
+	uint8_t e1s_boot_module = get_e1s_boot_drive_module();
 
 	switch (hsc_module) {
 	case HSC_MODULE_ADM1278:
@@ -485,6 +503,17 @@ uint8_t pal_get_extend_sensor_config()
 	case VR_MODULE_TPS53689:
 		// If independent tables are not yet supported, temporarily use ISL as a placeholder (or create a separate tps53689 table).
 		extend_sensor_config_size += ARRAY_SIZE(vr_isl69259_sensor_config_table);
+		break;
+	default:
+		break;
+	}
+
+	switch (e1s_boot_module) {
+	case E1S_BOOT_DRIVE_MODULE_INA233:
+		extend_sensor_config_size += ARRAY_SIZE(ina233_sensor_config_table);
+		break;
+	case E1S_BOOT_DRIVE_MODULE_SQ52205:
+		extend_sensor_config_size += ARRAY_SIZE(sq52205_sensor_config_table);
 		break;
 	default:
 		break;
@@ -609,6 +638,7 @@ void pal_extend_sensor_config()
 	uint8_t sensor_count = 0;
 	uint8_t hsc_module = get_hsc_module();
 	uint8_t vr_module = get_vr_module();
+	uint8_t e1s_boot_module = get_e1s_boot_drive_module();
 
 	/* Check the VR sensor type */
 	sensor_count = ARRAY_SIZE(plat_sensor_config);
@@ -684,6 +714,23 @@ void pal_extend_sensor_config()
 		break;
 	default:
 		LOG_ERR("Unsupported VR module: 0x%x", vr_module);
+		break;
+	}
+
+	switch (e1s_boot_module) {
+	case E1S_BOOT_DRIVE_MODULE_INA233:
+		sensor_count = ARRAY_SIZE(ina233_sensor_config_table);
+		for (int i = 0; i < sensor_count; i++) {
+			add_sensor_config(ina233_sensor_config_table[i]);
+		}
+		break;
+	case E1S_BOOT_DRIVE_MODULE_SQ52205:
+		sensor_count = ARRAY_SIZE(sq52205_sensor_config_table);
+		for (int i = 0; i < sensor_count; i++) {
+			add_sensor_config(sq52205_sensor_config_table[i]);
+		}
+		break;
+	default:
 		break;
 	}
 
