@@ -1,0 +1,7 @@
+<map id="ISR_MB_DC_STAGUS_CHAGNE" name="ISR_MB_DC_STAGUS_CHAGNE">
+<area shape="rect" id="node1" title=" " alt="" coords="5,20,227,47"/>
+<area shape="rect" id="node2" href="$hal__gpio_8c.html#af700ee50de3d113e223c2b011c41f966" title=" " alt="" coords="600,20,671,47"/>
+<area shape="rect" id="node3" href="$yv4-wf_2src_2platform_2plat__power__seq_8c.html#a7118174afd8452fc1b05f07b28f5a3e6" title=" " alt="" coords="275,20,405,47"/>
+<area shape="rect" id="node4" href="$yv4-ff_2src_2platform_2plat__power__seq_8c.html#af91bcc3107d5dc12defd0c6529e6f464" title=" " alt="" coords="275,71,405,98"/>
+<area shape="rect" id="node5" href="$gt-cc_2src_2platform_2plat__hook_8c.html#abda0c3d7a63cc6f68d1ed88e1d36729d" title=" " alt="" coords="453,71,552,98"/>
+</map>

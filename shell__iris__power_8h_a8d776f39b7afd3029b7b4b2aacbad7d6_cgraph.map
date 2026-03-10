@@ -1,0 +1,8 @@
+<map id="power_on_p3v3_osfp" name="power_on_p3v3_osfp">
+<area shape="rect" id="node1" title=" " alt="" coords="5,46,151,73"/>
+<area shape="rect" id="node2" href="$plat__ioexp_8c.html#ac080827d1752b9dc20adb6fceb655121" title=" " alt="" coords="199,5,343,47"/>
+<area shape="rect" id="node5" href="$plat__ioexp_8c.html#a63c59cb540b7df619e7698025582a57b" title=" " alt="" coords="199,71,343,112"/>
+<area shape="rect" id="node3" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="392,17,511,43"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="560,46,703,73"/>
+<area shape="rect" id="node6" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="391,71,512,98"/>
+</map>
