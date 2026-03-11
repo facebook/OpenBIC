@@ -177,33 +177,33 @@ bool tca6424a_init(void)
 void ioexp_init(void)
 {
 	// read from IO, save value (if output) to table
-	// set_ioexp_val_to_bootstrap_table();
+	set_ioexp_val_to_bootstrap_table();
 
-	// if (!pca6416a_init())
-	// 	LOG_ERR("pca6416a init fail");
+	if (!pca6416a_init())
+		LOG_ERR("pca6416a init fail");
 
-	// if (is_tca6424a_accessible()) {
-	// 	if (!tca6424a_init())
-	// 		LOG_ERR("tca6424a init fail");
-	// }
+	if (is_tca6424a_accessible()) {
+		if (!tca6424a_init())
+			LOG_ERR("tca6424a init fail");
+	}
 
-	// // set to output if TEST_STRAP enable
-	// int drive_level = 0;
-	// get_bootstrap_change_drive_level(STRAP_INDEX_HAMSA_TEST_STRAP_R, &drive_level);
-	// if (drive_level == 1) {
-	// 	set_hamsa_mfio_6_8_10_output();
-	// }
-	// get_bootstrap_change_drive_level(STRAP_INDEX_NUWA0_TEST_STRAP, &drive_level);
-	// if (drive_level == 1) {
-	// 	set_nuwa0_mfio_6_8_10_output();
-	// }
-	// get_bootstrap_change_drive_level(STRAP_INDEX_NUWA1_TEST_STRAP, &drive_level);
-	// if (drive_level == 1) {
-	// 	set_nuwa1_mfio_6_8_10_output();
-	// }
+	// set to output if TEST_STRAP enable
+	int drive_level = 0;
+	get_bootstrap_change_drive_level(STRAP_INDEX_HAMSA_TEST_STRAP_R, &drive_level);
+	if (drive_level == 1) {
+		set_hamsa_mfio_6_8_10_output();
+	}
+	get_bootstrap_change_drive_level(STRAP_INDEX_NUWA0_TEST_STRAP, &drive_level);
+	if (drive_level == 1) {
+		set_nuwa0_mfio_6_8_10_output();
+	}
+	get_bootstrap_change_drive_level(STRAP_INDEX_NUWA1_TEST_STRAP, &drive_level);
+	if (drive_level == 1) {
+		set_nuwa1_mfio_6_8_10_output();
+	}
 
-	// // set value from table
-	// set_bootstrap_table_val_to_ioexp();
+	// set value from table
+	set_bootstrap_table_val_to_ioexp();
 }
 
 void set_pca6554apw_ioe_value(uint8_t ioe_bus, uint8_t ioe_addr, uint8_t ioe_reg, uint8_t value)

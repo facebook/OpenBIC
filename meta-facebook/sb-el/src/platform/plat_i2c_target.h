@@ -41,3 +41,4 @@ typedef struct __attribute__((__packed__)) {
 } plat_sensor_reading;
 
 void update_sensor_reading_by_sensor_number(uint8_t sensor_number);
+int get_cached_sensor_reading_by_sensor_number(uint8_t sensor_number);

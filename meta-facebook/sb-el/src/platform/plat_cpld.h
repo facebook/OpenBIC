@@ -30,6 +30,7 @@
 #define CPLD_OFFSET_VR_VENDER_TYPE 0x15
 #define CPLD_OFFSET_POWER_CLAMP 0x25
 #define CPLD_OFFSET_USERCODE 0x32
+#define CPLD_OFFSET_POWER_CAPPING_LV1_TIME 0x36
 #define ASIC_JTAG_MUX_SEL 0x39
 #define CPLD_OFFSET_ASIC_BOARD_ID 0x3C
 
@@ -39,6 +40,7 @@
 #define VR_3_EN 0x41
 #define VR_4_EN 0x42
 
+#define CPLD_OFFSET_ADC_IDX 0xA0
 #define VR_AND_CLK_EN_PIN_CTRL 0xA1
 #define VR_PWRGD_PIN_READING_1_REG 0x07
 #define VR_PWRGD_PIN_READING_2_REG 0x08
@@ -74,6 +76,12 @@ typedef struct _cpld_info_ {
 	uint8_t bit_check_mask; //bit check mask
 
 } cpld_info;
+
+typedef struct {
+	const char *name;
+	uint8_t bit;
+	uint8_t offset;
+} cpld_pin_map_t;
 
 bool plat_read_cpld(uint8_t offset, uint8_t *data, uint8_t len);
 bool plat_write_cpld(uint8_t offset, uint8_t *data);
