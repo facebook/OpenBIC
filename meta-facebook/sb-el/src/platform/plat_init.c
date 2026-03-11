@@ -31,6 +31,7 @@
 #include "plat_user_setting.h"
 #include "plat_ioexp.h"
 #include "plat_power_capping.h"
+#include "plat_event.h"
 
 LOG_MODULE_REGISTER(plat_init);
 
@@ -69,6 +70,8 @@ void pal_post_init()
 		init_U200053_IO();
 		init_U200070_IO();
 	}
+	plat_set_ac_on_log();
+
 	init_cpld_polling();
 	ioexp_init();
 }
