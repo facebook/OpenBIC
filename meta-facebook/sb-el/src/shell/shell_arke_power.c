@@ -6,7 +6,7 @@
 #include "plat_gpio.h"
 #include "plat_isr.h"
 #include "plat_i2c.h"
-// #include "plat_ioexp.h"
+#include "plat_ioexp.h"
 #include "plat_pldm_sensor.h"
 #include "plat_class.h"
 #include "shell_arke_power.h"
@@ -325,39 +325,39 @@ void clear_clock_status(const struct shell *shell, uint8_t clock_index)
 	return;
 }
 
-// typedef struct ioe_power_good_status {
-// 	uint8_t bus;
-// 	uint8_t addr;
-// 	uint8_t bit_loc;
-// 	uint8_t *ioe_pwrgd_name;
+typedef struct ioe_power_good_status {
+	uint8_t bus;
+	uint8_t addr;
+	uint8_t bit_loc;
+	uint8_t *ioe_pwrgd_name;
 
-// } ioe_power_good_status;
+} ioe_power_good_status;
 
-// ioe_power_good_status ioe_pwrgd_status_table[] = {
-// 	{ U200052_IO_I2C_BUS, U200052_IO_ADDR, 0, "PWRGD_P3V3_OSFP_P1" },
-// 	{ U200052_IO_I2C_BUS, U200052_IO_ADDR, 1, "PWRGD_P3V3_OSFP_P2" },
-// 	{ U200052_IO_I2C_BUS, U200052_IO_ADDR, 2, "PWRGD_P3V3_OSFP_P3" },
-// 	{ U200052_IO_I2C_BUS, U200052_IO_ADDR, 3, "PWRGD_P3V3_OSFP_P4" },
-// 	{ U200052_IO_I2C_BUS, U200052_IO_ADDR, 4, "PWRGD_P3V3_OSFP_P5" },
-// 	{ U200052_IO_I2C_BUS, U200052_IO_ADDR, 5, "PWRGD_P3V3_OSFP_P6" },
-// };
+ioe_power_good_status ioe_pwrgd_status_table[] = {
+	{ U200052_IO_I2C_BUS, U200052_IO_ADDR, 0, "PWRGD_P3V3_OSFP_P1" },
+	{ U200052_IO_I2C_BUS, U200052_IO_ADDR, 1, "PWRGD_P3V3_OSFP_P2" },
+	{ U200052_IO_I2C_BUS, U200052_IO_ADDR, 2, "PWRGD_P3V3_OSFP_P3" },
+	{ U200052_IO_I2C_BUS, U200052_IO_ADDR, 3, "PWRGD_P3V3_OSFP_P4" },
+	{ U200052_IO_I2C_BUS, U200052_IO_ADDR, 4, "PWRGD_P3V3_OSFP_P5" },
+	{ U200052_IO_I2C_BUS, U200052_IO_ADDR, 5, "PWRGD_P3V3_OSFP_P6" },
+};
 
-// typedef struct ioe_pwr_on {
-// 	uint8_t bus;
-// 	uint8_t addr;
-// 	uint8_t bit_loc;
-// 	uint8_t *ioe_enable_name;
+typedef struct ioe_pwr_on {
+	uint8_t bus;
+	uint8_t addr;
+	uint8_t bit_loc;
+	uint8_t *ioe_enable_name;
 
-// } ioe_pwr_on;
+} ioe_pwr_on;
 
-// ioe_pwr_on ioe_pwr_on_table[] = {
-// 	{ U200051_IO_I2C_BUS, U200051_IO_ADDR, 0, "FM_P3V3_OSFP_P1_EN" },
-// 	{ U200051_IO_I2C_BUS, U200051_IO_ADDR, 1, "FM_P3V3_OSFP_P2_EN" },
-// 	{ U200051_IO_I2C_BUS, U200051_IO_ADDR, 2, "FM_P3V3_OSFP_P3_EN" },
-// 	{ U200051_IO_I2C_BUS, U200051_IO_ADDR, 3, "FM_P3V3_OSFP_P4_EN" },
-// 	{ U200051_IO_I2C_BUS, U200051_IO_ADDR, 4, "FM_P3V3_OSFP_P5_EN" },
-// 	{ U200051_IO_I2C_BUS, U200051_IO_ADDR, 5, "FM_P3V3_OSFP_P6_EN" },
-// };
+ioe_pwr_on ioe_pwr_on_table[] = {
+	{ U200051_IO_I2C_BUS, U200051_IO_ADDR, 0, "FM_P3V3_OSFP_P1_EN" },
+	{ U200051_IO_I2C_BUS, U200051_IO_ADDR, 1, "FM_P3V3_OSFP_P2_EN" },
+	{ U200051_IO_I2C_BUS, U200051_IO_ADDR, 2, "FM_P3V3_OSFP_P3_EN" },
+	{ U200051_IO_I2C_BUS, U200051_IO_ADDR, 3, "FM_P3V3_OSFP_P4_EN" },
+	{ U200051_IO_I2C_BUS, U200051_IO_ADDR, 4, "FM_P3V3_OSFP_P5_EN" },
+	{ U200051_IO_I2C_BUS, U200051_IO_ADDR, 5, "FM_P3V3_OSFP_P6_EN" },
+};
 
 bool check_p3v3_p5v_pwrgd(void)
 {
@@ -377,104 +377,104 @@ bool check_p3v3_p5v_pwrgd(void)
 	return false;
 }
 
-// void power_on_p3v3_osfp()
-// {
-// 	uint8_t write_data = 0;
-// 	uint8_t check_value = 0;
-// 	k_msleep(1000);
-// 	for (int i = 0; i < sizeof(ioe_pwr_on_table) / sizeof(ioe_pwr_on_table[0]); i++) {
-// 		// set
-// 		write_data |= BIT(ioe_pwr_on_table[i].bit_loc);
-// 		//print write data
-// 		LOG_DBG("%s : %20d", ioe_pwr_on_table[i].ioe_enable_name, write_data);
-// 		set_pca6554apw_ioe_value(ioe_pwr_on_table[i].bus, ioe_pwr_on_table[i].addr,
-// 					 OUTPUT_PORT, write_data);
+void power_on_p3v3_osfp()
+{
+	uint8_t write_data = 0;
+	uint8_t check_value = 0;
+	k_msleep(1000);
+	for (int i = 0; i < sizeof(ioe_pwr_on_table) / sizeof(ioe_pwr_on_table[0]); i++) {
+		// set
+		write_data |= BIT(ioe_pwr_on_table[i].bit_loc);
+		//print write data
+		LOG_DBG("%s : %20d", ioe_pwr_on_table[i].ioe_enable_name, write_data);
+		set_pca6554apw_ioe_value(ioe_pwr_on_table[i].bus, ioe_pwr_on_table[i].addr,
+					 OUTPUT_PORT, write_data);
 
-// 		k_msleep(100);
-// 		//check set value
-// 		get_pca6554apw_ioe_value(ioe_pwr_on_table[i].bus, ioe_pwr_on_table[i].addr,
-// 					 OUTPUT_PORT, &check_value);
-// 		uint8_t temp_value = (check_value >> i) & 0x01;
-// 		LOG_DBG("check_value : %d", check_value);
-// 		if (!temp_value)
-// 			LOG_INF("%s : %20s", ioe_pwr_on_table[i].ioe_enable_name, "fail");
-// 	}
-// }
-// void power_off_p3v3_osfp(const struct shell *shell)
-// {
-// 	set_pca6554apw_ioe_value(ioe_pwr_on_table[0].bus, ioe_pwr_on_table[0].addr, OUTPUT_PORT,
-// 				 0x0);
-// 	// check is power off
-// 	uint8_t check_value = 0;
-// 	get_pca6554apw_ioe_value(ioe_pwr_on_table[0].bus, ioe_pwr_on_table[0].addr, OUTPUT_PORT,
-// 				 &check_value);
-// 	if (check_value) {
-// 		shell_warn(shell, "%s ", "ioeU200052 power off fail");
-// 	}
-// }
-// void pwer_gd_get_status(const struct shell *shell)
-// {
-// 	uint8_t check_value = 0;
-// 	int ret = 0;
-// 	ret = get_pca6554apw_ioe_value(ioe_pwrgd_status_table[0].bus,
-// 				       ioe_pwrgd_status_table[0].addr, INPUT_PORT, &check_value);
+		k_msleep(100);
+		//check set value
+		get_pca6554apw_ioe_value(ioe_pwr_on_table[i].bus, ioe_pwr_on_table[i].addr,
+					 OUTPUT_PORT, &check_value);
+		uint8_t temp_value = (check_value >> i) & 0x01;
+		LOG_DBG("check_value : %d", check_value);
+		if (!temp_value)
+			LOG_INF("%s : %20s", ioe_pwr_on_table[i].ioe_enable_name, "fail");
+	}
+}
+void power_off_p3v3_osfp(const struct shell *shell)
+{
+	set_pca6554apw_ioe_value(ioe_pwr_on_table[0].bus, ioe_pwr_on_table[0].addr, OUTPUT_PORT,
+				 0x0);
+	// check is power off
+	uint8_t check_value = 0;
+	get_pca6554apw_ioe_value(ioe_pwr_on_table[0].bus, ioe_pwr_on_table[0].addr, OUTPUT_PORT,
+				 &check_value);
+	if (check_value) {
+		shell_warn(shell, "%s ", "ioeU200052 power off fail");
+	}
+}
+void pwer_gd_get_status(const struct shell *shell)
+{
+	uint8_t check_value = 0;
+	int ret = 0;
+	ret = get_pca6554apw_ioe_value(ioe_pwrgd_status_table[0].bus,
+				       ioe_pwrgd_status_table[0].addr, INPUT_PORT, &check_value);
 
-// 	if (ret == -1) {
-// 		return;
-// 	}
+	if (ret == -1) {
+		return;
+	}
 
-// 	for (int i = 0; i < sizeof(ioe_pwrgd_status_table) / sizeof(ioe_pwrgd_status_table[0]);
-// 	     i++) {
-// 		uint8_t tmp_value = (check_value >> i) & 0x01;
-// 		if (tmp_value) {
-// 			shell_print(shell, "%s : %d", ioe_pwrgd_status_table[i].ioe_pwrgd_name,
-// 				    tmp_value);
-// 		} else {
-// 			shell_print(shell, "%s : %d", ioe_pwrgd_status_table[i].ioe_pwrgd_name,
-// 				    tmp_value);
-// 		}
-// 	}
-// }
-// void steps_on_p3v3_osfp(const struct shell *shell)
-// {
-// 	uint8_t reg = 0;
-// 	uint8_t pwrgd_status = 0;
-// 	uint8_t check_value = 0;
-// 	for (int i = 0; i < sizeof(ioe_pwr_on_table) / sizeof(ioe_pwr_on_table[0]); i++) {
-// 		reg |= BIT(ioe_pwr_on_table[i].bit_loc);
+	for (int i = 0; i < sizeof(ioe_pwrgd_status_table) / sizeof(ioe_pwrgd_status_table[0]);
+	     i++) {
+		uint8_t tmp_value = (check_value >> i) & 0x01;
+		if (tmp_value) {
+			shell_print(shell, "%s : %d", ioe_pwrgd_status_table[i].ioe_pwrgd_name,
+				    tmp_value);
+		} else {
+			shell_print(shell, "%s : %d", ioe_pwrgd_status_table[i].ioe_pwrgd_name,
+				    tmp_value);
+		}
+	}
+}
+void steps_on_p3v3_osfp(const struct shell *shell)
+{
+	uint8_t reg = 0;
+	uint8_t pwrgd_status = 0;
+	uint8_t check_value = 0;
+	for (int i = 0; i < sizeof(ioe_pwr_on_table) / sizeof(ioe_pwr_on_table[0]); i++) {
+		reg |= BIT(ioe_pwr_on_table[i].bit_loc);
 
-// 		set_pca6554apw_ioe_value(ioe_pwr_on_table[i].bus, ioe_pwr_on_table[i].addr,
-// 					 OUTPUT_PORT, reg);
+		set_pca6554apw_ioe_value(ioe_pwr_on_table[i].bus, ioe_pwr_on_table[i].addr,
+					 OUTPUT_PORT, reg);
 
-// 		k_msleep(100);
-// 		//check set value
-// 		get_pca6554apw_ioe_value(ioe_pwr_on_table[i].bus, ioe_pwr_on_table[i].addr,
-// 					 OUTPUT_PORT, &check_value);
-// 		// only get the last bit
-// 		uint8_t temp_value = (check_value >> i) & 0x01;
+		k_msleep(100);
+		//check set value
+		get_pca6554apw_ioe_value(ioe_pwr_on_table[i].bus, ioe_pwr_on_table[i].addr,
+					 OUTPUT_PORT, &check_value);
+		// only get the last bit
+		uint8_t temp_value = (check_value >> i) & 0x01;
 
-// 		if (temp_value) {
-// 			shell_print(shell, "%s %s %20s", "set", ioe_pwr_on_table[i].ioe_enable_name,
-// 				    "success");
-// 		} else {
-// 			shell_print(shell, "%s %s %20s", "set", ioe_pwr_on_table[i].ioe_enable_name,
-// 				    "fail");
-// 		}
-// 		//check pwrgd status
-// 		get_pca6554apw_ioe_value(ioe_pwrgd_status_table[i].bus,
-// 					 ioe_pwrgd_status_table[i].addr, INPUT_PORT, &pwrgd_status);
-// 		pwrgd_status = (pwrgd_status >> ioe_pwrgd_status_table[i].bit_loc) & 0x01;
-// 		//print name and value and status
-// 		if (pwrgd_status) {
-// 			shell_print(shell, "%s : %d %20s", ioe_pwrgd_status_table[i].ioe_pwrgd_name,
-// 				    pwrgd_status, "success");
-// 		} else {
-// 			shell_print(shell, "%s : %d %20s", ioe_pwrgd_status_table[i].ioe_pwrgd_name,
-// 				    pwrgd_status, "fail");
-// 		}
-// 		k_msleep(100);
-// 	}
-// }
+		if (temp_value) {
+			shell_print(shell, "%s %s %20s", "set", ioe_pwr_on_table[i].ioe_enable_name,
+				    "success");
+		} else {
+			shell_print(shell, "%s %s %20s", "set", ioe_pwr_on_table[i].ioe_enable_name,
+				    "fail");
+		}
+		//check pwrgd status
+		get_pca6554apw_ioe_value(ioe_pwrgd_status_table[i].bus,
+					 ioe_pwrgd_status_table[i].addr, INPUT_PORT, &pwrgd_status);
+		pwrgd_status = (pwrgd_status >> ioe_pwrgd_status_table[i].bit_loc) & 0x01;
+		//print name and value and status
+		if (pwrgd_status) {
+			shell_print(shell, "%s : %d %20s", ioe_pwrgd_status_table[i].ioe_pwrgd_name,
+				    pwrgd_status, "success");
+		} else {
+			shell_print(shell, "%s : %d %20s", ioe_pwrgd_status_table[i].ioe_pwrgd_name,
+				    pwrgd_status, "fail");
+		}
+		k_msleep(100);
+	}
+}
 
 void pwr_get_clock_status(const struct shell *shell, uint8_t clock_index)
 {
