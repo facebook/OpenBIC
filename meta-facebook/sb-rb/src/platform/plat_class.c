@@ -210,7 +210,7 @@ void pal_show_board_types(const struct shell *shell)
 		    (adc_type == ADI_AD4058) ? "ADI_AD4058" :
 		    (adc_type == TIC_ADS7066) ? "TI_ADS7066" : "not supported");
 	
-	shell_print(shell, "* I2C connection for MEDHA0/1 to MMC: Disable");
+	shell_print(shell, "* I2C connection for MEDHA0/1 to MMC: Enable");
 	return;
 }
 

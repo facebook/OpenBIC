@@ -106,17 +106,11 @@ cpld_info cpld_info_table[] = {
 
 int power_info = 0;
 
-bool cpld_polling_alert_status = false; // only polling cpld when alert status is true
 bool cpld_polling_enable_flag = true;
 
 void get_cpld_polling_power_info(int* reading)
 {
 	*reading = power_info;
-}
-
-void check_cpld_polling_alert_status(void)
-{
-	cpld_polling_alert_status = (gpio_get(ALL_VR_PM_ALERT_R_N) == 0);
 }
 
 void set_cpld_polling_enable_flag(bool status)
@@ -461,7 +455,6 @@ void check_cpld_handler()
 
 void init_cpld_polling(void)
 {
-	check_cpld_polling_alert_status();
 	k_timer_start(&check_ubc_delayed_timer, K_MSEC(1000), K_NO_WAIT);
 	k_sem_init(&all_vr_pm_alert_sem, 0, 1);
 	k_timer_start(&ragular_cpld_polling_sem_timer, K_MSEC(1000), K_MSEC(1000));	

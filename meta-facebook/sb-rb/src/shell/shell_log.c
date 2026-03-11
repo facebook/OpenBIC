@@ -244,8 +244,14 @@ void cmd_log_dump(const struct shell *shell, size_t argc, char **argv)
 			shell_print(shell, "\tPOWER_ON_SEQUENCE_FAILURE");
 			err_data_len = 1;
 			uint8_t *name = NULL;
+			uint8_t sensor_num = get_pwrgd_sequence_fail_sensor_num(log.error_data[0]);
 			plat_get_power_seq_pwrgd_event_fail_name(log.error_data[0], &name);
 			shell_print(shell, "RAIL: %s", name);
+			if (sensor_num != NO_SENSOR_NUM) {
+				shell_print(shell, "read vr sensor status word(0x79):");
+				shell_print(shell, "\tlow  byte: 0x%02x", log.error_data[7]);
+				shell_print(shell, "\thigh byte: 0x%02x", log.error_data[8]);
+			}
 			shell_print(
 				shell,
 				"PWRGD REG(start from 0xBE): 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x",

@@ -40,6 +40,7 @@
 #include "plat_ioexp.h"
 #include "plat_fru.h"
 #include "plat_power_capping.h"
+#include "plat_adc.h"
 
 LOG_MODULE_REGISTER(plat_i2c_target);
 
@@ -59,7 +60,9 @@ LOG_MODULE_REGISTER(plat_i2c_target);
 #define CPLD_VERSION_GET_REG_LEN 4
 #define STRAP_SET_TYPE 0x44 // 01000100
 #define VR_PWR_BUF_SIZE 38
-#define I2C_TARGET_BUS_ASIC I2C_BUS7 // asic bus is I2C_BUS7, I2C_BUS6 is only for test
+#define I2C_TARGET_BUS_ASIC I2C_BUS7 // asic HAMSA
+#define I2C_TARGET_BUS_ASIC_MEDHA0 I2C_BUS4 // asic medha0
+#define I2C_TARGET_BUS_ASIC_MEDHA1 I2C_BUS5 // asic medha1
 
 typedef struct __attribute__((__packed__)) {
 	uint8_t data_length;
@@ -78,8 +81,8 @@ struct i2c_target_data *test_for_reading = NULL;
 
 /* I2C target init-enable table */
 const bool I2C_TARGET_ENABLE_TABLE[MAX_TARGET_NUM] = {
-	TARGET_DISABLE, TARGET_DISABLE, TARGET_DISABLE, TARGET_DISABLE,
-	TARGET_DISABLE, TARGET_ENABLE,	TARGET_ENABLE,	TARGET_DISABLE,
+	TARGET_DISABLE, TARGET_DISABLE, TARGET_DISABLE, TARGET_ENABLE,
+	TARGET_ENABLE,	TARGET_ENABLE,	TARGET_ENABLE,	TARGET_DISABLE,
 	TARGET_DISABLE, TARGET_DISABLE, TARGET_DISABLE, TARGET_DISABLE,
 };
 
@@ -535,7 +538,6 @@ void vr_power_reading(uint8_t *buffer, size_t buf_size)
 	for (size_t i = 0; i < ARRAY_SIZE(vr_pwr_sensor_table); i++) {
 		if (get_asic_board_id() != ASIC_BOARD_ID_EVB &&
 		    vr_pwr_sensor_table[i] == SENSOR_NUM_P3V3_OSFP_PWR_W) {
-			LOG_WRN("Skip sensor 0x%x", vr_pwr_sensor_table[i]);
 			continue;
 		}
 
@@ -545,14 +547,33 @@ void vr_power_reading(uint8_t *buffer, size_t buf_size)
 		val = (milivolt + 500) / 1000;
 
 		switch (vr_pwr_sensor_table[i]) {
-		case SENSOR_NUM_ASIC_P0V85_MEDHA0_VDD_PWR_W:
-			memcpy(&buffer[6], &val, 2);
-			medha0 = milivolt;
+		case SENSOR_NUM_ASIC_P0V85_MEDHA0_VDD_PWR_W: {
+			if (get_power_capping_source() == CAPPING_SOURCE_ADC) {
+				/* ADC instant power in W */
+				float pwr_w = get_adc_medha_inst_pwr_w(ADC_RB_IDX_MEDHA0);
+				uint16_t adc_w = (uint16_t)(pwr_w + 0.5f);
+				memcpy(&buffer[6], &adc_w, 2);
+				medha0 = (int)(pwr_w * 1000.0f + 0.5f);
+			} else {
+				memcpy(&buffer[6], &val, 2);
+				medha0 = milivolt;
+			}
 			break;
-		case SENSOR_NUM_ASIC_P0V85_MEDHA1_VDD_PWR_W:
-			memcpy(&buffer[8], &val, 2);
-			medha1 = milivolt;
+		}
+		case SENSOR_NUM_ASIC_P0V85_MEDHA1_VDD_PWR_W: {
+			if (get_power_capping_source() == CAPPING_SOURCE_ADC) {
+				float pwr_w = get_adc_medha_inst_pwr_w(ADC_RB_IDX_MEDHA1);
+
+				uint16_t adc_w = (uint16_t)(pwr_w + 0.5f);
+				memcpy(&buffer[8], &adc_w, 2);
+
+				medha1 = (int)(pwr_w * 1000.0f + 0.5f);
+			} else {
+				memcpy(&buffer[8], &val, 2);
+				medha1 = milivolt;
+			}
 			break;
+		}
 		case SENSOR_NUM_ASIC_P1V1_VDDQC_HBM0246_PWR_W:
 			memcpy(&buffer[10], &val, 2);
 			break;
@@ -866,20 +887,38 @@ static bool command_reply_data_handle(void *arg)
 			} break;
 			case MEDHA_SENSOR_VALUE_REG: {
 				data->target_rd_msg.msg_length = 4;
-				uint16_t sensor_value;
-				sensor_value = (get_cached_sensor_reading_by_sensor_number(
-							SENSOR_NUM_ASIC_P0V85_MEDHA0_VDD_PWR_W) +
-						500) /
-					       1000;
-				memcpy(&data->target_rd_msg.msg[0], &sensor_value,
-				       sizeof(sensor_value));
-				sensor_value = (get_cached_sensor_reading_by_sensor_number(
-							SENSOR_NUM_ASIC_P0V85_MEDHA1_VDD_PWR_W) +
-						500) /
-					       1000;
-				memcpy(&data->target_rd_msg.msg[2], &sensor_value,
-				       sizeof(sensor_value));
+				uint16_t sensor_value = 0;
 
+				if (get_power_capping_source() == CAPPING_SOURCE_ADC) {
+					/* ADC instant power in W */
+					float pwr_w0 = get_adc_medha_inst_pwr_w(ADC_RB_IDX_MEDHA0);
+					float pwr_w1 = get_adc_medha_inst_pwr_w(ADC_RB_IDX_MEDHA1);
+
+					sensor_value = (uint16_t)(pwr_w0 + 0.5f);
+					memcpy(&data->target_rd_msg.msg[0], &sensor_value,
+					       sizeof(sensor_value));
+
+					sensor_value = (uint16_t)(pwr_w1 + 0.5f);
+					memcpy(&data->target_rd_msg.msg[2], &sensor_value,
+					       sizeof(sensor_value));
+				} else {
+					/* VR sensor cache power in W */
+					sensor_value =
+						(get_cached_sensor_reading_by_sensor_number(
+							 SENSOR_NUM_ASIC_P0V85_MEDHA0_VDD_PWR_W) +
+						 500) /
+						1000;
+					memcpy(&data->target_rd_msg.msg[0], &sensor_value,
+					       sizeof(sensor_value));
+
+					sensor_value =
+						(get_cached_sensor_reading_by_sensor_number(
+							 SENSOR_NUM_ASIC_P0V85_MEDHA1_VDD_PWR_W) +
+						 500) /
+						1000;
+					memcpy(&data->target_rd_msg.msg[2], &sensor_value,
+					       sizeof(sensor_value));
+				}
 			} break;
 			case POWER_CAPPING_METHOD_REG: {
 				data->target_rd_msg.msg[0] = get_power_capping_method();
@@ -956,8 +995,8 @@ const struct _i2c_target_config I2C_TARGET_CONFIG_TABLE[MAX_TARGET_NUM] = {
 	{ 0xFF, 0xA },
 	{ 0xFF, 0xA },
 	{ 0xFF, 0xA },
-	{ 0xFF, 0xA },
-	{ 0xFF, 0xA },
+	{ 0x40, 0xA, command_reply_data_handle },
+	{ 0x40, 0xA, command_reply_data_handle },
 	{ 0x42, 0xA },
 	{ 0x40, 0xA, command_reply_data_handle },
 	{ 0xFF, 0xA },
@@ -1113,203 +1152,220 @@ void set_power_capping_source_handler(struct k_work *work_item)
 	set_power_capping_source(sensor_data->set_value);
 }
 
+static const asic_i2c_bus_map target_bus_list[] = {
+	{ HAMSA_I2C_BUS_IDX, I2C_TARGET_BUS_ASIC },
+	{ MEDHA0_I2C_BUS_IDX, I2C_TARGET_BUS_ASIC_MEDHA0 },
+	{ MEDHA1_I2C_BUS_IDX, I2C_TARGET_BUS_ASIC_MEDHA1 },
+};
 void plat_master_write_thread_handler()
 {
 	int rc = 0;
 	while (1) {
 		uint8_t rdata[MAX_I2C_TARGET_BUFF] = { 0 };
 		uint16_t rlen = 0;
-		rc = i2c_target_read(I2C_TARGET_BUS_ASIC, rdata, sizeof(rdata), &rlen);
-		if (rc) {
-			LOG_ERR("i2c_target_read fail, ret %d", rc);
-			continue;
-		}
-		// LOG_DBG("rlen = %d", rlen);
-		// LOG_HEXDUMP_DBG(rdata, rlen, "");
-		if (rlen < 1) {
-			LOG_ERR("Received data too short");
-			continue;
-		}
-
-		uint8_t reg_offset = rdata[0];
-		LOG_DBG("Received reg offset[0]: 0x%02x", rdata[0]);
-		LOG_DBG("Received reg offset[1]: 0x%02x", rdata[1]);
-		LOG_DBG("Received reg offset[2]: 0x%02x", rdata[2]);
-		switch (reg_offset) {
-		case WRITE_STRAP_PIN_VALUE_REG: {
-			if (rlen != 3) {
-				LOG_WRN("WRITE_STRAP_PIN_VALUE_REG Invalid length for offset(write): 0x%02x",
-					reg_offset);
-				LOG_DBG("Received data length: 0x%02x", rlen);
-				break;
-			}
-			bootstrap_pin = rdata[1];
-			user_setting_level = rdata[2];
-			k_work_submit(&set_bootstrap_element_work);
-		} break;
-		case I2C_BRIDGE_COMMAND_REG: {
-			if (rlen < 5) {
-				LOG_ERR("Invalid length for offset: 0x%02x", reg_offset);
-				break;
-			}
-			size_t payload_len = rlen - 4;
-			size_t struct_size = sizeof(plat_i2c_bridge_command_config) + payload_len;
-			plat_i2c_bridge_command_config *sensor_data = malloc(struct_size);
-			if (!sensor_data) {
-				LOG_ERR("Memory allocation failed!");
-				break;
-			}
-			sensor_data->bus = rdata[1];
-			sensor_data->addr = rdata[2];
-			sensor_data->read_len = rdata[3];
-			sensor_data->write_len = payload_len;
-			memcpy(sensor_data->data, &rdata[4], payload_len);
-			k_work_init(&sensor_data->work, i2c_bridge_command_handler);
-			k_work_submit(&sensor_data->work);
-			LOG_HEXDUMP_DBG(rdata, rlen, "I2C_BRIDGE_COMMAND_REG");
-		} break;
-		case CONTROL_VOL_VR_ASIC_P0V75_VDDPHY_HBM0246_REG:
-		case CONTROL_VOL_VR_ASIC_P0V75_VDDPHY_HBM1357_REG:
-		case CONTROL_VOL_VR_ASIC_P1V1_VDDQC_HBM0246_REG:
-		case CONTROL_VOL_VR_ASIC_P1V1_VDDQC_HBM1357_REG:
-		case CONTROL_VOL_VR_ASIC_P0V4_VDDQL_HBM0246_REG:
-		case CONTROL_VOL_VR_ASIC_P0V4_VDDQL_HBM1357_REG:
-		case CONTROL_VOL_VR_ASIC_P1V8_VPP_HBM0246_REG:
-		case CONTROL_VOL_VR_ASIC_P1V8_VPP_HBM1357_REG:
-		case CONTROL_VOL_VR_ASIC_P0V85_MEDHA0_VDD_REG:
-		case CONTROL_VOL_VR_ASIC_P0V85_MEDHA1_VDD_REG: {
-			if (rlen != 3) {
-				LOG_ERR("Invalid length for offset(write): 0x%02x", reg_offset);
-				break;
+		for (int i = 0; i < ASIC_I2C_BUS_IDX_MAX; i++) {
+			rc = multi_bus_i2c_target_read(target_bus_list[i].i2c_bus, rdata,
+						       sizeof(rdata), &rlen, K_MSEC(5));
+			if (rc == I2C_TARGET_MULTI_BUS_SKIP) {
+				// skip this bus
+				continue;
 			}
 
-			plat_control_voltage *sensor_data = malloc(sizeof(plat_control_voltage));
-			if (!sensor_data) {
-				LOG_ERR("Memory allocation failed!");
-				break;
-			}
-			sensor_data->rail = get_vr_rail_by_control_vol_reg(reg_offset);
-			sensor_data->set_value = rdata[1] | (rdata[2] << 8);
-			k_work_init(&sensor_data->work, set_control_voltage_handler);
-			k_work_submit(&sensor_data->work);
-		} break;
-		case LEVEL_1_PWR_ALERT_THRESHOLD_TIME_REG:
-		case LEVEL_2_PWR_ALERT_THRESHOLD_TIME_REG:
-		case LEVEL_3_PWR_ALERT_THRESHOLD_TIME_REG: {
-			if (rlen != 9) {
-				LOG_ERR("Invalid length for offset(write): 0x%02x", reg_offset);
-				break;
+			if (rc) {
+				LOG_ERR("i2c_target_read fail, ret %d", rc);
+				continue;
 			}
 
-			plat_power_capping_threshold_time_t *sensor_data =
-				malloc(sizeof(plat_power_capping_threshold_time_t));
-			if (!sensor_data) {
-				LOG_ERR("Memory allocation failed!");
-				break;
-			}
-			if (reg_offset == LEVEL_1_PWR_ALERT_THRESHOLD_TIME_REG) {
-				sensor_data->lv = CAPPING_LV_IDX_LV1;
-			} else if (reg_offset == LEVEL_2_PWR_ALERT_THRESHOLD_TIME_REG) {
-				sensor_data->lv = CAPPING_LV_IDX_LV2;
-			} else if (reg_offset == LEVEL_3_PWR_ALERT_THRESHOLD_TIME_REG) {
-				sensor_data->lv = CAPPING_LV_IDX_LV3;
-			}
-			memcpy(sensor_data->in_data, &rdata[1], 8);
-			k_work_init(&sensor_data->work, set_power_capping_threshold_time_handler);
-			k_work_submit(&sensor_data->work);
-		} break;
-		case POWER_CAPPING_METHOD_REG: {
-			if (rlen != 2) {
-				LOG_ERR("Invalid length for offset(write): 0x%02x", reg_offset);
-				break;
+			if (rlen < 1) {
+				LOG_ERR("Received data too short");
+				continue;
 			}
 
-			plat_power_capping_method_t *sensor_data =
-				malloc(sizeof(plat_power_capping_method_t));
-			if (!sensor_data) {
-				LOG_ERR("Memory allocation failed!");
-				break;
-			}
-			sensor_data->set_value = rdata[1];
+			uint8_t reg_offset = rdata[0];
+			switch (reg_offset) {
+			case WRITE_STRAP_PIN_VALUE_REG: {
+				if (rlen != 3) {
+					LOG_WRN("WRITE_STRAP_PIN_VALUE_REG Invalid length for offset(write): 0x%02x",
+						reg_offset);
+					LOG_DBG("Received data length: 0x%02x", rlen);
+					break;
+				}
+				bootstrap_pin = rdata[1];
+				user_setting_level = rdata[2];
+				k_work_submit(&set_bootstrap_element_work);
+			} break;
+			case I2C_BRIDGE_COMMAND_REG: {
+				if (rlen < 5) {
+					LOG_ERR("Invalid length for offset: 0x%02x", reg_offset);
+					break;
+				}
+				size_t payload_len = rlen - 4;
+				size_t struct_size =
+					sizeof(plat_i2c_bridge_command_config) + payload_len;
+				plat_i2c_bridge_command_config *sensor_data = malloc(struct_size);
+				if (!sensor_data) {
+					LOG_ERR("Memory allocation failed!");
+					break;
+				}
+				sensor_data->bus = rdata[1];
+				sensor_data->addr = rdata[2];
+				sensor_data->read_len = rdata[3];
+				sensor_data->write_len = payload_len;
+				memcpy(sensor_data->data, &rdata[4], payload_len);
+				k_work_init(&sensor_data->work, i2c_bridge_command_handler);
+				k_work_submit(&sensor_data->work);
+				LOG_HEXDUMP_DBG(rdata, rlen, "I2C_BRIDGE_COMMAND_REG");
+			} break;
+			case CONTROL_VOL_VR_ASIC_P0V75_VDDPHY_HBM0246_REG:
+			case CONTROL_VOL_VR_ASIC_P0V75_VDDPHY_HBM1357_REG:
+			case CONTROL_VOL_VR_ASIC_P1V1_VDDQC_HBM0246_REG:
+			case CONTROL_VOL_VR_ASIC_P1V1_VDDQC_HBM1357_REG:
+			case CONTROL_VOL_VR_ASIC_P0V4_VDDQL_HBM0246_REG:
+			case CONTROL_VOL_VR_ASIC_P0V4_VDDQL_HBM1357_REG:
+			case CONTROL_VOL_VR_ASIC_P1V8_VPP_HBM0246_REG:
+			case CONTROL_VOL_VR_ASIC_P1V8_VPP_HBM1357_REG:
+			case CONTROL_VOL_VR_ASIC_P0V85_MEDHA0_VDD_REG:
+			case CONTROL_VOL_VR_ASIC_P0V85_MEDHA1_VDD_REG: {
+				if (rlen != 3) {
+					LOG_ERR("Invalid length for offset(write): 0x%02x",
+						reg_offset);
+					break;
+				}
 
-			k_work_init(&sensor_data->work, set_power_capping_method_handler);
-			k_work_submit(&sensor_data->work);
-		} break;
-		case MEDHA_POWER_SOURCE_REG: {
-			if (rlen != 2) {
-				LOG_ERR("Invalid length for offset(write): 0x%02x", reg_offset);
-				break;
-			}
+				plat_control_voltage *sensor_data =
+					malloc(sizeof(plat_control_voltage));
+				if (!sensor_data) {
+					LOG_ERR("Memory allocation failed!");
+					break;
+				}
+				sensor_data->rail = get_vr_rail_by_control_vol_reg(reg_offset);
+				sensor_data->set_value = rdata[1] | (rdata[2] << 8);
+				k_work_init(&sensor_data->work, set_control_voltage_handler);
+				k_work_submit(&sensor_data->work);
+			} break;
+			case LEVEL_1_PWR_ALERT_THRESHOLD_TIME_REG:
+			case LEVEL_2_PWR_ALERT_THRESHOLD_TIME_REG:
+			case LEVEL_3_PWR_ALERT_THRESHOLD_TIME_REG: {
+				if (rlen != 9) {
+					LOG_ERR("Invalid length for offset(write): 0x%02x",
+						reg_offset);
+					break;
+				}
 
-			plat_power_capping_method_t *sensor_data =
-				malloc(sizeof(plat_power_capping_method_t));
-			if (!sensor_data) {
-				LOG_ERR("Memory allocation failed!");
-				break;
-			}
-			sensor_data->set_value = rdata[1];
+				plat_power_capping_threshold_time_t *sensor_data =
+					malloc(sizeof(plat_power_capping_threshold_time_t));
+				if (!sensor_data) {
+					LOG_ERR("Memory allocation failed!");
+					break;
+				}
+				if (reg_offset == LEVEL_1_PWR_ALERT_THRESHOLD_TIME_REG) {
+					sensor_data->lv = CAPPING_LV_IDX_LV1;
+				} else if (reg_offset == LEVEL_2_PWR_ALERT_THRESHOLD_TIME_REG) {
+					sensor_data->lv = CAPPING_LV_IDX_LV2;
+				} else if (reg_offset == LEVEL_3_PWR_ALERT_THRESHOLD_TIME_REG) {
+					sensor_data->lv = CAPPING_LV_IDX_LV3;
+				}
+				memcpy(sensor_data->in_data, &rdata[1], 8);
+				k_work_init(&sensor_data->work,
+					    set_power_capping_threshold_time_handler);
+				k_work_submit(&sensor_data->work);
+			} break;
+			case POWER_CAPPING_METHOD_REG: {
+				if (rlen != 2) {
+					LOG_ERR("Invalid length for offset(write): 0x%02x",
+						reg_offset);
+					break;
+				}
 
-			k_work_init(&sensor_data->work, set_power_capping_source_handler);
-			k_work_submit(&sensor_data->work);
-		} break;
-		case POLLING_RATE_TELEMETRY_REG: {
-			if (rlen != 2) {
-				LOG_ERR("Invalid length for offset(write): 0x%02x", reg_offset);
-				break;
-			}
-			uint8_t capping_source = get_power_capping_source();
-			uint8_t poll_rate_type = rdata[1];
-			uint8_t flag = 0;
-			switch (poll_rate_type) {
-			case 0:
-			case 1:
-			case 2:
-			case 3:
-			case 4:
-			case 5:
-			case 6:
-			case 7:
-				if (flag == 0)
-					plat_pldm_sensor_set_quick_vr_poll_interval(poll_rate_type,
-										    capping_source);
-				break;
+				plat_power_capping_method_t *sensor_data =
+					malloc(sizeof(plat_power_capping_method_t));
+				if (!sensor_data) {
+					LOG_ERR("Memory allocation failed!");
+					break;
+				}
+				sensor_data->set_value = rdata[1];
+
+				k_work_init(&sensor_data->work, set_power_capping_method_handler);
+				k_work_submit(&sensor_data->work);
+			} break;
+			case MEDHA_POWER_SOURCE_REG: {
+				if (rlen != 2) {
+					LOG_ERR("Invalid length for offset(write): 0x%02x",
+						reg_offset);
+					break;
+				}
+
+				plat_power_capping_method_t *sensor_data =
+					malloc(sizeof(plat_power_capping_method_t));
+				if (!sensor_data) {
+					LOG_ERR("Memory allocation failed!");
+					break;
+				}
+				sensor_data->set_value = rdata[1];
+
+				k_work_init(&sensor_data->work, set_power_capping_source_handler);
+				k_work_submit(&sensor_data->work);
+			} break;
+			case POLLING_RATE_TELEMETRY_REG: {
+				if (rlen != 2) {
+					LOG_ERR("Invalid length for offset(write): 0x%02x",
+						reg_offset);
+					break;
+				}
+				uint8_t capping_source = get_power_capping_source();
+				uint8_t poll_rate_type = rdata[1];
+				uint8_t flag = 0;
+				switch (poll_rate_type) {
+				case 0:
+				case 1:
+				case 2:
+				case 3:
+				case 4:
+				case 5:
+				case 6:
+				case 7:
+					if (flag == 0)
+						plat_pldm_sensor_set_quick_vr_poll_interval(
+							poll_rate_type, capping_source);
+					break;
+				default:
+					LOG_ERR("Polling rate type should be 0-7");
+					flag = 1;
+					break;
+				}
+			} break;
+			case SET_SENSOR_POLLING_COMMAND_REG: {
+				if (rlen != 8) {
+					LOG_ERR("Invalid length for offset: 0x%02x", reg_offset);
+					LOG_ERR("length: 0x%02x", rlen);
+					break;
+				}
+				uint8_t expected_signature[] = {
+					0x4D, 0x54, 0x49, 0x41, 0x56, 0x31
+				}; // ascii to hex: "MTIAV1"
+				if (memcmp(&rdata[1], expected_signature,
+					   sizeof(expected_signature)) != 0) {
+					LOG_HEXDUMP_DBG(rdata, rlen, "rdata:");
+					LOG_ERR("Wrong command for set sensor_polling");
+					break;
+				}
+				plat_control_sensor_polling *sensor_data =
+					malloc(sizeof(plat_control_sensor_polling));
+				if (!sensor_data) {
+					LOG_ERR("Memory allocation failed!");
+					break;
+				}
+				sensor_data->set_value = rdata[9]; // need to check
+				LOG_DBG("set sensor_polling:%x", sensor_data->set_value);
+				// transfer rdata[9] type to bool
+				sensor_data->set_value = sensor_data->set_value ? true : false;
+				k_work_init(&sensor_data->work, set_sensor_polling_handler);
+				k_work_submit(&sensor_data->work);
+			} break;
 			default:
-				LOG_ERR("Polling rate type should be 0-7");
-				flag = 1;
+				LOG_WRN("Unknown reg offset(write): 0x%02x", reg_offset);
 				break;
 			}
-		} break;
-		case SET_SENSOR_POLLING_COMMAND_REG: {
-			if (rlen != 8) {
-				LOG_ERR("Invalid length for offset: 0x%02x", reg_offset);
-				LOG_ERR("length: 0x%02x", rlen);
-				break;
-			}
-			uint8_t expected_signature[] = {
-				0x4D, 0x54, 0x49, 0x41, 0x56, 0x31
-			}; // ascii to hex: "MTIAV1"
-			if (memcmp(&rdata[1], expected_signature, sizeof(expected_signature)) !=
-			    0) {
-				LOG_HEXDUMP_DBG(rdata, rlen, "rdata:");
-				LOG_ERR("Wrong command for set sensor_polling");
-				break;
-			}
-			plat_control_sensor_polling *sensor_data =
-				malloc(sizeof(plat_control_sensor_polling));
-			if (!sensor_data) {
-				LOG_ERR("Memory allocation failed!");
-				break;
-			}
-			sensor_data->set_value = rdata[9]; // need to check
-			LOG_DBG("set sensor_polling:%x", sensor_data->set_value);
-			// transfer rdata[9] type to bool
-			sensor_data->set_value = sensor_data->set_value ? true : false;
-			k_work_init(&sensor_data->work, set_sensor_polling_handler);
-			k_work_submit(&sensor_data->work);
-		} break;
-		default:
-			LOG_WRN("Unknown reg offset(write): 0x%02x", reg_offset);
-			break;
 		}
 	}
 }

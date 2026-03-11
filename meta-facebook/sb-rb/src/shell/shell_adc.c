@@ -94,14 +94,18 @@ void shell_adc_get_averge_val(const struct shell *shell, uint8_t idx)
 	uint8_t lv = (idx == 0 || idx == 1) ? 2 : 3;
 
 	shell_warn(shell, "LV%d MEDHA%d CURR: %f(A)", lv, idx % 2,
-		   adc_raw_mv_to_apms(get_adc_averge_val(idx), vref));
+		   adc_raw_v_to_apms(get_adc_averge_val(idx), vref));
 
 	float pwr = get_adc_vr_pwr(idx);
 	shell_warn(shell, "LV%d MEDHA%d PWR:  %f(W)", lv, idx % 2, pwr);
 
 	float vol = get_vr_vol_sum(idx);
 	uint16_t len = get_adc_averge_times(idx);
-	shell_warn(shell, "LV%d MEDHA%d VOLT: %f(V)", lv, idx % 2, vol / len);
+	shell_warn(shell, "LV%d MEDHA%d VR VOLT: %f(V)", lv, idx % 2, vol / len);
+
+	uint16_t adc_voltage_average = get_adc_averge_val(idx);
+	float adc_volt = ((float)adc_voltage_average / 65536) * vref;
+	shell_warn(shell, "LV%d MEDHA%d ADC VOLT: %f(V)", lv, idx % 2, adc_volt);
 	shell_print(shell, "");
 }
 
@@ -170,7 +174,7 @@ void shell_adc_get_buf(const struct shell *shell, uint8_t idx)
 
 	shell_warn(shell, "LV%d MEDHA%d CURR (len=%d)(unit=A)): ", lv, idx % 2, len);
 	for (uint16_t i = 0; i < len; i++) {
-		shell_fprintf(shell, SHELL_NORMAL, "%f ", adc_raw_mv_to_apms(buf[i], vref));
+		shell_fprintf(shell, SHELL_NORMAL, "%f ", adc_raw_v_to_apms(buf[i], vref));
 		if ((i + 1) % 10 == 0) {
 			shell_print(shell, "");
 		}
@@ -183,18 +187,28 @@ void shell_adc_get_buf(const struct shell *shell, uint8_t idx)
 		// average pwr = average voltage * average current
 		// P = V * I
 		float pwr_buf = uint16_voltage_transfer_to_float(vr_buf[i]) *
-				adc_raw_mv_to_apms(buf[i], vref);
+				adc_raw_v_to_apms(buf[i], vref);
 		shell_fprintf(shell, SHELL_NORMAL, "%f ", pwr_buf);
 		if ((i + 1) % 10 == 0) {
 			shell_print(shell, "");
 		}
 	}
 	shell_print(shell, "");
-
-	shell_warn(shell, "LV%d MEDHA%d VOLT (len=%d)(unit=V)): ", lv, idx % 2, len);
+	// VR voltage buf
+	shell_warn(shell, "LV%d MEDHA%d VR VOLT (len=%d)(unit=V)): ", lv, idx % 2, len);
 	for (uint16_t i = 0; i < len; i++) {
 		float tmp = uint16_voltage_transfer_to_float(vr_buf[i]);
 		shell_fprintf(shell, SHELL_NORMAL, "%f ", tmp);
+		if ((i + 1) % 10 == 0) {
+			shell_print(shell, "");
+		}
+	}
+	shell_print(shell, "");
+	// ADC voltage buf
+	shell_warn(shell, "LV%d MEDHA%d ADC VOLT (len=%d)(unit=V): ", lv, idx % 2, len);
+	for (uint16_t i = 0; i < len; i++) {
+		float tmp_volt = ((float)buf[i] / 65536) * vref;
+		shell_fprintf(shell, SHELL_NORMAL, "%f ", tmp_volt);
 		if ((i + 1) % 10 == 0) {
 			shell_print(shell, "");
 		}

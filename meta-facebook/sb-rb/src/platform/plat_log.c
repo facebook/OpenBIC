@@ -152,8 +152,8 @@ vr_error_callback_info vr_error_callback_info_table[] = {
 		  PWRGD_P0V9_OWL_W_PVDD_FAULT, // bit2
 		  PWRGD_P0V9_OWL_E_PVDD_FAULT, // bit3
 		  PWRGD_PLL_VDDA15_HBM5_HBM7_FAULT, // bit4
-		  PWRGD_PLL_VDDA15_HBM4_HBM6_FAULT, // bit5
-		  PWRGD_PLL_VDDA15_HBM1_HBM3_FAULT, // bit6
+		  PWRGD_PLL_VDDA15_HBM1_HBM3_FAULT, // bit5
+		  PWRGD_PLL_VDDA15_HBM4_HBM6_FAULT, // bit6
 		  PWRGD_PLL_VDDA15_HBM0_HBM2_FAULT // bit7
 	  } }, // to_do not sure
 	{ VR_POWER_FAULT_5_REG,
@@ -348,7 +348,18 @@ bool get_error_data(uint16_t error_code, uint8_t *data)
 			}
 			data_num++;
 		}
-
+		// if have sensor num, read status word(0x79, 2 bytes) and save to data[7:8]
+		uint8_t sensor_num = get_pwrgd_sequence_fail_sensor_num(data[0]);
+		uint8_t status_word[2];
+		if (sensor_num != NO_SENSOR_NUM) {
+			if (!vr_fault_get_error_data(sensor_num, status_word)) {
+				LOG_ERR("Failed to get VR status word for sensor_num: 0x%x",
+					sensor_num);
+				return false;
+			}
+			data[7] = status_word[0];
+			data[8] = status_word[1];
+		}
 		return true;
 	}
 	case ASIC_ERROR_TRIGGER_CAUSE: {
@@ -504,8 +515,6 @@ void error_log_event(uint16_t error_code, bool log_status)
 	if (!plat_eeprom_write(write_address, (uint8_t *)&err_log_data[fru_count],
 			       sizeof(plat_err_log_mapping))) {
 		LOG_ERR("Write Log failed with Error code: %02x", error_code);
-	} else {
-		k_msleep(EEPROM_MAX_WRITE_TIME); // wait 5ms to write EEPROM
 	}
 
 	// Update the next log position

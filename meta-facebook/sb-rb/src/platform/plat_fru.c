@@ -31,6 +31,8 @@ LOG_MODULE_REGISTER(plat_fru);
 
 #define CPLD_FRU_START 0x0000
 #define CPLD_FRU_SIZE 0x0400
+static int64_t last_eeprom_write_ms;
+#define EEPROM_WRITE_CYCLE_MS 5
 
 const EEPROM_CFG plat_fru_config[] = {
 	{
@@ -64,6 +66,17 @@ bool plat_eeprom_write(uint32_t offset, uint8_t *data, uint16_t data_len)
 
 	LOG_DBG("plat_eeprom_write, offset: 0x%x, data_len: %d", offset, data_len);
 
+	int64_t current_time;
+	int64_t elapsed;
+
+	current_time = k_uptime_get();
+	elapsed = current_time - last_eeprom_write_ms;
+
+	if (last_eeprom_write_ms != 0 && elapsed < 5) {
+		LOG_WRN("eeprom write too fast, sleep %d ms", 5 - (uint32_t)elapsed);
+		k_msleep(5 - (uint32_t)elapsed);
+	}
+
 	EEPROM_ENTRY entry;
 
 	entry.offset = offset;
@@ -82,6 +95,8 @@ bool plat_eeprom_write(uint32_t offset, uint8_t *data, uint16_t data_len)
 		LOG_ERR("write eeprom 0x%x fail", offset);
 		return false;
 	}
+
+	last_eeprom_write_ms = k_uptime_get();
 
 	return true;
 }

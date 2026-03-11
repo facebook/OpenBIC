@@ -45,6 +45,7 @@ enum {
 
 #endif
 
+void set_power_capping_lv_switch_en_val(uint8_t val);
 void power_capping_syn_vr_oc_warn_limit();
 void add_sync_oc_warn_to_work();
 bool find_cpld_lv1_time_window_idx_by_value(uint8_t *idx, uint16_t value);
