@@ -25,6 +25,10 @@
 #include "plat_kernel_obj.h"
 #include "plat_log.h"
 #include "plat_event.h"
+#include "plat_hwmon.h"
+#include "plat_ioexp.h"
+#include "plat_class.h"
+#include "plat_power_capping.h"
 
 LOG_MODULE_REGISTER(plat_isr);
 
@@ -60,20 +64,42 @@ void ISR_GPIO_RST_ARKE_PWR_ON_PLD_R1_N()
 {
 	// dc on
 	if (gpio_get(RST_ARKE_PWR_ON_PLD_R1_N)) {
-		// ioexp_init();
+		ioexp_init();
+		if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
+			init_U200052_IO();
+			init_U200053_IO();
+			init_U200070_IO();
+			power_on_p3v3_osfp();
+		}
 		for (int i = 0; i < CLK_COMPONENT_MAX; i++) {
 			clear_clock_status(NULL, i);
 		}
-		// add_sync_oc_warn_to_work();
+		add_sync_oc_warn_to_work();
 		// if board id == EVB , ctrl fan pwm
-		// // when dc on clear cpld polling alert status
+		if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
+			LOG_INF("dc on, set fan pwm 65");
+			init_pwm_dev();
+			ast_pwm_set(65, PWM_PORT1);
+			ast_pwm_set(65, PWM_PORT6);
+		}
+		// when dc on clear cpld polling alert status
 		uint8_t err_type = CPLD_UNEXPECTED_VAL_TRIGGER_CAUSE;
 		LOG_DBG("cpld_polling_alert_status: true -> false, reset_error_log_states: %x",
 			err_type);
 		reset_error_log_states(err_type);
 	} else {
-		LOG_INF("dc off");
-		// set_ioe_init_flag(0);
+		LOG_INF("dc off, clear io expander init flag");
+		set_ioe_init_flag(0);
+		LOG_INF("dc off, exit the vr test mode");
+		// vr_test_mode_enable(false);
+
+		// if board id == EVB , ctrl fan pwm
+		if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
+			LOG_INF("dc off, set fan pwm 0");
+			init_pwm_dev();
+			ast_pwm_set(0, PWM_PORT1);
+			ast_pwm_set(0, PWM_PORT6);
+		}
 	}
 }
 
