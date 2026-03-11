@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include <drivers/adc.h>
 #include <drivers/spi.h>
 #include "libutil.h"
@@ -6,10 +22,12 @@
 #include "plat_adc.h"
 #include "plat_class.h"
 #include "plat_cpld.h"
+#include "plat_hook.h"
 #include <device.h>
 #include "util_sys.h"
 #include "plat_i2c_target.h"
 #include "plat_pldm_sensor.h"
+#include "plat_power_capping.h"
 
 LOG_MODULE_REGISTER(plat_adc);
 
@@ -19,24 +37,337 @@ LOG_MODULE_REGISTER(plat_adc);
 #define NUWA0_ADC_CHANNEL 8
 #define NUWA1_ADC_CHANNEL 6
 
+#define ADC_SPI_FREQ 6000000
+
 K_THREAD_STACK_DEFINE(adc_electra_thread_stack, ADC_STACK_SIZE);
 struct k_thread adc_electra_poll_thread;
-
+static uint8_t is_adc_init = false;
 static bool adc_poll_flag = true;
 uint8_t adc_idx_read = 0;
 float ad4058_val_0 = 0;
 float ad4058_val_1 = 0;
+static uint16_t ad4058_raw_0 = 0;
+static uint16_t ad4058_raw_1 = 0;
 float ads7066_val_0 = 0;
 float ads7066_val_1 = 0;
+static uint16_t ads7066_raw_0 = 0;
+static uint16_t ads7066_raw_1 = 0;
 const float ads7066_vref = 2.5;
 const float ad4058_vref = 2.5;
 static uint8_t adc_good_status[2] = { 0xFF, 0xFF };
+static uint8_t final_ucr_status = 0;
+static float inst_nuwa0 = 0;
+static float inst_nuwa1 = 0;
+
+typedef struct {
+	uint16_t avg_times; // 20ms at a time
+	uint16_t buf[ADC_AVERGE_TIMES_MAX];
+	uint16_t buf_idx;
+	uint16_t avg_val;
+	uint32_t sum;
+	uint16_t ucr; // pwr
+	uint16_t vr_voltage_buf[ADC_AVERGE_TIMES_MAX]; //ex. 0.8523 will save as 0.85 and 0.0023
+	float pwr_avg_val;
+	float vr_sum;
+	bool ucr_status; // over current
+} adc_info_t;
+
+//NUWA0: level 2 , level3
+//NUWA1: level 2 , level3
+adc_info_t adc_info[ADC_IDX_MAX] = { { .avg_times = 20, .ucr = 1600 },
+				     { .avg_times = 60, .ucr = 1600 },
+				     { .avg_times = 600, .ucr = 1070 },
+				     { .avg_times = 800, .ucr = 1070 } };
 
 static const struct device *spi_dev;
+
+uint8_t get_adc_good_status(uint8_t idx)
+{
+	return adc_good_status[idx];
+}
+
+uint8_t get_final_ucr_status()
+{
+	return (final_ucr_status & 0xF0);
+}
+
+void adc_poll_init()
+{
+	for (uint8_t i = ADC_IDX_NUWA0_1; i < ADC_IDX_MAX; i++) {
+		adc_info[i].sum = 0;
+		adc_info[i].buf_idx = 0;
+		adc_info[i].avg_val = 0;
+		adc_info[i].vr_sum = 0;
+		adc_info[i].pwr_avg_val = 0;
+		memset(adc_info[i].buf, 0, sizeof(uint16_t) * ADC_AVERGE_TIMES_MAX);
+		memset(adc_info[i].vr_voltage_buf, 0, sizeof(uint16_t) * ADC_AVERGE_TIMES_MAX);
+	}
+}
+
+float get_ads7066_vref()
+{
+	return ads7066_vref;
+}
+
+float get_ad4058_vref()
+{
+	return ad4058_vref;
+}
+uint16_t get_adc_averge_val(uint8_t idx)
+{
+	return adc_info[idx].avg_val;
+}
+
+uint16_t *get_adc_buf(uint16_t idx)
+{
+	return adc_info[idx].buf;
+}
+
+uint16_t *get_vr_buf(uint16_t idx)
+{
+	return adc_info[idx].vr_voltage_buf;
+}
+
+uint16_t get_adc_averge_times(uint8_t idx)
+{
+	return adc_info[idx].avg_times;
+}
+
+void adc_set_averge_times(uint8_t idx, uint16_t time)
+{
+	if (time >= ADC_AVERGE_TIMES_MIN && time <= ADC_AVERGE_TIMES_MAX) {
+		adc_info[idx].avg_times = time;
+		adc_poll_init();
+	} else {
+		LOG_WRN("invalid adc %d poll times: %d\n", idx, time);
+	}
+}
+
+float get_adc_nuwa_inst_pwr_w(uint8_t nuwa_idx)
+{
+	uint16_t raw = 0;
+	float v = 0.0f;
+	float vref = 0.0f;
+	uint8_t adc_type = get_adc_type();
+
+	switch (get_adc_type()) {
+	case TIC_ADS7066:
+		vref = ads7066_vref;
+		if (nuwa_idx == ADC_EL_IDX_NUWA0) {
+			raw = ads7066_raw_0;
+			v = inst_nuwa0;
+		} else if (nuwa_idx == ADC_EL_IDX_NUWA1) {
+			raw = ads7066_raw_1;
+			v = inst_nuwa1;
+		} else {
+			LOG_WRN("ADC pwr: invalid nuwa_idx=%d", nuwa_idx);
+			return 0.0f;
+		}
+		break;
+	case ADI_AD4058:
+		vref = ad4058_vref;
+		if (nuwa_idx == ADC_EL_IDX_NUWA0) {
+			raw = ad4058_raw_0;
+			v = inst_nuwa0;
+		} else if (nuwa_idx == ADC_EL_IDX_NUWA1) {
+			raw = ad4058_raw_1;
+			v = inst_nuwa1;
+		} else {
+			LOG_WRN("ADC pwr: invalid nuwa_idx=%d", nuwa_idx);
+			return 0.0f;
+		}
+		break;
+	default:
+		LOG_WRN("ADC pwr: unsupported adc_type=%d", adc_type);
+		return 0.0f;
+	}
+
+	/* current (A) */
+	float cur = adc_raw_v_to_apms(raw, vref);
+
+	/* power(W) */
+	return v * cur;
+}
+
+uint16_t get_adc_ucr(uint8_t idx)
+{
+	return adc_info[idx].ucr;
+}
+
+void set_adc_ucr(uint8_t idx, uint16_t ucr)
+{
+	adc_info[idx].ucr = ucr;
+}
+
+bool get_adc_ucr_status(uint8_t idx)
+{
+	return adc_info[idx].ucr_status;
+}
+
+void set_adc_ucr_status(uint8_t idx, bool status)
+{
+	adc_info[idx].ucr_status = status;
+}
+
+/* current (A) */
+float adc_raw_v_to_apms(uint16_t v, float vref)
+{
+	float temp_v = ((float)v / 0xffff) * vref;
+	return (get_vr_module() == VR_MODULE_MPS) ? 1000 * temp_v * 0.796 : 1000 * temp_v * 0.797;
+}
+
+uint16_t float_voltage_transfer_to_uint16(float temp_voltage_value)
+{
+	// Upper:ex. 0.85 → 85
+	uint8_t upper = (uint8_t)(temp_voltage_value * 100);
+	// Lower: (0.8523 - 0.85) = 0.0023 → 23
+	uint16_t lower_raw = (uint16_t)((temp_voltage_value * 10000) - (upper * 100));
+	uint8_t lower = (uint8_t)(lower_raw & 0xFF);
+	// Pack into one uint16
+	uint16_t packed = ((uint16_t)upper << 8) | lower;
+	return packed;
+}
+
+float uint16_voltage_transfer_to_float(uint16_t temp_voltage_value)
+{
+	uint8_t upper = (temp_voltage_value >> 8) & 0xFF;
+	uint8_t lower = temp_voltage_value & 0xFF;
+	// restore upper (2 digit)
+	float upper_val = upper / 100.0f;
+	// restore lower（2 digit）
+	float lower_val = lower / 10000.0f;
+	float restored = upper_val + lower_val;
+	return restored;
+}
+
+static void update_adc_info(uint16_t raw_data, uint8_t base_idx, float vref)
+{
+	LOG_DBG("base_idx: %d", base_idx);
+	for (uint8_t i = base_idx; i < ADC_IDX_MAX; i += 2) {
+		uint16_t m_sample_buffer[BUFFER_SIZE];
+		m_sample_buffer[0] = raw_data;
+		m_sample_buffer[1] = raw_data;
+		adc_info_t *adc = &adc_info[i];
+		// current averge
+		adc->sum -= adc->buf[adc->buf_idx];
+		adc->buf[adc->buf_idx] = ((i == ADC_IDX_NUWA0_1) || (i == ADC_IDX_NUWA0_2)) ?
+						 m_sample_buffer[1] :
+						 m_sample_buffer[0];
+		adc->sum += adc->buf[adc->buf_idx];
+		adc->avg_val = adc->sum / adc->avg_times;
+		// voltage averge
+		float temp_voltage_value = 0;
+		if (base_idx == ADC_EL_IDX_NUWA0) {
+			temp_voltage_value = get_cached_sensor_reading_by_sensor_number(
+						     SENSOR_NUM_ASIC_P0V75_NUWA0_VDD_VOLT_V) /
+					     1000.0;
+			inst_nuwa0 = temp_voltage_value;
+		} else if (base_idx == ADC_EL_IDX_NUWA1) {
+			temp_voltage_value = get_cached_sensor_reading_by_sensor_number(
+						     SENSOR_NUM_ASIC_P0V75_NUWA1_VDD_VOLT_V) /
+					     1000.0;
+			inst_nuwa1 = temp_voltage_value;
+		}
+		// transfer to uint16_t
+		uint16_t voltage_packed = float_voltage_transfer_to_uint16(temp_voltage_value);
+		adc->vr_sum -= uint16_voltage_transfer_to_float(adc->vr_voltage_buf[adc->buf_idx]);
+		adc->vr_voltage_buf[adc->buf_idx] = voltage_packed;
+		adc->vr_sum += uint16_voltage_transfer_to_float(adc->vr_voltage_buf[adc->buf_idx]);
+		// average pwr = average voltage * average current
+		adc->pwr_avg_val =
+			(adc->vr_sum / adc->avg_times) * adc_raw_v_to_apms(adc->avg_val, vref);
+
+		// decrease buffer idx
+		adc->buf_idx = (adc->buf_idx + 1) % adc->avg_times;
+
+		// check status
+		bool pwr_status = (adc->pwr_avg_val >= adc->ucr);
+		adc->ucr_status = pwr_status;
+		if (pwr_status) {
+			final_ucr_status |= (1 << (7 - i));
+		} else {
+			final_ucr_status &= ~(1 << (7 - i));
+		}
+	}
+}
+
+static void update_vr_base_power_info()
+{
+	int int_value = 0;
+	uint16_t val_nuwa0 = 0;
+	uint16_t val_nuwa1 = 0;
+	int_value =
+		get_cached_sensor_reading_by_sensor_number(SENSOR_NUM_ASIC_P0V75_NUWA0_VDD_PWR_W);
+	val_nuwa0 = (int_value + 500) / 1000;
+	int_value =
+		get_cached_sensor_reading_by_sensor_number(SENSOR_NUM_ASIC_P0V75_NUWA1_VDD_PWR_W);
+	val_nuwa1 = (int_value + 500) / 1000;
+
+	for (uint8_t i = 0; i < ADC_IDX_MAX; i++) {
+		adc_info_t *adc = &adc_info[i];
+		adc->sum -= adc->buf[adc->buf_idx];
+		adc->buf[adc->buf_idx] = ((i == ADC_IDX_NUWA0_1) || (i == ADC_IDX_NUWA0_2)) ?
+						 val_nuwa0 :
+						 val_nuwa1;
+		adc->sum += adc->buf[adc->buf_idx];
+		adc->avg_val = adc->sum / adc->avg_times;
+
+		// decrease buffer idx
+		adc->buf_idx = (adc->buf_idx + 1) % adc->avg_times;
+
+		// check status
+		bool pwr_status = (adc->avg_val >= adc->ucr);
+		adc->ucr_status = pwr_status;
+		if (pwr_status) {
+			final_ucr_status |= (1 << (7 - i));
+		} else {
+			final_ucr_status &= ~(1 << (7 - i));
+		}
+	}
+}
 
 bool adc_get_poll_flag()
 {
 	return adc_poll_flag;
+}
+
+void adc_set_poll_flag(uint8_t onoff)
+{
+	adc_poll_flag = onoff ? true : false;
+	if (!adc_poll_flag)
+		adc_poll_init();
+}
+
+void read_adc_info()
+{
+	uint8_t adc_idx = 0;
+	plat_read_cpld(CPLD_OFFSET_ADC_IDX, &adc_idx, 1);
+	adc_idx_read = adc_idx;
+
+	/* read VENDOR_L to determine*/
+	uint8_t value = 0;
+	ad4058_write_reg(0xA8, 0x00, 0);
+	ad4058_read_reg(0x0C, 0, &value);
+	if (value == 0x56) {
+		adc_idx_read = 0;
+	} else {
+		adc_idx_read = 1;
+	}
+}
+
+uint8_t get_adc_type()
+{
+	return adc_idx_read;
+}
+
+float get_adc_vr_pwr(uint8_t idx)
+{
+	return adc_info[idx].pwr_avg_val;
+}
+
+float get_vr_vol_sum(uint8_t idx)
+{
+	return adc_info[idx].vr_sum;
 }
 
 int ads7066_read_reg(uint8_t reg, uint8_t idx, uint8_t *out_data)
@@ -100,6 +431,7 @@ int ads7066_read_reg(uint8_t reg, uint8_t idx, uint8_t *out_data)
 		rx_buf[1], rx_buf[2]);
 	return 0;
 }
+
 int ads7066_write_reg(uint8_t reg, uint8_t write_val, uint8_t idx)
 {
 	spi_dev = device_get_binding("SPIP");
@@ -149,30 +481,6 @@ int ads7066_write_reg(uint8_t reg, uint8_t write_val, uint8_t idx)
 	}
 	LOG_INF("nuwa%d ADS7066 write reg 0x%02x", idx, reg);
 	return 0;
-}
-
-void read_adc_info()
-{
-	uint8_t adc_idx = 0;
-	// plat_read_cpld(CPLD_OFFSET_ADC_IDX, &adc_idx, 1);
-	// Seems that read from CPLD is not necessary
-	LOG_WRN("ADC index read from CPLD not implement, waiting for CPLD target\n");
-	adc_idx_read = adc_idx;
-
-	/* read VENDOR_L to determine*/
-	uint8_t value = 0;
-	ad4058_write_reg(0xA8, 0x00, 0);
-	ad4058_read_reg(0x0C, 0, &value);
-	if (value == 0x56) {
-		adc_idx_read = 0;
-	} else {
-		adc_idx_read = 1;
-	}
-}
-
-uint8_t get_adc_type()
-{
-	return adc_idx_read;
 }
 
 static void ads7066_read_voltage(uint8_t idx)
@@ -235,12 +543,12 @@ static void ads7066_read_voltage(uint8_t idx)
 	uint16_t raw_value = out_buf[0] << 8 | out_buf[1];
 	if (idx == ADC_EL_IDX_NUWA0) {
 		ads7066_val_0 = ((float)raw_value / 65536) * ads7066_vref;
-		// update_adc_info(raw_value, ADC_EL_IDX_NUWA0, ads7066_vref);
-		LOG_INF("NUWA0 ads7066 value: 0x%04x", raw_value);
+		ads7066_raw_0 = raw_value;
+		update_adc_info(raw_value, ADC_EL_IDX_NUWA0, ads7066_vref);
 	} else if (idx == ADC_EL_IDX_NUWA1) {
 		ads7066_val_1 = ((float)raw_value / 65536) * ads7066_vref;
-		// update_adc_info(raw_value, ADC_EL_IDX_NUWA1, ads7066_vref);
-		LOG_INF("NUWA1 ads7066 value: 0x%04x", raw_value);
+		ads7066_raw_1 = raw_value;
+		update_adc_info(raw_value, ADC_EL_IDX_NUWA1, ads7066_vref);
 	}
 
 	return;
@@ -436,8 +744,12 @@ static void ad4058_read_voltage(uint8_t idx)
 	uint16_t raw_value = (uint16_t)((high << 8) | low);
 	if (idx == ADC_EL_IDX_NUWA0) {
 		ad4058_val_0 = (float)raw_value / 65536 * ad4058_vref;
+		ad4058_raw_0 = raw_value;
+		update_adc_info(raw_value, ADC_EL_IDX_NUWA0, ad4058_vref);
 	} else if (idx == ADC_EL_IDX_NUWA1) {
 		ad4058_val_1 = (float)raw_value / 65536 * ad4058_vref;
+		ad4058_raw_1 = raw_value;
+		update_adc_info(raw_value, ADC_EL_IDX_NUWA1, ad4058_vref);
 	}
 
 	// set cnv_pin to high
@@ -452,9 +764,12 @@ void ads7066_mode_init()
 	// nuwa0 & nuwa1
 	for (int i = 0; i < ADC_EL_IDX_MAX; i++) {
 		ads7066_write_reg(0, 0x1, i);
-		// disable internal Volt reference
-		ads7066_write_reg(0x1, 0x2, i);
-
+		// if electra board revid >= EVT1B, disable internal Volt reference
+		if (get_asic_board_id() == ASIC_BOARD_ID_ELECTRA &&
+		    get_board_rev_id() >= REV_ID_DVT)
+			ads7066_write_reg(0x1, 0x2, i);
+		else
+			ads7066_write_reg(0x1, 0x82, i);
 		ads7066_write_reg(0x12, 0x1, i);
 		ads7066_write_reg(0x3, 0x6, i);
 
@@ -495,30 +810,49 @@ void ad4058_mode_init()
 
 void adc_electra_polling_handler(void *p1, void *p2, void *p3)
 {
-	read_adc_info();
-	LOG_INF("adc index is %d", adc_idx_read);
-	if (adc_idx_read == ADI_AD4058)
-		ad4058_mode_init();
-	else if (adc_idx_read == TIC_ADS7066)
-		ads7066_mode_init();
-	else
-		LOG_ERR("Invalid ADC index %d", adc_idx_read);
+	while (1) {
+		if (!is_mb_dc_on()) {
+			gpio_set(NUWA0_CNV, 0);
+			gpio_set(NUWA1_CNV, 0);
+			gpio_set(SPI_ADC_CS1_N, 0);
+			k_msleep(1000);
+			continue;
+		}
 
-	// waiting for power capping function
-	while (false) {
-			switch (adc_idx_read) {
-			case ADI_AD4058:
-				ad4058_read_voltage(ADC_EL_IDX_NUWA0);
-				ad4058_read_voltage(ADC_EL_IDX_NUWA1);
-				break;
-			case TIC_ADS7066:
-				ads7066_read_voltage(ADC_EL_IDX_NUWA0);
-				ads7066_read_voltage(ADC_EL_IDX_NUWA1);
-				break;
-			default:
-				LOG_DBG("Invalid ADC index %d", adc_idx_read);
-				break;
+		if (!is_adc_init) {
+			read_adc_info();
+			LOG_INF("adc index is %d", adc_idx_read);
+			if (adc_idx_read == ADI_AD4058)
+				ad4058_mode_init();
+			else if (adc_idx_read == TIC_ADS7066)
+				ads7066_mode_init();
+			else
+				LOG_ERR("Invalid ADC index %d", adc_idx_read);
+
+			is_adc_init = true;
+		}
+
+		if (get_power_capping_source() == CAPPING_SOURCE_ADC) {
+			if (adc_poll_flag) {
+				switch (adc_idx_read) {
+				case ADI_AD4058:
+					ad4058_read_voltage(ADC_EL_IDX_NUWA0);
+					ad4058_read_voltage(ADC_EL_IDX_NUWA1);
+					break;
+				case TIC_ADS7066:
+					ads7066_read_voltage(ADC_EL_IDX_NUWA0);
+					ads7066_read_voltage(ADC_EL_IDX_NUWA1);
+					break;
+				default:
+					LOG_DBG("Invalid ADC index %d", adc_idx_read);
+					break;
+				}
 			}
+		} else if (get_power_capping_source() == CAPPING_SOURCE_VR) {
+			update_vr_base_power_info();
+		}
+
+		plat_power_capping_give_sem();
 		k_msleep(0);
 	}
 }

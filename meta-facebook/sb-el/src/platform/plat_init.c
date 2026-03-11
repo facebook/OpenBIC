@@ -58,8 +58,10 @@ void pal_post_init()
 	user_settings_init();
 	init_fru_info();
 	plat_adc_electra_init();
+	plat_power_capping_init();
 	init_load_eeprom_log();
 	init_cpld_polling();
+	ioexp_init();
 }
 
 #define DEF_PROJ_GPIO_PRIORITY 78

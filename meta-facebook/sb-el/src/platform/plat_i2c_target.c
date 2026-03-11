@@ -77,3 +77,12 @@ void update_sensor_reading_by_sensor_number(uint8_t sensor_number)
 		(status == SENSOR_READ_SUCCESS) ? reading : 0xFFFFFFFF;
 }
 
+int get_cached_sensor_reading_by_sensor_number(uint8_t sensor_number)
+{
+	uint8_t sensor_index_offset = sensor_number - 1;
+	uint8_t table_index = sensor_index_offset / SENSOR_READING_PDR_INDEX_MAX;
+	uint8_t sensor_index = sensor_index_offset % SENSOR_READING_PDR_INDEX_MAX;
+	plat_sensor_reading *sensor_data = sensor_reading_table[table_index];
+	return sensor_data->sensor_entries[sensor_index].sensor_value;
+}
+
