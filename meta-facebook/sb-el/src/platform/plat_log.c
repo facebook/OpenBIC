@@ -27,6 +27,8 @@
 #include "plat_hook.h"
 #include "plat_class.h"
 #include "plat_pldm_sensor.h"
+#include "plat_gpio.h"
+#include "shell_plat_power_sequence.h"
 
 LOG_MODULE_REGISTER(plat_log);
 
@@ -307,6 +309,26 @@ bool get_error_data(uint16_t error_code, uint8_t *data)
 {
 	CHECK_NULL_ARG_WITH_RETURN(data, false);
 
+	uint8_t trigger_case = (error_code >> 13) & 0x07;
+
+	switch (trigger_case) {
+		case POWER_ON_SEQUENCE_TRIGGER_CAUSE: {
+			data[0] = plat_get_power_seq_fail_id();
+			uint8_t data_num = 1;
+			for (uint8_t i = PWRGD_EVENT_LATCH_1_REG; i <= PWRGD_EVENT_LATCH_6_REG; i++) {
+				if (!plat_read_cpld(i, &data[data_num], 1)) {
+					LOG_ERR("Fail read cpld reg 0x%x", i);
+					return false;
+				}
+				data_num++;
+			}
+			return true;
+		}
+		case DC_ON_TRIGGER_CAUSE: {
+			data[0] = gpio_get(RST_ARKE_PWR_ON_PLD_R1_N);
+			return true;
+		}
+	}
 	// Extract CPLD offset and bit position from the error code
 	uint8_t cpld_offset = error_code & 0xFF;
 	uint8_t bit_position = (error_code >> 8) & 0x07;

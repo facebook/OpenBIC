@@ -16,6 +16,10 @@
 
 #include "plat_kernel_obj.h"
 #include "plat_gpio.h"
+#include "plat_log.h"
+#include "plat_hook.h"
+// pending
+#include <shell_plat_power_sequence.h>
 #include <logging/log.h>
 
 
@@ -65,4 +69,48 @@ void plat_update_ubc_status(void){
 
 bool plat_get_ubc_status(void){
     return ubc_status;
+}
+
+/* Timer for check and handle power sequence events */
+void pwr_sequence_event_timer_handler(struct k_timer *timer);
+K_TIMER_DEFINE(pwr_sequence_event_work_timer, pwr_sequence_event_timer_handler, NULL);
+void pwr_sequence_event(struct k_work *work);
+K_WORK_DEFINE(pwr_sequence_event_work, pwr_sequence_event);
+
+void pwr_sequence_event_timer_handler(struct k_timer *timer){
+	k_work_submit(&pwr_sequence_event_work);
+}
+
+void pwr_sequence_event(struct k_work *work){
+	bool is_dc_on_status = is_mb_dc_on();
+	// if dc off
+    // Handle power-on sequence event if failure.
+	if (!is_dc_on_status) {
+		plat_find_power_seq_fail();
+		uint8_t idx = plat_get_power_seq_fail_id();
+
+		uint16_t error_code = (POWER_ON_SEQUENCE_TRIGGER_CAUSE << 13);
+		error_log_event(error_code, LOG_ASSERT);
+		LOG_ERR("power on sequence fail, error_code: 0x%x", error_code);
+
+		//send event to bmc
+		struct pldm_addsel_data sel_msg = { 0 };
+		sel_msg.assert_type = LOG_ASSERT;
+		sel_msg.event_type = ARKE_FAULT;
+		sel_msg.event_data_1 = ARKE_POWER_ON_SEQUENCE_FAIL;
+		sel_msg.event_data_2 = idx;
+
+		if (PLDM_SUCCESS != send_event_log_to_bmc(sel_msg)) {
+			LOG_ERR("Send SEL fail: 0x%x 0x%x 0x%x 0x%x", sel_msg.assert_type,
+				sel_msg.event_data_1, sel_msg.event_data_2, sel_msg.event_data_3);
+		} else {
+			LOG_INF("Send SEL: 0x%x 0x%x 0x%x 0x%x", sel_msg.assert_type,
+				sel_msg.event_data_1, sel_msg.event_data_2, sel_msg.event_data_3);
+		}
+	}
+}
+
+void plat_handle_pwr_sequence_event(void){
+    // delay 1 second for power sequence
+    k_timer_start(&pwr_sequence_event_work_timer, K_MSEC(1000), K_NO_WAIT);
 }

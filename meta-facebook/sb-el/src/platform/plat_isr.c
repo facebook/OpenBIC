@@ -24,6 +24,7 @@
 #include "shell_arke_power.h"
 #include "plat_kernel_obj.h"
 #include "plat_log.h"
+#include "plat_event.h"
 
 LOG_MODULE_REGISTER(plat_isr);
 
@@ -45,14 +46,12 @@ void ISR_GPIO_FM_PLD_UBC_EN_R()
 
 	LOG_INF("FM_PLD_UBC_EN_R = %d\nDC ON", gpio_get(FM_PLD_UBC_EN_R));
 
-	// if (gpio_get(FM_PLD_UBC_EN_R) == GPIO_HIGH) {
-	// 	plat_set_dc_on_log(LOG_ASSERT);
-	// 	k_timer_start(&pwr_sequence_event_work_timer, K_MSEC(1000), K_NO_WAIT);
-	// }
-
-	// if (gpio_get(FM_PLD_UBC_EN_R) == GPIO_LOW) {
-	// 	plat_set_dc_on_log(LOG_DEASSERT);
-	// }
+	if (gpio_get(FM_PLD_UBC_EN_R) == GPIO_HIGH) {
+		plat_set_dc_on_log(LOG_ASSERT);
+		plat_handle_pwr_sequence_event();
+	}else {
+		plat_set_dc_on_log(LOG_DEASSERT);
+	}
 
 	plat_update_ubc_status();
 }
