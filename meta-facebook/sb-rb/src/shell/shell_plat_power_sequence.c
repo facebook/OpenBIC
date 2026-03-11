@@ -277,19 +277,24 @@ int cmd_power_sequence(const struct shell *shell, size_t argc, char **argv)
 
 bool plat_find_power_seq_fail()
 {
-	for (uint8_t i = 0; i < power_sequence_event_pwrgd_table_size; i++) {
-		uint8_t data;
-		uint8_t cpld_offset = power_sequence_event_pwrgd_table[i].cpld_offsets;
+	uint8_t data[6] = { 0 };
+	// read once all latch reg 0xBE to 0xC4
+	if (!plat_read_cpld(PWRGD_EVENT_LATCH_1_REG, data, PWR_SEQ_REG_LEN)) {
+		LOG_ERR("Fail read cpld reg 0xBE to 0xC4");
+		power_seq_fail_id = 0xFF;
+		return false;
+	}
 
-		if (!plat_read_cpld(cpld_offset, &data, 1)) {
-			LOG_ERR("Fail read cpld reg 0x%x", cpld_offset);
-			power_seq_fail_id = 0xFF;
-			return false;
-		}
-		LOG_INF("read pwr fail reg, cpld offset 0x%x value 0x%x", cpld_offset, data);
+	for (uint8_t i = 0; i < power_sequence_event_pwrgd_table_size; i++) {
+		uint8_t cpld_offset = power_sequence_event_pwrgd_table[i].cpld_offsets;
 		// if check cpld bit is 0, means fine the first fail pwrgd, update power_seq_fail_id
-		if (((data >> power_sequence_event_pwrgd_table[i].bit_location) & 0x1) == 0) {
+		if (((*(data + cpld_offset - PWRGD_EVENT_LATCH_1_REG) >>
+		      power_sequence_event_pwrgd_table[i].bit_location) &
+		     0x1) == 0) {
 			power_seq_fail_id = power_sequence_event_pwrgd_table[i].index;
+			LOG_INF("find power sequence fail, index: %d, name: %s",
+				power_sequence_event_pwrgd_table[i].index,
+				power_sequence_event_pwrgd_table[i].power_rail_name);
 			return true;
 		}
 	}

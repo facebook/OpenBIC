@@ -24,14 +24,13 @@
 #include "plat_class.h"
 #include "plat_adc.h"
 #include "plat_mctp.h"
+#include "shell_plat_power_sequence.h"
+#include "plat_log.h"
 
 // test command
 void cmd_test(const struct shell *shell, size_t argc, char **argv)
 {
 	shell_print(shell, "Hello world!");
-	uint8_t type = strtoul(argv[1], NULL, 16);
-	uint8_t src = strtoul(argv[2], NULL, 16);
-	plat_pldm_sensor_set_quick_vr_poll_interval(type, src);
 }
 
 void cmd_read_raw(const struct shell *shell, size_t argc, char **argv)
