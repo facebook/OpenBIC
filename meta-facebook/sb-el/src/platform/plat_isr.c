@@ -23,6 +23,7 @@
 #include "plat_cpld.h"
 #include "shell_arke_power.h"
 #include "plat_kernel_obj.h"
+#include "plat_log.h"
 
 LOG_MODULE_REGISTER(plat_isr);
 
@@ -67,10 +68,10 @@ void ISR_GPIO_RST_ARKE_PWR_ON_PLD_R1_N()
 		// add_sync_oc_warn_to_work();
 		// if board id == EVB , ctrl fan pwm
 		// // when dc on clear cpld polling alert status
-		// uint8_t err_type = CPLD_UNEXPECTED_VAL_TRIGGER_CAUSE;
-		// LOG_DBG("cpld_polling_alert_status: true -> false, reset_error_log_states: %x",
-		// 	err_type);
-		// reset_error_log_states(err_type);
+		uint8_t err_type = CPLD_UNEXPECTED_VAL_TRIGGER_CAUSE;
+		LOG_DBG("cpld_polling_alert_status: true -> false, reset_error_log_states: %x",
+			err_type);
+		reset_error_log_states(err_type);
 	} else {
 		LOG_INF("dc off");
 		// set_ioe_init_flag(0);

@@ -81,5 +81,6 @@ bool set_cpld_bit(uint8_t cpld_offset, uint8_t bit, uint8_t value);
 void init_cpld_polling(void);
 void get_cpld_polling_power_info(int *reading);
 void set_cpld_polling_enable_flag(bool status);
+void reset_error_log_states(uint8_t err_type);
 
 #endif

@@ -36,6 +36,7 @@ LOG_MODULE_REGISTER(plat_log);
 #define EEPROM_MAX_WRITE_TIME 5 // the BR24G512 eeprom max write time is 3.5 ms
 #define CPLD_VR_VENDOR_TYPE_REG 0x1C
 #define ERROR_CODE_TYPE_SHIFT 13
+#define SENSOR_NUMBER_DONT_CARE 0xFF
 
 static plat_err_log_mapping err_log_data[LOG_MAX_NUM];
 static uint16_t err_code_caches[200]; //extend if error code types > 200
@@ -79,72 +80,129 @@ vr_smbus_alrt_sensor_map vr_smbus_alrt_sensor_map_table[] = {
 	{ 7, VR_RAIL_E_ASIC_P0V75_NUWA0_VDD },
 };
 
-vr_ubc_device_table vr_device_table[] = {
-	// index, sensor_num_1(page 0), sensor_num_2(page 1)
-	{ VR_INDEX_E_1, SENSOR_NUM_ASIC_P0V75_NUWA1_VDD_TEMP_C },
+typedef struct _vr_device_match_sensor_num {
+	uint8_t index;
+	uint8_t sensor_num_1;
+} vr_device_match_sensor_num;
 
-	{ VR_INDEX_E_2, SENSOR_NUM_ASIC_P0V75_NUWA0_VDD_TEMP_C },
-
-	{ VR_INDEX_E_3, SENSOR_NUM_ASIC_P0V9_OWL_E_TRVDD_TEMP_C,
-	  SENSOR_NUM_ASIC_P0V75_OWL_E_TRVDD_TEMP_C },
-
-	{ VR_INDEX_E_4, SENSOR_NUM_ASIC_P0V75_MAX_M_VDD_TEMP_C,
-	  SENSOR_NUM_ASIC_P0V75_VDDPHY_HBM1357_TEMP_C },
-
-	{ VR_INDEX_E_5, SENSOR_NUM_ASIC_P0V75_OWL_E_VDD_TEMP_C,
-	  SENSOR_NUM_ASIC_P0V4_VDDQL_HBM1357_TEMP_C },
-
-	{ VR_INDEX_E_6, SENSOR_NUM_ASIC_P1V05_VDDQC_HBM1357_TEMP_C,
-	  SENSOR_NUM_ASIC_P1V8_VPP_HBM1357_TEMP_C },
-
-	{ VR_INDEX_E_7, SENSOR_NUM_ASIC_P1V05_VDDQC_HBM1357_TEMP_C,
-	  SENSOR_NUM_ASIC_P0V85_HAMSA_VDD_TEMP_C },
-
-	{ VR_INDEX_E_8, SENSOR_NUM_ASIC_P0V9_VDDQ_HBM1357_TEMP_C,
-	  SENSOR_NUM_ASIC_P0V8_HAMSA_AVDD_PCIE_TEMP_C },
-
-	{ VR_INDEX_E_9, SENSOR_NUM_ASIC_P1V05_VDDQC_HBM0246_TEMP_C,
-	  SENSOR_NUM_ASIC_P1V2_HAMSA_VDDHRXTX_PCIE_TEMP_C },
-
-	{ VR_INDEX_E_10, SENSOR_NUM_ASIC_P1V05_VDDQC_HBM0246_TEMP_C,
-	  SENSOR_NUM_ASIC_P1V8_VPP_HBM0246_TEMP_C },
-
-	{ VR_INDEX_E_11, SENSOR_NUM_ASIC_P0V4_VDDQL_HBM0246_TEMP_C,
-	  SENSOR_NUM_ASIC_P0V75_VDDPHY_HBM0246_TEMP_C },
-
-	{ VR_INDEX_E_12, SENSOR_NUM_ASIC_P0V75_OWL_W_VDD_TEMP_C,
-	  SENSOR_NUM_ASIC_P0V75_MAX_S_VDD_TEMP_C },
-
-	{ VR_INDEX_E_13, SENSOR_NUM_ASIC_P0V9_OWL_W_TRVDD_TEMP_C,
-	  SENSOR_NUM_ASIC_P0V75_OWL_W_TRVDD_TEMP_C },
+vr_device_match_sensor_num vr_error_fault_table[] = {
+	// follow VR_PWR_LOG_DEVICE_INDEX_E
+	// //pwr fault reg 1
+	{ PWRGD_OWL_E_TRVDD0P9_R_FAULT, SENSOR_NUM_ASIC_P0V9_OWL_E_TRVDD_TEMP_C },
+	{ PWRGD_OWL_W_TRVDD0P9_R_FAULT, SENSOR_NUM_ASIC_P0V9_OWL_W_TRVDD_TEMP_C },
+	{ PWRGD_OWL_E_TRVDD0P75_R_FAULT, SENSOR_NUM_ASIC_P0V75_OWL_E_TRVDD_TEMP_C },
+	{ PWRGD_OWL_W_TRVDD0P75_R_FAULT, SENSOR_NUM_ASIC_P0V75_OWL_W_TRVDD_TEMP_C },
+	{ PWRGD_HAMSA_AVDD_PCIE_R_FAULT, SENSOR_NUM_ASIC_P0V8_HAMSA_AVDD_PCIE_TEMP_C },
+	{ PWRGD_HAMSA_VDDHRXTX_PCIE_R_FAULT, SENSOR_NUM_ASIC_P1V2_HAMSA_VDDHRXTX_PCIE_TEMP_C },
+	{ PWRGD_P4V2_R_FAULT, 0 }, // TODO
+	{ PWRGD_P0V75_AVDD_HCSL_R_FAULT, 0 }, // TODO
+	//pwr fault reg 2
+	{ PWRGD_MEDHA1_VDD_FAULT, SENSOR_NUM_ASIC_P0V75_NUWA1_VDD_TEMP_C },
+	{ PWRGD_MEDHA0_VDD_FAULT, SENSOR_NUM_ASIC_P0V75_NUWA0_VDD_TEMP_C },
+	{ PWRGD_OWL_E_VDD_R_FAULT, SENSOR_NUM_ASIC_P0V75_OWL_E_VDD_TEMP_C },
+	{ PWRGD_OWL_W_VDD_R_FAULT, SENSOR_NUM_ASIC_P0V75_OWL_W_VDD_TEMP_C },
+	{ PWRGD_HAMSA_VDD_R_FAULT, SENSOR_NUM_ASIC_P0V85_HAMSA_VDD_TEMP_C },
+	{ PWRGD_MAX_S_VDD_R_FAULT, SENSOR_NUM_ASIC_P0V75_MAX_S_VDD_TEMP_C },
+	{ PWRGD_MAX_M_VDD_R_FAULT, SENSOR_NUM_ASIC_P0V75_MAX_M_VDD_TEMP_C },
+	{ PWRGD_MAX_N_VDD_R_FAULT, SENSOR_NUM_ASIC_P0V75_MAX_N_VDD_TEMP_C },
+	//pwr fault reg 3
+	{ PWRGD_VDDQL_HBM0_HBM2_HBM4_HBM6_R_FAULT, SENSOR_NUM_ASIC_P0V4_VDDQL_HBM0246_TEMP_C },
+	{ PWRGD_VDDQC_HBM0_HBM2_HBM4_HBM6_R_FAULT, SENSOR_NUM_ASIC_P1V05_VDDQC_HBM0246_TEMP_C },
+	{ PWRGD_VPP_HBM0_HBM2_HBM4_HBM6_R_FAULT, SENSOR_NUM_ASIC_P1V8_VPP_HBM0246_TEMP_C },
+	{ PWRGD_VDDPHY_HBM0_HBM2_HBM4_HBM6_R_FAULT, SENSOR_NUM_ASIC_P0V75_VDDPHY_HBM0246_TEMP_C },
+	{ PWRGD_VDDQL_HBM1_HBM3_HBM5_HBM7_R_FAULT, SENSOR_NUM_ASIC_P0V4_VDDQL_HBM1357_TEMP_C },
+	{ PWRGD_VDDQC_HBM1_HBM3_HBM5_HBM7_R_FAULT, SENSOR_NUM_ASIC_P1V05_VDDQC_HBM1357_TEMP_C },
+	{ PWRGD_VPP_HBM1_HBM3_HBM5_HBM7_R_FAULT, SENSOR_NUM_ASIC_P1V8_VPP_HBM1357_TEMP_C },
+	{ PWRGD_VDDPHY_HBM1_HBM3_HBM5_HBM7_R_FAULT, SENSOR_NUM_ASIC_P0V75_VDDPHY_HBM1357_TEMP_C },
+	//pwr fault reg 4
+	{ PWRGD_PLL_VDDA15_HBM0_HBM2_FAULT, 0 }, // TODO
+	{ PWRGD_PLL_VDDA15_HBM1_HBM3_FAULT, 0 }, // TODO
+	{ PWRGD_PLL_VDDA15_HBM4_HBM6_FAULT, 0 }, // TODO
+	{ PWRGD_PLL_VDDA15_HBM5_HBM7_FAULT, 0 }, // TODO
+	{ PWRGD_P0V9_OWL_E_PVDD_FAULT, 0 }, // TODO
+	{ PWRGD_P0V9_OWL_W_PVDD_FAULT, 0 }, // TODO
+	{ PWRGD_P1V5_E_RVDD_FAULT, 0 }, // TODO
+	{ PWRGD_P1V5_W_RVDD_FAULT, 0 }, // TODO
+	//pwr fault reg 5
+	{ P12V_UBC_PWRGD_FAULT, 0 }, // TODO
+	{ PWRGD_P5V_R_FAULT, 0 }, // TODO
+	{ PWRGD_P3V3_R_FAULT, 0 }, // TODO
+	{ PWRGD_P1V8_R_FAULT, 0 }, // TODO
+	{ PWRGD_LDO_IN_1V2_R_FAULT, 0 }, // TODO
+	{ PWRGD_P1V5_PLL_VDDA_OWL_FAULT, 0 }, // TODO
+	{ PWRGD_P1V5_PLL_VDDA_SOC_FAULT, 0 }, // TODO
+	{ PWRGD_PVDD1P5_FAULT, 0 }, // TODO
+	// don't care of sensor num
+	{ VR_ERR_DEVICE_DONT_CARE, SENSOR_NUMBER_DONT_CARE },
 };
 
 typedef struct _vr_error_callback_info_ {
 	uint8_t cpld_offset;
-	uint8_t vr_status_word_access_map;
 	uint8_t bit_mapping_vr_sensor_num[8];
 } vr_error_callback_info;
 
 vr_error_callback_info vr_error_callback_info_table[] = {
-	// cpld_offset, reading mask, bit_mapping_vr_sensor_num
+	// cpld_offset, bit_mapping_vr_sensor_num
 	{ VR_POWER_FAULT_1_REG,
-	  0xFC,
-	  { VR_INDEX_E_3, VR_INDEX_E_13, VR_INDEX_E_3, VR_INDEX_E_13, VR_INDEX_E_8, VR_INDEX_E_9,
-	    0x00, 0x00 } },
+	  {
+		  PWRGD_P0V75_AVDD_HCSL_R_FAULT, // bit0
+		  PWRGD_P4V2_R_FAULT, // bit1
+		  PWRGD_HAMSA_VDDHRXTX_PCIE_R_FAULT, // bit2
+		  PWRGD_HAMSA_AVDD_PCIE_R_FAULT, // bit3
+		  PWRGD_OWL_W_TRVDD0P75_R_FAULT, // bit4
+		  PWRGD_OWL_E_TRVDD0P75_R_FAULT, // bit5
+		  PWRGD_OWL_W_TRVDD0P9_R_FAULT, // bit6
+		  PWRGD_OWL_E_TRVDD0P9_R_FAULT // bit7
+	  } },
 	{ VR_POWER_FAULT_2_REG,
-	  0xFF,
-	  { VR_INDEX_E_1, VR_INDEX_E_2, VR_INDEX_E_5, VR_INDEX_E_12, VR_INDEX_E_9, VR_INDEX_E_12,
-	    VR_INDEX_E_4, VR_INDEX_E_8 } },
+	  {
+		  PWRGD_MAX_N_VDD_R_FAULT, // bit0
+		  PWRGD_MAX_M_VDD_R_FAULT, // bit1
+		  PWRGD_MAX_S_VDD_R_FAULT, // bit2
+		  PWRGD_HAMSA_VDD_R_FAULT, // bit3
+		  PWRGD_OWL_W_VDD_R_FAULT, // bit4
+		  PWRGD_OWL_E_VDD_R_FAULT, // bit5
+		  PWRGD_MEDHA0_VDD_FAULT, // bit6
+		  PWRGD_MEDHA1_VDD_FAULT // bit7
+	  } },
 	{ VR_POWER_FAULT_3_REG,
-	  0xFF,
-	  { VR_INDEX_E_11, VR_INDEX_E_10, VR_INDEX_E_10, VR_INDEX_E_11, VR_INDEX_E_5, VR_INDEX_E_6,
-	    VR_INDEX_E_6, VR_INDEX_E_4 } },
+	  {
+		  PWRGD_VDDPHY_HBM1_HBM3_HBM5_HBM7_R_FAULT, // bit0
+		  PWRGD_VPP_HBM1_HBM3_HBM5_HBM7_R_FAULT, // bit1
+		  PWRGD_VDDQC_HBM1_HBM3_HBM5_HBM7_R_FAULT, // bit2
+		  PWRGD_VDDQL_HBM1_HBM3_HBM5_HBM7_R_FAULT, // bit3
+		  PWRGD_VDDPHY_HBM0_HBM2_HBM4_HBM6_R_FAULT, // bit4
+		  PWRGD_VPP_HBM0_HBM2_HBM4_HBM6_R_FAULT, // bit5
+		  PWRGD_VDDQC_HBM0_HBM2_HBM4_HBM6_R_FAULT, // bit6
+		  PWRGD_VDDQL_HBM0_HBM2_HBM4_HBM6_R_FAULT // bit7
+	  } },
 	{ VR_POWER_FAULT_4_REG,
-	  0,
-	  { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } }, // to_do not sure
+	  {
+		  PWRGD_P1V5_W_RVDD_FAULT, // bit0
+		  PWRGD_P1V5_E_RVDD_FAULT, // bit1
+		  PWRGD_P0V9_OWL_W_PVDD_FAULT, // bit2
+		  PWRGD_P0V9_OWL_E_PVDD_FAULT, // bit3
+		  PWRGD_PLL_VDDA15_HBM5_HBM7_FAULT, // bit4
+		  PWRGD_PLL_VDDA15_HBM4_HBM6_FAULT, // bit5
+		  PWRGD_PLL_VDDA15_HBM1_HBM3_FAULT, // bit6
+		  PWRGD_PLL_VDDA15_HBM0_HBM2_FAULT // bit7
+	  } }, // to_do not sure
 	{ VR_POWER_FAULT_5_REG,
-	  0,
-	  { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } }, // to_do not sure
+	  {
+		  PWRGD_PVDD1P5_FAULT, // bit0
+		  PWRGD_P1V5_PLL_VDDA_SOC_FAULT, // bit1
+		  PWRGD_P1V5_PLL_VDDA_OWL_FAULT, // bit2
+		  PWRGD_LDO_IN_1V2_R_FAULT, // bit3
+		  PWRGD_P1V8_R_FAULT, // bit4
+		  PWRGD_P3V3_R_FAULT, // bit5
+		  PWRGD_P5V_R_FAULT, // bit6
+		  P12V_UBC_PWRGD_FAULT // bit7
+	  } }, // to_do not sure
+	{ VR_SMBUS_ALERT_EVENT_LOG_REG,
+	  { 0x00, VR_ERR_DEVICE_DONT_CARE, VR_ERR_DEVICE_DONT_CARE, VR_ERR_DEVICE_DONT_CARE,
+	    VR_ERR_DEVICE_DONT_CARE, VR_ERR_DEVICE_DONT_CARE, VR_ERR_DEVICE_DONT_CARE,
+	    VR_ERR_DEVICE_DONT_CARE } },
+
 };
 
 void plat_log_read(uint8_t *log_data, uint8_t cmd_size, uint16_t order)
@@ -210,6 +268,41 @@ bool vr_fault_get_error_data(uint8_t sensor_id, uint8_t *data)
 	return get_raw_data_from_sensor_id(sensor_id, 0x79, data, 2);
 }
 
+bool get_multi_vr_status(uint8_t alrt_index, uint8_t *data)
+{
+	const vr_smbus_alrt_sensor_map *entry = &vr_smbus_alrt_sensor_map_table[alrt_index];
+	uint16_t vr_data;
+	uint8_t *ptr = data;
+
+	// Collect all VR rails from this table entry
+	uint8_t vr_list[4] = {
+		entry->vr_rail_1_page_0,
+		entry->vr_rail_1_page_1,
+		entry->vr_rail_2_page_0,
+		entry->vr_rail_2_page_1,
+	};
+
+	for (int i = 0; i < 4; i++) {
+		if (vr_list[i] == 0)
+			continue; // Skip empty entries
+
+		if (!plat_get_vr_status(vr_list[i], VR_STAUS_E_STATUS_WORD, &vr_data)) {
+			LOG_ERR("SMBus alert: Failed to get VR[%d] status word", vr_list[i]);
+			return false;
+		}
+		LOG_INF("VR[%d] status word: 0x%x", vr_list[i], vr_data);
+		// Write each uint16_t value into the output buffer (little-endian)
+		*ptr++ = (uint8_t)(vr_data & 0xFF);
+		*ptr++ = (uint8_t)((vr_data >> 8) & 0xFF);
+	}
+
+	// print VR data
+	for (int i = 0; i < 8; i++)
+		LOG_DBG("data[%d]: %02X ", i, data[i]);
+
+	return true;
+}
+
 bool get_error_data(uint16_t error_code, uint8_t *data)
 {
 	CHECK_NULL_ARG_WITH_RETURN(data, false);
@@ -222,6 +315,7 @@ bool get_error_data(uint16_t error_code, uint8_t *data)
 	// Initialize sensor number
 	uint8_t sensor_num = 0x00;
 	uint8_t device_id = 0x00;
+	uint8_t smbus_alrt_index = bit_position;
 
 	// Find the device_id associated with the error code
 	for (size_t i = 0; i < ARRAY_SIZE(vr_error_callback_info_table); i++) {
@@ -233,14 +327,14 @@ bool get_error_data(uint16_t error_code, uint8_t *data)
 	}
 
 	if (device_id == 0x00) {
-		LOG_DBG("No valid device_id for error_code: 0x%x", error_code);
+		LOG_WRN("No valid device_id for error_code: 0x%x", error_code);
 		return false;
 	}
 
 	// Find the sensor number associated with the device_id
-	for (size_t i = 0; i < ARRAY_SIZE(vr_device_table); i++) {
-		if (vr_device_table[i].index == device_id) {
-			sensor_num = vr_device_table[i].sensor_num_1;
+	for (size_t i = 0; i < ARRAY_SIZE(vr_error_fault_table); i++) {
+		if (vr_error_fault_table[i].index == device_id) {
+			sensor_num = vr_error_fault_table[i].sensor_num_1;
 			break;
 		}
 	}
@@ -251,10 +345,26 @@ bool get_error_data(uint16_t error_code, uint8_t *data)
 		return false;
 	}
 
-	// Handle VR_FAULT_ASSERT errors and retrieve VR-specific data
-	if (!vr_fault_get_error_data(sensor_num, data)) {
-		LOG_ERR("Failed to retrieve VR fault data for sensor_num: 0x%x", sensor_num);
-		return false;
+	if (cpld_offset == VR_SMBUS_ALERT_EVENT_LOG_REG) {
+		// smbalrt status some bits will include 2 different VRs(each VR has 2 pages so total 8 Bytes)
+		// Handle VR_FAULT_ASSERT errors and retrieve VR-specific data
+		if (smbus_alrt_index < ARRAY_SIZE(vr_smbus_alrt_sensor_map_table)) {
+			if (!get_multi_vr_status(smbus_alrt_index, data)) {
+				LOG_ERR("Failed to retrieve VR error data for smbus alrt index: 0x%x",
+					smbus_alrt_index);
+				return false;
+			}
+		} else {
+			LOG_ERR("smbus alrt index: 0x%x out of range", smbus_alrt_index);
+			return false;
+		}
+	} else {
+		// Handle VR_FAULT_ASSERT errors and retrieve VR-specific data
+		if (!vr_fault_get_error_data(sensor_num, data)) {
+			LOG_ERR("Failed to retrieve VR fault data for sensor_num: 0x%x",
+				sensor_num);
+			return false;
+		}
 	}
 
 	return true;
@@ -303,7 +413,7 @@ void error_log_event(uint16_t error_code, bool log_status)
 
 	uint16_t fru_count = next_log_position;
 
-	// Update the log entry's index
+	// Update the log entry's index(1-base)
 	err_log_data[fru_count].index = next_index;
 	next_index = (next_index % LOG_MAX_INDEX) + 1;
 
@@ -322,12 +432,6 @@ void error_log_event(uint16_t error_code, bool log_status)
 		LOG_ERR("Failed to dump 1st part CPLD data");
 	}
 
-	if (!plat_read_cpld(CPLD_REGISTER_2ND_PART_START_OFFSET,
-			    err_log_data[fru_count].cpld_dump + CPLD_REGISTER_1ST_PART_NUM,
-			    CPLD_REGISTER_2ND_PART_NUM)) {
-		LOG_ERR("Failed to dump 2nd part CPLD data");
-	}
-
 	//dump err_log_data for debug
 	LOG_HEXDUMP_DBG(&err_log_data[fru_count], sizeof(plat_err_log_mapping), "err_log_data");
 
@@ -344,6 +448,8 @@ void error_log_event(uint16_t error_code, bool log_status)
 
 	// Update the next log position
 	next_log_position = (fru_count % LOG_MAX_NUM) + 1;
+	if (next_log_position == LOG_MAX_NUM)
+		next_log_position = 1;
 	log_num++;
 
 	if (log_num > LOG_MAX_NUM) {
