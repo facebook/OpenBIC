@@ -56,6 +56,15 @@
 // PDB1 power reading registers
 #define CPLD_POWER_INFO_0_REG 0xB6
 #define CPLD_POWER_INFO_1_REG 0xB7
+
+// Power sequence fail log registers, CPLD not ready
+#define PWRGD_EVENT_LATCH_1_REG 0xBE
+#define PWRGD_EVENT_LATCH_2_REG 0xBF
+#define PWRGD_EVENT_LATCH_3_REG 0xC0
+#define PWRGD_EVENT_LATCH_4_REG 0xC1
+#define PWRGD_EVENT_LATCH_5_REG 0xC2
+#define PWRGD_EVENT_LATCH_6_REG 0xC3
+
 typedef struct _cpld_info_ cpld_info;
 
 typedef struct _cpld_info_ {

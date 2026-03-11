@@ -25,3 +25,6 @@ void plat_trigger_cpld_polling(void);
 /* Timer for dc status checking */
 void plat_update_ubc_status(void);
 bool plat_get_ubc_status(void);
+
+/* Timer for power sequence event handling */
+void plat_handle_pwr_sequence_event(void);
