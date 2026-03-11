@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include <logging/log.h>
 #include "pldm_sensor.h"
 #include "plat_i2c.h"
@@ -37,10 +53,10 @@ bool pca6416a_init(void)
 }
 
 // tca6424a
-// bool is_tca6424a_accessible()
-// {
-// 	return (get_asic_board_id() == ASIC_BOARD_ID_EVB && is_mb_dc_on());
-// }
+bool is_tca6424a_accessible()
+{
+	return (get_asic_board_id() == ASIC_BOARD_ID_EVB && is_mb_dc_on());
+}
 
 bool tca6424a_i2c_read(uint8_t offset, uint8_t *data, uint8_t len)
 {
@@ -205,7 +221,6 @@ void ioexp_init(void)
 	// set value from table
 	set_bootstrap_table_val_to_ioexp();
 }
-
 void set_pca6554apw_ioe_value(uint8_t ioe_bus, uint8_t ioe_addr, uint8_t ioe_reg, uint8_t value)
 {
 	uint8_t retry = 5;
@@ -250,33 +265,33 @@ int get_pca6554apw_ioe_value(uint8_t ioe_bus, uint8_t ioe_addr, uint8_t ioe_reg,
 	return 0;
 }
 
-// //evb only
-// void init_U200052_IO()
-// {
-// 	LOG_INF("init U200052 IO expander");
-// 	// bit0 to bit5 is input (1)
-// 	set_pca6554apw_ioe_value(U200052_IO_I2C_BUS, U200052_IO_ADDR, CONFIG, 0x3F);
-// 	// io6,io7 default output 0
-// 	set_pca6554apw_ioe_value(U200052_IO_I2C_BUS, U200052_IO_ADDR, OUTPUT_PORT,
-// 				 U200052_IO_INIT_VAL);
-// }
-// //evb only
-// void init_U200053_IO()
-// {
-// 	LOG_INF("init U200053 IO expander");
-// 	// bit0 to bit5 is input (1)
-// 	set_pca6554apw_ioe_value(U200053_IO_I2C_BUS, U200053_IO_ADDR, CONFIG, 0xBF);
-// 	// io6 default output 1
-// 	set_pca6554apw_ioe_value(U200053_IO_I2C_BUS, U200053_IO_ADDR, OUTPUT_PORT,
-// 				 U200053_IO_INIT_VAL);
-// }
-// //evb2 only
-// void init_U200070_IO()
-// {
-// 	LOG_INF("init U200070 IO expander");
-// 	// bit3 to bit5 is input (1)
-// 	set_pca6554apw_ioe_value(U200070_IO_I2C_BUS, U200070_IO_ADDR, CONFIG, 0x38);
-// 	// io0,io1,io2 default output 1 io7 default output 0
-// 	set_pca6554apw_ioe_value(U200070_IO_I2C_BUS, U200070_IO_ADDR, OUTPUT_PORT,
-// 				 U200070_IO_INIT_VAL);
-// }
+//evb only
+void init_U200052_IO()
+{
+	LOG_INF("init U200052 IO expander");
+	// bit0 to bit5 is input (1)
+	set_pca6554apw_ioe_value(U200052_IO_I2C_BUS, U200052_IO_ADDR, CONFIG, 0x3F);
+	// io6,io7 default output 0
+	set_pca6554apw_ioe_value(U200052_IO_I2C_BUS, U200052_IO_ADDR, OUTPUT_PORT,
+				 U200052_IO_INIT_VAL);
+}
+//evb only
+void init_U200053_IO()
+{
+	LOG_INF("init U200053 IO expander");
+	// bit0 to bit5 is input (1)
+	set_pca6554apw_ioe_value(U200053_IO_I2C_BUS, U200053_IO_ADDR, CONFIG, 0xBF);
+	// io6 default output 1
+	set_pca6554apw_ioe_value(U200053_IO_I2C_BUS, U200053_IO_ADDR, OUTPUT_PORT,
+				 U200053_IO_INIT_VAL);
+}
+//evb2 only
+void init_U200070_IO()
+{
+	LOG_INF("init U200070 IO expander");
+	// bit3 to bit5 is input (1)
+	set_pca6554apw_ioe_value(U200070_IO_I2C_BUS, U200070_IO_ADDR, CONFIG, 0x38);
+	// io0,io1,io2 default output 1 io7 default output 0
+	set_pca6554apw_ioe_value(U200070_IO_I2C_BUS, U200070_IO_ADDR, OUTPUT_PORT,
+				 U200070_IO_INIT_VAL);
+}
