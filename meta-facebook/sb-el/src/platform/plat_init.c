@@ -29,6 +29,8 @@
 #include "plat_cpld.h"
 #include "plat_log.h"
 #include "plat_user_setting.h"
+#include "plat_ioexp.h"
+#include "plat_power_capping.h"
 
 LOG_MODULE_REGISTER(plat_init);
 
@@ -60,6 +62,13 @@ void pal_post_init()
 	plat_adc_electra_init();
 	plat_power_capping_init();
 	init_load_eeprom_log();
+	if (get_asic_board_id() == ASIC_BOARD_ID_EVB && get_board_rev_id() >= REV_ID_EVT1B) {
+		// if board id >= EVB EVT1B(FAB2)
+		quick_sensor_poll_init();
+		init_U200052_IO();
+		init_U200053_IO();
+		init_U200070_IO();
+	}
 	init_cpld_polling();
 	ioexp_init();
 }

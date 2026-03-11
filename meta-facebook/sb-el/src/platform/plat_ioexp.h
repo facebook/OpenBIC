@@ -33,17 +33,17 @@
 #define TCA6424A_CONFIG_0 0x0C
 #define TCA6424A_CONFIG_1 0x0D
 #define TCA6424A_CONFIG_2 0x0E
-// #define U200052_IO_ADDR 0x3A
-// #define U200053_IO_ADDR 0x3B
-// #define U200070_IO_ADDR 0x3C
-// #define U200051_IO_I2C_BUS I2C_BUS1
-// #define U200052_IO_I2C_BUS I2C_BUS1
-// #define U200053_IO_I2C_BUS I2C_BUS1
-// #define U200070_IO_I2C_BUS I2C_BUS1
+#define U200052_IO_ADDR 0x3A
+#define U200053_IO_ADDR 0x3B
+#define U200070_IO_ADDR 0x3C
+#define U200051_IO_I2C_BUS I2C_BUS1
+#define U200052_IO_I2C_BUS I2C_BUS1
+#define U200053_IO_I2C_BUS I2C_BUS1
+#define U200070_IO_I2C_BUS I2C_BUS1
 
-// #define U200052_IO_INIT_VAL 0xC0
-// #define U200053_IO_INIT_VAL 0x40
-// #define U200070_IO_INIT_VAL 0x07
+#define U200052_IO_INIT_VAL 0xC0
+#define U200053_IO_INIT_VAL 0x40
+#define U200070_IO_INIT_VAL 0x07
 
 #define HAMSA_MFIO19 1
 #define HAMSA_MFIO6 6
@@ -70,9 +70,9 @@ void set_hamsa_mfio_6_8_10_output();
 void set_nuwa0_mfio_6_8_10_output();
 void set_nuwa1_mfio_6_8_10_output();
 void ioexp_init(void);
-// void init_U200052_IO();
-// void init_U200053_IO();
-// void init_U200070_IO();
+void init_U200052_IO();
+void init_U200053_IO();
+void init_U200070_IO();
 void set_pca6554apw_ioe_value(uint8_t ioe_bus, uint8_t ioe_addr, uint8_t ioe_reg, uint8_t value);
 int get_pca6554apw_ioe_value(uint8_t ioe_bus, uint8_t ioe_addr, uint8_t ioe_reg, uint8_t *value);
 
