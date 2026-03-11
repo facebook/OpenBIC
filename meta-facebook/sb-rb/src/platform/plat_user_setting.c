@@ -901,7 +901,7 @@ bool perm_config_clear(void)
 
 	/* clear soc_pcie_perst perm parameter */
 	uint32_t setting_value_for_delay_pcie_perst[4] = { 0 };
-	memset(setting_value_for_delay_pcie_perst, 0xffffffff,
+	memset(setting_value_for_delay_pcie_perst, 0xFF,
 	       sizeof(setting_value_for_delay_pcie_perst));
 	if (!set_user_settings_delay_pcie_perst_to_eeprom(
 		    &setting_value_for_delay_pcie_perst[0],
@@ -1234,10 +1234,10 @@ bool post_vr_read(sensor_cfg *cfg, void *args, int *const reading)
 		if (integer < 0 && fraction > 0)
 			fraction = -fraction;
 
-		float tmp_reading = (float)integer + fraction;
+		float tmp_reading_value = (float)integer + fraction;
 
-		if (tmp_reading < 0) {
-			tmp_reading = 0;
+		if (tmp_reading_value < 0) {
+			tmp_reading_value = 0;
 			*reading = 0;
 			LOG_DBG("Original sensor reading: integer = %d, fraction = %f", integer,
 				fraction);
@@ -1245,7 +1245,8 @@ bool post_vr_read(sensor_cfg *cfg, void *args, int *const reading)
 		}
 
 		int decoded_reading =
-			(int)((tmp_reading * power(10, -1 * unit_modifier) - offset) / resolution);
+			(int)((tmp_reading_value * power(10, -1 * unit_modifier) - offset) /
+			      resolution);
 
 		/* record power history */
 		for (int i = 0; i < UBC_VR_RAIL_E_MAX; i++) {
@@ -1334,7 +1335,8 @@ clock_compnt_mapping clock_buffer_mapping_table[] = {
 	{ CLK_BUF_U88, CLK_BUF_U88_ADDR, I2C_BUS3 },
 };
 
-void set_clock_value(uint8_t clock_index, uint8_t write_offset, uint8_t write_length, uint8_t *data)
+void set_clock_value(uint8_t clock_index, uint8_t write_offset, uint8_t write_length,
+		     const uint8_t *data)
 {
 	if (write_length == 0) {
 		LOG_ERR("write_length is 0");
