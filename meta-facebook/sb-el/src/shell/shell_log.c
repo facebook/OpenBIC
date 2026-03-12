@@ -21,6 +21,7 @@
 #include "plat_fru.h"
 #include "plat_cpld.h"
 #include "plat_user_setting.h"
+#include "plat_thermal.h"
 #include "shell_plat_power_sequence.h"
 
 typedef struct {
@@ -260,37 +261,37 @@ void cmd_log_dump(const struct shell *shell, size_t argc, char **argv)
 			shell_print(shell, "\tDC_ON_DETECTED");
 			err_data_len = 1;
 			break;
-		// case TEMPERATURE_TRIGGER_CAUSE:
-		// 	shell_print(shell, "\tTEMPERATURE_TRIGGER");
-		// 	uint8_t temp_sensor_num = log.err_code & 0xFF;
-		// 	//find name in temp_index_table
-		// 	for (int j = 0; j < TEMP_INDEX_MAX; j++) {
-		// 		if (temp_sensor_num == temp_index_table[j].sensor_id) {
-		// 			shell_print(shell, "\t\t%s",
-		// 				    temp_index_table[j].sensor_name);
-		// 			shell_print(shell, "sensor_num 0x%02x status(02h): 0x%02x",
-		// 				    log.error_data[2], log.error_data[0]);
-		// 			// check whether the open status
-		// 			if (log.error_data[0] & BIT(2))
-		// 				shell_print(
-		// 					shell,
-		// 					"sensor_num 0x%02x open status(1Bh): 0x%02x",
-		// 					log.error_data[2], log.error_data[1]);
-		// 			else if (log.error_data[0] & BIT(4))
-		// 				shell_print(
-		// 					shell,
-		// 					"high limit trigger, status(35h): 0x%02x",
-		// 					log.error_data[1]);
-		// 			else if (log.error_data[0] & BIT(3))
-		// 				shell_print(
-		// 					shell,
-		// 					"low limit trigger, status(36h): 0x%02x",
-		// 					log.error_data[1]);
-		// 			err_data_len = 3;
-		// 			break;
-		// 		}
-		// 	}
-		// 	break;
+		case TEMPERATURE_TRIGGER_CAUSE:
+			shell_print(shell, "\tTEMPERATURE_TRIGGER");
+			uint8_t temp_sensor_num = log.err_code & 0xFF;
+			//find name in temp_index_table
+			for (int j = 0; j < TEMP_INDEX_MAX; j++) {
+				if (temp_sensor_num == temp_index_table[j].sensor_id) {
+					shell_print(shell, "\t\t%s",
+						    temp_index_table[j].sensor_name);
+					shell_print(shell, "sensor_num 0x%02x status(02h): 0x%02x",
+						    log.error_data[2], log.error_data[0]);
+					// check whether the open status
+					if (log.error_data[0] & BIT(2))
+						shell_print(
+							shell,
+							"sensor_num 0x%02x open status(1Bh): 0x%02x",
+							log.error_data[2], log.error_data[1]);
+					else if (log.error_data[0] & BIT(4))
+						shell_print(
+							shell,
+							"high limit trigger, status(35h): 0x%02x",
+							log.error_data[1]);
+					else if (log.error_data[0] & BIT(3))
+						shell_print(
+							shell,
+							"low limit trigger, status(36h): 0x%02x",
+							log.error_data[1]);
+					err_data_len = 3;
+					break;
+				}
+			}
+			break;
 		case ASIC_THERMTRIP_TRIGGER_CAUSE:
 			shell_print(shell, "\tASIC_THERMTRIP_TRIGGER");
 			shell_print(shell, "read cpld offset(0x27): 0x%02x", log.error_data[0]);

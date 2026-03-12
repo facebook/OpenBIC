@@ -30,6 +30,7 @@
 #include "plat_log.h"
 #include "plat_user_setting.h"
 #include "plat_ioexp.h"
+#include "plat_thermal.h"
 #include "plat_power_capping.h"
 #include "plat_event.h"
 #include "plat_hwmon.h"
@@ -76,6 +77,7 @@ void pal_post_init()
 
 	init_cpld_polling();
 	ioexp_init();
+	init_thermal_polling();
 }
 
 #define DEF_PROJ_GPIO_PRIORITY 78
