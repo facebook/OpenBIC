@@ -28,6 +28,7 @@
 #include "plat_class.h"
 #include "plat_pldm_sensor.h"
 #include "tmp431.h"
+#include "plat_event.h"
 #include "plat_gpio.h"
 #include "shell_plat_power_sequence.h"
 #include "plat_thermal.h"
@@ -334,6 +335,18 @@ bool get_error_data(uint16_t error_code, uint8_t *data)
 			LOG_INF("Temperature status: 0x%x, sensor num: 0x%x", data[0], data[1]);
 			return true;
 		}
+		case ASIC_THERMTRIP_TRIGGER_CAUSE: {
+			uint8_t cpld_data[3];
+			if (!plat_read_cpld(HBM_CATTRIP_LOG_REG, cpld_data, 3)) {
+				LOG_ERR("Failed to get cpld data");
+				return false;
+			}
+			// cpld reg 0x27
+			data[0] = cpld_data[0];
+			// cpld reg 0x29
+			data[1] = cpld_data[2];
+			return true;
+		}
 		case POWER_ON_SEQUENCE_TRIGGER_CAUSE: {
 			data[0] = plat_get_power_seq_fail_id();
 			uint8_t data_num = 1;
@@ -344,6 +357,15 @@ bool get_error_data(uint16_t error_code, uint8_t *data)
 				}
 				data_num++;
 			}
+			return true;
+		}
+		case ASIC_ERROR_TRIGGER_CAUSE: {
+			plat_asic_error_event *asic_event = plat_get_asic_error_event();
+			CHECK_NULL_ARG_WITH_RETURN(asic_event, false);
+			data[0] = asic_event->event_id_0;
+			data[1] = asic_event->event_id_1;
+			data[2] = asic_event->chip_id;
+			data[3] = asic_event->module_id;
 			return true;
 		}
 		case AC_ON_TRIGGER_CAUSE:

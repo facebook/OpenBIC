@@ -69,6 +69,9 @@
 #define PWRGD_EVENT_LATCH_5_REG 0xC2
 #define PWRGD_EVENT_LATCH_6_REG 0xC3
 
+// ASIC_THERMTRIP_TRIGGER_CAUSE log register
+#define HBM_CATTRIP_LOG_REG 0x27
+
 typedef struct _cpld_info_ cpld_info;
 
 typedef struct _cpld_info_ {

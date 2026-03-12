@@ -34,6 +34,7 @@
 #include "plat_power_capping.h"
 #include "plat_event.h"
 #include "plat_hwmon.h"
+#include "plat_gpio.h"
 
 LOG_MODULE_REGISTER(plat_init);
 
@@ -78,6 +79,10 @@ void pal_post_init()
 	init_cpld_polling();
 	ioexp_init();
 	init_thermal_polling();
+
+	// check the thermtrip open-circuit
+	if (!gpio_get(FM_ASIC_0_THERMTRIP_R_N))
+		plat_asic_thermtrip_error_log(LOG_ASSERT);
 }
 
 #define DEF_PROJ_GPIO_PRIORITY 78

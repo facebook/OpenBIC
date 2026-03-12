@@ -28,6 +28,8 @@
 
 LOG_MODULE_REGISTER(plat_event);
 
+static plat_asic_error_event asic_error_event;
+
 const vr_fault_info vr_fault_table[] = {
 	// { arke_event_source, cpld_reg_offset, cpld_reg_bit }
     // "VR_RAIL_E_ASIC_P0V9_VDDQ_HBM1357" and "VR_RAIL_E_ASIC_P0V9_VDDQ_HBM0246" waiting for CPLD table
@@ -237,4 +239,33 @@ void plat_set_arke_temp_error_log(bool is_assert, uint8_t sensor_id)
 	}
 	set_led_flag(true);
 	k_msleep(500);
+}
+
+void plat_asic_thermtrip_error_log(bool is_assert)
+{
+	uint16_t error_code = (ASIC_THERMTRIP_TRIGGER_CAUSE << 13);
+	error_log_event(error_code, (is_assert ? LOG_ASSERT : LOG_DEASSERT));
+
+	if (is_assert == LOG_ASSERT) {
+		LOG_INF("Generated thermtrip error code: 0x%x", error_code);
+	}
+	k_msleep(500);
+}
+
+void plat_asic_error_error_log(bool is_assert, plat_asic_error_event event)
+{
+	asic_error_event = event;
+
+	uint16_t error_code = (ASIC_ERROR_TRIGGER_CAUSE << 13);
+	error_log_event(error_code, (is_assert ? LOG_ASSERT : LOG_DEASSERT));
+
+	if (is_assert == LOG_ASSERT) {
+		LOG_INF("Generated ASIC error error code: 0x%x", error_code);
+	}
+	k_msleep(100);
+}
+
+plat_asic_error_event *plat_get_asic_error_event(void)
+{
+	return &asic_error_event;
 }
