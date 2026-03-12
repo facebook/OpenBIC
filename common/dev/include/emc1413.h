@@ -50,6 +50,7 @@ enum EMC1413_REIGSTER_MAP {
 	EMC1413_INTERNAL_THERM_LIMIT_REG = 0x20,
 	EMC1413_EXTERNAL_1_THERM_LIMIT_REG = 0x19,
 	EMC1413_EXTERNAL_2_THERM_LIMIT_REG = 0x1A,
+	EMC1413_OPEN_STATUS_REG = 0x1B,
 	EMC1413_REG_MAX,
 };
 
@@ -59,5 +60,6 @@ bool emc1413_set_temp_threshold(sensor_cfg *cfg, uint8_t temp_threshold_index,
 				uint32_t *millidegree_celsius);
 bool emc1413_set_comparator_mode(sensor_cfg *cfg);
 bool emc1413_set_therm_hysteresis(sensor_cfg *cfg, uint8_t temp_therm_hysteresis_val);
+bool emc1413_get_temp_open_status(sensor_cfg *cfg, uint8_t *temp_status);
 
 #endif
