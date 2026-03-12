@@ -38,6 +38,15 @@
 #define ASIC_MEDHA1_SENSOR0_ADDR (0x9A >> 1)
 #define ASIC_MEDHA1_SENSOR1_ADDR (0x9A >> 1)
 
+#define ASIC_MEDHA0_SENSOR0_2ND_ADDR (0xD8 >> 1)
+#define ASIC_MEDHA0_SENSOR1_2ND_ADDR (0xD8 >> 1)
+#define ASIC_OWL_W_2ND_ADDR (0x38 >> 1)
+#define ASIC_OWL_E_2ND_ADDR (0x38 >> 1)
+#define ASIC_HAMSA_CRM_2ND_ADDR (0xD8 >> 1)
+#define ASIC_HAMSA_LS_2ND_ADDR (0xD8 >> 1)
+#define ASIC_MEDHA1_SENSOR0_2ND_ADDR (0x38 >> 1)
+#define ASIC_MEDHA1_SENSOR1_2ND_ADDR (0x38 >> 1)
+
 #define ASIC_P0V85_MEDHA0_VDD_ADDR (0x50 >> 1)
 #define ASIC_P0V85_MEDHA1_VDD_ADDR (0x4C >> 1)
 #define ASIC_P0V9_OWL_E_TRVDD_ADDR (0xEE >> 1)
@@ -325,6 +334,12 @@ typedef struct _power_capping_time_setting {
 	uint16_t case_time_ms[8];
 } power_capping_time_setting;
 
+typedef struct _temp_sensor_change_cfg {
+	uint8_t sensor_id;
+	uint8_t address;
+	uint16_t offset;
+} temp_sensor_change_cfg;
+
 enum SENSOR_THREAD_LIST {
 	TEMP_SENSOR_THREAD_ID = 0,
 	VR_SENSOR_THREAD_ID,
@@ -332,6 +347,12 @@ enum SENSOR_THREAD_LIST {
 	UBC_SENSOR_THREAD_ID,
 	EVB_SENSOR_THREAD_ID,
 	MAX_SENSOR_THREAD_ID,
+};
+
+enum TEMPERATURE_SENSOR_LIST {
+	TEMP_TMP432 = 0,
+	TEMP_EMC1413,
+	MAX_TEMP_SENSOR_LIST,
 };
 
 enum PCA9554APW_REG { INPUT_PORT = 0, OUTPUT_PORT = 1, POLARITY_INVERSION = 2, CONFIG = 3 };
@@ -373,4 +394,5 @@ uint8_t get_ioe_init_flag();
 PDR_numeric_sensor *get_pdr_numeric_sensor_by_sensor_id(uint8_t sensor_id);
 uint8_t get_pwr_capping_polling_rate_type();
 uint16_t get_quick_medha_polling_rate();
+void check_temp_sensor(uint8_t tmp_module);
 #endif

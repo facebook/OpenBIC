@@ -17,6 +17,7 @@
 #include <logging/log.h>
 #include "plat_thermal.h"
 #include "tmp431.h"
+#include "emc1413.h"
 #include "sensor.h"
 #include "plat_log.h"
 #include "plat_user_setting.h"
@@ -24,10 +25,11 @@
 #include "plat_i2c.h"
 #include "plat_pldm_sensor.h"
 #include "plat_led.h"
+#include "plat_hook.h"
 
 LOG_MODULE_REGISTER(plat_thermal);
 
-#define TMP432_HIGH_LIMIT_STATUS_REG 0x35
+#define TMP_HIGH_LIMIT_STATUS_REG 0x35
 
 struct k_thread check_thermal_thread;
 K_KERNEL_STACK_MEMBER(check_thermal_thread_stack, 1024);
@@ -72,7 +74,7 @@ void read_temp_status(uint8_t bus, uint8_t target_addr)
 {
 	uint8_t clear_status_data[1];
 	LOG_DBG("bus is %d, target_addr is 0x%x", bus, target_addr);
-	plat_i2c_read(bus, target_addr, TMP432_HIGH_LIMIT_STATUS_REG, clear_status_data, 1);
+	plat_i2c_read(bus, target_addr, TMP_HIGH_LIMIT_STATUS_REG, clear_status_data, 1);
 	LOG_DBG("temp status is 0x%x", clear_status_data[0]);
 }
 
@@ -118,9 +120,9 @@ void check_thermal_handler(void *arg1, void *arg2, void *arg3)
 				continue;
 			}
 			uint8_t status_data;
+			uint8_t remote_bit = 0;
 			//idx will base on 3
 			plat_get_temp_status(temp_alert_index_table[i].index + 3, &status_data);
-
 			// check status open
 			if (status_data & TEMP_STATUS_OPEN) {
 				// check sensor
@@ -135,13 +137,24 @@ void check_thermal_handler(void *arg1, void *arg2, void *arg3)
 					}
 				}
 			}
-
 			// if status BIT(3), BIT(4) is high than send error log;
 			if (status_data & TEMP_LIMIT_STATUS) {
-				uint8_t remote_bit =
-					(temp_cfg->offset == TMP432_REMOTE_TEMPERATRUE_1) ? BIT(1) :
-					(temp_cfg->offset == TMP432_REMOTE_TEMPERATRUE_2) ? BIT(2) :
-											    0;
+				if (temp_cfg->type == sensor_dev_tmp431) {
+					remote_bit =
+						(temp_cfg->offset == TMP432_REMOTE_TEMPERATRUE_1) ?
+							BIT(1) :
+						(temp_cfg->offset == TMP432_REMOTE_TEMPERATRUE_2) ?
+							BIT(2) :
+							0;
+				}
+				if (temp_cfg->type == sensor_dev_emc1413) {
+					remote_bit =
+						(temp_cfg->offset == EMC1413_REMOTE_TEMPERATRUE_1) ?
+							BIT(1) :
+						(temp_cfg->offset == EMC1413_REMOTE_TEMPERATRUE_2) ?
+							BIT(2) :
+							0;
+				}
 				uint8_t limit_status_reg =
 					(status_data & TEMP_STATUS_H_LIMIT) ? H_LIMIT_STATUS :
 					(status_data & TEMP_STATUS_L_LIMIT) ? L_LIMIT_STATUS :

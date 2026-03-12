@@ -113,6 +113,8 @@ void init_plat_config()
 	asic_board_id = board_id & 0x03;
 	init_vr_vendor_module();
 	change_sensor_cfg(asic_board_id, vr_module, ubc_module, board_rev_id);
+	// check temp sensor
+	check_temp_sensor(TEMP_EMC1413);
 	// cpld fru offset 0: slot
 	plat_cpld_eerprom_read(&mmc_slot, 0, 1);
 	// mmc slot 1-4 * 0x0A

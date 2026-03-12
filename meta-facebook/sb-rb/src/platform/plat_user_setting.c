@@ -29,6 +29,7 @@
 #include "sensor.h"
 #include "tmp75.h"
 #include "tmp431.h"
+#include "emc1413.h"
 #include "plat_class.h"
 #include "shell_plat_average_power.h"
 #include "shell_plat_throttle_switch.h"
@@ -201,6 +202,51 @@ bool plat_get_temp_status(uint8_t rail, uint8_t *temp_status)
 			goto err;
 		}
 		break;
+	case sensor_dev_emc1413:
+		switch (cfg->num) {
+		/*
+		SENSOR_NUM_ASIC_MEDHA0_SENSOR0_TEMP_C
+		SENSOR_NUM_ASIC_MEDHA0_SENSOR1_TEMP_C
+		SENSOR_NUM_ASIC_OWL_W_TEMP_C
+		SENSOR_NUM_ASIC_OWL_E_TEMP_C
+		SENSOR_NUM_ASIC_MEDHA1_SENSOR0_TEMP_C
+		SENSOR_NUM_ASIC_MEDHA1_SENSOR1_TEMP_C
+		SENSOR_NUM_ASIC_HAMSA_CRM_TEMP_C
+		SENSOR_NUM_ASIC_HAMSA_LS_TEMP_C
+		*/
+		case SENSOR_NUM_ASIC_MEDHA0_SENSOR0_TEMP_C:
+		case SENSOR_NUM_ASIC_MEDHA0_SENSOR1_TEMP_C:
+			if (!emc1413_get_temp_status(cfg, temp_status)) {
+				LOG_ERR("The EMC1413 MEDHA0 sensor0/1 temp status reading failed");
+				goto err;
+			}
+			break;
+		case SENSOR_NUM_ASIC_OWL_W_TEMP_C:
+		case SENSOR_NUM_ASIC_OWL_E_TEMP_C:
+			if (!emc1413_get_temp_status(cfg, temp_status)) {
+				LOG_ERR("The EMC1413 OWL W/E temp status reading failed");
+				goto err;
+			}
+			break;
+		case SENSOR_NUM_ASIC_MEDHA1_SENSOR0_TEMP_C:
+		case SENSOR_NUM_ASIC_MEDHA1_SENSOR1_TEMP_C:
+			if (!emc1413_get_temp_status(cfg, temp_status)) {
+				LOG_ERR("The EMC1413 MEDHA1 sensor0/1 temp status reading failed");
+				goto err;
+			}
+			break;
+		case SENSOR_NUM_ASIC_HAMSA_CRM_TEMP_C:
+		case SENSOR_NUM_ASIC_HAMSA_LS_TEMP_C:
+			if (!emc1413_get_temp_status(cfg, temp_status)) {
+				LOG_ERR("The EMC1413 HAMSA CRM/LS temp status reading failed");
+				goto err;
+			}
+			break;
+		default:
+			break;
+		}
+		//LOG_INF("Get temp status 0x%02x for sensor %d", *temp_status, cfg->num);
+		break;
 	default:
 		LOG_ERR("Unsupport TEMP type(%x)", cfg->type);
 		goto err;
@@ -332,6 +378,13 @@ bool set_plat_temp_threshold(uint8_t temp_index_threshold_type, uint32_t *millid
 			return false;
 		}
 		break;
+	case sensor_dev_emc1413:
+		if (!emc1413_set_temp_threshold(cfg, temp_threshold_type_tmp,
+						millidegree_celsius)) {
+			LOG_ERR("The EMC1413 temp threshold setting failed");
+			return false;
+		}
+		break;
 	default:
 		LOG_ERR("Unsupport temp type(%x)", cfg->type);
 		return false;
@@ -376,6 +429,13 @@ bool get_plat_temp_threshold(uint8_t temp_index_threshold_type, int32_t *millide
 	case sensor_dev_tmp75:
 		if (!tmp75_get_temp_threshold(cfg, temp_threshold_type_tmp, millidegree_celsius)) {
 			LOG_ERR("The TMP75 temp threshold reading failed");
+			return false;
+		}
+		break;
+	case sensor_dev_emc1413:
+		if (!emc1413_get_temp_threshold(cfg, temp_threshold_type_tmp,
+						millidegree_celsius)) {
+			LOG_ERR("The EMC1413 temp threshold reading failed");
 			return false;
 		}
 		break;
@@ -437,6 +497,13 @@ bool plat_clear_temp_status(uint8_t rail)
 	case sensor_dev_tmp75: {
 		LOG_DBG("TMP75 temp_status cannot be cleared; its behavior depends on the temp_threshold settings.");
 	} break;
+	case sensor_dev_emc1413: {
+		if (!emc1413_clear_temp_status(cfg)) {
+			LOG_ERR("The TEMP EMC1413 temp status clear failed");
+			goto err;
+		}
+		break;
+	}
 	default:
 		LOG_ERR("Unsupport TEMP type(%x)", cfg->type);
 		goto err;
@@ -486,6 +553,13 @@ bool plat_set_temp_threshold(uint8_t temp_index_threshold_type, uint32_t *millid
 	case sensor_dev_tmp75:
 		if (!tmp75_set_temp_threshold(cfg, temp_threshold_type_tmp, millidegree_celsius)) {
 			LOG_ERR("The TMP75 temp threshold setting failed");
+			return false;
+		}
+		break;
+	case sensor_dev_emc1413:
+		if (!emc1413_set_temp_threshold(cfg, temp_threshold_type_tmp,
+						millidegree_celsius)) {
+			LOG_ERR("The EMC1413 temp threshold setting failed");
 			return false;
 		}
 		break;
@@ -593,6 +667,13 @@ bool plat_get_temp_threshold(uint8_t temp_index_threshold_type, uint32_t *millid
 	case sensor_dev_tmp75:
 		if (!tmp75_get_temp_threshold(cfg, temp_threshold_type_tmp, millidegree_celsius)) {
 			LOG_ERR("The TMP75 temp threshold reading failed");
+			return false;
+		}
+		break;
+	case sensor_dev_emc1413:
+		if (!emc1413_get_temp_threshold(cfg, temp_threshold_type_tmp,
+						millidegree_celsius)) {
+			LOG_ERR("The EMC1413 temp threshold reading failed");
 			return false;
 		}
 		break;

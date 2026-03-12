@@ -17,6 +17,7 @@
 #include "pmbus.h"
 #include "sensor.h"
 #include "tmp431.h"
+#include "emc1413.h"
 #include "pldm_sensor.h"
 #include "plat_hook.h"
 #include "plat_i2c.h"
@@ -12814,4 +12815,87 @@ uint8_t sensor_polling_cmd(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t 
 exit:
 	*resp_len = sizeof(struct _sensor_polling_cmd_resp);
 	return PLDM_SUCCESS;
+}
+
+uint8_t sensor_polling_cmd(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t instance_id,
+			   uint8_t *resp, uint16_t *resp_len, void *ext_params)
+{
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp_len, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(ext_params, PLDM_ERROR);
+
+	struct _sensor_polling_cmd_req *req_p = (struct _sensor_polling_cmd_req *)buf;
+	struct _sensor_polling_cmd_resp *resp_p = (struct _sensor_polling_cmd_resp *)resp;
+
+	if (len < (sizeof(*req_p) - 1)) {
+		LOG_WRN("request len %d is invalid", len);
+		resp_p->completion_code = PLDM_ERROR_INVALID_LENGTH;
+		set_iana(resp_p->iana, sizeof(resp_p->iana));
+		goto exit;
+	}
+
+	if (check_iana(req_p->iana) == PLDM_ERROR) {
+		resp_p->completion_code = PLDM_ERROR_INVALID_DATA;
+		set_iana(resp_p->iana, sizeof(resp_p->iana));
+		goto exit;
+	}
+
+	if (!(req_p->set_value == 1 || req_p->set_value == 0)) {
+		LOG_ERR("set sensor_polling:%x is out of range", req_p->set_value);
+		resp_p->completion_code = PLDM_ERROR_INVALID_DATA;
+		set_iana(resp_p->iana, sizeof(resp_p->iana));
+		goto exit;
+	}
+
+	set_plat_sensor_polling_enable_flag(req_p->set_value);
+
+	LOG_INF("set sensor_polling:%x success", req_p->set_value);
+	resp_p->completion_code = PLDM_SUCCESS;
+	set_iana(resp_p->iana, sizeof(resp_p->iana));
+	resp_p->set_value = req_p->set_value;
+
+exit:
+	*resp_len = sizeof(struct _sensor_polling_cmd_resp);
+	return PLDM_SUCCESS;
+}
+
+temp_sensor_change_cfg change_mapping_table[] = {
+	{ SENSOR_NUM_ASIC_MEDHA0_SENSOR0_TEMP_C, ASIC_MEDHA0_SENSOR0_2ND_ADDR,
+	  EMC1413_REMOTE_TEMPERATRUE_1 },
+	{ SENSOR_NUM_ASIC_MEDHA0_SENSOR1_TEMP_C, ASIC_MEDHA0_SENSOR1_2ND_ADDR,
+	  EMC1413_REMOTE_TEMPERATRUE_2 },
+	{ SENSOR_NUM_ASIC_OWL_W_TEMP_C, ASIC_OWL_W_2ND_ADDR, EMC1413_REMOTE_TEMPERATRUE_1 },
+	{ SENSOR_NUM_ASIC_OWL_E_TEMP_C, ASIC_OWL_E_2ND_ADDR, EMC1413_REMOTE_TEMPERATRUE_2 },
+	{ SENSOR_NUM_ASIC_MEDHA1_SENSOR0_TEMP_C, ASIC_MEDHA1_SENSOR0_2ND_ADDR,
+	  EMC1413_REMOTE_TEMPERATRUE_1 },
+	{ SENSOR_NUM_ASIC_MEDHA1_SENSOR1_TEMP_C, ASIC_MEDHA1_SENSOR1_2ND_ADDR,
+	  EMC1413_REMOTE_TEMPERATRUE_2 },
+	{ SENSOR_NUM_ASIC_HAMSA_CRM_TEMP_C, ASIC_HAMSA_CRM_2ND_ADDR, EMC1413_REMOTE_TEMPERATRUE_1 },
+	{ SENSOR_NUM_ASIC_HAMSA_LS_TEMP_C, ASIC_HAMSA_LS_2ND_ADDR, EMC1413_REMOTE_TEMPERATRUE_2 },
+};
+void check_temp_sensor(uint8_t tmp_module)
+{
+	if (tmp_module == TEMP_EMC1413) {
+		//change temp sensor type and address to em1413
+		uint8_t table_size = sizeof(plat_pldm_sensor_temp_table) /
+				     sizeof(plat_pldm_sensor_temp_table[0]);
+		for (int i = 0; i < table_size; i++) {
+			for (int j = 0;
+			     j < sizeof(change_mapping_table) / sizeof(temp_sensor_change_cfg);
+			     j++) {
+				if (plat_pldm_sensor_temp_table[i].pldm_sensor_cfg.num ==
+				    change_mapping_table[j].sensor_id) {
+					plat_pldm_sensor_temp_table[i].pldm_sensor_cfg.type =
+						sensor_dev_emc1413;
+					plat_pldm_sensor_temp_table[i].pldm_sensor_cfg.target_addr =
+						change_mapping_table[j].address;
+					plat_pldm_sensor_temp_table[i].pldm_sensor_cfg.offset =
+						change_mapping_table[j].offset;
+					break;
+				}
+			}
+		}
+	}
 }

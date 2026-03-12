@@ -32,6 +32,7 @@
 #include "shell_plat_average_power.h"
 #include "plat_ioexp.h"
 #include "tmp431.h"
+#include "emc1413.h"
 #include "plat_util.h"
 
 LOG_MODULE_REGISTER(plat_hook);
@@ -120,22 +121,103 @@ bool post_common_sensor_read(sensor_cfg *cfg, void *args, int *const reading)
 	return true;
 }
 
+uint8_t emc1413_cache_status_0 = 0;
+uint8_t emc1413_cache_status_1 = 0;
+uint8_t emc1413_cache_status_2 = 0;
+uint8_t emc1413_cache_status_3 = 0;
+
+bool emc1413_check_open_status(sensor_cfg *cfg, uint8_t status)
+{
+	uint8_t bit = (cfg->offset == EMC1413_REMOTE_TEMPERATRUE_1) ? BIT(1) :
+		      (cfg->offset == EMC1413_REMOTE_TEMPERATRUE_2) ? BIT(2) :
+								      0;
+	// only check BIT(1), BIT(2)
+	if (status & bit) {
+		cfg->cache_status = SENSOR_OPEN_CIRCUIT;
+		return false;
+	}
+	return true;
+}
+
 bool post_tmp432_read(sensor_cfg *cfg, void *args, int *reading)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	ARG_UNUSED(args);
 	ARG_UNUSED(reading);
+	uint8_t bit = 0;
 
-	uint8_t status = 0;
-
-	if (tmp432_get_temp_open_status(cfg, &status)) {
-		uint8_t bit = (cfg->offset == TMP432_REMOTE_TEMPERATRUE_1) ? BIT(1) :
+	if (cfg->type == sensor_dev_tmp431) {
+		uint8_t status = 0;
+		if (tmp432_get_temp_open_status(cfg, &status)) {
+			bit = (cfg->offset == TMP432_REMOTE_TEMPERATRUE_1) ? BIT(1) :
 			      (cfg->offset == TMP432_REMOTE_TEMPERATRUE_2) ? BIT(2) :
 									     0;
-		// only check BIT(1), BIT(2)
-		if (status & bit) {
-			cfg->cache_status = SENSOR_OPEN_CIRCUIT;
-			return false;
+			// only check BIT(1), BIT(2)
+			if (status & bit) {
+				cfg->cache_status = SENSOR_OPEN_CIRCUIT;
+				return false;
+			}
+		}
+	}
+
+	if (cfg->type == sensor_dev_emc1413) {
+		switch (cfg->num) {
+		/*
+		SENSOR_NUM_ASIC_MEDHA0_SENSOR0_TEMP_C
+		SENSOR_NUM_ASIC_MEDHA0_SENSOR1_TEMP_C
+		SENSOR_NUM_ASIC_OWL_W_TEMP_C
+		SENSOR_NUM_ASIC_OWL_E_TEMP_C
+		SENSOR_NUM_ASIC_MEDHA1_SENSOR0_TEMP_C
+		SENSOR_NUM_ASIC_MEDHA1_SENSOR1_TEMP_C
+		SENSOR_NUM_ASIC_HAMSA_CRM_TEMP_C
+		SENSOR_NUM_ASIC_HAMSA_LS_TEMP_C
+		*/
+		case SENSOR_NUM_ASIC_MEDHA0_SENSOR0_TEMP_C:
+			if (emc1413_get_temp_open_status(cfg, &emc1413_cache_status_0)) {
+				// update the open status to cache
+				if (!emc1413_check_open_status(cfg, emc1413_cache_status_0))
+					return false;
+			}
+			break;
+		case SENSOR_NUM_ASIC_MEDHA0_SENSOR1_TEMP_C:
+			if (!emc1413_check_open_status(cfg, emc1413_cache_status_0))
+				return false;
+			break;
+		case SENSOR_NUM_ASIC_OWL_W_TEMP_C:
+			if (emc1413_get_temp_open_status(cfg, &emc1413_cache_status_1)) {
+				// update the open status to cache
+				if (!emc1413_check_open_status(cfg, emc1413_cache_status_1))
+					return false;
+			}
+			break;
+		case SENSOR_NUM_ASIC_OWL_E_TEMP_C:
+			if (!emc1413_check_open_status(cfg, emc1413_cache_status_1))
+				return false;
+			break;
+		case SENSOR_NUM_ASIC_MEDHA1_SENSOR0_TEMP_C:
+			if (emc1413_get_temp_open_status(cfg, &emc1413_cache_status_2)) {
+				// update the open status to cache
+				if (!emc1413_check_open_status(cfg, emc1413_cache_status_2))
+					return false;
+			}
+			break;
+		case SENSOR_NUM_ASIC_MEDHA1_SENSOR1_TEMP_C:
+			if (!emc1413_check_open_status(cfg, emc1413_cache_status_2))
+				return false;
+			break;
+		case SENSOR_NUM_ASIC_HAMSA_CRM_TEMP_C:
+			if (emc1413_get_temp_open_status(cfg, &emc1413_cache_status_3)) {
+				// update the open status to cache
+				if (!emc1413_check_open_status(cfg, emc1413_cache_status_3))
+					return false;
+			}
+			break;
+		case SENSOR_NUM_ASIC_HAMSA_LS_TEMP_C:
+			if (!emc1413_check_open_status(cfg, emc1413_cache_status_3))
+				return false;
+			break;
+		default:
+			break;
 		}
 	}
 
@@ -1676,4 +1758,14 @@ void set_delta_ubc_time_of_vout_rise()
 			LOG_INF("save UBC command bus: %d, address: 0x%x", bus, addr);
 		}
 	}
+}
+uint8_t get_emc1413_cache_status(uint8_t idx)
+{
+	uint8_t cache_status[4] = { emc1413_cache_status_0, emc1413_cache_status_1,
+				    emc1413_cache_status_2, emc1413_cache_status_3 };
+	if (idx > 3) {
+		LOG_ERR("Invalid emc1413 cache status index %u", idx);
+		return 0;
+	}
+	return cache_status[idx];
 }
