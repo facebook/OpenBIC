@@ -36,7 +36,7 @@ LOG_MODULE_REGISTER(plat_hook);
 static struct k_mutex vr_mutex[VR_MAX_NUM];
 
 #define EEPROM_MAX_WRITE_TIME 5 // the BR24G512 eeprom max write time is 3.5 ms
-
+/* VR */
 // clang-format off
 vr_pre_proc_arg vr_pre_read_args[] = {
 	{ .mutex = vr_mutex + 0, .vr_page = 0x0 },  { .mutex = vr_mutex + 0, .vr_page = 0x1 },
@@ -58,7 +58,6 @@ vr_pre_proc_arg vr_pre_read_args[] = {
 mp2971_init_arg mp2971_init_args[] = {
 	[0] = { .vout_scale_enable = true },
 };
-
 // clang-format on
 
 void *vr_mutex_get(enum VR_INDEX_E vr_index)
@@ -230,6 +229,7 @@ vr_mapping_status vr_status_table[] = {
 	{ VR_STAUS_E_STATUS_CML, PMBUS_STATUS_CML, "STATUS_CML_PMBUS" },
 };
 
+/* bootstrap */
 bootstrap_mapping_register bootstrap_table[] = {
 	{ STRAP_INDEX_HAMSA_TEST_STRAP_R, STRAP_TYPE_CPLD,0x16, "HAMSA_TEST_STRAP_R", 4, 1, 0x0,
 	  0x0, false },
@@ -329,23 +329,23 @@ bootstrap_mapping_register bootstrap_table[] = {
 	{ STRAP_INDEX_OWL_W_BOOT_SOURCE_0_7, STRAP_TYPE_IOEXP_PCA6416A, PCA6414A_OUTPUT_PORT_1,
 	  "OWL_W_BOOT_SOURCE_0_7", 0, 8, 0x0, 0x0, false },
 	{ STRAP_INDEX_HAMSA_MFIO6, STRAP_TYPE_IOEXP_TCA6424A, TCA6424A_OUTPUT_PORT_1, "HAMSA_MFIO6",
-	  6, 1, 0x0, 0x0, false },
+	  HAMSA_MFIO6_BIT, 1, 0x0, 0x0, false },
 	{ STRAP_INDEX_HAMSA_MFIO8, STRAP_TYPE_IOEXP_TCA6424A, TCA6424A_OUTPUT_PORT_1, "HAMSA_MFIO8",
-	  7, 1, 0x0, 0x0, false },
+	  HAMSA_MFIO8_BIT, 1, 0x0, 0x0, false },
 	{ STRAP_INDEX_HAMSA_MFIO10, STRAP_TYPE_IOEXP_TCA6424A, TCA6424A_OUTPUT_PORT_2,
 	  "HAMSA_MFIO10", 0, 1, 0x0, 0x0, false },
-	{ STRAP_INDEX_NUWA0_MFIO6, STRAP_TYPE_IOEXP_TCA6424A, TCA6424A_OUTPUT_PORT_2,
-	  "NUWA0_MFIO6", 7, 1, 0x0, 0x0, false },
-	{ STRAP_INDEX_NUWA0_MFIO8, STRAP_TYPE_IOEXP_TCA6424A, TCA6424A_OUTPUT_PORT_2,
-	  "NUWA0_MFIO8", 6, 1, 0x0, 0x0, false },
-	{ STRAP_INDEX_NUWA0_MFIO10, STRAP_TYPE_IOEXP_TCA6424A, TCA6424A_OUTPUT_PORT_2,
-	  "NUWA0_MFIO10", 5, 1, 0x0, 0x0, false },
-	{ STRAP_INDEX_NUWA1_MFIO6, STRAP_TYPE_IOEXP_TCA6424A, TCA6424A_OUTPUT_PORT_2,
-	  "NUWA1_MFIO6", 4, 1, 0x0, 0x0, false },
-	{ STRAP_INDEX_NUWA1_MFIO8, STRAP_TYPE_IOEXP_TCA6424A, TCA6424A_OUTPUT_PORT_2,
-	  "NUWA1_MFIO8", 3, 1, 0x0, 0x0, false },
-	{ STRAP_INDEX_NUWA1_MFIO10, STRAP_TYPE_IOEXP_TCA6424A, TCA6424A_OUTPUT_PORT_2,
-	  "NUWA1_MFIO10", 2, 1, 0x0, 0x0, false },
+	{ STRAP_INDEX_NUWA0_MFIO6, STRAP_TYPE_IOEXP_TCAL6408R, TCAL6408R_OUTPUT_PORT_0,
+	  "NUWA0_MFIO6", NUWA0_MFIO6_BIT, 1, 0x0, 0x0, false },
+	{ STRAP_INDEX_NUWA0_MFIO8, STRAP_TYPE_IOEXP_TCAL6408R, TCAL6408R_OUTPUT_PORT_0,
+	  "NUWA0_MFIO8", NUWA0_MFIO8_BIT, 1, 0x0, 0x0, false },
+	{ STRAP_INDEX_NUWA0_MFIO10, STRAP_TYPE_IOEXP_TCAL6408R, TCAL6408R_OUTPUT_PORT_0,
+	  "NUWA0_MFIO10", NUWA0_MFIO10_BIT, 1, 0x0, 0x0, false },
+	{ STRAP_INDEX_NUWA1_MFIO6, STRAP_TYPE_IOEXP_TCAL6408R, TCAL6408R_OUTPUT_PORT_0,
+	  "NUWA1_MFIO6", NUWA1_MFIO6_BIT, 1, 0x0, 0x0, false },
+	{ STRAP_INDEX_NUWA1_MFIO8, STRAP_TYPE_IOEXP_TCAL6408R, TCAL6408R_OUTPUT_PORT_0,
+	  "NUWA1_MFIO8", NUWA1_MFIO8_BIT, 1, 0x0, 0x0, false },
+	{ STRAP_INDEX_NUWA1_MFIO10, STRAP_TYPE_IOEXP_TCAL6408R, TCAL6408R_OUTPUT_PORT_0,
+	  "NUWA1_MFIO10", NUWA1_MFIO10_BIT, 1, 0x0, 0x0, false },
 };
 // clang-format on
 
@@ -609,33 +609,31 @@ bool set_ioexp_val_to_bootstrap_table(void)
 			(data[1] & (~direction[1]));
 	}
 
-	// wait for evb
-	// tca6424a only in EVB
-	// if (is_tca6424a_accessible()) {
-	// 	if (!tca6424a_i2c_read(TCA6424A_OUTPUT_PORT_1, data, 2)) {
-	// 		LOG_ERR("Can't find bootstrap value from tca6424a");
-	// 		return false;
-	// 	}
-	// 	if (!tca6424a_i2c_read(TCA6424A_CONFIG_1, direction, 2)) {
-	// 		LOG_ERR("Can't find bootstrap direction from tca6424a");
-	// 		return false;
-	// 	}
-	// 	for (uint8_t i = STRAP_INDEX_HAMSA_MFIO6; i <= STRAP_INDEX_MEDHA1_MFIO10; i++) {
-	// 		// check data from port1 or port2
-	// 		uint8_t dir = (bootstrap_table[i].cpld_offsets == TCA6424A_OUTPUT_PORT_1) ?
-	// 				      direction[0] :
-	// 				      direction[1];
-	// 		uint8_t tmp = (bootstrap_table[i].cpld_offsets == TCA6424A_OUTPUT_PORT_1) ?
-	// 				      data[0] :
-	// 				      data[1];
-	// 		// set when output only
-	// 		if ((dir >> bootstrap_table[i].bit_offset) & 0x01) {
-	// 			continue;
-	// 		}
-	// 		bootstrap_table[i].change_setting_value =
-	// 			(tmp >> bootstrap_table[i].bit_offset) & 0x01;
-	// 	}
-	// }
+	if (is_evb_ioe_accessible()) {
+		if (!tca6424a_i2c_read(TCA6424A_OUTPUT_PORT_1, data, 2)) {
+			LOG_ERR("Can't find bootstrap value from tca6424a");
+			return false;
+		}
+		if (!tca6424a_i2c_read(TCA6424A_CONFIG_1, direction, 2)) {
+			LOG_ERR("Can't find bootstrap direction from tca6424a");
+			return false;
+		}
+		for (uint8_t i = STRAP_INDEX_HAMSA_MFIO6; i <= STRAP_INDEX_NUWA1_MFIO10; i++) {
+			// check data from port1 or port2
+			uint8_t dir = (bootstrap_table[i].cpld_offsets == TCA6424A_OUTPUT_PORT_1) ?
+					      direction[0] :
+					      direction[1];
+			uint8_t tmp = (bootstrap_table[i].cpld_offsets == TCA6424A_OUTPUT_PORT_1) ?
+					      data[0] :
+					      data[1];
+			// set when output only
+			if ((dir >> bootstrap_table[i].bit_offset) & 0x01) {
+				continue;
+			}
+			bootstrap_table[i].change_setting_value =
+				(tmp >> bootstrap_table[i].bit_offset) & 0x01;
+		}
+	}
 
 	return true;
 }
@@ -673,6 +671,8 @@ static inline uint8_t get_val_from_strap_index(uint8_t strap_index)
 bool set_bootstrap_table_val_to_ioexp(void)
 {
 	uint8_t data[2] = { 0 };
+
+	/* 1) PCA6416A: OWL boot source */
 	data[0] = bootstrap_table[STRAP_INDEX_OWL_E_BOOT_SOURCE_0_7].change_setting_value;
 	data[1] = bootstrap_table[STRAP_INDEX_OWL_W_BOOT_SOURCE_0_7].change_setting_value;
 	if (!pca6416a_i2c_write(PCA6414A_OUTPUT_PORT_0, data, 2)) {
@@ -680,24 +680,39 @@ bool set_bootstrap_table_val_to_ioexp(void)
 		return false;
 	}
 
-	// tca6424a only in EVB
-	// wait for evb
-	// if (is_tca6424a_accessible()) {
-	// 	uint8_t port1_data = 0;
-	// 	uint8_t port2_data = 0;
-	// 	for (uint8_t i = STRAP_INDEX_HAMSA_MFIO6; i <= STRAP_INDEX_MEDHA1_MFIO10; i++) {
-	// 		if (bootstrap_table[i].cpld_offsets == TCA6424A_OUTPUT_PORT_1)
-	// 			port1_data |= get_val_from_strap_index(i);
-	// 		else
-	// 			port2_data |= get_val_from_strap_index(i);
-	// 	}
-	// 	data[0] = port1_data;
-	// 	data[1] = port2_data;
-	// 	if (!tca6424a_i2c_write(TCA6424A_OUTPUT_PORT_1, data, 2)) {
-	// 		LOG_ERR("Can't set tca6424a from bootstrap_table");
-	// 		return false;
-	// 	}
-	// }
+	/* 2) EVB-only IO expanders */
+	if (is_evb_ioe_accessible()) {
+		/* 2-1) HAMSA straps -> TCA6424A (legacy) */
+		uint8_t port1_data = 0;
+		uint8_t port2_data = 0;
+
+		/* Only HAMSA_MFIO6/8/10 stay on TCA6424A */
+		for (uint8_t i = STRAP_INDEX_HAMSA_MFIO6; i <= STRAP_INDEX_HAMSA_MFIO10; i++) {
+			if (bootstrap_table[i].cpld_offsets == TCA6424A_OUTPUT_PORT_1) {
+				port1_data |= get_val_from_strap_index(i);
+			} else {
+				port2_data |= get_val_from_strap_index(i);
+			}
+		}
+
+		data[0] = port1_data;
+		data[1] = port2_data;
+		if (!tca6424a_i2c_write(TCA6424A_OUTPUT_PORT_1, data, 2)) {
+			LOG_ERR("Can't set tca6424a (HAMSA) from bootstrap_table");
+			return false;
+		}
+
+		uint8_t nuwa_out = 0;
+		/* Only NUWA_MFIO6/8/10 stay on TCAL6408R */
+		for (uint8_t i = STRAP_INDEX_NUWA0_MFIO6; i <= STRAP_INDEX_NUWA1_MFIO10; i++) {
+			nuwa_out |= get_val_from_strap_index(i);
+		}
+
+		if (!tcal6408r_i2c_write(TCAL6408R_OUTPUT_PORT_0, &nuwa_out, 1)) {
+			LOG_ERR("Can't set tcal6408r (NUWA) from bootstrap_table");
+			return false;
+		}
+	}
 
 	return true;
 }
@@ -879,30 +894,30 @@ bool set_bootstrap_val_to_device(uint8_t strap, uint8_t val)
 		}
 		/* when TEST_STRAP to 0, change MFIO 6 8 10 to INPUT  */
 		/* when TEST_STRAP to 1, change MFIO 6 8 10 to OUTPUT */
-		// if (is_tca6424a_accessible()) {
-		// 	if (bootstrap_table[strap].index == STRAP_INDEX_HAMSA_TEST_STRAP_R) {
-		// 		if ((val & BIT(bootstrap_table[strap].bit_offset)) == 0) {
-		// 			set_hamsa_mfio_6_8_10_input();
-		// 		} else {
-		// 			set_hamsa_mfio_6_8_10_output();
-		// 			set_bootstrap_table_val_to_ioexp();
-		// 		}
-		// 	} else if (bootstrap_table[strap].index == STRAP_INDEX_MEDHA0_TEST_STRAP) {
-		// 		if ((val & BIT(bootstrap_table[strap].bit_offset)) == 0) {
-		// 			set_medha0_mfio_6_8_10_input();
-		// 		} else {
-		// 			set_medha0_mfio_6_8_10_output();
-		// 			set_bootstrap_table_val_to_ioexp();
-		// 		}
-		// 	} else if (bootstrap_table[strap].index == STRAP_INDEX_MEDHA1_TEST_STRAP) {
-		// 		if ((val & BIT(bootstrap_table[strap].bit_offset)) == 0) {
-		// 			set_medha1_mfio_6_8_10_input();
-		// 		} else {
-		// 			set_medha1_mfio_6_8_10_output();
-		// 			set_bootstrap_table_val_to_ioexp();
-		// 		}
-		// 	}
-		// }
+		if (is_evb_ioe_accessible()) {
+			if (bootstrap_table[strap].index == STRAP_INDEX_HAMSA_TEST_STRAP_R) {
+				if ((val & BIT(bootstrap_table[strap].bit_offset)) == 0) {
+					set_hamsa_mfio_6_8_10_input();
+				} else {
+					set_hamsa_mfio_6_8_10_output();
+					set_bootstrap_table_val_to_ioexp();
+				}
+			} else if (bootstrap_table[strap].index == STRAP_INDEX_NUWA0_TEST_STRAP) {
+				if ((val & BIT(bootstrap_table[strap].bit_offset)) == 0) {
+					set_nuwa0_mfio_6_8_10_input();
+				} else {
+					set_nuwa0_mfio_6_8_10_output();
+					set_bootstrap_table_val_to_ioexp();
+				}
+			} else if (bootstrap_table[strap].index == STRAP_INDEX_NUWA1_TEST_STRAP) {
+				if ((val & BIT(bootstrap_table[strap].bit_offset)) == 0) {
+					set_nuwa1_mfio_6_8_10_input();
+				} else {
+					set_nuwa1_mfio_6_8_10_output();
+					set_bootstrap_table_val_to_ioexp();
+				}
+			}
+		}
 		break;
 	case STRAP_TYPE_IOEXP_PCA6416A:
 		if (is_mb_dc_on()) {
@@ -910,13 +925,18 @@ bool set_bootstrap_val_to_device(uint8_t strap, uint8_t val)
 				return false;
 		}
 		break;
-	// case STRAP_TYPE_IOEXP_TCA6424A:
-	// 	// tca6424a only in EVB
-	// 	if (is_tca6424a_accessible()) {
-	// 		if (!tca6424a_i2c_write(bootstrap_table[strap].cpld_offsets, &val, 1))
-	// 			return false;
-	// 	}
-	// 	break;
+	case STRAP_TYPE_IOEXP_TCA6424A:
+		if (is_evb_ioe_accessible()) {
+			if (!tca6424a_i2c_write(bootstrap_table[strap].cpld_offsets, &val, 1))
+				return false;
+		}
+		break;
+	case STRAP_TYPE_IOEXP_TCAL6408R:
+		if (is_evb_ioe_accessible()) {
+			if (!tcal6408r_i2c_write(bootstrap_table[strap].cpld_offsets, &val, 1))
+				return false;
+		}
+		break;
 	default:
 		LOG_ERR("Invalid bootstrap_table[%d] type: %d", strap, type);
 		return false;
