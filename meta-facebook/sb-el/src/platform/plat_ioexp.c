@@ -25,14 +25,7 @@
 
 LOG_MODULE_REGISTER(plat_ioexp);
 
-#define PCA6414A_BUS I2C_BUS1
-#define PCA6414A_ADDR (0x40 >> 1)
-
-#define TCA6424A_BUS I2C_BUS1
-#define TCA6424A_ADDR (0x44 >> 1)
-#define TCA6424A_AI_BIT BIT(7) // Auto-Increment bit
-
-// pca6414a
+/* pca6414a */
 bool pca6416a_i2c_read(uint8_t offset, uint8_t *data, uint8_t len)
 {
 	return plat_i2c_read(PCA6414A_BUS, PCA6414A_ADDR, offset, data, len);
@@ -52,57 +45,10 @@ bool pca6416a_init(void)
 	return true;
 }
 
-// tca6424a
-bool is_tca6424a_accessible()
-{
-	return (get_asic_board_id() == ASIC_BOARD_ID_EVB && is_mb_dc_on());
-}
-
+/* tca6424a */
 bool tca6424a_i2c_read(uint8_t offset, uint8_t *data, uint8_t len)
 {
 	return plat_i2c_read(TCA6424A_BUS, TCA6424A_ADDR, (offset | TCA6424A_AI_BIT), data, len);
-}
-
-bool tca6424a_i2c_read_drive_value(uint8_t group, uint8_t bit, uint8_t *data)
-{
-	uint8_t value = 0;
-	uint8_t confg_reg = 0;
-	uint8_t input_reg = 0;
-	uint8_t output_reg = 0;
-
-	if (group == 0) {
-		confg_reg = TCA6424A_CONFIG_0;
-		input_reg = TCA6424A_INPUT_PORT_0;
-		output_reg = TCA6424A_OUTPUT_PORT_0;
-	} else if (group == 1) {
-		confg_reg = TCA6424A_CONFIG_1;
-		input_reg = TCA6424A_INPUT_PORT_1;
-		output_reg = TCA6424A_OUTPUT_PORT_1;
-	} else if (group == 2) {
-		confg_reg = TCA6424A_CONFIG_2;
-		input_reg = TCA6424A_INPUT_PORT_2;
-		output_reg = TCA6424A_OUTPUT_PORT_2;
-	} else {
-		LOG_ERR("Wrong group!");
-		return false;
-	}
-
-	if (!tca6424a_i2c_read(confg_reg, &value, 1)) {
-		return false;
-	}
-
-	if (value & BIT(bit)) {
-		if (!tca6424a_i2c_read(input_reg, &value, 1)) {
-			return false;
-		}
-	} else {
-		if (!tca6424a_i2c_read(output_reg, &value, 1)) {
-			return false;
-		}
-	}
-	*data = (value & BIT(bit)) >> bit;
-
-	return true;
 }
 
 bool tca6424a_i2c_write(uint8_t offset, uint8_t *data, uint8_t len)
@@ -135,44 +81,16 @@ bool tca6424a_i2c_write_bit(uint8_t offset, uint8_t bit, uint8_t val)
 
 void set_hamsa_mfio_6_8_10_input()
 {
-	tca6424a_i2c_write_bit(TCA6424A_CONFIG_1, HAMSA_MFIO6, 1);
-	tca6424a_i2c_write_bit(TCA6424A_CONFIG_1, HAMSA_MFIO8, 1);
-	tca6424a_i2c_write_bit(TCA6424A_CONFIG_2, HAMSA_MFIO10, 1);
-}
-
-void set_nuwa0_mfio_6_8_10_input()
-{
-	tca6424a_i2c_write_bit(TCA6424A_CONFIG_2, NUWA0_MFIO6, 1);
-	tca6424a_i2c_write_bit(TCA6424A_CONFIG_2, NUWA0_MFIO8, 1);
-	tca6424a_i2c_write_bit(TCA6424A_CONFIG_2, NUWA0_MFIO10, 1);
-}
-
-void set_nuwa1_mfio_6_8_10_input()
-{
-	tca6424a_i2c_write_bit(TCA6424A_CONFIG_2, NUWA1_MFIO6, 1);
-	tca6424a_i2c_write_bit(TCA6424A_CONFIG_2, NUWA1_MFIO8, 1);
-	tca6424a_i2c_write_bit(TCA6424A_CONFIG_2, NUWA1_MFIO10, 1);
+	tca6424a_i2c_write_bit(TCA6424A_CONFIG_1, HAMSA_MFIO6_BIT, 1);
+	tca6424a_i2c_write_bit(TCA6424A_CONFIG_1, HAMSA_MFIO8_BIT, 1);
+	tca6424a_i2c_write_bit(TCA6424A_CONFIG_2, HAMSA_MFIO10_BIT, 1);
 }
 
 void set_hamsa_mfio_6_8_10_output()
 {
-	tca6424a_i2c_write_bit(TCA6424A_CONFIG_1, HAMSA_MFIO6, 0);
-	tca6424a_i2c_write_bit(TCA6424A_CONFIG_1, HAMSA_MFIO8, 0);
-	tca6424a_i2c_write_bit(TCA6424A_CONFIG_2, HAMSA_MFIO10, 0);
-}
-
-void set_nuwa0_mfio_6_8_10_output()
-{
-	tca6424a_i2c_write_bit(TCA6424A_CONFIG_2, NUWA0_MFIO6, 0);
-	tca6424a_i2c_write_bit(TCA6424A_CONFIG_2, NUWA0_MFIO8, 0);
-	tca6424a_i2c_write_bit(TCA6424A_CONFIG_2, NUWA0_MFIO10, 0);
-}
-
-void set_nuwa1_mfio_6_8_10_output()
-{
-	tca6424a_i2c_write_bit(TCA6424A_CONFIG_2, NUWA1_MFIO6, 0);
-	tca6424a_i2c_write_bit(TCA6424A_CONFIG_2, NUWA1_MFIO8, 0);
-	tca6424a_i2c_write_bit(TCA6424A_CONFIG_2, NUWA1_MFIO10, 0);
+	tca6424a_i2c_write_bit(TCA6424A_CONFIG_1, HAMSA_MFIO6_BIT, 0);
+	tca6424a_i2c_write_bit(TCA6424A_CONFIG_1, HAMSA_MFIO8_BIT, 0);
+	tca6424a_i2c_write_bit(TCA6424A_CONFIG_2, HAMSA_MFIO10_BIT, 0);
 }
 
 bool tca6424a_init(void)
@@ -182,45 +100,14 @@ bool tca6424a_init(void)
 		return false;
 
 	//set HAMSA_MFIO19(VR_HOT_EVB_BIT) to default 0
-	if (!tca6424a_i2c_write_bit(TCA6424A_OUTPUT_PORT_0, HAMSA_MFIO19, 0)) {
+	if (!tca6424a_i2c_write_bit(TCA6424A_OUTPUT_PORT_0, HAMSA_MFIO19_BIT, 0)) {
 		return false;
 	}
 
 	return true;
 }
 
-// total
-void ioexp_init(void)
-{
-	// read from IO, save value (if output) to table
-	set_ioexp_val_to_bootstrap_table();
-
-	if (!pca6416a_init())
-		LOG_ERR("pca6416a init fail");
-
-	if (is_tca6424a_accessible()) {
-		if (!tca6424a_init())
-			LOG_ERR("tca6424a init fail");
-	}
-
-	// set to output if TEST_STRAP enable
-	int drive_level = 0;
-	get_bootstrap_change_drive_level(STRAP_INDEX_HAMSA_TEST_STRAP_R, &drive_level);
-	if (drive_level == 1) {
-		set_hamsa_mfio_6_8_10_output();
-	}
-	get_bootstrap_change_drive_level(STRAP_INDEX_NUWA0_TEST_STRAP, &drive_level);
-	if (drive_level == 1) {
-		set_nuwa0_mfio_6_8_10_output();
-	}
-	get_bootstrap_change_drive_level(STRAP_INDEX_NUWA1_TEST_STRAP, &drive_level);
-	if (drive_level == 1) {
-		set_nuwa1_mfio_6_8_10_output();
-	}
-
-	// set value from table
-	set_bootstrap_table_val_to_ioexp();
-}
+/* pca6554apw */
 void set_pca6554apw_ioe_value(uint8_t ioe_bus, uint8_t ioe_addr, uint8_t ioe_reg, uint8_t value)
 {
 	uint8_t retry = 5;
@@ -265,7 +152,6 @@ int get_pca6554apw_ioe_value(uint8_t ioe_bus, uint8_t ioe_addr, uint8_t ioe_reg,
 	return 0;
 }
 
-//evb only
 void init_U200052_IO()
 {
 	LOG_INF("init U200052 IO expander");
@@ -275,7 +161,7 @@ void init_U200052_IO()
 	set_pca6554apw_ioe_value(U200052_IO_I2C_BUS, U200052_IO_ADDR, OUTPUT_PORT,
 				 U200052_IO_INIT_VAL);
 }
-//evb only
+
 void init_U200053_IO()
 {
 	LOG_INF("init U200053 IO expander");
@@ -285,7 +171,7 @@ void init_U200053_IO()
 	set_pca6554apw_ioe_value(U200053_IO_I2C_BUS, U200053_IO_ADDR, OUTPUT_PORT,
 				 U200053_IO_INIT_VAL);
 }
-//evb2 only
+
 void init_U200070_IO()
 {
 	LOG_INF("init U200070 IO expander");
@@ -294,4 +180,139 @@ void init_U200070_IO()
 	// io0,io1,io2 default output 1 io7 default output 0
 	set_pca6554apw_ioe_value(U200070_IO_I2C_BUS, U200070_IO_ADDR, OUTPUT_PORT,
 				 U200070_IO_INIT_VAL);
+}
+
+/* tcal6408r */
+bool tcal6408r_i2c_read(uint8_t offset, uint8_t *data, uint8_t len)
+{
+	if (data == NULL || len == 0) {
+		return false;
+	}
+	return plat_i2c_read(TCAL6408R_BUS, TCAL6408R_ADDR, offset, data, len);
+}
+
+bool tcal6408r_i2c_write(uint8_t offset, uint8_t *data, uint8_t len)
+{
+	if (data == NULL || len == 0) {
+		return false;
+	}
+	return plat_i2c_write(TCAL6408R_BUS, TCAL6408R_ADDR, offset, data, len);
+}
+
+bool tcal6408r_i2c_write_bit(uint8_t offset, uint8_t bit, uint8_t val)
+{
+	if (bit >= 8) {
+		LOG_ERR("tcal6408r: invalid bit %d", bit);
+		return false;
+	}
+
+	uint8_t current_val = 0;
+	if (!tcal6408r_i2c_read(offset, &current_val, 1)) {
+		LOG_ERR("tcal6408r: read reg 0x%02x fail", offset);
+		return false;
+	}
+
+	uint8_t new_val;
+	if (val) {
+		new_val = current_val | BIT(bit);
+	} else {
+		new_val = current_val & ~BIT(bit);
+	}
+
+	if (new_val == current_val) {
+		return true;
+	}
+
+	if (!tcal6408r_i2c_write(offset, &new_val, 1)) {
+		LOG_ERR("tcal6408r: write reg 0x%02x fail", offset);
+		return false;
+	}
+
+	return true;
+}
+
+void set_nuwa0_mfio_6_8_10_input(void)
+{
+	tcal6408r_i2c_write_bit(TCAL6408R_CONFIG_0, NUWA0_MFIO6_BIT, 1);
+	tcal6408r_i2c_write_bit(TCAL6408R_CONFIG_0, NUWA0_MFIO8_BIT, 1);
+	tcal6408r_i2c_write_bit(TCAL6408R_CONFIG_0, NUWA0_MFIO10_BIT, 1);
+}
+
+void set_nuwa1_mfio_6_8_10_input(void)
+{
+	tcal6408r_i2c_write_bit(TCAL6408R_CONFIG_0, NUWA1_MFIO6_BIT, 1);
+	tcal6408r_i2c_write_bit(TCAL6408R_CONFIG_0, NUWA1_MFIO8_BIT, 1);
+	tcal6408r_i2c_write_bit(TCAL6408R_CONFIG_0, NUWA1_MFIO10_BIT, 1);
+}
+
+void set_nuwa0_mfio_6_8_10_output(void)
+{
+	tcal6408r_i2c_write_bit(TCAL6408R_CONFIG_0, NUWA0_MFIO6_BIT, 0);
+	tcal6408r_i2c_write_bit(TCAL6408R_CONFIG_0, NUWA0_MFIO8_BIT, 0);
+	tcal6408r_i2c_write_bit(TCAL6408R_CONFIG_0, NUWA0_MFIO10_BIT, 0);
+}
+
+void set_nuwa1_mfio_6_8_10_output(void)
+{
+	tcal6408r_i2c_write_bit(TCAL6408R_CONFIG_0, NUWA1_MFIO6_BIT, 0);
+	tcal6408r_i2c_write_bit(TCAL6408R_CONFIG_0, NUWA1_MFIO8_BIT, 0);
+	tcal6408r_i2c_write_bit(TCAL6408R_CONFIG_0, NUWA1_MFIO10_BIT, 0);
+}
+
+bool tcal6408r_init(void)
+{
+	/* CONFIG: 1=input, 0=output -> set all output */
+	uint8_t cfg = 0x00;
+	if (!tcal6408r_i2c_write(TCAL6408R_CONFIG_0, &cfg, 1)) {
+		LOG_ERR("tcal6408r init: set CONFIG_0 fail");
+		return false;
+	}
+
+	LOG_INF("tcal6408r init done (all output)");
+	return true;
+}
+
+/* other */
+bool is_evb_ioe_accessible()
+{
+	return (get_asic_board_id() == ASIC_BOARD_ID_EVB && is_mb_dc_on());
+}
+
+void ioexp_init(void)
+{
+	// read from IO, save value (if output) to table
+	set_ioexp_val_to_bootstrap_table();
+
+	if (!pca6416a_init())
+		LOG_ERR("pca6416a init fail");
+
+	if (is_evb_ioe_accessible()) {
+		if (!tca6424a_init())
+			LOG_ERR("tca6424a init fail");
+
+		if (!tcal6408r_init())
+			LOG_ERR("tcal6408r init fail");
+
+		init_U200052_IO();
+		init_U200053_IO();
+		init_U200070_IO();
+	}
+
+	// set to output if TEST_STRAP enable
+	int drive_level = 0;
+	get_bootstrap_change_drive_level(STRAP_INDEX_HAMSA_TEST_STRAP_R, &drive_level);
+	if (drive_level == 1) {
+		set_hamsa_mfio_6_8_10_output();
+	}
+	get_bootstrap_change_drive_level(STRAP_INDEX_NUWA0_TEST_STRAP, &drive_level);
+	if (drive_level == 1) {
+		set_nuwa0_mfio_6_8_10_output();
+	}
+	get_bootstrap_change_drive_level(STRAP_INDEX_NUWA1_TEST_STRAP, &drive_level);
+	if (drive_level == 1) {
+		set_nuwa1_mfio_6_8_10_output();
+	}
+
+	// set value from table
+	set_bootstrap_table_val_to_ioexp();
 }
