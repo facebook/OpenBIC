@@ -19,7 +19,7 @@
 
 #include "sensor.h"
 
-#define VR_MAX_NUM 12
+#define VR_MAX_NUM 14
 #define VR_MUTEX_LOCK_TIMEOUT_MS 1000
 
 #include "plat_pldm_sensor.h"

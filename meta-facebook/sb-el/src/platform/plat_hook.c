@@ -52,6 +52,7 @@ vr_pre_proc_arg vr_pre_read_args[] = {
 	{ .mutex = vr_mutex + 10, .vr_page = 0x0 }, { .mutex = vr_mutex + 10, .vr_page = 0x1 },
 	{ .mutex = vr_mutex + 11, .vr_page = 0x0 }, { .mutex = vr_mutex + 11, .vr_page = 0x1 },
 	{ .mutex = vr_mutex + 12, .vr_page = 0x0 }, { .mutex = vr_mutex + 12, .vr_page = 0x1 },
+	{ .mutex = vr_mutex + 13, .vr_page = 0x0 }, { .mutex = vr_mutex + 13, .vr_page = 0x1 },
 };
 
 mp2971_init_arg mp2971_init_args[] = {
@@ -132,6 +133,7 @@ bool post_vr_read(sensor_cfg *cfg, void *args, int *const reading)
 		*reading = 0;
 		LOG_DBG("Negative sensor reading detected. Set reading to 0x%x", *reading);
 	}
+	// post_sensor_reading_hook_func(cfg->num);
 
 	return true;
 }
