@@ -24,6 +24,10 @@
 // CPLD VR hot registers
 #define ASIC_VR_HOT_SWITCH 0x12
 
+// TMP75 type thermal sensor alert register, 
+// TMP432 handle by itself
+#define TMP75_ALERT_CPLD_OFFSET 0x2F
+
 #define CPLD_OFFSET_ASIC_RESET 0x00
 #define VR_EN_PIN_READING_5 0x05
 #define CPLD_OFFSET_BOARD_REV_ID 0x14

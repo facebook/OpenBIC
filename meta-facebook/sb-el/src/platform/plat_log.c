@@ -27,8 +27,10 @@
 #include "plat_hook.h"
 #include "plat_class.h"
 #include "plat_pldm_sensor.h"
+#include "tmp431.h"
 #include "plat_gpio.h"
 #include "shell_plat_power_sequence.h"
+#include "plat_thermal.h"
 
 LOG_MODULE_REGISTER(plat_log);
 
@@ -312,6 +314,26 @@ bool get_error_data(uint16_t error_code, uint8_t *data)
 	uint8_t trigger_case = (error_code >> 13) & 0x07;
 
 	switch (trigger_case) {
+		case TEMPERATURE_TRIGGER_CAUSE: {
+			uint8_t temperature_sensoor_num = error_code & 0xFF;
+			LOG_WRN("trigger_case: 0x%x, temperature_sensoor_num: 0x%x", trigger_case,
+				temperature_sensoor_num);
+			sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(temperature_sensoor_num);
+			data[0] = get_thermal_status_val_for_log(temperature_sensoor_num);
+			if (data[0] & TEMP_STATUS_OPEN) {
+				if (!tmp432_get_temp_open_status(cfg, &data[1])) {
+					LOG_ERR("Failed to get 0x%02x temperature open status",
+						temperature_sensoor_num);
+					return false;
+				}
+			} else {
+				data[1] = get_thermal_limit_status_val_for_log(temperature_sensoor_num);
+			}
+			// save sensor num to data and keep raw data
+			data[2] = temperature_sensoor_num;
+			LOG_INF("Temperature status: 0x%x, sensor num: 0x%x", data[0], data[1]);
+			return true;
+		}
 		case POWER_ON_SEQUENCE_TRIGGER_CAUSE: {
 			data[0] = plat_get_power_seq_fail_id();
 			uint8_t data_num = 1;
