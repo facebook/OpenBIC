@@ -132,7 +132,7 @@ power_sequence power_sequence_off_table[] = {
 power_sequence_event_pwrgd power_sequence_event_pwrgd_table[] = {
 	{ 0, PWRGD_EVENT_LATCH_1_REG, "P12V_UBC1", 7, SENSOR_NUM_UBC1_P12V_VOLT_V },
 	{ 1, PWRGD_EVENT_LATCH_1_REG, "P12V_UBC2", 6, SENSOR_NUM_UBC2_P12V_VOLT_V },
-	{ 2, PWRGD_EVENT_LATCH_1_REG, "P3V3", 5, SENSOR_NUM_P3V3_OSFP_VOLT_V },
+	{ 2, PWRGD_EVENT_LATCH_1_REG, "P3V3", 5, NO_SENSOR_NUM },
 	{ 3, PWRGD_EVENT_LATCH_1_REG, "P4V2", 4, NO_SENSOR_NUM },
 	{ 4, PWRGD_EVENT_LATCH_1_REG, "P5V", 3, NO_SENSOR_NUM },
 	{ 5, PWRGD_EVENT_LATCH_1_REG, "LDO_IN_1V2", 2, NO_SENSOR_NUM },
