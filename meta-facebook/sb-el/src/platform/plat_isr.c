@@ -79,12 +79,12 @@ void ISR_GPIO_RST_ARKE_PWR_ON_PLD_R1_N()
 		}
 		add_sync_oc_warn_to_work();
 		// if board id == EVB , ctrl fan pwm
-		// if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
-		// 	LOG_INF("dc on, set fan pwm 65");
-		// 	init_pwm_dev();
-		// 	ast_pwm_set(65, PWM_PORT1);
-		// 	ast_pwm_set(65, PWM_PORT6);
-		// }
+		if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
+			LOG_INF("dc on, set fan pwm 65");
+			init_pwm_dev();
+			ast_pwm_set(65, PWM_PORT2);
+			ast_pwm_set(65, PWM_PORT6);
+		}
 		// when dc on clear cpld polling alert status
 		uint8_t err_type = CPLD_UNEXPECTED_VAL_TRIGGER_CAUSE;
 		reset_error_log_states(err_type);
@@ -93,12 +93,12 @@ void ISR_GPIO_RST_ARKE_PWR_ON_PLD_R1_N()
 		set_ioe_init_flag(0);
 		// vr_test_mode_enable(false);
 		// if board id == EVB , ctrl fan pwm
-		// if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
-		// 	LOG_INF("dc off, set fan pwm 0");
-		// 	init_pwm_dev();
-		// 	ast_pwm_set(0, PWM_PORT1);
-		// 	ast_pwm_set(0, PWM_PORT6);
-		// }
+		if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
+			LOG_INF("dc off, set fan pwm 0");
+			init_pwm_dev();
+			ast_pwm_set(0, PWM_PORT2);
+			ast_pwm_set(0, PWM_PORT6);
+		}
 	}
 }
 
