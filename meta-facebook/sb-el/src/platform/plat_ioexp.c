@@ -95,7 +95,8 @@ void set_hamsa_mfio_6_8_10_output()
 
 bool tca6424a_init(void)
 {
-	uint8_t data[3] = { 0xFD, 0xFF, 0xFD }; // HAMSA_MFIO19 out, OWL_EW_VQPS out
+	// uint8_t data[3] = { 0xFD, 0xFF, 0xFD }; // HAMSA_MFIO19 out, OWL_EW_VQPS out
+	uint8_t data[3] = { 0x00, 0x00, 0x00 }; // all output
 	if (!tca6424a_i2c_write(TCA6424A_CONFIG_0, data, 3))
 		return false;
 

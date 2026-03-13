@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#include "plat_i2c.h"
+
 #ifndef PLAT_IOEXP_H
 #define PLAT_IOEXP_H
 
@@ -46,6 +48,7 @@
 #define HAMSA_MFIO10_BIT 0
 
 /* pca6554apw */
+enum PCA9554APW_REG { INPUT_PORT = 0, OUTPUT_PORT = 1, POLARITY_INVERSION = 2, CONFIG = 3 };
 #define PCA6414A_BUS I2C_BUS1
 #define PCA6414A_ADDR (0x40 >> 1)
 
