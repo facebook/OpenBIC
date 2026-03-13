@@ -153,6 +153,7 @@ pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
 	VR_COMPONENT_DEF(COMPNT_VR_11),
 	VR_COMPONENT_DEF(COMPNT_VR_12),
 	VR_COMPONENT_DEF(COMPNT_VR_13),
+	VR_COMPONENT_DEF(COMPNT_VR_3V3),
 };
 
 uint8_t plat_pldm_query_device_identifiers(const uint8_t *buf, uint16_t len, uint8_t *resp,
