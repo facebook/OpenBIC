@@ -57,9 +57,7 @@ void pal_set_sys_status()
 void pal_post_init()
 {
 	plat_mctp_init();
-
 }
-
 
 #define DEF_PROJ_GPIO_PRIORITY 78
 
