@@ -67,6 +67,7 @@ compnt_mapping_sensor vr_compnt_mapping_sensor_table[] = {
 	{ COMPNT_VR_11, SENSOR_NUM_ASIC_P0V4_VDDQL_HBM0246_TEMP_C, "ASIC_P0V4_VDDQL_HBM0246" },
 	{ COMPNT_VR_12, SENSOR_NUM_ASIC_P0V75_OWL_W_VDD_TEMP_C, "ASIC_P0V75_OWL_W_VDD" },
 	{ COMPNT_VR_13, SENSOR_NUM_ASIC_P0V9_OWL_W_TRVDD_TEMP_C, "ASIC_P0V9_OWL_W_TRVDD" },
+	{ COMPNT_VR_3V3, SENSOR_NUM_P3V3_OSFP_TEMP_C, "P3V3_OSFP" },
 };
 
 static uint8_t pldm_pre_bic_update(void *fw_update_param)
