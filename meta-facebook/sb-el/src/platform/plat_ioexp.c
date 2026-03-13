@@ -152,6 +152,15 @@ int get_pca6554apw_ioe_value(uint8_t ioe_bus, uint8_t ioe_addr, uint8_t ioe_reg,
 	return 0;
 }
 
+void init_U200051_IO()
+{
+	LOG_INF("init U200051 IO expander");
+	// only bit6 is input (1)
+	set_pca6554apw_ioe_value(U200051_IO_I2C_BUS, U200051_IO_ADDR, CONFIG, 0x40);
+	// io5,io7 default output 1
+	set_pca6554apw_ioe_value(U200051_IO_I2C_BUS, U200051_IO_ADDR, OUTPUT_PORT, 0x80);
+}
+
 void init_U200052_IO()
 {
 	LOG_INF("init U200052 IO expander");
@@ -292,10 +301,6 @@ void ioexp_init(void)
 
 		if (!tcal6408r_init())
 			LOG_ERR("tcal6408r init fail");
-
-		init_U200052_IO();
-		init_U200053_IO();
-		init_U200070_IO();
 	}
 
 	// set to output if TEST_STRAP enable

@@ -53,6 +53,7 @@
 #define U200052_IO_I2C_BUS I2C_BUS1
 #define U200053_IO_I2C_BUS I2C_BUS1
 #define U200070_IO_I2C_BUS I2C_BUS1
+#define U200051_IO_ADDR (0x72 >> 1)
 #define U200052_IO_ADDR 0x3A
 #define U200053_IO_ADDR 0x3B
 #define U200070_IO_ADDR 0x3C
@@ -89,6 +90,7 @@ void set_hamsa_mfio_6_8_10_input();
 /* pca6554apw */
 void set_pca6554apw_ioe_value(uint8_t ioe_bus, uint8_t ioe_addr, uint8_t ioe_reg, uint8_t value);
 int get_pca6554apw_ioe_value(uint8_t ioe_bus, uint8_t ioe_addr, uint8_t ioe_reg, uint8_t *value);
+void init_U200051_IO();
 void init_U200052_IO();
 void init_U200053_IO();
 void init_U200070_IO();

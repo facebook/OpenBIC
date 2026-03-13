@@ -56,7 +56,7 @@ void ISR_GPIO_FM_PLD_UBC_EN_R()
 	if (gpio_get(FM_PLD_UBC_EN_R) == GPIO_HIGH) {
 		plat_set_dc_on_log(LOG_ASSERT);
 		plat_handle_pwr_sequence_event();
-	}else {
+	} else {
 		plat_set_dc_on_log(LOG_DEASSERT);
 	}
 
@@ -79,30 +79,26 @@ void ISR_GPIO_RST_ARKE_PWR_ON_PLD_R1_N()
 		}
 		add_sync_oc_warn_to_work();
 		// if board id == EVB , ctrl fan pwm
-		if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
-			LOG_INF("dc on, set fan pwm 65");
-			init_pwm_dev();
-			ast_pwm_set(65, PWM_PORT1);
-			ast_pwm_set(65, PWM_PORT6);
-		}
+		// if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
+		// 	LOG_INF("dc on, set fan pwm 65");
+		// 	init_pwm_dev();
+		// 	ast_pwm_set(65, PWM_PORT1);
+		// 	ast_pwm_set(65, PWM_PORT6);
+		// }
 		// when dc on clear cpld polling alert status
 		uint8_t err_type = CPLD_UNEXPECTED_VAL_TRIGGER_CAUSE;
-		LOG_DBG("cpld_polling_alert_status: true -> false, reset_error_log_states: %x",
-			err_type);
 		reset_error_log_states(err_type);
 	} else {
 		LOG_INF("dc off, clear io expander init flag");
 		set_ioe_init_flag(0);
-		LOG_INF("dc off, exit the vr test mode");
 		// vr_test_mode_enable(false);
-
 		// if board id == EVB , ctrl fan pwm
-		if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
-			LOG_INF("dc off, set fan pwm 0");
-			init_pwm_dev();
-			ast_pwm_set(0, PWM_PORT1);
-			ast_pwm_set(0, PWM_PORT6);
-		}
+		// if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
+		// 	LOG_INF("dc off, set fan pwm 0");
+		// 	init_pwm_dev();
+		// 	ast_pwm_set(0, PWM_PORT1);
+		// 	ast_pwm_set(0, PWM_PORT6);
+		// }
 	}
 }
 
