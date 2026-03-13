@@ -50,7 +50,7 @@ void pal_pre_init()
 	init_plat_config();
 	plat_led_init();
 	vr_mutex_init();
-	init_pwm_dev();
+	// init_pwm_dev();
 	// plat_i3c_set_pid();
 }
 
@@ -75,7 +75,6 @@ void pal_post_init()
 		init_U200070_IO();
 	}
 	plat_set_ac_on_log();
-
 	init_cpld_polling();
 	ioexp_init();
 	init_thermal_polling();

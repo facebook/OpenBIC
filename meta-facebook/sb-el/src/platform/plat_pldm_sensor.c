@@ -22,6 +22,7 @@
 #include "plat_i2c.h"
 #include "plat_util.h"
 #include "plat_class.h"
+#include "plat_ioexp.h"
 // #include "shell_plat_average_power.h"
 #include "plat_power_capping.h"
 
@@ -13397,50 +13398,6 @@ void plat_pldm_sensor_change_poll_interval(int thread_id, uint32_t *poll_interva
 	return;
 }
 
-void set_ioe_value(uint8_t ioe_addr, uint8_t ioe_reg, uint8_t value)
-{
-	uint8_t retry = 5;
-	I2C_MSG msg = { 0 };
-	int ret = 0;
-	msg.bus = I2C_BUS1;
-	msg.target_addr = ioe_addr;
-	msg.tx_len = 2;
-	msg.data[0] = ioe_reg;
-	msg.data[1] = value;
-
-	ret = i2c_master_write(&msg, retry);
-
-	if (ret != 0) {
-		LOG_ERR("Failed to write IOE(0x%02X). The register is 0x%02X.", ioe_addr, ioe_reg);
-		k_msleep(3000);
-	}
-}
-
-int get_ioe_value(uint8_t ioe_addr, uint8_t ioe_reg, uint8_t *value)
-{
-	int ret = 0;
-	uint8_t retry = 5;
-	I2C_MSG msg = { 0 };
-
-	msg.bus = I2C_BUS1;
-	msg.target_addr = ioe_addr;
-	msg.tx_len = 1;
-	msg.rx_len = 1;
-	msg.data[0] = ioe_reg;
-
-	ret = i2c_master_read(&msg, retry);
-
-	if (ret != 0) {
-		LOG_ERR("Failed to read IOE(0x%02X). The register is 0x%02X.", ioe_addr, ioe_reg);
-		k_msleep(3000);
-		return -1;
-	}
-
-	*value = msg.data[0];
-
-	return 0;
-}
-
 uint8_t get_ioe_init_flag()
 {
 	return ioe_init_flag;
@@ -13454,15 +13411,6 @@ void set_ioe_init_flag(uint8_t flag)
 struct k_thread quick_sensor_poll;
 K_KERNEL_STACK_MEMBER(quick_sensor_poll_stack, 1024);
 k_tid_t quick_sensor_tid;
-
-void init_U200051_IO()
-{
-	LOG_INF("init U200051 IO expander");
-	// only bit6 is input (1)
-	set_ioe_value(U200051_IO_ADDR, CONFIG, 0x40);
-	// io5,io7 default output 1
-	set_ioe_value(U200051_IO_ADDR, OUTPUT_PORT, 0x80);
-}
 
 /* quick sensor */
 void quick_sensor_poll_handler(void *arug0, void *arug1, void *arug2)
@@ -13489,7 +13437,7 @@ void quick_sensor_poll_handler(void *arug0, void *arug1, void *arug2)
 
 		k_msleep(quick_sensor_poll_interval_ms);
 		// read mux U200051 IO_6, if change means leak detected set io_7 to 1
-		ret = get_ioe_value(U200051_IO_ADDR, INPUT_PORT, &leak_2_value);
+		ret = get_pca6554apw_ioe_value(U200051_IO_I2C_BUS, U200051_IO_ADDR, INPUT_PORT, &leak_2_value);
 
 		if (ret != 0) {
 			LOG_ERR("Failed to read IOE(0x%02X). The register is 0x%02X.",
@@ -13500,10 +13448,10 @@ void quick_sensor_poll_handler(void *arug0, void *arug1, void *arug2)
 		if (leak_2_value & 0x40) {
 			if (log_show_flag == 0) {
 				LOG_WRN("leak_2 detected");
-				get_ioe_value(U200051_IO_ADDR, OUTPUT_PORT, &set_io7_value);
+				get_pca6554apw_ioe_value(U200051_IO_I2C_BUS, U200051_IO_ADDR, OUTPUT_PORT, &set_io7_value);
 				//inverse bit-7
 				set_io7_value ^= 0x80;
-				set_ioe_value(U200051_IO_ADDR, OUTPUT_PORT, set_io7_value);
+				set_pca6554apw_ioe_value(U200051_IO_I2C_BUS, U200051_IO_ADDR, OUTPUT_PORT, set_io7_value);
 				log_show_flag = 1;
 			}
 		} else {
