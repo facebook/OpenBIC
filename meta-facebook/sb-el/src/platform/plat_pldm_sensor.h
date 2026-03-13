@@ -301,8 +301,6 @@ typedef struct _power_capping_time_setting {
 	uint16_t case_time_ms[8];
 } power_capping_time_setting;
 
-enum PCA9554APW_REG { INPUT_PORT = 0, OUTPUT_PORT = 1, POLARITY_INVERSION = 2, CONFIG = 3 };
-
 enum VR_ADDRESS_VIRSION { OLD_MPS = 0, OLD_RNS, MAX_VR_ADDRESS_VIRSION };
 
 int plat_pldm_sensor_get_sensor_count(int thread_id);
