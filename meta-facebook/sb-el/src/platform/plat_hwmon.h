@@ -19,7 +19,7 @@
 #ifndef PLAT_HWMON_H
 #define PLAT_HWMON_H
 
-#define PWM_PORT1 1
+#define PWM_PORT2 2
 #define PWM_PORT6 6
 void init_pwm_dev(void);
 int ast_pwm_set(int duty, uint32_t port);

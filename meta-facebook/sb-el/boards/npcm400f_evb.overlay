@@ -173,11 +173,11 @@
 };
 
 &pwm1 {
-    status = "okay";
+    status = "disabled";
 };
 
-&pwm4 {
-    status = "disabled";
+&pwm2 {
+    status = "okay";
 };
 
 &pwm5 {
