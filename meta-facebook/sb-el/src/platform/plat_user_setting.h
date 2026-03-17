@@ -20,6 +20,8 @@
 #include "plat_cpld.h"
 #include "plat_pldm_sensor.h"
 
+#define MMC_SLOT_USER_SETTING_OFFSET 0x0000
+
 #define VR_MUTEX_LOCK_TIMEOUT_MS 1000
 #define TEMP_THRESHOLD_USER_SETTINGS_OFFSET 0x8100
 #define VR_VOUT_USER_SETTINGS_OFFSET 0x8000

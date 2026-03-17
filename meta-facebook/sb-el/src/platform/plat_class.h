@@ -65,7 +65,7 @@ enum REV_ID {
 	REV_ID_MP,
 	REV_ID_RSVD1,
 	REV_ID_RSVD2,
-	MAX_REV_ID,
+	REV_ID_UNKNOWN,
 };
 
 void init_plat_config();
