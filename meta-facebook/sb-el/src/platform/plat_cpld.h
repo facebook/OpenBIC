@@ -24,38 +24,26 @@
 // CPLD VR hot registers
 #define ASIC_VR_HOT_SWITCH 0x12
 
-// TMP75 type thermal sensor alert register, 
+// TMP75 type thermal sensor alert register,
 // TMP432 handle by itself
 #define TMP75_ALERT_CPLD_OFFSET 0x2F
 
-#define CPLD_OFFSET_ASIC_RESET 0x00
-#define VR_EN_PIN_READING_5 0x05
-#define CPLD_OFFSET_BOARD_REV_ID 0x14
-#define CPLD_OFFSET_VR_VENDER_TYPE 0x15
-#define CPLD_OFFSET_POWER_CLAMP 0x25
-#define CPLD_OFFSET_USERCODE 0x32
-#define CPLD_OFFSET_POWER_CAPPING_LV1_TIME 0x36
-#define ASIC_JTAG_MUX_SEL 0x39
-#define CPLD_OFFSET_ASIC_BOARD_ID 0x3C
-
+// CPLD power steps on registers
 #define VR_AND_CLK_EN 0x3E
 #define VR_1_EN 0x3F
 #define VR_2_EN 0x40
 #define VR_3_EN 0x41
 #define VR_4_EN 0x42
+#define VR_AND_CLK_EN_PIN_CTRL 0xA1 // pin control (1-step only)
+#define VR_1STEP_FUNC_EN_REG 0xA9
 
-#define CPLD_OFFSET_ADC_IDX 0xA0
-#define VR_AND_CLK_EN_PIN_CTRL 0xA1
+// CPLD power good status registers
 #define VR_PWRGD_PIN_READING_1_REG 0x07
 #define VR_PWRGD_PIN_READING_2_REG 0x08
 #define VR_PWRGD_PIN_READING_3_REG 0x09
 #define VR_PWRGD_PIN_READING_4_REG 0x0A
 #define VR_PWRGD_PIN_READING_5_REG 0x0B
 #define VR_PWRGD_PIN_READING_6_REG 0x0C
-#define VR_CLK_ENABLE_PIN_CTRL_REG 0xA1 // pin control (1-step only)
-#define CPLD_ASIC_RESET_STATUS_REG 0xA2
-
-#define VR_1STEP_FUNC_EN_REG 0xA9
 
 // PDB1 power reading registers
 #define CPLD_POWER_INFO_0_REG 0xB6
@@ -71,6 +59,45 @@
 
 // ASIC_THERMTRIP_TRIGGER_CAUSE log register
 #define HBM_CATTRIP_LOG_REG 0x27
+
+// CPLD bootstrap mapping and MFIO debug registers
+#define HAMSA_STRAP 0x16
+#define HAMSA_MFIO_REG 0x17
+#define HAMSA_CONTROL_IO 0x18
+#define HAMSA_JTAG_JTCE 0x19
+#define NUWA0_STRAP 0x1A
+#define NUWA0_CONTROL_IO 0x1B
+#define NUWA1_STRAP 0x1C
+#define NUWA1_CONTROL_IO 0x1D
+#define NUWA_MFIO_REG 0x1E
+#define NUWA_JTAG_JTCE 0x1F
+#define OWL_CONTROL_IO 0x20
+#define OWL_JTAG_SEL 0x21
+#define OWL_UART_SEL 0x22
+#define OWL_DVT_ENABLE 0x9E
+// (High -> OUT, Low -> IN)
+#define HAMSA_MFIO12_13_14_CTRL 0xB8
+#define NUWA_MFIO12_13_14_CTRL 0xB9
+#define HAMSA_MFIO12_13_14_INPUT 0xBA
+#define NUWA_MFIO12_13_14_INPUT 0xBB
+
+// CPLD platform info
+#define CPLD_OFFSET_BOARD_REV_ID 0x14
+#define CPLD_OFFSET_VR_VENDER_TYPE 0x15
+#define CPLD_OFFSET_ASIC_BOARD_ID 0x3C
+
+// CPLD power capping
+#define CPLD_OFFSET_POWER_CLAMP 0x25
+#define CPLD_OFFSET_POWER_CAPPING_LV1_TIME 0x36
+
+// Other CPLD registers
+#define CPLD_OFFSET_ASIC_RESET 0x00
+#define VR_EN_PIN_READING_5 0x05
+#define CPLD_OFFSET_USERCODE 0x32
+#define CPLD_OFFSET_MMC_PWR_EN 0x38
+#define ASIC_JTAG_MUX_SEL 0x39
+#define CPLD_OFFSET_ADC_IDX 0xA0
+#define CPLD_ASIC_RESET_STATUS_REG 0xA2
 
 typedef struct _cpld_info_ cpld_info;
 
