@@ -219,10 +219,10 @@ static steps_on_struct steps_on[] = {
 	{ 1, VR_3_EN, 2, "FM_PVDD1P5_EN", PWRGD_PVDD1P5 }, //FM_PVDD1P5_EN
 	{ 1, VR_AND_CLK_EN, 0, "FM_HAMSA_VDDHRXTX_PCIE_EN",
 	  PWRGD_HAMSA_VDDHRXTX_PCIE_R }, //FM_HAMSA_VDDHRXTX_PCIE_EN
-	{ 1, VR_CLK_ENABLE_PIN_CTRL_REG, 6, "ASIC_POWER_ON_RESET_N",
+	{ 1, VR_AND_CLK_EN_PIN_CTRL, 6, "ASIC_POWER_ON_RESET_N",
 	  NO_DEFINED }, //ASIC_POWER_ON_RESET_N
-	{ 1, VR_CLK_ENABLE_PIN_CTRL_REG, 5, "ASIC_SYS_RST_N", NO_DEFINED }, //ASIC_SYS_RST_N
-	{ 1, VR_CLK_ENABLE_PIN_CTRL_REG, 4, "HAMSA_PCIE_PERST_B_PLD_N",
+	{ 1, VR_AND_CLK_EN_PIN_CTRL, 5, "ASIC_SYS_RST_N", NO_DEFINED }, //ASIC_SYS_RST_N
+	{ 1, VR_AND_CLK_EN_PIN_CTRL, 4, "HAMSA_PCIE_PERST_B_PLD_N",
 	  NO_DEFINED }, //HAMSA_PCIE_PERST_B_PLD_N
 };
 
@@ -550,7 +550,7 @@ int power_steps = 0;
 static bool arke_power_control(uint8_t onoff)
 {
 	uint8_t tmp = onoff ? 0x80 : 0x00;
-	return plat_write_cpld(0x38, &tmp);
+	return plat_write_cpld(CPLD_OFFSET_MMC_PWR_EN, &tmp);
 }
 
 void cmd_arke_power_on(const struct shell *shell, size_t argc, char **argv)
