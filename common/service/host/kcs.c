@@ -392,8 +392,10 @@ static int schedule_kcs_work_handle(k_work_handler_t handler, uint8_t *kcs_buff,
 		goto error;
 	}
 	// POST Start/End send event log to BMC only if kcs_write was successful
-	if (((kcs_work->ibuf[0] == NETFN_OEM_REQ) && (kcs_work->ibuf[1] == CMD_OEM_POST_START)) ||
-	    ((kcs_work->ibuf[0] == NETFN_OEM_REQ) && (kcs_work->ibuf[1] == CMD_OEM_POST_END))) {
+	if (((kcs_work->ibuf[0] == (NETFN_OEM_REQ << 2)) &&
+	     (kcs_work->ibuf[1] == CMD_OEM_POST_START)) ||
+	    ((kcs_work->ibuf[0] == (NETFN_OEM_REQ << 2)) &&
+	     (kcs_work->ibuf[1] == CMD_OEM_POST_END))) {
 		if (kcs_write(kcs_inst->index, kcs_buff, 3) != 0) {
 			goto error;
 		}
