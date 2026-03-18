@@ -69,54 +69,56 @@ static bool is_quick_vr_sensor(uint8_t sensor_num)
 }
 
 typedef struct {
+	uint8_t sensor_bus;
 	uint8_t fab1_1nd_addr;
 	uint8_t fab1_2nd_addr;
 } addr_map_t;
 
 // clang-format off
 static const addr_map_t tmp_addr_map_table[] = {
-	{ASIC_NUWA0_SENSOR0_ADDR, ASIC_NUWA0_SENSOR0_EMC1413_ADDR},
-	{ASIC_NUWA0_SENSOR1_ADDR, ASIC_NUWA0_SENSOR1_EMC1413_ADDR},
-	{ASIC_OWL_W_ADDR, ASIC_OWL_W_EMC1413_ADDR},
-	{ASIC_OWL_E_ADDR, ASIC_OWL_E_EMC1413_ADDR},
-	{ASIC_HAMSA_CRM_ADDR, ASIC_HAMSA_CRM_EMC1413_ADDR},
-	{ASIC_HAMSA_LS_ADDR, ASIC_HAMSA_LS_EMC1413_ADDR},
-	{ASIC_NUWA1_SENSOR0_ADDR, ASIC_NUWA1_SENSOR0_EMC1413_ADDR},
-	{ASIC_NUWA1_SENSOR1_ADDR, ASIC_NUWA1_SENSOR1_EMC1413_ADDR},
+	{I2C_BUS3, ASIC_NUWA0_SENSOR0_ADDR, ASIC_NUWA0_SENSOR0_EMC1413_ADDR},
+	{I2C_BUS3, ASIC_NUWA0_SENSOR1_ADDR, ASIC_NUWA0_SENSOR1_EMC1413_ADDR},
+	{I2C_BUS3, ASIC_OWL_W_ADDR, ASIC_OWL_W_EMC1413_ADDR},
+	{I2C_BUS3, ASIC_OWL_E_ADDR, ASIC_OWL_E_EMC1413_ADDR},
+	{I2C_BUS2, ASIC_HAMSA_CRM_ADDR, ASIC_HAMSA_CRM_EMC1413_ADDR},
+	{I2C_BUS2, ASIC_HAMSA_LS_ADDR, ASIC_HAMSA_LS_EMC1413_ADDR},
+	{I2C_BUS2, ASIC_NUWA1_SENSOR0_ADDR, ASIC_NUWA1_SENSOR0_EMC1413_ADDR},
+	{I2C_BUS2, ASIC_NUWA1_SENSOR1_ADDR, ASIC_NUWA1_SENSOR1_EMC1413_ADDR},
 };
 
 static const addr_map_t vr_addr_map_table[] = {
-	{ ASIC_P0V75_NUWA0_VDD_ADDR, ASIC_P0V75_NUWA0_VDD_RNS_ADDR},
-	{ ASIC_P0V75_NUWA1_VDD_ADDR, ASIC_P0V75_NUWA1_VDD_RNS_ADDR},
-	{ ASIC_P0V9_OWL_E_TRVDD_ADDR, ASIC_P0V9_OWL_E_TRVDD_RNS_ADDR},
-	{ ASIC_P0V75_OWL_E_TRVDD_ADDR, ASIC_P0V75_OWL_E_TRVDD_RNS_ADDR},
-	{ ASIC_P0V75_MAX_M_VDD_ADDR, ASIC_P0V75_MAX_M_VDD_RNS_ADDR},
-	{ ASIC_P0V75_VDDPHY_HBM1357_ADDR, ASIC_P0V75_VDDPHY_HBM1357_RNS_ADDR},
-	{ ASIC_P0V75_OWL_E_VDD_ADDR, ASIC_P0V75_OWL_E_VDD_RNS_ADDR},
-	{ ASIC_P0V4_VDDQL_HBM1357_ADDR, ASIC_P0V4_VDDQL_HBM1357_RNS_ADDR},
-	{ ASIC_P1V05_VDDQC_HBM1357_ADDR, ASIC_P1V05_VDDQC_HBM1357_RNS_ADDR},
-	{ ASIC_P1V8_VPP_HBM1357_ADDR, ASIC_P1V8_VPP_HBM1357_RNS_ADDR},
-	{ ASIC_P0V9_VDDQ_HBM1357_ADDR, ASIC_P0V9_VDDQ_HBM1357_RNS_ADDR},
-	{ ASIC_P0V85_HAMSA_VDD_ADDR, ASIC_P0V85_HAMSA_VDD_RNS_ADDR},
-	{ ASIC_P0V75_MAX_N_VDD_ADDR, ASIC_P0V75_MAX_N_VDD_RNS_ADDR},
-	{ ASIC_P0V8_HAMSA_AVDD_PCIE_ADDR, ASIC_P0V8_HAMSA_AVDD_PCIE_RNS_ADDR},
-	{ ASIC_P0V9_VDDQ_HBM0246_ADDR, ASIC_P0V9_VDDQ_HBM0246_RNS_ADDR},
-	{ ASIC_P1V2_HAMSA_VDDHRXTX_PCIE_ADDR, ASIC_P1V2_HAMSA_VDDHRXTX_PCIE_RNS_ADDR},
-	{ ASIC_P1V05_VDDQC_HBM0246_ADDR, ASIC_P1V05_VDDQC_HBM0246_RNS_ADDR},
-	{ ASIC_P1V8_VPP_HBM0246_ADDR, ASIC_P1V8_VPP_HBM0246_RNS_ADDR},
-	{ ASIC_P0V4_VDDQL_HBM0246_ADDR, ASIC_P0V4_VDDQL_HBM0246_RNS_ADDR},
-	{ ASIC_P0V75_VDDPHY_HBM0246_ADDR, ASIC_P0V75_VDDPHY_HBM0246_RNS_ADDR},
-	{ ASIC_P0V75_OWL_W_VDD_ADDR, ASIC_P0V75_OWL_W_VDD_RNS_ADDR},
-	{ ASIC_P0V75_MAX_S_VDD_ADDR, ASIC_P0V75_MAX_S_VDD_RNS_ADDR},
-	{ ASIC_P0V9_OWL_W_TRVDD_ADDR, ASIC_P0V9_OWL_W_TRVDD_RNS_ADDR},
-	{ ASIC_P0V75_OWL_W_TRVDD_ADDR, ASIC_P0V75_OWL_W_TRVDD_RNS_ADDR},
+	{I2C_BUS3, ASIC_P0V75_NUWA0_VDD_ADDR, ASIC_P0V75_NUWA0_VDD_RNS_ADDR},
+	{I2C_BUS2, ASIC_P0V75_NUWA1_VDD_ADDR, ASIC_P0V75_NUWA1_VDD_RNS_ADDR},
+	{I2C_BUS2, ASIC_P0V9_OWL_E_TRVDD_ADDR, ASIC_P0V9_OWL_E_TRVDD_RNS_ADDR},
+	{I2C_BUS2, ASIC_P0V75_OWL_E_TRVDD_ADDR, ASIC_P0V75_OWL_E_TRVDD_RNS_ADDR},
+	{I2C_BUS2, ASIC_P0V75_MAX_M_VDD_ADDR, ASIC_P0V75_MAX_M_VDD_RNS_ADDR},
+	{I2C_BUS2, ASIC_P0V75_VDDPHY_HBM1357_ADDR, ASIC_P0V75_VDDPHY_HBM1357_RNS_ADDR},
+	{I2C_BUS2, ASIC_P0V75_OWL_E_VDD_ADDR, ASIC_P0V75_OWL_E_VDD_RNS_ADDR},
+	{I2C_BUS2, ASIC_P0V4_VDDQL_HBM1357_ADDR, ASIC_P0V4_VDDQL_HBM1357_RNS_ADDR},
+	{I2C_BUS2, ASIC_P1V05_VDDQC_HBM1357_ADDR, ASIC_P1V05_VDDQC_HBM1357_RNS_ADDR},
+	{I2C_BUS2, ASIC_P1V8_VPP_HBM1357_ADDR, ASIC_P1V8_VPP_HBM1357_RNS_ADDR},
+	{I2C_BUS2, ASIC_P0V9_VDDQ_HBM1357_ADDR, ASIC_P0V9_VDDQ_HBM1357_RNS_ADDR},
+	{I2C_BUS3, ASIC_P0V85_HAMSA_VDD_ADDR, ASIC_P0V85_HAMSA_VDD_RNS_ADDR},
+	{I2C_BUS3, ASIC_P0V75_MAX_N_VDD_ADDR, ASIC_P0V75_MAX_N_VDD_RNS_ADDR},
+	{I2C_BUS3, ASIC_P0V8_HAMSA_AVDD_PCIE_ADDR, ASIC_P0V8_HAMSA_AVDD_PCIE_RNS_ADDR},
+	{I2C_BUS3, ASIC_P0V9_VDDQ_HBM0246_ADDR, ASIC_P0V9_VDDQ_HBM0246_RNS_ADDR},
+	{I2C_BUS3, ASIC_P1V2_HAMSA_VDDHRXTX_PCIE_ADDR, ASIC_P1V2_HAMSA_VDDHRXTX_PCIE_RNS_ADDR},
+	{I2C_BUS3, ASIC_P1V05_VDDQC_HBM0246_ADDR, ASIC_P1V05_VDDQC_HBM0246_RNS_ADDR},
+	{I2C_BUS3, ASIC_P1V8_VPP_HBM0246_ADDR, ASIC_P1V8_VPP_HBM0246_RNS_ADDR},
+	{I2C_BUS3, ASIC_P0V4_VDDQL_HBM0246_ADDR, ASIC_P0V4_VDDQL_HBM0246_RNS_ADDR},
+	{I2C_BUS3, ASIC_P0V75_VDDPHY_HBM0246_ADDR, ASIC_P0V75_VDDPHY_HBM0246_RNS_ADDR},
+	{I2C_BUS3, ASIC_P0V75_OWL_W_VDD_ADDR, ASIC_P0V75_OWL_W_VDD_RNS_ADDR},
+	{I2C_BUS3, ASIC_P0V75_MAX_S_VDD_ADDR, ASIC_P0V75_MAX_S_VDD_RNS_ADDR},
+	{I2C_BUS3, ASIC_P0V9_OWL_W_TRVDD_ADDR, ASIC_P0V9_OWL_W_TRVDD_RNS_ADDR},
+	{I2C_BUS3, ASIC_P0V75_OWL_W_TRVDD_ADDR, ASIC_P0V75_OWL_W_TRVDD_RNS_ADDR},
 };
 // clang-format on
 
-uint8_t convert_tmp_addr(uint8_t addr, uint8_t tmp_change_mode)
+uint8_t convert_tmp_addr(uint8_t bus, uint8_t addr, uint8_t tmp_change_mode)
 {
 	for (int i = 0; i < ARRAY_SIZE(tmp_addr_map_table); i++) {
-		if (tmp_addr_map_table[i].fab1_1nd_addr == addr) {
+		if (tmp_addr_map_table[i].sensor_bus == bus &&
+		    tmp_addr_map_table[i].fab1_1nd_addr == addr) {
 			if (tmp_change_mode == FAB1_2ND_EMC1413)
 				return tmp_addr_map_table[i].fab1_2nd_addr;
 			else if (tmp_change_mode == FAB1_1ND_TMP432)
@@ -128,10 +130,11 @@ uint8_t convert_tmp_addr(uint8_t addr, uint8_t tmp_change_mode)
 	return addr;
 }
 
-uint8_t convert_vr_addr(uint8_t addr, uint8_t vr_change_mode)
+uint8_t convert_vr_addr(uint8_t bus, uint8_t addr, uint8_t vr_change_mode)
 {
 	for (int i = 0; i < ARRAY_SIZE(vr_addr_map_table); i++) {
-		if (vr_addr_map_table[i].fab1_1nd_addr == addr) {
+		if (vr_addr_map_table[i].sensor_bus == bus &&
+		    vr_addr_map_table[i].fab1_1nd_addr == addr) {
 			if (vr_change_mode == FAB1_2ND_RNS)
 				return vr_addr_map_table[i].fab1_2nd_addr;
 			else if (vr_change_mode == FAB1_1ND_MPS)
@@ -13136,13 +13139,14 @@ PDR_numeric_sensor *get_pdr_numeric_sensor_by_sensor_id(uint8_t sensor_id)
 	return NULL;
 }
 
-#define SENSOR_CFG_NO_CHANGE 0xFF
+#define SENSOR_CFG_UNKNOW 0xFF
 
 void change_sensor_cfg(uint8_t asic_board_id, uint8_t tmp_module, uint8_t vr_module, uint8_t ubc_module,
 		       uint8_t board_rev_id)
 {
 	uint8_t tmp_change_mode = FAB1_1ND_TMP432;
 	uint8_t vr_change_mode = FAB1_1ND_MPS;
+	uint8_t bus = SENSOR_CFG_UNKNOW;
 	/*
 	When changing the address version, you first need to check the board type (EVB or Rainbow), and then check the board revision ID.
 	FAB2 corresponds to EVT1B
@@ -13213,8 +13217,9 @@ void change_sensor_cfg(uint8_t asic_board_id, uint8_t tmp_module, uint8_t vr_mod
 
 			// change TMP address
 			uint8_t old_addr = tmp_table[j].pldm_sensor_cfg.target_addr;
+			bus = tmp_table[j].pldm_sensor_cfg.port;
 			tmp_table[j].pldm_sensor_cfg.target_addr =
-				convert_tmp_addr(old_addr, tmp_change_mode);
+				convert_tmp_addr(bus, old_addr, tmp_change_mode);
 
 			LOG_INF("change TMP sensor 0x%x addr 0x%x -> 0x%x",
 				num, old_addr, tmp_table[j].pldm_sensor_cfg.target_addr);
@@ -13227,8 +13232,8 @@ void change_sensor_cfg(uint8_t asic_board_id, uint8_t tmp_module, uint8_t vr_mod
 		if (vr_change_mode == FAB1_1ND_MPS)
 			continue;
 
-		pldm_sensor_info *table = plat_pldm_sensor_load(i);
-		if (table == NULL)
+		pldm_sensor_info *vr_table = plat_pldm_sensor_load(i);
+		if (vr_table == NULL)
 			return;
 
 		int count = plat_pldm_sensor_get_sensor_count(i);
@@ -13237,12 +13242,13 @@ void change_sensor_cfg(uint8_t asic_board_id, uint8_t tmp_module, uint8_t vr_mod
 		// change VR address
 		for (uint8_t j = 0; j < count; j++) {
 			if (vr_change_mode == FAB1_2ND_RNS)
-				table[j].pldm_sensor_cfg.type = sensor_dev_raa228249;
+				vr_table[j].pldm_sensor_cfg.type = sensor_dev_raa228249;
 
-			table[j].pldm_sensor_cfg.target_addr = convert_vr_addr(
-				table[j].pldm_sensor_cfg.target_addr, vr_change_mode);
+			bus = vr_table[j].pldm_sensor_cfg.port;
+			vr_table[j].pldm_sensor_cfg.target_addr = convert_vr_addr(bus,
+				vr_table[j].pldm_sensor_cfg.target_addr, vr_change_mode);
 			LOG_INF("change VR sensors 0x%x address to 0x%x",
-				table[j].pldm_sensor_cfg.num, table[j].pldm_sensor_cfg.target_addr);
+				vr_table[j].pldm_sensor_cfg.num, vr_table[j].pldm_sensor_cfg.target_addr);
 		}
 	}
 }
@@ -13381,15 +13387,15 @@ void plat_pldm_sensor_set_quick_vr_poll_interval(uint8_t type, uint8_t capping_s
 	6 = MEDHA0/1_VDD power every 5ms, VDDQC0246/VDDQC1357 every 5ms
 	7 = MEDHA0/1_VDD power every 2ms, VDDQC0246/VDDQC1357 every 10ms, OWL_E_VDD/OWL_W_VDD/HAMSA_VDD every 100ms
 	*/
-	pldm_sensor_info *table = plat_pldm_sensor_load(QUICK_VR_SENSOR_THREAD_ID);
+	pldm_sensor_info *vr_table = plat_pldm_sensor_load(QUICK_VR_SENSOR_THREAD_ID);
 	int count = plat_pldm_sensor_get_sensor_count(QUICK_VR_SENSOR_THREAD_ID);
 	// print out polling ms
 	for (uint8_t i = 0; i < count; i++) {
-		LOG_INF("get 0x%x: quick vr poll interval is %d ms", table[i].pldm_sensor_cfg.num,
-			table[i].poll_interval_ms);
+		LOG_INF("get 0x%x: quick vr poll interval is %d ms", vr_table[i].pldm_sensor_cfg.num,
+			vr_table[i].poll_interval_ms);
 	}
 	if (count < 0) {
-		LOG_ERR("Cannot get table: %d", QUICK_VR_SENSOR_THREAD_ID);
+		LOG_ERR("Cannot get vr_table: %d", QUICK_VR_SENSOR_THREAD_ID);
 		return;
 	}
 	// size of pwr_capping_setting_table
@@ -13406,7 +13412,7 @@ void plat_pldm_sensor_set_quick_vr_poll_interval(uint8_t type, uint8_t capping_s
 		LOG_INF("%d: set nuwa0/1 poll interval", type);
 		for (uint8_t i = 0; i < count; i++) {
 			for (uint8_t j = 0; j < table_size; j++) {
-				if (table[i].pldm_sensor_cfg.num ==
+				if (vr_table[i].pldm_sensor_cfg.num ==
 				    pwr_capping_setting_table[j].sensor_id) {
 					if (capping_source == CAPPING_SOURCE_VR) {
 						// set vr power polling time
@@ -13414,13 +13420,13 @@ void plat_pldm_sensor_set_quick_vr_poll_interval(uint8_t type, uint8_t capping_s
 							    SENSOR_NUM_ASIC_P0V75_NUWA0_VDD_VOLT_V ||
 						    pwr_capping_setting_table[j].sensor_id ==
 							    SENSOR_NUM_ASIC_P0V75_NUWA1_VDD_VOLT_V) {
-							table[i].poll_interval_ms =
+							vr_table[i].poll_interval_ms =
 								VR_DEFAULT_POLLING_INTERVAL_MS;
 						} else {
 							const uint16_t *time_index =
 								pwr_capping_setting_table[j]
 									.case_time_ms;
-							table[i].poll_interval_ms =
+							vr_table[i].poll_interval_ms =
 								time_index[type];
 						}
 
@@ -13430,13 +13436,13 @@ void plat_pldm_sensor_set_quick_vr_poll_interval(uint8_t type, uint8_t capping_s
 							    SENSOR_NUM_ASIC_P0V75_NUWA0_VDD_PWR_W ||
 						    pwr_capping_setting_table[j].sensor_id ==
 							    SENSOR_NUM_ASIC_P0V75_NUWA1_VDD_PWR_W) {
-							table[i].poll_interval_ms =
+							vr_table[i].poll_interval_ms =
 								VR_DEFAULT_POLLING_INTERVAL_MS;
 						} else {
 							const uint16_t *time_index =
 								pwr_capping_setting_table[j]
 									.case_time_ms;
-							table[i].poll_interval_ms =
+							vr_table[i].poll_interval_ms =
 								time_index[type];
 						}
 					} else {
@@ -13453,8 +13459,8 @@ void plat_pldm_sensor_set_quick_vr_poll_interval(uint8_t type, uint8_t capping_s
 		break;
 	};
 	for (uint8_t i = 0; i < count; i++) {
-		LOG_INF("set 0x%x: quick vr poll interval is %d ms", table[i].pldm_sensor_cfg.num,
-			table[i].poll_interval_ms);
+		LOG_INF("set 0x%x: quick vr poll interval is %d ms", vr_table[i].pldm_sensor_cfg.num,
+			vr_table[i].poll_interval_ms);
 	}
 }
 

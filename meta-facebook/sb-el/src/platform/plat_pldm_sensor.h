@@ -348,7 +348,8 @@ char16_t *char16_strcat_char(char16_t *dest, char16_t ch);
 bool get_raw_data_from_sensor_id(uint8_t sensor_id, uint8_t offset, uint8_t *val, uint8_t len);
 void change_sensor_cfg(uint8_t asic_board_id, uint8_t tmp_module, uint8_t vr_module,
 		       uint8_t ubc_module, uint8_t board_rev_id);
-uint8_t convert_vr_addr(uint8_t addr, uint8_t vr_change_mode);
+uint8_t convert_tmp_addr(uint8_t bus, uint8_t addr, uint8_t tmp_change_mode);
+uint8_t convert_vr_addr(uint8_t bus, uint8_t addr, uint8_t vr_change_mode);
 uint32_t plat_get_pdr_size(uint8_t pdr_type);
 uint32_t plat_pldm_sensor_get_quick_vr_poll_interval();
 void plat_pldm_sensor_set_quick_vr_poll_interval(uint8_t type, uint8_t capping_source);
