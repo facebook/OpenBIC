@@ -30,6 +30,7 @@
 #include "plat_ioexp.h"
 #include "plat_fru.h"
 #include "plat_class.h"
+#include "tmp431.h"
 
 LOG_MODULE_REGISTER(plat_hook);
 
@@ -135,6 +136,28 @@ bool post_vr_read(sensor_cfg *cfg, void *args, int *const reading)
 	// post_sensor_reading_hook_func(cfg->num);
 
 	return true;
+}
+
+bool post_tmp432_read(sensor_cfg *cfg, void *args, int *reading)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	ARG_UNUSED(args);
+	ARG_UNUSED(reading);
+
+	uint8_t status = 0;
+
+	if (tmp432_get_temp_open_status(cfg, &status)) {
+		uint8_t bit = (cfg->offset == TMP432_REMOTE_TEMPERATRUE_1) ? BIT(1) :
+			      (cfg->offset == TMP432_REMOTE_TEMPERATRUE_2) ? BIT(2) :
+									     0;
+		// only check BIT(1), BIT(2)
+		if (status & bit) {
+			cfg->cache_status = SENSOR_OPEN_CIRCUIT;
+			return false;
+		}
+	}
+
+	return post_common_sensor_read(cfg, args, reading);
 }
 
 bool is_mb_dc_on()

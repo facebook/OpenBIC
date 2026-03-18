@@ -221,7 +221,7 @@ void check_thermal_handler(void *arg1, void *arg2, void *arg3)
 					temp_alert_index_table[i].sensor_id);
 				continue;
 			}
-			uint8_t status_data;
+			uint8_t status_data = 0;
 			plat_get_temp_status(temp_alert_index_table[i].index, &status_data);
 
 			// check status open
