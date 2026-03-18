@@ -232,6 +232,7 @@ extern mp2971_init_arg mp2971_init_args[];
 
 bool pre_vr_read(sensor_cfg *cfg, void *args);
 bool post_vr_read(sensor_cfg *cfg, void *args, int *const reading);
+bool post_tmp432_read(sensor_cfg *cfg, void *args, int *reading);
 bool is_mb_dc_on();
 void *vr_mutex_get(enum VR_INDEX_E vr_index);
 void vr_mutex_init(void);
