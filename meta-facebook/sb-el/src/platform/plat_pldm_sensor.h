@@ -31,14 +31,33 @@
 #define BOT_INLET_ADDR (0x94 >> 1)
 #define BOT_OUTLET_ADDR (0x96 >> 1)
 // page 49
+// TMP_MODULE_TMP432 addr
+// U109
 #define ASIC_NUWA0_SENSOR0_ADDR (0x98 >> 1)
 #define ASIC_NUWA0_SENSOR1_ADDR (0x98 >> 1)
+// U623
 #define ASIC_OWL_W_ADDR (0x9A >> 1)
 #define ASIC_OWL_E_ADDR (0x9A >> 1)
+// U622
 #define ASIC_HAMSA_CRM_ADDR (0x98 >> 1)
 #define ASIC_HAMSA_LS_ADDR (0x98 >> 1)
+// U110
 #define ASIC_NUWA1_SENSOR0_ADDR (0x9A >> 1)
 #define ASIC_NUWA1_SENSOR1_ADDR (0x9A >> 1)
+
+// TMP_MODULE_EMC1413 addr
+// U109 0x6c(7-bit)
+#define ASIC_NUWA0_SENSOR0_EMC1413_ADDR (0xD8 >> 1)
+#define ASIC_NUWA0_SENSOR1_EMC1413_ADDR (0xD8 >> 1)
+// U623 0x1C(7-bit)
+#define ASIC_OWL_W_EMC1413_ADDR (0x38 >> 1)
+#define ASIC_OWL_E_EMC1413_ADDR (0x38 >> 1)
+// U622 0x6c(7-bit)
+#define ASIC_HAMSA_CRM_EMC1413_ADDR (0xD8 >> 1)
+#define ASIC_HAMSA_LS_EMC1413_ADDR (0xD8 >> 1)
+// U110 0x1C(7-bit)
+#define ASIC_NUWA1_SENSOR0_EMC1413_ADDR (0x38 >> 1)
+#define ASIC_NUWA1_SENSOR1_EMC1413_ADDR (0x38 >> 1)
 
 // VR_MODULE_MPS module addr
 //PU438
@@ -301,7 +320,8 @@ typedef struct _power_capping_time_setting {
 	uint16_t case_time_ms[8];
 } power_capping_time_setting;
 
-enum VR_ADDRESS_VIRSION { OLD_MPS = 0, OLD_RNS, MAX_VR_ADDRESS_VIRSION };
+enum TMP_ADDRESS_VIRSION { FAB1_1ND_TMP432 = 0, FAB1_2ND_EMC1413, MAX_TMP_ADDRESS_VIRSION };
+enum VR_ADDRESS_VIRSION { FAB1_1ND_MPS = 0, FAB1_2ND_RNS, MAX_VR_ADDRESS_VIRSION };
 
 int plat_pldm_sensor_get_sensor_count(int thread_id);
 sensor_cfg *get_sensor_cfg_by_sensor_id(uint8_t sensor_id);
@@ -326,8 +346,8 @@ char16_t *char16_strcpy(char16_t *dest, const char16_t *src);
 char16_t *char16_strcat_char(char16_t *dest, char16_t ch);
 
 bool get_raw_data_from_sensor_id(uint8_t sensor_id, uint8_t offset, uint8_t *val, uint8_t len);
-void change_sensor_cfg(uint8_t asic_board_id, uint8_t vr_module, uint8_t ubc_module,
-		       uint8_t board_rev_id);
+void change_sensor_cfg(uint8_t asic_board_id, uint8_t tmp_module, uint8_t vr_module,
+		       uint8_t ubc_module, uint8_t board_rev_id);
 uint8_t convert_vr_addr(uint8_t addr, uint8_t vr_change_mode);
 uint32_t plat_get_pdr_size(uint8_t pdr_type);
 uint32_t plat_pldm_sensor_get_quick_vr_poll_interval();

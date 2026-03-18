@@ -44,8 +44,9 @@ enum UBC_MODULE {
 };
 
 enum TMP_MODULE {
-	TMP_TMP432,
-	TMP_TYPE_UNKNOWN,
+	TMP_MODULE_TMP432,
+	TMP_MODULE_EMC1413,
+	TMP_MODULE_TYPE_UNKNOWN,
 };
 
 enum ASIC_BOARD_ID {
@@ -71,6 +72,7 @@ enum REV_ID {
 void init_plat_config();
 uint8_t get_vr_module();
 uint8_t get_ubc_module();
+uint8_t get_tmp_module();
 uint8_t get_mmc_slot();
 uint8_t get_asic_board_id();
 uint8_t get_board_rev_id();

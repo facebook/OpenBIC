@@ -31,11 +31,13 @@
 #define BOARD_TYPE_MASK (BIT(0) | BIT(1))
 #define REV_ID_MASK (BIT(0) | BIT(1) | BIT(2))
 
+#define I2C_BUS_TMP I2C_BUS3
+
 LOG_MODULE_REGISTER(plat_class);
 
 static uint8_t vr_module = VR_MODULE_UNKNOWN;
 static uint8_t ubc_module = UBC_MODULE_UNKNOWN;
-static uint8_t tmp_module = TMP_TMP432;
+static uint8_t tmp_module = TMP_MODULE_TYPE_UNKNOWN;
 static uint8_t vr_vendor_module = VENDOR_TYPE_UNKNOWN;
 static uint8_t asic_board_id = ASIC_BOARD_ID_UNKNOWN;
 static uint8_t board_rev_id = REV_ID_UNKNOWN;
@@ -158,6 +160,28 @@ void init_board_stage(void)
 	}
 }
 
+void init_tmp_vendor_type(void)
+{
+	I2C_MSG i2c_msg = { 0 };
+	uint8_t retry = 5;
+	i2c_msg.bus = I2C_BUS_TMP;
+	i2c_msg.target_addr = ASIC_NUWA0_SENSOR0_ADDR;
+	i2c_msg.tx_len = 1;
+	i2c_msg.rx_len = 1;
+	i2c_msg.data[0] = 0xFE; //MFG ID REG
+
+	int ret = 0;
+	if (ret == i2c_master_read(&i2c_msg, retry)) {
+		LOG_INF("Assume TMP is TMP432 by address check");
+		tmp_module = TMP_MODULE_TMP432;
+		return;
+	} else {
+		LOG_INF("Assume TMP is EMC1413 by register check");
+		tmp_module = TMP_MODULE_EMC1413;
+		return;
+	}
+}
+
 void init_vr_vendor_type(void)
 {
 	//get CPLD VR_VENDOR_TYPE
@@ -176,8 +200,9 @@ void init_plat_config()
 {
 	init_board_type();
 	init_board_stage();
+	init_tmp_vendor_type();
 	init_vr_vendor_type();
-	change_sensor_cfg(asic_board_id, vr_module, ubc_module, board_rev_id);
+	change_sensor_cfg(asic_board_id, tmp_module, vr_module, ubc_module, board_rev_id);
 	// cpld fru offset 0: slot
 	plat_cpld_eerprom_read(&mmc_slot, MMC_SLOT_USER_SETTING_OFFSET, 1);
 	// mmc slot 1-4 * 0x0A
@@ -196,6 +221,11 @@ uint8_t get_vr_module()
 uint8_t get_ubc_module()
 {
 	return ubc_module;
+}
+
+uint8_t get_tmp_module()
+{
+	return tmp_module;
 }
 
 uint8_t get_mmc_slot()
@@ -269,7 +299,9 @@ void pal_show_board_types(const struct shell *shell)
 						   "not supported");
 
 	shell_print(shell, "* TMP_TYPE:      (0x%02X)%s", tmp_module,
-		    (tmp_module == TMP_TMP432) ? "TMP_TMP75_TMP432" : "not supported");
+		    (tmp_module == TMP_MODULE_TMP432) ? "TMP_TMP75_TMP432" :
+			(tmp_module == TMP_MODULE_EMC1413) ? "TMP_TMP75_EMC1413" :
+							"not supported");
 
 	shell_print(shell, "* ADC_TYPE:      (0x%02X)%s", adc_type,
 		    (adc_type == ADI_AD4058) ? "ADI_AD4058" :
