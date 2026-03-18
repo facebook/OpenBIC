@@ -199,7 +199,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
 		0x00, // UNRT
-		0x00, // UCT
+		0xFD, // UCT
 		0x00, // UNCT
 		0x00, // LNRT
 		0x00, // LCT
@@ -293,7 +293,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 			IPMI_SDR_SENSOR_INIT_DEF_SCAN, // sensor init
 		IPMI_SDR_SENSOR_CAP_THRESHOLD_RW |
 			IPMI_SDR_SENSOR_CAP_EVENT_CTRL_NO, // sensor capabilities
-		IPMI_SDR_SENSOR_TYPE_TEMPERATURE, // sensor type
+		IPMI_SDR_SENSOR_TYPE_VOLTAGE, // sensor type
 		IPMI_SDR_EVENT_TYPE_THRESHOLD, // event/reading type
 		0x00, // assert event mask
 		IPMI_SDR_CMP_RETURN_LCT | IPMI_SDR_ASSERT_MASK_UCT_HI |
@@ -308,7 +308,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SENSOR_UNIT_VOL, // base unit
 		0x00, // modifier unit
 		IPMI_SDR_LINEAR_LINEAR, // linearization
-		0x3F, // [7:0] M bits
+		0x47, // [7:0] M bits
 		0x00, // [9:8] M bits, tolerance
 		0x00, // [7:0] B bits
 		0x00, // [9:8] B bits, tolerance
@@ -320,12 +320,12 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // normal minimum
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
-		0xE4, // UNRT
-		0xD4, // UCT
-		0xD2, // UNCT
-		0xA0, // LNRT
-		0xAA, // LCT
-		0xAC, // LNCT
+		0x00, // UNRT
+		0xBF, // UCT
+		0xBD, // UNCT
+		0x00, // LNRT
+		0x8C, // LCT
+		0x8D, // LNCT
 		0x00, // positive-going threshold
 		0x00, // negative-going threshold
 		0x00, // reserved
@@ -354,7 +354,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 			IPMI_SDR_SENSOR_INIT_DEF_SCAN, // sensor init
 		IPMI_SDR_SENSOR_CAP_THRESHOLD_RW |
 			IPMI_SDR_SENSOR_CAP_EVENT_CTRL_NO, // sensor capabilities
-		IPMI_SDR_SENSOR_TYPE_TEMPERATURE, // sensor type
+		IPMI_SDR_SENSOR_TYPE_VOLTAGE, // sensor type
 		IPMI_SDR_EVENT_TYPE_THRESHOLD, // event/reading type
 		0x00, // assert event mask
 		IPMI_SDR_CMP_RETURN_LCT | IPMI_SDR_ASSERT_MASK_UCT_HI |
@@ -369,7 +369,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SENSOR_UNIT_VOL, // base unit
 		0x00, // modifier unit
 		IPMI_SDR_LINEAR_LINEAR, // linearization
-		0x12, // [7:0] M bits
+		0x13, // [7:0] M bits
 		0x00, // [9:8] M bits, tolerance
 		0x00, // [7:0] B bits
 		0x00, // [9:8] B bits, tolerance
@@ -381,12 +381,12 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // normal minimum
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
-		0xDE, // UNRT
-		0xC6, // UCT
-		0xC4, // UNCT
-		0x80, // LNRT
-		0xA9, // LCT
-		0xAB, // LNCT
+		0xD2, // UNRT
+		0xBB, // UCT
+		0xBA, // UNCT
+		0x7A, // LNRT
+		0xA1, // LCT
+		0xA2, // LNCT
 		0x00, // positive-going threshold
 		0x00, // negative-going threshold
 		0x00, // reserved
@@ -415,7 +415,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 			IPMI_SDR_SENSOR_INIT_DEF_SCAN, // sensor init
 		IPMI_SDR_SENSOR_CAP_THRESHOLD_RW |
 			IPMI_SDR_SENSOR_CAP_EVENT_CTRL_NO, // sensor capabilities
-		IPMI_SDR_SENSOR_TYPE_TEMPERATURE, // sensor type
+		IPMI_SDR_SENSOR_TYPE_VOLTAGE, // sensor type
 		IPMI_SDR_EVENT_TYPE_THRESHOLD, // event/reading type
 		0x00, // assert event mask
 		IPMI_SDR_CMP_RETURN_LCT | IPMI_SDR_ASSERT_MASK_UCT_HI |
@@ -443,10 +443,10 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
 		0xCB, // UNRT
-		0xBA, // UCT
-		0xB8, // UNCT
+		0xB9, // UCT
+		0xB7, // UNCT
 		0x8C, // LNRT
-		0xA1, // LCT
+		0xA2, // LCT
 		0xA3, // LNCT
 		0x00, // positive-going threshold
 		0x00, // negative-going threshold
@@ -476,7 +476,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 			IPMI_SDR_SENSOR_INIT_DEF_SCAN, // sensor init
 		IPMI_SDR_SENSOR_CAP_THRESHOLD_RW |
 			IPMI_SDR_SENSOR_CAP_EVENT_CTRL_NO, // sensor capabilities
-		IPMI_SDR_SENSOR_TYPE_TEMPERATURE, // sensor type
+		IPMI_SDR_SENSOR_TYPE_VOLTAGE, // sensor type
 		IPMI_SDR_EVENT_TYPE_THRESHOLD, // event/reading type
 		0x00, // assert event mask
 		IPMI_SDR_CMP_RETURN_LCT | IPMI_SDR_ASSERT_MASK_UCT_HI |
@@ -491,7 +491,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SENSOR_UNIT_VOL, // base unit
 		0x00, // modifier unit
 		IPMI_SDR_LINEAR_LINEAR, // linearization
-		0x0F, // [7:0] M bits
+		0x12, // [7:0] M bits
 		0x00, // [9:8] M bits, tolerance
 		0x00, // [7:0] B bits
 		0x00, // [9:8] B bits, tolerance
@@ -503,12 +503,12 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // normal minimum
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
-		0x00, // UNRT
-		0xEA, // UCT
-		0xE7, // UNCT
-		0x00, // LNRT
-		0xB8, // LCT
-		0xBA, // LNCT
+		0xDD, // UNRT
+		0xC2, // UCT
+		0xC0, // UNCT
+		0x81, // LNRT
+		0x9A, // LCT
+		0x9C, // LNCT
 		0x00, // positive-going threshold
 		0x00, // negative-going threshold
 		0x00, // reserved
@@ -537,7 +537,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 			IPMI_SDR_SENSOR_INIT_DEF_SCAN, // sensor init
 		IPMI_SDR_SENSOR_CAP_THRESHOLD_RW |
 			IPMI_SDR_SENSOR_CAP_EVENT_CTRL_NO, // sensor capabilities
-		IPMI_SDR_SENSOR_TYPE_TEMPERATURE, // sensor type
+		IPMI_SDR_SENSOR_TYPE_VOLTAGE, // sensor type
 		IPMI_SDR_EVENT_TYPE_THRESHOLD, // event/reading type
 		0x00, // assert event mask
 		IPMI_SDR_CMP_RETURN_LCT | IPMI_SDR_ASSERT_MASK_UCT_HI |
@@ -552,7 +552,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SENSOR_UNIT_VOL, // base unit
 		0x00, // modifier unit
 		IPMI_SDR_LINEAR_LINEAR, // linearization
-		0x1B, // [7:0] M bits
+		0x1C, // [7:0] M bits
 		0x00, // [9:8] M bits, tolerance
 		0x00, // [7:0] B bits
 		0x00, // [9:8] B bits, tolerance
@@ -564,12 +564,12 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // normal minimum
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
-		0xD7, // UNRT
-		0xC8, // UCT
-		0xC6, // UNCT
-		0x94, // LNRT
-		0xAA, // LCT
-		0xAC, // LNCT
+		0xCF, // UNRT
+		0xC1, // UCT
+		0xBF, // UNCT
+		0x8F, // LNRT
+		0xA5, // LCT
+		0xA7, // LNCT
 		0x00, // positive-going threshold
 		0x00, // negative-going threshold
 		0x00, // reserved
@@ -598,7 +598,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 			IPMI_SDR_SENSOR_INIT_DEF_SCAN, // sensor init
 		IPMI_SDR_SENSOR_CAP_THRESHOLD_RW |
 			IPMI_SDR_SENSOR_CAP_EVENT_CTRL_NO, // sensor capabilities
-		IPMI_SDR_SENSOR_TYPE_TEMPERATURE, // sensor type
+		IPMI_SDR_SENSOR_TYPE_VOLTAGE, // sensor type
 		IPMI_SDR_EVENT_TYPE_THRESHOLD, // event/reading type
 		0x00, // assert event mask
 		IPMI_SDR_CMP_RETURN_LCT | IPMI_SDR_ASSERT_MASK_UCT_HI |
@@ -629,7 +629,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0xCB, // UCT
 		0xC9, // UNCT
 		0x00, // LNRT
-		0x8D, // LCT
+		0x8E, // LCT
 		0x8F, // LNCT
 		0x00, // positive-going threshold
 		0x00, // negative-going threshold
@@ -659,7 +659,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 			IPMI_SDR_SENSOR_INIT_DEF_SCAN, // sensor init
 		IPMI_SDR_SENSOR_CAP_THRESHOLD_RW |
 			IPMI_SDR_SENSOR_CAP_EVENT_CTRL_NO, // sensor capabilities
-		IPMI_SDR_SENSOR_TYPE_TEMPERATURE, // sensor type
+		IPMI_SDR_SENSOR_TYPE_VOLTAGE, // sensor type
 		IPMI_SDR_EVENT_TYPE_THRESHOLD, // event/reading type
 		0x00, // assert event mask
 		IPMI_SDR_CMP_RETURN_LCT | IPMI_SDR_ASSERT_MASK_UCT_HI |
@@ -674,7 +674,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SENSOR_UNIT_VOL, // base unit
 		0x00, // modifier unit
 		IPMI_SDR_LINEAR_LINEAR, // linearization
-		0x06, // [7:0] M bits
+		0x07, // [7:0] M bits
 		0x00, // [9:8] M bits, tolerance
 		0x00, // [7:0] B bits
 		0x00, // [9:8] B bits, tolerance
@@ -686,12 +686,12 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // normal minimum
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
-		0xE8, // UNRT
-		0xD8, // UCT
-		0xD6, // UNCT
-		0xA0, // LNRT
-		0xB8, // LCT
-		0xBA, // LNCT
+		0xC6, // UNRT
+		0xB9, // UCT
+		0xB7, // UNCT
+		0x8A, // LNRT
+		0x9E, // LCT
+		0xA0, // LNCT
 		0x00, // positive-going threshold
 		0x00, // negative-going threshold
 		0x00, // reserved
@@ -720,7 +720,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 			IPMI_SDR_SENSOR_INIT_DEF_SCAN, // sensor init
 		IPMI_SDR_SENSOR_CAP_THRESHOLD_RW |
 			IPMI_SDR_SENSOR_CAP_EVENT_CTRL_NO, // sensor capabilities
-		IPMI_SDR_SENSOR_TYPE_TEMPERATURE, // sensor type
+		IPMI_SDR_SENSOR_TYPE_VOLTAGE, // sensor type
 		IPMI_SDR_EVENT_TYPE_THRESHOLD, // event/reading type
 		0x00, // assert event mask
 		IPMI_SDR_CMP_RETURN_LCT | IPMI_SDR_ASSERT_MASK_UCT_HI |
@@ -735,7 +735,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SENSOR_UNIT_VOL, // base unit
 		0x00, // modifier unit
 		IPMI_SDR_LINEAR_LINEAR, // linearization
-		0x09, // [7:0] M bits
+		0x0A, // [7:0] M bits
 		0x00, // [9:8] M bits, tolerance
 		0x00, // [7:0] B bits
 		0x00, // [9:8] B bits, tolerance
@@ -747,12 +747,12 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // normal minimum
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
-		0xE8, // UNRT
-		0xD5, // UCT
-		0xD3, // UNCT
-		0xA0, // LNRT
-		0xBA, // LCT
-		0xBC, // LNCT
+		0xD0, // UNRT
+		0xBF, // UCT
+		0xBE, // UNCT
+		0x90, // LNRT
+		0xA8, // LCT
+		0xAA, // LNCT
 		0x00, // positive-going threshold
 		0x00, // negative-going threshold
 		0x00, // reserved
@@ -809,7 +809,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
 		0x00, // UNRT
-		0x47, // UCT
+		0x4E, // UCT
 		0x00, // UNCT
 		0x00, // LNRT
 		0x00, // LCT
@@ -1147,7 +1147,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 			IPMI_SDR_SENSOR_INIT_DEF_SCAN, // sensor init
 		IPMI_SDR_SENSOR_CAP_THRESHOLD_RW |
 			IPMI_SDR_SENSOR_CAP_EVENT_CTRL_NO, // sensor capabilities
-		IPMI_SDR_SENSOR_TYPE_TEMPERATURE, // sensor type
+		IPMI_SDR_SENSOR_TYPE_CURRENT, // sensor type
 		IPMI_SDR_EVENT_TYPE_THRESHOLD, // event/reading type
 		0x00, // assert event mask
 		IPMI_SDR_CMP_RETURN_LCT | IPMI_SDR_ASSERT_MASK_UCT_HI |
@@ -1162,7 +1162,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SENSOR_UNIT_AMP, // base unit
 		0x00, // modifier unit
 		IPMI_SDR_LINEAR_LINEAR, // linearization
-		0x4E, // [7:0] M bits
+		0x4A, // [7:0] M bits
 		0x00, // [9:8] M bits, tolerance
 		0x00, // [7:0] B bits
 		0x00, // [9:8] B bits, tolerance
@@ -1174,9 +1174,9 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // normal minimum
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
-		0xE7, // UNRT
-		0xB5, // UCT
-		0x99, // UNCT
+		0xF3, // UNRT
+		0xBE, // UCT
+		0xA0, // UNCT
 		0x00, // LNRT
 		0x00, // LCT
 		0x00, // LNCT
@@ -1208,7 +1208,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 			IPMI_SDR_SENSOR_INIT_DEF_SCAN, // sensor init
 		IPMI_SDR_SENSOR_CAP_THRESHOLD_RW |
 			IPMI_SDR_SENSOR_CAP_EVENT_CTRL_NO, // sensor capabilities
-		IPMI_SDR_SENSOR_TYPE_TEMPERATURE, // sensor type
+		IPMI_SDR_SENSOR_TYPE_CURRENT, // sensor type
 		IPMI_SDR_EVENT_TYPE_THRESHOLD, // event/reading type
 		0x00, // assert event mask
 		IPMI_SDR_CMP_RETURN_LCT | IPMI_SDR_ASSERT_MASK_UCT_HI |
@@ -1223,7 +1223,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SENSOR_UNIT_AMP, // base unit
 		0x00, // modifier unit
 		IPMI_SDR_LINEAR_LINEAR, // linearization
-		0x1F, // [7:0] M bits
+		0x1C, // [7:0] M bits
 		0x00, // [9:8] M bits, tolerance
 		0x00, // [7:0] B bits
 		0x00, // [9:8] B bits, tolerance
@@ -1235,9 +1235,9 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // normal minimum
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
-		0xE5, // UNRT
-		0xAB, // UCT
-		0x9B, // UNCT
+		0xFD, // UNRT
+		0xBD, // UCT
+		0xAB, // UNCT
 		0x00, // LNRT
 		0x00, // LCT
 		0x00, // LNCT
@@ -1269,7 +1269,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 			IPMI_SDR_SENSOR_INIT_DEF_SCAN, // sensor init
 		IPMI_SDR_SENSOR_CAP_THRESHOLD_RW |
 			IPMI_SDR_SENSOR_CAP_EVENT_CTRL_NO, // sensor capabilities
-		IPMI_SDR_SENSOR_TYPE_TEMPERATURE, // sensor type
+		IPMI_SDR_SENSOR_TYPE_CURRENT, // sensor type
 		IPMI_SDR_EVENT_TYPE_THRESHOLD, // event/reading type
 		0x00, // assert event mask
 		IPMI_SDR_CMP_RETURN_LCT | IPMI_SDR_ASSERT_MASK_UCT_HI |
@@ -1298,7 +1298,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // sensor minimum reading
 		0xE1, // UNRT
 		0x4E, // UCT
-		0x3F, // UNCT
+		0x3E, // UNCT
 		0x00, // LNRT
 		0x00, // LCT
 		0x00, // LNCT
@@ -1330,7 +1330,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 			IPMI_SDR_SENSOR_INIT_DEF_SCAN, // sensor init
 		IPMI_SDR_SENSOR_CAP_THRESHOLD_RW |
 			IPMI_SDR_SENSOR_CAP_EVENT_CTRL_NO, // sensor capabilities
-		IPMI_SDR_SENSOR_TYPE_TEMPERATURE, // sensor type
+		IPMI_SDR_SENSOR_TYPE_CURRENT, // sensor type
 		IPMI_SDR_EVENT_TYPE_THRESHOLD, // event/reading type
 		0x00, // assert event mask
 		IPMI_SDR_CMP_RETURN_LCT | IPMI_SDR_ASSERT_MASK_UCT_HI |
@@ -1345,7 +1345,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SENSOR_UNIT_AMP, // base unit
 		0x00, // modifier unit
 		IPMI_SDR_LINEAR_LINEAR, // linearization
-		0x13, // [7:0] M bits
+		0x12, // [7:0] M bits
 		0x00, // [9:8] M bits, tolerance
 		0x00, // [7:0] B bits
 		0x00, // [9:8] B bits, tolerance
@@ -1357,9 +1357,9 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // normal minimum
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
-		0xE2, // UNRT
-		0x9E, // UCT
-		0x8E, // UNCT
+		0xEE, // UNRT
+		0xA6, // UCT
+		0x96, // UNCT
 		0x00, // LNRT
 		0x00, // LCT
 		0x00, // LNCT
@@ -1391,7 +1391,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 			IPMI_SDR_SENSOR_INIT_DEF_SCAN, // sensor init
 		IPMI_SDR_SENSOR_CAP_THRESHOLD_RW |
 			IPMI_SDR_SENSOR_CAP_EVENT_CTRL_NO, // sensor capabilities
-		IPMI_SDR_SENSOR_TYPE_TEMPERATURE, // sensor type
+		IPMI_SDR_SENSOR_TYPE_CURRENT, // sensor type
 		IPMI_SDR_EVENT_TYPE_THRESHOLD, // event/reading type
 		0x00, // assert event mask
 		IPMI_SDR_CMP_RETURN_LCT | IPMI_SDR_ASSERT_MASK_UCT_HI |
@@ -1406,7 +1406,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SENSOR_UNIT_AMP, // base unit
 		0x00, // modifier unit
 		IPMI_SDR_LINEAR_LINEAR, // linearization
-		0x1A, // [7:0] M bits
+		0x18, // [7:0] M bits
 		0x00, // [9:8] M bits, tolerance
 		0x00, // [7:0] B bits
 		0x00, // [9:8] B bits, tolerance
@@ -1418,9 +1418,9 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // normal minimum
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
-		0xE7, // UNRT
-		0xB1, // UCT
-		0xA2, // UNCT
+		0xFA, // UNRT
+		0xBF, // UCT
+		0xAF, // UNCT
 		0x00, // LNRT
 		0x00, // LCT
 		0x00, // LNCT
@@ -1452,7 +1452,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 			IPMI_SDR_SENSOR_INIT_DEF_SCAN, // sensor init
 		IPMI_SDR_SENSOR_CAP_THRESHOLD_RW |
 			IPMI_SDR_SENSOR_CAP_EVENT_CTRL_NO, // sensor capabilities
-		IPMI_SDR_SENSOR_TYPE_TEMPERATURE, // sensor type
+		IPMI_SDR_SENSOR_TYPE_POWER_UNIT, // sensor type
 		IPMI_SDR_EVENT_TYPE_THRESHOLD, // event/reading type
 		0x00, // assert event mask
 		IPMI_SDR_CMP_RETURN_LCT | IPMI_SDR_ASSERT_MASK_UCT_HI |
@@ -1467,7 +1467,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SENSOR_UNIT_WATT, // base unit
 		0x00, // modifier unit
 		IPMI_SDR_LINEAR_LINEAR, // linearization
-		0x8D, // [7:0] M bits
+		0x85, // [7:0] M bits
 		0x00, // [9:8] M bits, tolerance
 		0x00, // [7:0] B bits
 		0x00, // [9:8] B bits, tolerance
@@ -1479,9 +1479,9 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // normal minimum
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
-		0xE6, // UNRT
-		0xB4, // UCT
-		0x98, // UNCT
+		0xF3, // UNRT
+		0xBE, // UCT
+		0xA1, // UNCT
 		0x00, // LNRT
 		0x00, // LCT
 		0x00, // LNCT
@@ -1513,7 +1513,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 			IPMI_SDR_SENSOR_INIT_DEF_SCAN, // sensor init
 		IPMI_SDR_SENSOR_CAP_THRESHOLD_RW |
 			IPMI_SDR_SENSOR_CAP_EVENT_CTRL_NO, // sensor capabilities
-		IPMI_SDR_SENSOR_TYPE_TEMPERATURE, // sensor type
+		IPMI_SDR_SENSOR_TYPE_POWER_UNIT, // sensor type
 		IPMI_SDR_EVENT_TYPE_THRESHOLD, // event/reading type
 		0x00, // assert event mask
 		IPMI_SDR_CMP_RETURN_LCT | IPMI_SDR_ASSERT_MASK_UCT_HI |
@@ -1528,7 +1528,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SENSOR_UNIT_WATT, // base unit
 		0x00, // modifier unit
 		IPMI_SDR_LINEAR_LINEAR, // linearization
-		0x39, // [7:0] M bits
+		0x35, // [7:0] M bits
 		0x00, // [9:8] M bits, tolerance
 		0x00, // [7:0] B bits
 		0x00, // [9:8] B bits, tolerance
@@ -1540,9 +1540,9 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // normal minimum
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
-		0xE0, // UNRT
-		0xA7, // UCT
-		0x98, // UNCT
+		0xF1, // UNRT
+		0xB4, // UCT
+		0xA3, // UNCT
 		0x00, // LNRT
 		0x00, // LCT
 		0x00, // LNCT
@@ -1574,7 +1574,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 			IPMI_SDR_SENSOR_INIT_DEF_SCAN, // sensor init
 		IPMI_SDR_SENSOR_CAP_THRESHOLD_RW |
 			IPMI_SDR_SENSOR_CAP_EVENT_CTRL_NO, // sensor capabilities
-		IPMI_SDR_SENSOR_TYPE_TEMPERATURE, // sensor type
+		IPMI_SDR_SENSOR_TYPE_POWER_UNIT, // sensor type
 		IPMI_SDR_EVENT_TYPE_THRESHOLD, // event/reading type
 		0x00, // assert event mask
 		IPMI_SDR_CMP_RETURN_LCT | IPMI_SDR_ASSERT_MASK_UCT_HI |
@@ -1589,7 +1589,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SENSOR_UNIT_WATT, // base unit
 		0x00, // modifier unit
 		IPMI_SDR_LINEAR_LINEAR, // linearization
-		0x98, // [7:0] M bits
+		0x89, // [7:0] M bits
 		0x00, // [9:8] M bits, tolerance
 		0x00, // [7:0] B bits
 		0x00, // [9:8] B bits, tolerance
@@ -1601,9 +1601,9 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // normal minimum
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
-		0xD5, // UNRT
-		0x4A, // UCT
-		0x3B, // UNCT
+		0xEC, // UNRT
+		0x52, // UCT
+		0x41, // UNCT
 		0x00, // LNRT
 		0x00, // LCT
 		0x00, // LNCT
@@ -1635,7 +1635,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 			IPMI_SDR_SENSOR_INIT_DEF_SCAN, // sensor init
 		IPMI_SDR_SENSOR_CAP_THRESHOLD_RW |
 			IPMI_SDR_SENSOR_CAP_EVENT_CTRL_NO, // sensor capabilities
-		IPMI_SDR_SENSOR_TYPE_TEMPERATURE, // sensor type
+		IPMI_SDR_SENSOR_TYPE_POWER_UNIT, // sensor type
 		IPMI_SDR_EVENT_TYPE_THRESHOLD, // event/reading type
 		0x00, // assert event mask
 		IPMI_SDR_CMP_RETURN_LCT | IPMI_SDR_ASSERT_MASK_UCT_HI |
@@ -1650,7 +1650,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SENSOR_UNIT_WATT, // base unit
 		0x00, // modifier unit
 		IPMI_SDR_LINEAR_LINEAR, // linearization
-		0x16, // [7:0] M bits
+		0x14, // [7:0] M bits
 		0x00, // [9:8] M bits, tolerance
 		0x00, // [7:0] B bits
 		0x00, // [9:8] B bits, tolerance
@@ -1662,9 +1662,9 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // normal minimum
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
-		0xE0, // UNRT
-		0x9C, // UCT
-		0x8D, // UNCT
+		0xF6, // UNRT
+		0xAB, // UCT
+		0x9A, // UNCT
 		0x00, // LNRT
 		0x00, // LCT
 		0x00, // LNCT
@@ -1696,7 +1696,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 			IPMI_SDR_SENSOR_INIT_DEF_SCAN, // sensor init
 		IPMI_SDR_SENSOR_CAP_THRESHOLD_RW |
 			IPMI_SDR_SENSOR_CAP_EVENT_CTRL_NO, // sensor capabilities
-		IPMI_SDR_SENSOR_TYPE_TEMPERATURE, // sensor type
+		IPMI_SDR_SENSOR_TYPE_POWER_UNIT, // sensor type
 		IPMI_SDR_EVENT_TYPE_THRESHOLD, // event/reading type
 		0x00, // assert event mask
 		IPMI_SDR_CMP_RETURN_LCT | IPMI_SDR_ASSERT_MASK_UCT_HI |
@@ -1711,7 +1711,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SENSOR_UNIT_WATT, // base unit
 		0x00, // modifier unit
 		IPMI_SDR_LINEAR_LINEAR, // linearization
-		0x1C, // [7:0] M bits
+		0x1A, // [7:0] M bits
 		0x00, // [9:8] M bits, tolerance
 		0x00, // [7:0] B bits
 		0x00, // [9:8] B bits, tolerance
@@ -1723,9 +1723,9 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // normal minimum
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
-		0xE5, // UNRT
-		0xB0, // UCT
-		0xA1, // UNCT
+		0xF6, // UNRT
+		0xBD, // UCT
+		0xAC, // UNCT
 		0x00, // LNRT
 		0x00, // LCT
 		0x00, // LNCT
@@ -1757,7 +1757,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 			IPMI_SDR_SENSOR_INIT_DEF_SCAN, // sensor init
 		IPMI_SDR_SENSOR_CAP_THRESHOLD_RW |
 			IPMI_SDR_SENSOR_CAP_EVENT_CTRL_NO, // sensor capabilities
-		IPMI_SDR_SENSOR_TYPE_TEMPERATURE, // sensor type
+		IPMI_SDR_SENSOR_TYPE_VOLTAGE, // sensor type
 		IPMI_SDR_EVENT_TYPE_THRESHOLD, // event/reading type
 		0x00, // assert event mask
 		IPMI_SDR_CMP_RETURN_LCT | IPMI_SDR_ASSERT_MASK_UCT_HI |
@@ -1785,8 +1785,8 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
 		0xDC, // UNRT
-		0xC1, // UCT
-		0xBF, // UNCT
+		0xC0, // UCT
+		0xBE, // UNCT
 		0x28, // LNRT
 		0x92, // LCT
 		0x94, // LNCT
@@ -1818,7 +1818,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 			IPMI_SDR_SENSOR_INIT_DEF_SCAN, // sensor init
 		IPMI_SDR_SENSOR_CAP_THRESHOLD_RW |
 			IPMI_SDR_SENSOR_CAP_EVENT_CTRL_NO, // sensor capabilities
-		IPMI_SDR_SENSOR_TYPE_TEMPERATURE, // sensor type
+		IPMI_SDR_SENSOR_TYPE_VOLTAGE, // sensor type
 		IPMI_SDR_EVENT_TYPE_THRESHOLD, // event/reading type
 		0x00, // assert event mask
 		IPMI_SDR_CMP_RETURN_LCT | IPMI_SDR_ASSERT_MASK_UCT_HI |
@@ -1846,8 +1846,8 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
 		0xDC, // UNRT
-		0xC0, // UCT
-		0xBE, // UNCT
+		0xBF, // UCT
+		0xBD, // UNCT
 		0x28, // LNRT
 		0xA9, // LCT
 		0xAB, // LNCT
@@ -1879,7 +1879,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 			IPMI_SDR_SENSOR_INIT_DEF_SCAN, // sensor init
 		IPMI_SDR_SENSOR_CAP_THRESHOLD_RW |
 			IPMI_SDR_SENSOR_CAP_EVENT_CTRL_NO, // sensor capabilities
-		IPMI_SDR_SENSOR_TYPE_TEMPERATURE, // sensor type
+		IPMI_SDR_SENSOR_TYPE_VOLTAGE, // sensor type
 		IPMI_SDR_EVENT_TYPE_THRESHOLD, // event/reading type
 		0x00, // assert event mask
 		IPMI_SDR_CMP_RETURN_LCT | IPMI_SDR_ASSERT_MASK_UCT_HI |
@@ -1907,8 +1907,8 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
 		0xDC, // UNRT
-		0xBE, // UCT
-		0xBC, // UNCT
+		0xBD, // UCT
+		0xBB, // UNCT
 		0x28, // LNRT
 		0xAA, // LCT
 		0xAC, // LNCT
@@ -1940,7 +1940,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 			IPMI_SDR_SENSOR_INIT_DEF_SCAN, // sensor init
 		IPMI_SDR_SENSOR_CAP_THRESHOLD_RW |
 			IPMI_SDR_SENSOR_CAP_EVENT_CTRL_NO, // sensor capabilities
-		IPMI_SDR_SENSOR_TYPE_TEMPERATURE, // sensor type
+		IPMI_SDR_SENSOR_TYPE_VOLTAGE, // sensor type
 		IPMI_SDR_EVENT_TYPE_THRESHOLD, // event/reading type
 		0x00, // assert event mask
 		IPMI_SDR_CMP_RETURN_LCT | IPMI_SDR_ASSERT_MASK_UCT_HI |
@@ -1955,7 +1955,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SENSOR_UNIT_VOL, // base unit
 		0x00, // modifier unit
 		IPMI_SDR_LINEAR_LINEAR, // linearization
-		0x07, // [7:0] M bits
+		0x06, // [7:0] M bits
 		0x00, // [9:8] M bits, tolerance
 		0x00, // [7:0] B bits
 		0x00, // [9:8] B bits, tolerance
@@ -1967,12 +1967,12 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // normal minimum
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
-		0xD6, // UNRT
-		0xAF, // UCT
-		0xAD, // UNCT
-		0x39, // LNRT
-		0x96, // LCT
-		0x98, // LNCT
+		0xFA, // UNRT
+		0xCC, // UCT
+		0xCA, // UNCT
+		0x43, // LNRT
+		0xAF, // LCT
+		0xB1, // LNCT
 		0x00, // positive-going threshold
 		0x00, // negative-going threshold
 		0x00, // reserved
@@ -2001,7 +2001,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 			IPMI_SDR_SENSOR_INIT_DEF_SCAN, // sensor init
 		IPMI_SDR_SENSOR_CAP_THRESHOLD_RW |
 			IPMI_SDR_SENSOR_CAP_EVENT_CTRL_NO, // sensor capabilities
-		IPMI_SDR_SENSOR_TYPE_TEMPERATURE, // sensor type
+		IPMI_SDR_SENSOR_TYPE_VOLTAGE, // sensor type
 		IPMI_SDR_EVENT_TYPE_THRESHOLD, // event/reading type
 		0x00, // assert event mask
 		IPMI_SDR_CMP_RETURN_LCT | IPMI_SDR_ASSERT_MASK_UCT_HI |
@@ -2016,7 +2016,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SENSOR_UNIT_VOL, // base unit
 		0x00, // modifier unit
 		IPMI_SDR_LINEAR_LINEAR, // linearization
-		0x07, // [7:0] M bits
+		0x06, // [7:0] M bits
 		0x00, // [9:8] M bits, tolerance
 		0x00, // [7:0] B bits
 		0x00, // [9:8] B bits, tolerance
@@ -2028,12 +2028,12 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // normal minimum
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
-		0xD4, // UNRT
-		0x9F, // UCT
-		0x9D, // UNCT
-		0x39, // LNRT
-		0x81, // LCT
-		0x82, // LNCT
+		0xF6, // UNRT
+		0xB9, // UCT
+		0xB7, // UNCT
+		0x43, // LNRT
+		0x97, // LCT
+		0x98, // LNCT
 		0x00, // positive-going threshold
 		0x00, // negative-going threshold
 		0x00, // reserved
@@ -2306,7 +2306,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 			IPMI_SDR_SENSOR_INIT_DEF_SCAN, // sensor init
 		IPMI_SDR_SENSOR_CAP_THRESHOLD_RW |
 			IPMI_SDR_SENSOR_CAP_EVENT_CTRL_NO, // sensor capabilities
-		IPMI_SDR_SENSOR_TYPE_TEMPERATURE, // sensor type
+		IPMI_SDR_SENSOR_TYPE_POWER_UNIT, // sensor type
 		IPMI_SDR_EVENT_TYPE_THRESHOLD, // event/reading type
 		0x00, // assert event mask
 		IPMI_SDR_CMP_RETURN_LCT | IPMI_SDR_ASSERT_MASK_UCT_HI |
@@ -2321,7 +2321,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SENSOR_UNIT_WATT, // base unit
 		0x00, // modifier unit
 		IPMI_SDR_LINEAR_LINEAR, // linearization
-		0x0E, // [7:0] M bits
+		0x11, // [7:0] M bits
 		0x00, // [9:8] M bits, tolerance
 		0x00, // [7:0] B bits
 		0x00, // [9:8] B bits, tolerance
@@ -2334,8 +2334,8 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
 		0x00, // UNRT
-		0xE6, // UCT
-		0xE1, // UNCT
+		0xBB, // UCT
+		0xB9, // UNCT
 		0x00, // LNRT
 		0x00, // LCT
 		0x00, // LNCT
@@ -2367,7 +2367,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 			IPMI_SDR_SENSOR_INIT_DEF_SCAN, // sensor init
 		IPMI_SDR_SENSOR_CAP_THRESHOLD_RW |
 			IPMI_SDR_SENSOR_CAP_EVENT_CTRL_NO, // sensor capabilities
-		IPMI_SDR_SENSOR_TYPE_TEMPERATURE, // sensor type
+		IPMI_SDR_SENSOR_TYPE_POWER_UNIT, // sensor type
 		IPMI_SDR_EVENT_TYPE_THRESHOLD, // event/reading type
 		0x00, // assert event mask
 		IPMI_SDR_CMP_RETURN_LCT | IPMI_SDR_ASSERT_MASK_UCT_HI |
@@ -2382,7 +2382,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SENSOR_UNIT_WATT, // base unit
 		0x00, // modifier unit
 		IPMI_SDR_LINEAR_LINEAR, // linearization
-		0x0E, // [7:0] M bits
+		0x11, // [7:0] M bits
 		0x00, // [9:8] M bits, tolerance
 		0x00, // [7:0] B bits
 		0x00, // [9:8] B bits, tolerance
@@ -2395,8 +2395,8 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
 		0x00, // UNRT
-		0xE6, // UCT
-		0xE1, // UNCT
+		0xBB, // UCT
+		0xB9, // UNCT
 		0x00, // LNRT
 		0x00, // LCT
 		0x00, // LNCT
@@ -2428,7 +2428,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 			IPMI_SDR_SENSOR_INIT_DEF_SCAN, // sensor init
 		IPMI_SDR_SENSOR_CAP_THRESHOLD_RW |
 			IPMI_SDR_SENSOR_CAP_EVENT_CTRL_NO, // sensor capabilities
-		IPMI_SDR_SENSOR_TYPE_TEMPERATURE, // sensor type
+		IPMI_SDR_SENSOR_TYPE_POWER_UNIT, // sensor type
 		IPMI_SDR_EVENT_TYPE_THRESHOLD, // event/reading type
 		0x00, // assert event mask
 		IPMI_SDR_CMP_RETURN_LCT | IPMI_SDR_ASSERT_MASK_UCT_HI |
@@ -2443,7 +2443,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SENSOR_UNIT_WATT, // base unit
 		0x00, // modifier unit
 		IPMI_SDR_LINEAR_LINEAR, // linearization
-		0x0E, // [7:0] M bits
+		0x11, // [7:0] M bits
 		0x00, // [9:8] M bits, tolerance
 		0x00, // [7:0] B bits
 		0x00, // [9:8] B bits, tolerance
@@ -2456,8 +2456,8 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
 		0x00, // UNRT
-		0xE6, // UCT
-		0xE1, // UNCT
+		0xBB, // UCT
+		0xB9, // UNCT
 		0x00, // LNRT
 		0x00, // LCT
 		0x00, // LNCT
@@ -2489,7 +2489,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 			IPMI_SDR_SENSOR_INIT_DEF_SCAN, // sensor init
 		IPMI_SDR_SENSOR_CAP_THRESHOLD_RW |
 			IPMI_SDR_SENSOR_CAP_EVENT_CTRL_NO, // sensor capabilities
-		IPMI_SDR_SENSOR_TYPE_TEMPERATURE, // sensor type
+		IPMI_SDR_SENSOR_TYPE_POWER_UNIT, // sensor type
 		IPMI_SDR_EVENT_TYPE_THRESHOLD, // event/reading type
 		0x00, // assert event mask
 		IPMI_SDR_CMP_RETURN_LCT | IPMI_SDR_ASSERT_MASK_UCT_HI |
@@ -2504,7 +2504,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		IPMI_SENSOR_UNIT_WATT, // base unit
 		0x00, // modifier unit
 		IPMI_SDR_LINEAR_LINEAR, // linearization
-		0x0E, // [7:0] M bits
+		0x11, // [7:0] M bits
 		0x00, // [9:8] M bits, tolerance
 		0x00, // [7:0] B bits
 		0x00, // [9:8] B bits, tolerance
@@ -2517,8 +2517,8 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
 		0x00, // UNRT
-		0xE6, // UCT
-		0xE1, // UNCT
+		0xBB, // UCT
+		0xB9, // UNCT
 		0x00, // LNRT
 		0x00, // LCT
 		0x00, // LNCT
@@ -2578,7 +2578,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
 		0x00, // UNRT
-		0x4B, // UCT
+		0x46, // UCT
 		0x00, // UNCT
 		0x00, // LNRT
 		0x00, // LCT
@@ -2611,7 +2611,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 			IPMI_SDR_SENSOR_INIT_DEF_SCAN, // sensor init
 		IPMI_SDR_SENSOR_CAP_THRESHOLD_RW |
 			IPMI_SDR_SENSOR_CAP_EVENT_CTRL_NO, // sensor capabilities
-		IPMI_SDR_SENSOR_TYPE_TEMPERATURE, // sensor type
+		IPMI_SDR_SENSOR_TYPE_POWER_UNIT, // sensor type
 		IPMI_SDR_EVENT_TYPE_THRESHOLD, // event/reading type
 		0x00, // assert event mask
 		IPMI_SDR_CMP_RETURN_LCT | IPMI_SDR_ASSERT_MASK_UCT_HI |
@@ -2672,7 +2672,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 			IPMI_SDR_SENSOR_INIT_DEF_SCAN, // sensor init
 		IPMI_SDR_SENSOR_CAP_THRESHOLD_RW |
 			IPMI_SDR_SENSOR_CAP_EVENT_CTRL_NO, // sensor capabilities
-		IPMI_SDR_SENSOR_TYPE_TEMPERATURE, // sensor type
+		IPMI_SDR_SENSOR_TYPE_VOLTAGE, // sensor type
 		IPMI_SDR_EVENT_TYPE_THRESHOLD, // event/reading type
 		0x00, // assert event mask
 		IPMI_SDR_CMP_RETURN_LCT | IPMI_SDR_ASSERT_MASK_UCT_HI |
@@ -2702,9 +2702,9 @@ SDR_Full_sensor plat_sdr_table[] = {
 		0x8F, // UNRT
 		0x87, // UCT
 		0x86, // UNCT
-		0x64, // LNRT
-		0x68, // LCT
-		0x69, // LNCT
+		0x65, // LNRT
+		0x69, // LCT
+		0x6A, // LNCT
 		0x00, // positive-going threshold
 		0x00, // negative-going threshold
 		0x00, // reserved
@@ -2733,7 +2733,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 			IPMI_SDR_SENSOR_INIT_DEF_SCAN, // sensor init
 		IPMI_SDR_SENSOR_CAP_THRESHOLD_RW |
 			IPMI_SDR_SENSOR_CAP_EVENT_CTRL_NO, // sensor capabilities
-		IPMI_SDR_SENSOR_TYPE_TEMPERATURE, // sensor type
+		IPMI_SDR_SENSOR_TYPE_CURRENT, // sensor type
 		IPMI_SDR_EVENT_TYPE_THRESHOLD, // event/reading type
 		0x00, // assert event mask
 		IPMI_SDR_CMP_RETURN_LCT | IPMI_SDR_ASSERT_MASK_UCT_HI |
@@ -2794,7 +2794,7 @@ SDR_Full_sensor plat_sdr_table[] = {
 			IPMI_SDR_SENSOR_INIT_DEF_SCAN, // sensor init
 		IPMI_SDR_SENSOR_CAP_THRESHOLD_RW |
 			IPMI_SDR_SENSOR_CAP_EVENT_CTRL_NO, // sensor capabilities
-		IPMI_SDR_SENSOR_TYPE_TEMPERATURE, // sensor type
+		IPMI_SDR_SENSOR_TYPE_POWER_UNIT, // sensor type
 		IPMI_SDR_EVENT_TYPE_THRESHOLD, // event/reading type
 		0x00, // assert event mask
 		IPMI_SDR_CMP_RETURN_LCT | IPMI_SDR_ASSERT_MASK_UCT_HI |
@@ -2887,7 +2887,7 @@ SDR_Full_sensor hotswap_sdr_table[] = {
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
 		0x7D, // UNRT
-		0x56, // UCT
+		0x69, // UCT
 		0x00, // UNCT
 		0x00, // LNRT
 		0x00, // LCT
@@ -2920,7 +2920,7 @@ SDR_Full_sensor hotswap_sdr_table[] = {
 			IPMI_SDR_SENSOR_INIT_DEF_SCAN, // sensor init
 		IPMI_SDR_SENSOR_CAP_THRESHOLD_RW |
 			IPMI_SDR_SENSOR_CAP_EVENT_CTRL_NO, // sensor capabilities
-		IPMI_SDR_SENSOR_TYPE_TEMPERATURE, // sensor type
+		IPMI_SDR_SENSOR_TYPE_VOLTAGE, // sensor type
 		IPMI_SDR_EVENT_TYPE_THRESHOLD, // event/reading type
 		0x00, // assert event mask
 		IPMI_SDR_CMP_RETURN_LCT | IPMI_SDR_ASSERT_MASK_UCT_HI |
@@ -2935,7 +2935,7 @@ SDR_Full_sensor hotswap_sdr_table[] = {
 		IPMI_SENSOR_UNIT_VOL, // base unit
 		0x00, // modifier unit
 		IPMI_SDR_LINEAR_LINEAR, // linearization
-		0x3F, // [7:0] M bits
+		0x46, // [7:0] M bits
 		0x00, // [9:8] M bits, tolerance
 		0x00, // [7:0] B bits
 		0x00, // [9:8] B bits, tolerance
@@ -2947,12 +2947,12 @@ SDR_Full_sensor hotswap_sdr_table[] = {
 		0x00, // normal minimum
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
-		0xE4, // UNRT
-		0xD4, // UCT
-		0xD2, // UNCT
-		0xA0, // LNRT
-		0xAA, // LCT
-		0xAC, // LNCT
+		0xC2, // UNRT
+		0xBE, // UCT
+		0xBC, // UNCT
+		0x91, // LNRT
+		0x99, // LCT
+		0x9B, // LNCT
 		0x00, // positive-going threshold
 		0x00, // negative-going threshold
 		0x00, // reserved
@@ -2981,7 +2981,7 @@ SDR_Full_sensor hotswap_sdr_table[] = {
 			IPMI_SDR_SENSOR_INIT_DEF_SCAN, // sensor init
 		IPMI_SDR_SENSOR_CAP_THRESHOLD_RW |
 			IPMI_SDR_SENSOR_CAP_EVENT_CTRL_NO, // sensor capabilities
-		IPMI_SDR_SENSOR_TYPE_TEMPERATURE, // sensor type
+		IPMI_SDR_SENSOR_TYPE_CURRENT, // sensor type
 		IPMI_SDR_EVENT_TYPE_THRESHOLD, // event/reading type
 		0x00, // assert event mask
 		IPMI_SDR_CMP_RETURN_LCT | IPMI_SDR_ASSERT_MASK_UCT_HI |
@@ -2996,7 +2996,7 @@ SDR_Full_sensor hotswap_sdr_table[] = {
 		IPMI_SENSOR_UNIT_AMP, // base unit
 		0x00, // modifier unit
 		IPMI_SDR_LINEAR_LINEAR, // linearization
-		0x22, // [7:0] M bits
+		0x0A, // [7:0] M bits
 		0x00, // [9:8] M bits, tolerance
 		0x00, // [7:0] B bits
 		0x00, // [9:8] B bits, tolerance
@@ -3008,9 +3008,9 @@ SDR_Full_sensor hotswap_sdr_table[] = {
 		0x00, // normal minimum
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
-		0x3F, // UNRT
-		0x3A, // UCT
-		0x37, // UNCT
+		0xF7, // UNRT
+		0xE2, // UCT
+		0xD8, // UNCT
 		0x00, // LNRT
 		0x00, // LCT
 		0x00, // LNCT
@@ -3042,7 +3042,7 @@ SDR_Full_sensor hotswap_sdr_table[] = {
 			IPMI_SDR_SENSOR_INIT_DEF_SCAN, // sensor init
 		IPMI_SDR_SENSOR_CAP_THRESHOLD_RW |
 			IPMI_SDR_SENSOR_CAP_EVENT_CTRL_NO, // sensor capabilities
-		IPMI_SDR_SENSOR_TYPE_TEMPERATURE, // sensor type
+		IPMI_SDR_SENSOR_TYPE_POWER_UNIT, // sensor type
 		IPMI_SDR_EVENT_TYPE_THRESHOLD, // event/reading type
 		0x00, // assert event mask
 		IPMI_SDR_CMP_RETURN_LCT | IPMI_SDR_ASSERT_MASK_UCT_HI |
@@ -3057,7 +3057,7 @@ SDR_Full_sensor hotswap_sdr_table[] = {
 		IPMI_SENSOR_UNIT_WATT, // base unit
 		0x00, // modifier unit
 		IPMI_SDR_LINEAR_LINEAR, // linearization
-		0xD9, // [7:0] M bits
+		0x91, // [7:0] M bits
 		0x00, // [9:8] M bits, tolerance
 		0x00, // [7:0] B bits
 		0x00, // [9:8] B bits, tolerance
@@ -3069,9 +3069,9 @@ SDR_Full_sensor hotswap_sdr_table[] = {
 		0x00, // normal minimum
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
-		0x79, // UNRT
-		0x6F, // UCT
-		0x6A, // UNCT
+		0xCF, // UNRT
+		0xBE, // UCT
+		0xB5, // UNCT
 		0x00, // LNRT
 		0x00, // LCT
 		0x00, // LNCT
@@ -3082,6 +3082,253 @@ SDR_Full_sensor hotswap_sdr_table[] = {
 		0x00, // OEM
 		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
 		"MB_HSC_INPUT_PWR_W",
+	},
+};
+
+SDR_Full_sensor efuse_sdr_table[] = {
+	{
+		// EFUSE temperature
+		0x00,
+		0x00, // record ID
+		IPMI_SDR_VER_15, // SDR ver
+		IPMI_SDR_FULL_SENSOR, // record type
+		IPMI_SDR_FULL_SENSOR_MIN_LEN, // size of struct
+
+		SELF_I2C_ADDRESS << 1, // owner id
+		0x00, // owner lun
+		SENSOR_NUM_TEMP_EFUSE, // sensor number
+
+		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
+		0x00, // entity instance
+		IPMI_SDR_SENSOR_INIT_SCAN | IPMI_SDR_SENSOR_INIT_EVENT |
+			IPMI_SDR_SENSOR_INIT_THRESHOLD | IPMI_SDR_SENSOR_INIT_TYPE |
+			IPMI_SDR_SENSOR_INIT_DEF_EVENT |
+			IPMI_SDR_SENSOR_INIT_DEF_SCAN, // sensor init
+		IPMI_SDR_SENSOR_CAP_THRESHOLD_RW |
+			IPMI_SDR_SENSOR_CAP_EVENT_CTRL_NO, // sensor capabilities
+		IPMI_SDR_SENSOR_TYPE_TEMPERATURE, // sensor type
+		IPMI_SDR_EVENT_TYPE_THRESHOLD, // event/reading type
+		0x00, // assert event mask
+		IPMI_SDR_CMP_RETURN_LCT | IPMI_SDR_ASSERT_MASK_UCT_HI |
+			IPMI_SDR_ASSERT_MASK_LCT_LO, // assert threshold reading mask
+		0x00, // deassert event mask
+		IPMI_SDR_CMP_RETURN_UCT | IPMI_SDR_DEASSERT_MASK_UCT_LO |
+			IPMI_SDR_DEASSERT_MASK_LCT_HI, // deassert threshold reading mask
+		0x00, // discrete reading mask/ settable
+		IPMI_SDR_UCT_SETTABLE | IPMI_SDR_LCT_SETTABLE | IPMI_SDR_UCT_READABLE |
+			IPMI_SDR_LCT_READABLE, // threshold mask/ readable threshold mask
+		0x80, // sensor unit
+		IPMI_SENSOR_UNIT_DEGREE_C, // base unit
+		0x00, // modifier unit
+		IPMI_SDR_LINEAR_LINEAR, // linearization
+		0x01, // [7:0] M bits
+		0x00, // [9:8] M bits, tolerance
+		0x00, // [7:0] B bits
+		0x00, // [9:8] B bits, tolerance
+		0x00, // [7:4] accuracy , [3:2] accuracy exp, [1:0] sensor direction
+		0x00, // Rexp, Bexp
+		0x00, // analog characteristic
+		0x00, // nominal reading
+		0x00, // normal maximum
+		0x00, // normal minimum
+		0x00, // sensor maximum reading
+		0x00, // sensor minimum reading
+		0x7D, // UNRT
+		0x69, // UCT
+		0x00, // UNCT
+		0x00, // LNRT
+		0x00, // LCT
+		0x00, // LNCT
+		0x00, // positive-going threshold
+		0x00, // negative-going threshold
+		0x00, // reserved
+		0x00, // reserved
+		0x00, // OEM
+		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
+		"MB_EFUSE_TEMP_C",
+	},
+	{
+		// EFUSE_IN voltage
+		0x00,
+		0x00, // record ID
+		IPMI_SDR_VER_15, // SDR ver
+		IPMI_SDR_FULL_SENSOR, // record type
+		IPMI_SDR_FULL_SENSOR_MIN_LEN, // size of struct
+
+		SELF_I2C_ADDRESS << 1, // owner id
+		0x00, // owner lun
+		SENSOR_NUM_VOL_EFUSE_IN, // sensor number
+
+		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
+		0x00, // entity instance
+		IPMI_SDR_SENSOR_INIT_SCAN | IPMI_SDR_SENSOR_INIT_EVENT |
+			IPMI_SDR_SENSOR_INIT_THRESHOLD | IPMI_SDR_SENSOR_INIT_TYPE |
+			IPMI_SDR_SENSOR_INIT_DEF_EVENT |
+			IPMI_SDR_SENSOR_INIT_DEF_SCAN, // sensor init
+		IPMI_SDR_SENSOR_CAP_THRESHOLD_RW |
+			IPMI_SDR_SENSOR_CAP_EVENT_CTRL_NO, // sensor capabilities
+		IPMI_SDR_SENSOR_TYPE_VOLTAGE, // sensor type
+		IPMI_SDR_EVENT_TYPE_THRESHOLD, // event/reading type
+		0x00, // assert event mask
+		IPMI_SDR_CMP_RETURN_LCT | IPMI_SDR_ASSERT_MASK_UCT_HI |
+			IPMI_SDR_ASSERT_MASK_LCT_LO, // assert threshold reading mask
+		0x00, // deassert event mask
+		IPMI_SDR_CMP_RETURN_UCT | IPMI_SDR_DEASSERT_MASK_UCT_LO |
+			IPMI_SDR_DEASSERT_MASK_LCT_HI, // deassert threshold reading mask
+		0x00, // discrete reading mask/ settable
+		IPMI_SDR_UCT_SETTABLE | IPMI_SDR_LCT_SETTABLE | IPMI_SDR_UCT_READABLE |
+			IPMI_SDR_LCT_READABLE, // threshold mask/ readable threshold mask
+		0x00, // sensor unit
+		IPMI_SENSOR_UNIT_VOL, // base unit
+		0x00, // modifier unit
+		IPMI_SDR_LINEAR_LINEAR, // linearization
+		0x46, // [7:0] M bits
+		0x00, // [9:8] M bits, tolerance
+		0x00, // [7:0] B bits
+		0x00, // [9:8] B bits, tolerance
+		0x00, // [7:4] accuracy , [3:2] accuracy exp, [1:0] sensor direction
+		0xD0, // Rexp, Bexp
+		0x00, // analog characteristic
+		0x00, // nominal reading
+		0x00, // normal maximum
+		0x00, // normal minimum
+		0x00, // sensor maximum reading
+		0x00, // sensor minimum reading
+		0xC2, // UNRT
+		0xBE, // UCT
+		0xBC, // UNCT
+		0x91, // LNRT
+		0x99, // LCT
+		0x9B, // LNCT
+		0x00, // positive-going threshold
+		0x00, // negative-going threshold
+		0x00, // reserved
+		0x00, // reserved
+		0x00, // OEM
+		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
+		"MB_EFUSE_INPUT_VOLT_V",
+	},
+	{
+		// EFUSE_OUT current
+		0x00,
+		0x00, // record ID
+		IPMI_SDR_VER_15, // SDR ver
+		IPMI_SDR_FULL_SENSOR, // record type
+		IPMI_SDR_FULL_SENSOR_MIN_LEN, // size of struct
+
+		SELF_I2C_ADDRESS << 1, // owner id
+		0x00, // owner lun
+		SENSOR_NUM_CUR_EFUSE_OUT, // sensor number
+
+		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
+		0x00, // entity instance
+		IPMI_SDR_SENSOR_INIT_SCAN | IPMI_SDR_SENSOR_INIT_EVENT |
+			IPMI_SDR_SENSOR_INIT_THRESHOLD | IPMI_SDR_SENSOR_INIT_TYPE |
+			IPMI_SDR_SENSOR_INIT_DEF_EVENT |
+			IPMI_SDR_SENSOR_INIT_DEF_SCAN, // sensor init
+		IPMI_SDR_SENSOR_CAP_THRESHOLD_RW |
+			IPMI_SDR_SENSOR_CAP_EVENT_CTRL_NO, // sensor capabilities
+		IPMI_SDR_SENSOR_TYPE_CURRENT, // sensor type
+		IPMI_SDR_EVENT_TYPE_THRESHOLD, // event/reading type
+		0x00, // assert event mask
+		IPMI_SDR_CMP_RETURN_LCT | IPMI_SDR_ASSERT_MASK_UCT_HI |
+			IPMI_SDR_ASSERT_MASK_LCT_LO, // assert threshold reading mask
+		0x00, // deassert event mask
+		IPMI_SDR_CMP_RETURN_UCT | IPMI_SDR_DEASSERT_MASK_UCT_LO |
+			IPMI_SDR_DEASSERT_MASK_LCT_HI, // deassert threshold reading mask
+		0x00, // discrete reading mask/ settable
+		IPMI_SDR_UCT_SETTABLE | IPMI_SDR_LCT_SETTABLE | IPMI_SDR_UCT_READABLE |
+			IPMI_SDR_LCT_READABLE, // threshold mask/ readable threshold mask
+		0x00, // sensor unit
+		IPMI_SENSOR_UNIT_AMP, // base unit
+		0x00, // modifier unit
+		IPMI_SDR_LINEAR_LINEAR, // linearization
+		0x0A, // [7:0] M bits
+		0x00, // [9:8] M bits, tolerance
+		0x00, // [7:0] B bits
+		0x00, // [9:8] B bits, tolerance
+		0x00, // [7:4] accuracy , [3:2] accuracy exp, [1:0] sensor direction
+		0xE0, // Rexp, Bexp
+		0x00, // analog characteristic
+		0x00, // nominal reading
+		0x00, // normal maximum
+		0x00, // normal minimum
+		0x00, // sensor maximum reading
+		0x00, // sensor minimum reading
+		0xF7, // UNRT
+		0xE2, // UCT
+		0xD8, // UNCT
+		0x00, // LNRT
+		0x00, // LCT
+		0x00, // LNCT
+		0x00, // positive-going threshold
+		0x00, // negative-going threshold
+		0x00, // reserved
+		0x00, // reserved
+		0x00, // OEM
+		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
+		"MB_EFUSE_OUTPUT_CURR_A",
+	},
+	{
+		// EFUSE_IN power
+		0x00,
+		0x00, // record ID
+		IPMI_SDR_VER_15, // SDR ver
+		IPMI_SDR_FULL_SENSOR, // record type
+		IPMI_SDR_FULL_SENSOR_MIN_LEN, // size of struct
+
+		SELF_I2C_ADDRESS << 1, // owner id
+		0x00, // owner lun
+		SENSOR_NUM_PWR_EFUSE_IN, // sensor number
+
+		IPMI_SDR_ENTITY_ID_SYS_BOARD, // entity id
+		0x00, // entity instance
+		IPMI_SDR_SENSOR_INIT_SCAN | IPMI_SDR_SENSOR_INIT_EVENT |
+			IPMI_SDR_SENSOR_INIT_THRESHOLD | IPMI_SDR_SENSOR_INIT_TYPE |
+			IPMI_SDR_SENSOR_INIT_DEF_EVENT |
+			IPMI_SDR_SENSOR_INIT_DEF_SCAN, // sensor init
+		IPMI_SDR_SENSOR_CAP_THRESHOLD_RW |
+			IPMI_SDR_SENSOR_CAP_EVENT_CTRL_NO, // sensor capabilities
+		IPMI_SDR_SENSOR_TYPE_POWER_UNIT, // sensor type
+		IPMI_SDR_EVENT_TYPE_THRESHOLD, // event/reading type
+		0x00, // assert event mask
+		IPMI_SDR_CMP_RETURN_LCT | IPMI_SDR_ASSERT_MASK_UCT_HI |
+			IPMI_SDR_ASSERT_MASK_LCT_LO, // assert threshold reading mask
+		0x00, // deassert event mask
+		IPMI_SDR_CMP_RETURN_UCT | IPMI_SDR_DEASSERT_MASK_UCT_LO |
+			IPMI_SDR_DEASSERT_MASK_LCT_HI, // deassert threshold reading mask
+		0x00, // discrete reading mask/ settable
+		IPMI_SDR_UCT_SETTABLE | IPMI_SDR_LCT_SETTABLE | IPMI_SDR_UCT_READABLE |
+			IPMI_SDR_LCT_READABLE, // threshold mask/ readable threshold mask
+		0x00, // sensor unit
+		IPMI_SENSOR_UNIT_WATT, // base unit
+		0x00, // modifier unit
+		IPMI_SDR_LINEAR_LINEAR, // linearization
+		0x91, // [7:0] M bits
+		0x00, // [9:8] M bits, tolerance
+		0x00, // [7:0] B bits
+		0x00, // [9:8] B bits, tolerance
+		0x00, // [7:4] accuracy , [3:2] accuracy exp, [1:0] sensor direction
+		0xE0, // Rexp, Bexp
+		0x00, // analog characteristic
+		0x00, // nominal reading
+		0x00, // normal maximum
+		0x00, // normal minimum
+		0x00, // sensor maximum reading
+		0x00, // sensor minimum reading
+		0xCF, // UNRT
+		0xBE, // UCT
+		0xB5, // UNCT
+		0x00, // LNRT
+		0x00, // LCT
+		0x00, // LNCT
+		0x00, // positive-going threshold
+		0x00, // negative-going threshold
+		0x00, // reserved
+		0x00, // reserved
+		0x00, // OEM
+		IPMI_SDR_STRING_TYPE_ASCII_8, // ID len, should be same as "size of struct"
+		"MB_EFUSE_INPUT_PWR_W",
 	},
 };
 
@@ -3365,7 +3612,7 @@ SDR_Full_sensor dpv2_sdr_table[] = {
 			IPMI_SDR_SENSOR_INIT_DEF_SCAN, // sensor init
 		IPMI_SDR_SENSOR_CAP_THRESHOLD_RW |
 			IPMI_SDR_SENSOR_CAP_EVENT_CTRL_NO, // sensor capabilities
-		IPMI_SDR_SENSOR_TYPE_TEMPERATURE, // sensor type
+		IPMI_SDR_SENSOR_TYPE_POWER_UNIT, // sensor type
 		IPMI_SDR_EVENT_TYPE_THRESHOLD, // event/reading type
 		0x00, // assert event mask
 		IPMI_SDR_CMP_RETURN_LNCT | IPMI_SDR_ASSERT_MASK_UNCT_HI |
@@ -3425,10 +3672,12 @@ uint8_t pal_get_extend_sdr()
 	uint8_t hsc_module = get_hsc_module();
 	switch (hsc_module) {
 	case HSC_MODULE_ADM1278:
-	case HSC_MODULE_MP5990:
 	case HSC_MODULE_LTC4286:
 	case HSC_MODULE_LTC4282:
 		extend_sdr_size += ARRAY_SIZE(hotswap_sdr_table);
+		break;
+	case HSC_MODULE_MP5990:
+		extend_sdr_size += ARRAY_SIZE(efuse_sdr_table);
 		break;
 	default:
 		LOG_ERR("Unsupported HSC module, HSC module: 0x%x", hsc_module);
@@ -3444,12 +3693,17 @@ void pal_extend_full_sdr_table()
 	uint8_t hsc_module = get_hsc_module();
 	switch (hsc_module) {
 	case HSC_MODULE_ADM1278:
-	case HSC_MODULE_MP5990:
 	case HSC_MODULE_LTC4286:
 	case HSC_MODULE_LTC4282:
 		extend_array_num = ARRAY_SIZE(hotswap_sdr_table);
 		for (int index = 0; index < extend_array_num; index++) {
 			add_full_sdr_table(hotswap_sdr_table[index]);
+		}
+		break;
+	case HSC_MODULE_MP5990:
+		extend_array_num = ARRAY_SIZE(efuse_sdr_table);
+		for (int index = 0; index < extend_array_num; index++) {
+			add_full_sdr_table(efuse_sdr_table[index]);
 		}
 		break;
 	default:
