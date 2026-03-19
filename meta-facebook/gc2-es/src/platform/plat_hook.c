@@ -60,13 +60,22 @@ adm1278_init_arg adm1278_init_args[] = {
 	[0] = { .is_init = false, .config = { 0x3F1C }, .r_sense = 1 }
 };
 mp5990_init_arg mp5990_init_args[] = { [0] = { .is_init = false,
-					       .iout_cal_gain = 0xFFFF,
+					       .iout_cal_gain = 0x00B0,
 					       .iout_oc_fault_limit = 0xFFFF,
 					       .ocw_sc_ref = 0xFFFF },
 				       [1] = { .is_init = false,
 					       .iout_cal_gain = 0x01BF,
 					       .iout_oc_fault_limit = 0x0046,
 					       .ocw_sc_ref = 0xFFFF } };
+mp5998_init_arg mp5998_init_args[] = {
+	[0] = { .vin_ov_fault_limit = 0x0370, //55h value : 13.75      lsb : 1/64 V
+		.vin_ov_warn_limit = 0x0360, //57h value : 13.5
+		.vin_uv_warn_limit = 0x028D, //58h value : 10.203125
+		.iin_oc_fault_limit = 0x01B7, //5Bh value : 27.4375    lsb : 1/16 A
+		.iin_oc_warn_limit = 0x0195, //5Dh value : 25.3125
+		.fault_mask = 0x0008, //D4h
+		.protect_en = 0x3EFF }
+}; //CAh
 ltc4286_init_arg ltc4286_init_args[] = {
 	[0] = { .is_init = false, .r_sense_mohm = 0.25, .mfr_config_1 = { 0x1570 } },
 	[1] = { .is_init = false, .r_sense_mohm = 0.25, .mfr_config_1 = { 0x3570 } }
