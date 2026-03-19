@@ -251,6 +251,7 @@ bool vr_rail_voltage_peak_clear(uint8_t rail_index);
 // Bootstrape
 bool bootstrap_default_settings_init(void);
 bool bootstrap_user_settings_init(void);
+bool temp_threshold_user_settings_get(void *temp_threshold_user_settings);
 bool set_bootstrap_table_and_user_settings(uint8_t rail, uint8_t *change_setting_value,
 					   uint8_t drive_index_level, bool is_perm,
 					   bool is_default);

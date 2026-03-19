@@ -51,6 +51,51 @@ enum PLAT_TEMP_INDEX_E {
 	TEMP_INDEX_MAX,
 };
 
+enum PLAT_TEMP_INDEX_THRESHOLD_TYPE_E {
+	TOP_INLET_LOW_LIMIT,
+	TOP_INLET_HIGH_LIMIT,
+	BOT_INLET_LOW_LIMIT,
+	BOT_INLET_HIGH_LIMIT,
+	BOT_OUTLET_LOW_LIMIT,
+	BOT_OUTLET_HIGH_LIMIT,
+	ASIC_NUWA0_SENSOR0_LOW_LIMIT,
+	ASIC_NUWA0_SENSOR0_HIGH_LIMIT,
+	ASIC_NUWA0_SENSOR1_LOW_LIMIT,
+	ASIC_NUWA0_SENSOR1_HIGH_LIMIT,
+	ASIC_OWL_W_LOW_LIMIT,
+	ASIC_OWL_W_HIGH_LIMIT,
+	ASIC_OWL_E_LOW_LIMIT,
+	ASIC_OWL_E_HIGH_LIMIT,
+	ASIC_NUWA1_SENSOR0_LOW_LIMIT,
+	ASIC_NUWA1_SENSOR0_HIGH_LIMIT,
+	ASIC_NUWA1_SENSOR1_LOW_LIMIT,
+	ASIC_NUWA1_SENSOR1_HIGH_LIMIT,
+	ASIC_HAMSA_CRM_LOW_LIMIT,
+	ASIC_HAMSA_CRM_HIGH_LIMIT,
+	ASIC_HAMSA_LS_LOW_LIMIT,
+	ASIC_HAMSA_LS_HIGH_LIMIT,
+	PLAT_TEMP_INDEX_THRESHOLD_TYPE_MAX,
+};
+typedef struct temp_threshold_mapping_sensor {
+	uint8_t temp_index_threshold_type; //PLAT_TEMP_INDEX_THRESHOLD_TYPE_E
+	uint8_t temp_threshold_type;
+	uint8_t sensor_id;
+	uint8_t *temp_threshold_name;
+} temp_threshold_mapping_sensor;
+
+typedef struct temp_threshold_user_settings_struct {
+	uint32_t temperature_reg_val[PLAT_TEMP_INDEX_THRESHOLD_TYPE_MAX];
+} temp_threshold_user_settings_struct;
+
+extern temp_threshold_user_settings_struct temp_threshold_user_settings;
+
+bool get_temp_index_threshold_type_name(uint8_t type, uint8_t **name);
+bool plat_get_temp_threshold(uint8_t temp_index_threshold_type, uint32_t *millidegree_celsius);
+bool temp_threshold_user_settings_init(void);
+bool plat_set_temp_threshold(uint8_t temp_index_threshold_type, uint32_t *millidegree_celsius,
+			     bool is_default, bool is_perm);
+bool temp_threshold_default_settings_init(void);
 void user_settings_init(void);
+bool perm_config_clear(void);
 
 #endif
