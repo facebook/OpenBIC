@@ -1603,3 +1603,59 @@ err:
 	}
 	return ret;
 }
+
+
+void set_delta_ubc_time_of_vout_rise()
+{
+	uint8_t ubc_module = get_ubc_module();
+	const uint8_t sensor_ids[2] = {
+		SENSOR_NUM_UBC1_P12V_VOLT_V,
+		SENSOR_NUM_UBC2_P12V_VOLT_V,
+	};
+
+	if (ubc_module == UBC_MODULE_DELTA) {
+		for (int i = 0; i < ARRAY_SIZE(sensor_ids); i++) {
+			uint8_t id = sensor_ids[i];
+			sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(id);
+			if (!cfg) {
+				LOG_ERR("DELTA UBC vout rising init: sensor cfg not found (sensor_id=0x%02X)",
+					id);
+				return;
+			}
+
+			uint8_t bus = cfg->port;
+			uint8_t addr = cfg->target_addr;
+
+			uint8_t write_data[2] = { 0 };
+
+			/* remove protection: reg 0x10 = 0x00 */
+			write_data[0] = 0x00;
+
+			if (!plat_i2c_write(bus, addr, 0x10, &write_data[0], 1)) {
+				LOG_ERR("UBC(id=0x%02X bus=%u addr=0x%02X): write 0x10 failed", id,
+					bus, addr);
+				return;
+			}
+			LOG_INF("remove UBC protection bus: %d, address: 0x%x", bus, addr);
+			/* set vout rising time: reg 0x61 = 0x78 0x00 */
+			write_data[0] = 0x78;
+			write_data[1] = 0x00;
+
+			if (!plat_i2c_write(bus, addr, 0x61, write_data, 2)) {
+				LOG_ERR("UBC(id=0x%02X bus=%u addr=0x%02X): write 0x51 failed", id,
+					bus, addr);
+				return;
+			}
+			LOG_INF("set UBC vout rising time bus: %d, address: 0x%x", bus, addr);
+			/* Save command's (Reg 0x61) data to OTP */
+			write_data[0] = 0x61;
+
+			if (!plat_i2c_write(bus, addr, 0x17, write_data, 1)) {
+				LOG_ERR("UBC(id=0x%02X bus=%u addr=0x%02X): write 0x4F failed", id,
+					bus, addr);
+				return;
+			}
+			LOG_INF("save UBC command bus: %d, address: 0x%x", bus, addr);
+		}
+	}
+}

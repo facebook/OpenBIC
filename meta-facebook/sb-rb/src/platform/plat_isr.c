@@ -34,6 +34,7 @@
 #include "plat_power_capping.h"
 #include "plat_hwmon.h"
 #include "shell_plat_power_sequence.h"
+#include "plat_adc.h"
 #include "plat_user_setting.h"
 
 LOG_MODULE_REGISTER(plat_isr);
@@ -186,6 +187,8 @@ void ISR_GPIO_RST_IRIS_PWR_ON_PLD_R1_N()
 		// when dc on clear cpld polling alert status
 		uint8_t err_type = CPLD_UNEXPECTED_VAL_TRIGGER_CAUSE;
 		reset_error_log_states(err_type);
+		// re-init adc
+		set_is_adc_init(0);
 	} else {
 		plat_switch_pin_a12(true); /* LOW -> A12 = GPIO73 output low */
 		gpio_conf(SPI_ADC_CS1_N, GPIO_OUTPUT);

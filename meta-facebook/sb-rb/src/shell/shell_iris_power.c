@@ -386,18 +386,16 @@ ioe_pwr_on ioe_pwr_on_table[] = {
 
 bool check_p3v3_p5v_pwrgd(void)
 {
-	// read p3v3_pwrgf and p5v_pwrgf
-	// PWRGD_P3V3_R, bit-4, VR_PWRGD_PIN_READING_5_REG
+	// read p3v3_pwrgf
+	// PWRGD_P3V3_R, bit-4
 	uint8_t offset = VR_PWRGD_PIN_READING_5_REG;
 	uint8_t reg_data = 0;
 	if (!plat_read_cpld(offset, &reg_data, 1)) {
 		LOG_ERR("Read CPLD offset 0x%x failed", offset);
 	}
 	uint8_t p3v3_value = (reg_data >> 4) & 0x01;
-	// PWRGD_P5V_R, bit-5, VR_PWRGD_PIN_READING_5_REG
-	uint8_t p5v_value = (reg_data >> 5) & 0x01;
-	//if both p3v3 and p5v are all 1, return true
-	if (p3v3_value == 1 && p5v_value == 1)
+	//if p3v3 is 1, return true
+	if (p3v3_value == 1)
 		return true;
 	return false;
 }

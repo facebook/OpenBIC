@@ -857,3 +857,9 @@ void plat_adc_rainbow_init(void)
 
 	LOG_INF("ADC(rainbow) polling thread started...\n");
 }
+
+void set_is_adc_init(uint8_t value)
+{
+	is_adc_init = value ? true : false;
+	LOG_INF("set is_adc_init to %d", is_adc_init);
+}
