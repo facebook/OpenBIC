@@ -642,6 +642,14 @@ bool vr_rail_voltage_peak_clear(uint8_t rail_index)
 bool vr_vout_range_user_settings_init(void)
 {
 	for (int i = 0; i < VR_RAIL_E_MAX; i++) {
+		if ((get_asic_board_id() != ASIC_BOARD_ID_EVB) &&
+		    (i == VR_RAIL_E_P3V3_OSFP_VOLT_V)) {
+			vout_range_user_settings.default_vout_max[i] = 0xffff;
+			vout_range_user_settings.default_vout_min[i] = 0xffff;
+			vout_range_user_settings.change_vout_max[i] = 0xffff;
+			vout_range_user_settings.change_vout_min[i] = 0xffff;
+			continue; // skip osfp p3v3 on AEGIS BD
+		}
 		uint16_t vout_max = 0;
 		uint16_t vout_min = 0;
 		if (!plat_get_vout_range(i, &vout_max, &vout_min)) {
@@ -832,6 +840,19 @@ bool bootstrap_user_settings_set(void *bootstrap_user_settings)
 		return false;
 	}
 	k_msleep(EEPROM_MAX_WRITE_TIME);
+
+	return true;
+}
+bool temp_threshold_user_settings_get(void *temp_threshold_user_settings)
+{
+	CHECK_NULL_ARG_WITH_RETURN(temp_threshold_user_settings, false);
+
+	/* TODO: read the temp_threshold_user_settings from eeprom */
+	if (!plat_eeprom_read(TEMP_THRESHOLD_USER_SETTINGS_OFFSET, temp_threshold_user_settings,
+			      sizeof(struct temp_threshold_user_settings_struct))) {
+		LOG_ERR("Failed to read eeprom when get temp_threshold_user_settings");
+		return false;
+	}
 
 	return true;
 }
@@ -1066,4 +1087,13 @@ bool bootstrap_user_settings_init(void)
 	}
 
 	return true;
+}
+
+void plat_pldm_sensor_post_load_init(int thread_id)
+{
+	if (thread_id == TEMP_SENSOR_THREAD_ID) {
+		temp_threshold_default_settings_init();
+		temp_threshold_user_settings_init();
+	}
+	LOG_INF("plat_pldm_sensor_post_load init done");
 }
