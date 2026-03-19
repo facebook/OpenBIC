@@ -60,143 +60,7 @@ vr_pre_proc_arg vr_pre_read_args[] = {
 mp2971_init_arg mp2971_init_args[] = {
 	[0] = { .vout_scale_enable = true },
 };
-// clang-format on
 
-void *vr_mutex_get(enum VR_INDEX_E vr_index)
-{
-	if (vr_index >= VR_INDEX_MAX) {
-		LOG_ERR("vr_mutex_get, invalid vr_index %d", vr_index);
-		return NULL;
-	}
-
-	return vr_mutex + vr_index;
-}
-
-bool pre_vr_read(sensor_cfg *cfg, void *args)
-{
-	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
-	CHECK_NULL_ARG_WITH_RETURN(args, false);
-
-	vr_pre_proc_arg *pre_proc_args = (vr_pre_proc_arg *)args;
-	uint8_t retry = 5;
-	I2C_MSG msg;
-
-	/* mutex lock */
-	if (pre_proc_args->mutex) {
-		LOG_DBG("%x l %p", cfg->num, pre_proc_args->mutex);
-		if (k_mutex_lock(pre_proc_args->mutex, K_MSEC(VR_MUTEX_LOCK_TIMEOUT_MS))) {
-			LOG_ERR("0x%02x pre_vr_read, mutex lock fail", cfg->num);
-			return false;
-		}
-	}
-
-	/* set page */
-	msg.bus = cfg->port;
-	msg.target_addr = cfg->target_addr;
-	msg.tx_len = 2;
-	msg.data[0] = 0x00;
-	msg.data[1] = pre_proc_args->vr_page;
-	if (i2c_master_write(&msg, retry)) {
-		k_mutex_unlock(pre_proc_args->mutex);
-		LOG_ERR("0x%02x pre_vr_read, set page fail", cfg->num);
-		return false;
-	}
-	return true;
-}
-
-bool post_vr_read(sensor_cfg *cfg, void *args, int *const reading)
-{
-	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
-	CHECK_NULL_ARG_WITH_RETURN(args, false);
-
-	vr_pre_proc_arg *pre_proc_args = (vr_pre_proc_arg *)args;
-
-	/* mutex unlock */
-	if (pre_proc_args->mutex) {
-		LOG_DBG("%x u %p", cfg->num, pre_proc_args->mutex);
-		if (k_mutex_unlock(pre_proc_args->mutex)) {
-			LOG_ERR("0x%02x post_vr_read, mutex unlock fail", cfg->num);
-			return false;
-		}
-	}
-
-	/* set reading val to 0 if reading val is negative */
-	sensor_val tmp_reading;
-	tmp_reading.integer = (int16_t)(*reading & 0xFFFF);
-	tmp_reading.fraction = (int16_t)((*reading >> 16) & 0xFFFF);
-
-	/* sensor_value = 1000 times of true value */
-	int32_t sensor_value = tmp_reading.integer * 1000 + tmp_reading.fraction;
-
-	if (sensor_value < 0) {
-		LOG_DBG("Original sensor reading: integer = %d, fraction = %d (combined value * 1000: %d)",
-			tmp_reading.integer, tmp_reading.fraction, sensor_value);
-		*reading = 0;
-		LOG_DBG("Negative sensor reading detected. Set reading to 0x%x", *reading);
-	}
-	// post_sensor_reading_hook_func(cfg->num);
-
-	return true;
-}
-
-bool post_tmp432_read(sensor_cfg *cfg, void *args, int *reading)
-{
-	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
-	ARG_UNUSED(args);
-	ARG_UNUSED(reading);
-
-	uint8_t status = 0;
-	uint8_t bit = 0;
-
-	switch (cfg->type) {
-	case sensor_dev_tmp431:
-		bit = (cfg->offset == TMP432_REMOTE_TEMPERATRUE_1) ? BIT(1) :
-				(cfg->offset == TMP432_REMOTE_TEMPERATRUE_2) ? BIT(2) : 0;
-		if (!tmp432_get_temp_open_status(cfg, &status)) {
-			LOG_ERR("Failed to get temp open status for sensor 0x%x", cfg->num);
-			return false;
-		}
-		break;
-	case sensor_dev_emc1413:
-		bit = (cfg->offset == EMC1413_REMOTE_TEMPERATRUE_1) ? BIT(1) :
-				(cfg->offset == EMC1413_REMOTE_TEMPERATRUE_2) ? BIT(2) : 0;
-		if (!emc1413_get_temp_open_status(cfg, &status)) {	
-			LOG_ERR("Failed to get temp open status for sensor 0x%x", cfg->num);
-			return false;
-		}
-		break;
-	default:
-		LOG_ERR("Unsupported sensor type 0x%x for post_tmp432_read", cfg->type);
-		return false;
-	}
-
-	// only check BIT(1), BIT(2)
-	if (status & bit) {
-		cfg->cache_status = SENSOR_OPEN_CIRCUIT;
-		return false;
-	}
-
-	return post_common_sensor_read(cfg, args, reading);
-}
-
-bool is_mb_dc_on()
-{
-	/* RST_ARKE_PWR_ON_PLD_R1_N is low active,
-   * 1 -> power on
-   * 0 -> power off
-   */
-	return gpio_get(RST_ARKE_PWR_ON_PLD_R1_N);
-}
-
-void vr_mutex_init(void)
-{
-	for (uint8_t i = 0; i < ARRAY_SIZE(vr_mutex); i++) {
-		k_mutex_init(vr_mutex + i);
-		LOG_DBG("vr_mutex[%d] %p init", i, vr_mutex + i);
-	}
-}
-
-// clang-format off
 /* the order is following enum VR_RAIL_E */
 vr_mapping_sensor vr_rail_table[] = {
 	{ VR_RAIL_E_ASIC_P0V75_NUWA0_VDD, SENSOR_NUM_ASIC_P0V75_NUWA0_VDD_VOLT_V,
@@ -390,6 +254,162 @@ bootstrap_mapping_register bootstrap_table[] = {
 	  "NUWA1_MFIO10", NUWA1_MFIO10_BIT, 1, 0x0, 0x0, false },
 };
 // clang-format on
+
+void *vr_mutex_get(enum VR_INDEX_E vr_index)
+{
+	if (vr_index >= VR_INDEX_MAX) {
+		LOG_ERR("vr_mutex_get, invalid vr_index %d", vr_index);
+		return NULL;
+	}
+
+	return vr_mutex + vr_index;
+}
+
+bool pre_vr_read(sensor_cfg *cfg, void *args)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(args, false);
+
+	vr_pre_proc_arg *pre_proc_args = (vr_pre_proc_arg *)args;
+	uint8_t retry = 5;
+	I2C_MSG msg;
+
+	/* mutex lock */
+	if (pre_proc_args->mutex) {
+		LOG_DBG("%x l %p", cfg->num, pre_proc_args->mutex);
+		if (k_mutex_lock(pre_proc_args->mutex, K_MSEC(VR_MUTEX_LOCK_TIMEOUT_MS))) {
+			LOG_ERR("0x%02x pre_vr_read, mutex lock fail", cfg->num);
+			return false;
+		}
+	}
+
+	/* set page */
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
+	msg.tx_len = 2;
+	msg.data[0] = 0x00;
+	msg.data[1] = pre_proc_args->vr_page;
+	if (i2c_master_write(&msg, retry)) {
+		k_mutex_unlock(pre_proc_args->mutex);
+		LOG_ERR("0x%02x pre_vr_read, set page fail", cfg->num);
+		return false;
+	}
+	return true;
+}
+
+bool post_vr_read(sensor_cfg *cfg, void *args, int *const reading)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(args, false);
+
+	// Voltage peak
+	for (int i = 0; i < VR_RAIL_E_MAX; i++) {
+		if (reading == NULL) {
+			break;
+		}
+
+		if (((get_asic_board_id() != ASIC_BOARD_ID_EVB)) &&
+		    (i == VR_RAIL_E_P3V3_OSFP_VOLT_V))
+			continue; // skip osfp p3v3 on AEGIS BD
+
+		if (cfg->num == vr_rail_table[i].sensor_id) {
+			if (vr_rail_table[i].peak_value == 0xffffffff) {
+				vr_rail_table[i].peak_value = *reading;
+			} else {
+				if (vr_rail_table[i].peak_value < *reading) {
+					vr_rail_table[i].peak_value = *reading;
+				}
+			}
+			break;
+		}
+	}
+
+	vr_pre_proc_arg *pre_proc_args = (vr_pre_proc_arg *)args;
+
+	/* mutex unlock */
+	if (pre_proc_args->mutex) {
+		LOG_DBG("%x u %p", cfg->num, pre_proc_args->mutex);
+		if (k_mutex_unlock(pre_proc_args->mutex)) {
+			LOG_ERR("0x%02x post_vr_read, mutex unlock fail", cfg->num);
+			return false;
+		}
+	}
+
+	/* set reading val to 0 if reading val is negative */
+	sensor_val tmp_reading;
+	tmp_reading.integer = (int16_t)(*reading & 0xFFFF);
+	tmp_reading.fraction = (int16_t)((*reading >> 16) & 0xFFFF);
+
+	/* sensor_value = 1000 times of true value */
+	int32_t sensor_value = tmp_reading.integer * 1000 + tmp_reading.fraction;
+
+	if (sensor_value < 0) {
+		LOG_DBG("Original sensor reading: integer = %d, fraction = %d (combined value * 1000: %d)",
+			tmp_reading.integer, tmp_reading.fraction, sensor_value);
+		*reading = 0;
+		LOG_DBG("Negative sensor reading detected. Set reading to 0x%x", *reading);
+	}
+	// post_sensor_reading_hook_func(cfg->num);
+
+	return true;
+}
+
+bool post_tmp432_read(sensor_cfg *cfg, void *args, int *reading)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	ARG_UNUSED(args);
+	ARG_UNUSED(reading);
+
+	uint8_t status = 0;
+	uint8_t bit = 0;
+
+	switch (cfg->type) {
+	case sensor_dev_tmp431:
+		bit = (cfg->offset == TMP432_REMOTE_TEMPERATRUE_1) ? BIT(1) :
+				(cfg->offset == TMP432_REMOTE_TEMPERATRUE_2) ? BIT(2) : 0;
+		if (!tmp432_get_temp_open_status(cfg, &status)) {
+			LOG_ERR("Failed to get temp open status for sensor 0x%x", cfg->num);
+			return false;
+		}
+		break;
+	case sensor_dev_emc1413:
+		bit = (cfg->offset == EMC1413_REMOTE_TEMPERATRUE_1) ? BIT(1) :
+				(cfg->offset == EMC1413_REMOTE_TEMPERATRUE_2) ? BIT(2) : 0;
+		if (!emc1413_get_temp_open_status(cfg, &status)) {	
+			LOG_ERR("Failed to get temp open status for sensor 0x%x", cfg->num);
+			return false;
+		}
+		break;
+	default:
+		LOG_ERR("Unsupported sensor type 0x%x for post_tmp432_read", cfg->type);
+		return false;
+	}
+
+	// only check BIT(1), BIT(2)
+	if (status & bit) {
+		cfg->cache_status = SENSOR_OPEN_CIRCUIT;
+		return false;
+	}
+
+	return post_common_sensor_read(cfg, args, reading);
+}
+
+bool is_mb_dc_on()
+{
+	/* RST_ARKE_PWR_ON_PLD_R1_N is low active,
+   * 1 -> power on
+   * 0 -> power off
+   */
+	return gpio_get(RST_ARKE_PWR_ON_PLD_R1_N);
+}
+
+void vr_mutex_init(void)
+{
+	for (uint8_t i = 0; i < ARRAY_SIZE(vr_mutex); i++) {
+		k_mutex_init(vr_mutex + i);
+		LOG_DBG("vr_mutex[%d] %p init", i, vr_mutex + i);
+	}
+}
 
 bool vr_rail_name_get(uint8_t rail, uint8_t **name)
 {
@@ -589,6 +609,32 @@ bool plat_get_vout_range(uint8_t rail, uint16_t *vout_max_millivolt, uint16_t *v
 
 	*vout_max_millivolt = (uint16_t)pdr_sensor->critical_high;
 	*vout_min_millivolt = (uint16_t)pdr_sensor->critical_low;
+
+	return true;
+}
+
+bool vr_rail_voltage_peak_get(uint8_t *name, int *peak_value)
+{
+	CHECK_NULL_ARG_WITH_RETURN(name, false);
+	CHECK_NULL_ARG_WITH_RETURN(peak_value, false);
+
+	for (int i = 0; i < VR_RAIL_E_MAX; i++) {
+		if (strcmp(name, vr_rail_table[i].sensor_name) == 0) {
+			*peak_value = vr_rail_table[i].peak_value;
+			return true;
+		}
+	}
+
+	return false;
+}
+
+bool vr_rail_voltage_peak_clear(uint8_t rail_index)
+{
+	if (rail_index >= VR_RAIL_E_MAX) {
+		return false;
+	}
+
+	vr_rail_table[rail_index].peak_value = 0xffffffff;
 
 	return true;
 }
