@@ -39,6 +39,7 @@ enum GT_NIC_CONFIG {
 	NIC_CONFIG_IB_CX7 = 2,
 	NIC_CONFIG_THOR2 = 3,
 	NIC_CONFIG_POLLARA = 4,
+	NIC_CONFIG_VULCANO = 5,
 };
 
 #define FRU_CFG_NUM MAX_FRU_ID
@@ -73,5 +74,6 @@ typedef struct {
 
 uint8_t check_nic_type_by_fru();
 bool get_first_nic_manufacturer(char *manufacturer, uint8_t manufacturer_size);
+bool get_first_nic_name(char *name, uint8_t name_size);
 
 #endif

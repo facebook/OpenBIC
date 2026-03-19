@@ -32,6 +32,7 @@
 #include "plat_fru.h"
 #include "plat_class.h"
 #include "tmp75.h"
+#include "cx7.h"
 
 #include <logging/log.h>
 
@@ -970,6 +971,76 @@ cx7_init_arg cx7_init_args[] = {
 		.re_init_eid_fn = plat_set_dev_endpoint },
 };
 
+cx7_init_arg vulcano_init_args[] = {
+	[0] = { .is_init = false,
+		.endpoint = 0x10,
+		.sensor_id = 0x003D,
+		.re_init_eid_fn = plat_set_dev_endpoint },
+	[1] = { .is_init = false,
+		.endpoint = 0x11,
+		.sensor_id = 0x003D,
+		.re_init_eid_fn = plat_set_dev_endpoint },
+	[2] = { .is_init = false,
+		.endpoint = 0x12,
+		.sensor_id = 0x003D,
+		.re_init_eid_fn = plat_set_dev_endpoint },
+	[3] = { .is_init = false,
+		.endpoint = 0x13,
+		.sensor_id = 0x003D,
+		.re_init_eid_fn = plat_set_dev_endpoint },
+	[4] = { .is_init = false,
+		.endpoint = 0x14,
+		.sensor_id = 0x003D,
+		.re_init_eid_fn = plat_set_dev_endpoint },
+	[5] = { .is_init = false,
+		.endpoint = 0x15,
+		.sensor_id = 0x003D,
+		.re_init_eid_fn = plat_set_dev_endpoint },
+	[6] = { .is_init = false,
+		.endpoint = 0x16,
+		.sensor_id = 0x003D,
+		.re_init_eid_fn = plat_set_dev_endpoint },
+	[7] = { .is_init = false,
+		.endpoint = 0x17,
+		.sensor_id = 0x003D,
+		.re_init_eid_fn = plat_set_dev_endpoint },
+};
+
+cx7_init_arg vulcano_optics_init_args[] = {
+	[0] = { .is_init = false,
+		.endpoint = 0x10,
+		.sensor_id = 0x0041,
+		.re_init_eid_fn = plat_set_dev_endpoint },
+	[1] = { .is_init = false,
+		.endpoint = 0x11,
+		.sensor_id = 0x0041,
+		.re_init_eid_fn = plat_set_dev_endpoint },
+	[2] = { .is_init = false,
+		.endpoint = 0x12,
+		.sensor_id = 0x0041,
+		.re_init_eid_fn = plat_set_dev_endpoint },
+	[3] = { .is_init = false,
+		.endpoint = 0x13,
+		.sensor_id = 0x0041,
+		.re_init_eid_fn = plat_set_dev_endpoint },
+	[4] = { .is_init = false,
+		.endpoint = 0x14,
+		.sensor_id = 0x0041,
+		.re_init_eid_fn = plat_set_dev_endpoint },
+	[5] = { .is_init = false,
+		.endpoint = 0x15,
+		.sensor_id = 0x0041,
+		.re_init_eid_fn = plat_set_dev_endpoint },
+	[6] = { .is_init = false,
+		.endpoint = 0x16,
+		.sensor_id = 0x0041,
+		.re_init_eid_fn = plat_set_dev_endpoint },
+	[7] = { .is_init = false,
+		.endpoint = 0x17,
+		.sensor_id = 0x0041,
+		.re_init_eid_fn = plat_set_dev_endpoint },
+};
+
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK ARGS
  **************************************************************************************************/
@@ -1318,6 +1389,56 @@ void nic_optics_drive_reinit_for_pollara(void)
 		}
 
 		if (tmp75_init(cfg)) {
+			LOG_ERR("sensor number 0x%x cfg->read reinit fail", cfg->num);
+		}
+	}
+	enable_sensor_poll();
+}
+
+void nic_drive_reinit_for_vulcano(void)
+{
+	if (get_nic_config() != NIC_CONFIG_VULCANO)
+		return;
+
+	LOG_INF("NIC_CONFIG_VULCANO detected, do nic drive reinit");
+
+	disable_sensor_poll();
+
+	for (uint8_t i = 0; i < ARRAY_SIZE(nic_temp_sensor_table); i++) {
+		uint8_t sensor_num = nic_temp_sensor_table[i];
+		sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
+
+		if (!cfg) {
+			LOG_ERR("The pointer to sensor number 0x%x cfg is NULL", sensor_num);
+			continue;
+		}
+
+		if (cx7_init(cfg)) {
+			LOG_ERR("sensor number 0x%x cfg->read reinit fail", cfg->num);
+		}
+	}
+	enable_sensor_poll();
+}
+
+void nic_optics_drive_reinit_for_vulcano(void)
+{
+	if (get_nic_config() != NIC_CONFIG_VULCANO)
+		return;
+
+	LOG_INF("NIC_CONFIG_VULCANO detected, do nic optics drive reinit");
+
+	disable_sensor_poll();
+
+	for (uint8_t i = 0; i < ARRAY_SIZE(nic_optics_sensor_table); i++) {
+		uint8_t sensor_num = nic_optics_sensor_table[i];
+		sensor_cfg *cfg = &sensor_config[sensor_config_index_map[sensor_num]];
+
+		if (!cfg) {
+			LOG_ERR("The pointer to sensor number 0x%x cfg is NULL", sensor_num);
+			continue;
+		}
+
+		if (cx7_init(cfg)) {
 			LOG_ERR("sensor number 0x%x cfg->read reinit fail", cfg->num);
 		}
 	}
