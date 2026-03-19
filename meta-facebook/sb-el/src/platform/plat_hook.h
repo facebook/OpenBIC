@@ -230,6 +230,7 @@ typedef struct bootstrap_user_settings_struct {
 extern vr_vout_range_user_settings_struct vout_range_user_settings;
 extern mp2971_init_arg mp2971_init_args[];
 
+//  vr sensor
 bool pre_vr_read(sensor_cfg *cfg, void *args);
 bool post_vr_read(sensor_cfg *cfg, void *args, int *const reading);
 bool post_tmp432_read(sensor_cfg *cfg, void *args, int *reading);
@@ -244,6 +245,10 @@ bool plat_get_vr_status(uint8_t rail, uint8_t vr_status_rail, uint16_t *vr_statu
 bool plat_clear_vr_status(uint8_t rail);
 bool post_common_sensor_read(sensor_cfg *cfg, void *args, int *const reading);
 bool vr_vout_range_user_settings_init(void);
+bool vr_rail_voltage_peak_get(uint8_t *name, int *peak_value);
+bool vr_rail_voltage_peak_clear(uint8_t rail_index);
+
+// Bootstrape
 bool bootstrap_default_settings_init(void);
 bool bootstrap_user_settings_init(void);
 bool set_bootstrap_table_and_user_settings(uint8_t rail, uint8_t *change_setting_value,
