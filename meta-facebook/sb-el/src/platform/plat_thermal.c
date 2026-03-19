@@ -17,6 +17,7 @@
 #include <logging/log.h>
 #include "plat_thermal.h"
 #include "tmp431.h"
+#include "emc1413.h"
 #include "sensor.h"
 #include "plat_log.h"
 #include "plat_user_setting.h"
@@ -134,6 +135,12 @@ bool plat_clear_temp_status(uint8_t rail)
 			goto err;
 		}
 		break;
+	case sensor_dev_emc1413:
+		if (!emc1413_clear_temp_status(cfg)) {
+			LOG_ERR("The TEMP EMC1413 temp status clear failed");
+			goto err;
+		}
+		break;
 	case sensor_dev_tmp75: {
 		LOG_DBG("TMP75 temp_status cannot be cleared; its behavior depends on the temp_threshold settings.");
 	} break;
@@ -186,6 +193,12 @@ bool plat_get_temp_status(uint8_t rail, uint8_t *temp_status)
 	case sensor_dev_tmp431:
 		if (!tmp432_get_temp_status(cfg, temp_status)) {
 			LOG_ERR("The TEMP TMP432 temp status reading failed");
+			goto err;
+		}
+		break;
+	case sensor_dev_emc1413:
+		if (!emc1413_get_temp_status(cfg, temp_status)) {
+			LOG_ERR("The TEMP EMC1413 temp status reading failed");
 			goto err;
 		}
 		break;
