@@ -17,6 +17,7 @@
 #include "pmbus.h"
 #include "sensor.h"
 #include "tmp431.h"
+#include "emc1413.h"
 #include "pldm_sensor.h"
 #include "plat_hook.h"
 #include "plat_i2c.h"
@@ -13211,6 +13212,12 @@ void change_sensor_cfg(uint8_t asic_board_id, uint8_t tmp_module, uint8_t vr_mod
 
 			if (tmp_change_mode == FAB1_2ND_EMC1413) {
 				tmp_table[j].pldm_sensor_cfg.type = sensor_dev_emc1413;
+				if (tmp_table[j].pldm_sensor_cfg.offset == TMP432_REMOTE_TEMPERATRUE_1) {
+					tmp_table[j].pldm_sensor_cfg.offset = EMC1413_REMOTE_TEMPERATRUE_1;
+				}
+				else if (tmp_table[j].pldm_sensor_cfg.offset == TMP432_REMOTE_TEMPERATRUE_2) {
+					tmp_table[j].pldm_sensor_cfg.offset = EMC1413_REMOTE_TEMPERATRUE_2;
+				}
 			} else {
 				/* default (old tmp432) or other types if needed */
 			}

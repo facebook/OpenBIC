@@ -31,6 +31,7 @@
 #include "plat_fru.h"
 #include "plat_class.h"
 #include "tmp431.h"
+#include "emc1413.h"
 
 LOG_MODULE_REGISTER(plat_hook);
 
@@ -145,16 +146,34 @@ bool post_tmp432_read(sensor_cfg *cfg, void *args, int *reading)
 	ARG_UNUSED(reading);
 
 	uint8_t status = 0;
+	uint8_t bit = 0;
 
-	if (tmp432_get_temp_open_status(cfg, &status)) {
-		uint8_t bit = (cfg->offset == TMP432_REMOTE_TEMPERATRUE_1) ? BIT(1) :
-			      (cfg->offset == TMP432_REMOTE_TEMPERATRUE_2) ? BIT(2) :
-									     0;
-		// only check BIT(1), BIT(2)
-		if (status & bit) {
-			cfg->cache_status = SENSOR_OPEN_CIRCUIT;
+	switch (cfg->type) {
+	case sensor_dev_tmp431:
+		bit = (cfg->offset == TMP432_REMOTE_TEMPERATRUE_1) ? BIT(1) :
+				(cfg->offset == TMP432_REMOTE_TEMPERATRUE_2) ? BIT(2) : 0;
+		if (!tmp432_get_temp_open_status(cfg, &status)) {
+			LOG_ERR("Failed to get temp open status for sensor 0x%x", cfg->num);
 			return false;
 		}
+		break;
+	case sensor_dev_emc1413:
+		bit = (cfg->offset == EMC1413_REMOTE_TEMPERATRUE_1) ? BIT(1) :
+				(cfg->offset == EMC1413_REMOTE_TEMPERATRUE_2) ? BIT(2) : 0;
+		if (!emc1413_get_temp_open_status(cfg, &status)) {	
+			LOG_ERR("Failed to get temp open status for sensor 0x%x", cfg->num);
+			return false;
+		}
+		break;
+	default:
+		LOG_ERR("Unsupported sensor type 0x%x for post_tmp432_read", cfg->type);
+		return false;
+	}
+
+	// only check BIT(1), BIT(2)
+	if (status & bit) {
+		cfg->cache_status = SENSOR_OPEN_CIRCUIT;
+		return false;
 	}
 
 	return post_common_sensor_read(cfg, args, reading);
