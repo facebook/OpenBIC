@@ -1604,7 +1604,6 @@ err:
 	return ret;
 }
 
-
 void set_delta_ubc_time_of_vout_rise()
 {
 	uint8_t ubc_module = get_ubc_module();
@@ -1627,6 +1626,17 @@ void set_delta_ubc_time_of_vout_rise()
 			uint8_t addr = cfg->target_addr;
 
 			uint8_t write_data[2] = { 0 };
+			/* read  vout rising time first, if it's 0x0078, just skip*/
+			if (!plat_i2c_read(bus, addr, 0x61, write_data, 2)) {
+				LOG_ERR("UBC(id=0x%02X bus=%u addr=0x%02X): read 0x61 failed", id,
+					bus, addr);
+				return;
+			}
+			if (write_data[0] == 0x78 && write_data[1] == 0x00) {
+				LOG_INF("UBC vout rising time already set, skip setting. vout_rise: 0x%02X, bus: %d, address: 0x%x",
+					(write_data[0] << 8) | write_data[1], bus, addr);
+				continue;
+			}
 
 			/* remove protection: reg 0x10 = 0x00 */
 			write_data[0] = 0x00;
