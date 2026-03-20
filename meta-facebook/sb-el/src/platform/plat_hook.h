@@ -249,6 +249,7 @@ bool vr_rail_voltage_peak_get(uint8_t *name, int *peak_value);
 bool vr_rail_voltage_peak_clear(uint8_t rail_index);
 
 // pwrlevel
+bool post_ubc_read(sensor_cfg *cfg, void *args, int *reading);
 bool plat_get_alert_level_is_assert(void);
 
 // Bootstrape
