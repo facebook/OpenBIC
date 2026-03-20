@@ -27,6 +27,7 @@
 #include "raa228249.h"
 #include "plat_i2c_target.h"
 #include "plat_user_setting.h"
+#include "plat_kernel_obj.h"
 #include "plat_ioexp.h"
 #include "plat_fru.h"
 #include "plat_class.h"
@@ -35,7 +36,10 @@
 
 LOG_MODULE_REGISTER(plat_hook);
 
+bool post_sensor_reading_hook_func(uint8_t sensor_number);
+
 static struct k_mutex vr_mutex[VR_MAX_NUM];
+bool alert_level_is_assert = false;
 
 #define EEPROM_MAX_WRITE_TIME 5 // the BR24G512 eeprom max write time is 3.5 ms
 /* VR */
@@ -366,7 +370,8 @@ bool post_tmp432_read(sensor_cfg *cfg, void *args, int *reading)
 	switch (cfg->type) {
 	case sensor_dev_tmp431:
 		bit = (cfg->offset == TMP432_REMOTE_TEMPERATRUE_1) ? BIT(1) :
-				(cfg->offset == TMP432_REMOTE_TEMPERATRUE_2) ? BIT(2) : 0;
+		      (cfg->offset == TMP432_REMOTE_TEMPERATRUE_2) ? BIT(2) :
+								     0;
 		if (!tmp432_get_temp_open_status(cfg, &status)) {
 			LOG_ERR("Failed to get temp open status for sensor 0x%x", cfg->num);
 			return false;
@@ -374,8 +379,9 @@ bool post_tmp432_read(sensor_cfg *cfg, void *args, int *reading)
 		break;
 	case sensor_dev_emc1413:
 		bit = (cfg->offset == EMC1413_REMOTE_TEMPERATRUE_1) ? BIT(1) :
-				(cfg->offset == EMC1413_REMOTE_TEMPERATRUE_2) ? BIT(2) : 0;
-		if (!emc1413_get_temp_open_status(cfg, &status)) {	
+		      (cfg->offset == EMC1413_REMOTE_TEMPERATRUE_2) ? BIT(2) :
+								      0;
+		if (!emc1413_get_temp_open_status(cfg, &status)) {
 			LOG_ERR("Failed to get temp open status for sensor 0x%x", cfg->num);
 			return false;
 		}
@@ -392,6 +398,80 @@ bool post_tmp432_read(sensor_cfg *cfg, void *args, int *reading)
 	}
 
 	return post_common_sensor_read(cfg, args, reading);
+}
+
+bool plat_get_alert_level_is_assert(void)
+{
+	return alert_level_is_assert;
+}
+
+bool post_ubc_read(sensor_cfg *cfg, void *args, int *reading)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	ARG_UNUSED(args);
+
+	// post reading value update
+	uint8_t sensor_number = cfg->num;
+	if (!post_sensor_reading_hook_func(sensor_number))
+		LOG_ERR("pldm update sensor value failed");
+
+	const sensor_val *reading_val = (sensor_val *)reading;
+
+	int sensor_reading = 0;
+	static int ubc1_current_mA;
+
+	if (cfg->num == SENSOR_NUM_UBC1_P12V_CURR_A) {
+		if (reading != NULL) {
+			if (reading_val->integer >= 0) {
+				sensor_reading =
+					reading_val->integer * 1000 + reading_val->fraction;
+			} else {
+				sensor_reading =
+					reading_val->integer * 1000 - reading_val->fraction;
+			}
+
+			ubc1_current_mA = sensor_reading;
+		} else {
+			ubc1_current_mA = 0;
+		}
+	}
+
+	if (cfg->num == SENSOR_NUM_UBC2_P12V_CURR_A) {
+		if (reading != NULL) {
+			if (reading_val->integer >= 0) {
+				sensor_reading =
+					reading_val->integer * 1000 + reading_val->fraction;
+			} else {
+				sensor_reading =
+					reading_val->integer * 1000 - reading_val->fraction;
+			}
+		} else {
+			sensor_reading = 0;
+		}
+
+		if (pwr_level_mutex_lock(K_MSEC(1000)) != 0) {
+			LOG_ERR("failed to lock pwrlevel mutex");
+			return false;
+		}
+
+		if ((ubc1_current_mA + sensor_reading) > plat_get_alert_level_mA_user_setting()) {
+			if (alert_level_is_assert == false) {
+				alert_level_is_assert = true;
+				power_level_send_event(alert_level_is_assert, ubc1_current_mA,
+						       sensor_reading);
+			}
+		} else {
+			if (alert_level_is_assert == true) {
+				alert_level_is_assert = false;
+				power_level_send_event(alert_level_is_assert, ubc1_current_mA,
+						       sensor_reading);
+			}
+		}
+
+		pwr_level_mutex_unlock();
+	}
+
+	return true;
 }
 
 bool is_mb_dc_on()
