@@ -28,3 +28,8 @@ bool plat_get_ubc_status(void);
 
 /* Timer for power sequence event handling */
 void plat_handle_pwr_sequence_event(void);
+
+/* mutex for pwrlevel */
+int pwr_level_mutex_lock(k_timeout_t timeout);
+int pwr_level_mutex_unlock(void);
+void pwr_level_mutex_init(void);

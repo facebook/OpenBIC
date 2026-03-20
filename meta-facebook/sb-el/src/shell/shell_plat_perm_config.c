@@ -42,19 +42,19 @@ static int cmd_perm_config_get(const struct shell *shell, size_t argc, char **ar
 		}
 	}
 
-	// char setting_data[4] = { 0 };
+	char setting_data[4] = { 0 };
 
-	// if (get_user_settings_alert_level_from_eeprom(setting_data, sizeof(setting_data)) == -1) {
-	// 	LOG_ERR("get alert level user settings failed");
-	// } else {
-	// 	int32_t alert_level_value = ((setting_data[3] << 24) | (setting_data[2] << 16) |
-	// 				     (setting_data[1] << 8) | setting_data[0]);
-	// 	if (alert_level_value != 0xffffffff) {
-	// 		shell_print(shell, "power alert level                            val=%d",
-	// 			    alert_level_value);
-	// 		config_count++;
-	// 	}
-	// }
+	if (get_user_settings_alert_level_from_eeprom(setting_data, sizeof(setting_data)) == -1) {
+		LOG_ERR("get alert level user settings failed");
+	} else {
+		int32_t alert_level_value = ((setting_data[3] << 24) | (setting_data[2] << 16) |
+					     (setting_data[1] << 8) | setting_data[0]);
+		if (alert_level_value != 0xffffffff) {
+			shell_print(shell, "power alert level                            val=%d",
+				    alert_level_value);
+			config_count++;
+		}
+	}
 
 	// uint32_t setting_data_for_delay_pcie_perst[4] = { 0 };
 	// if (!get_user_settings_delay_pcie_perst_from_eeprom(

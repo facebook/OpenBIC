@@ -22,29 +22,35 @@
 #include <shell_plat_power_sequence.h>
 #include <logging/log.h>
 
-
 LOG_MODULE_REGISTER(plat_kernel);
 
 /* semaphore CPLD polling semaphore */
 K_TIMER_DEFINE(ragular_cpld_polling_sem_timer, plat_ragular_cpld_polling_sem_handler, NULL);
 static struct k_sem cpld_polling_sem;
 
-void plat_ragular_cpld_polling_sem_handler(struct k_timer *timer){
+/* mutex for pwrlevel */
+static struct k_mutex pwrlevel_mutex;
+
+void plat_ragular_cpld_polling_sem_handler(struct k_timer *timer)
+{
 	k_sem_give(&cpld_polling_sem);
 }
 
-void plat_activate_cpld_polling_semaphore_timer(void){
-    k_sem_init(&cpld_polling_sem, 0, 1);
-    k_timer_start(&ragular_cpld_polling_sem_timer, K_MSEC(1000), K_MSEC(1000));	
+void plat_activate_cpld_polling_semaphore_timer(void)
+{
+	k_sem_init(&cpld_polling_sem, 0, 1);
+	k_timer_start(&ragular_cpld_polling_sem_timer, K_MSEC(1000), K_MSEC(1000));
 }
 
-void plat_wait_for_cpld_polling_trigger(void){
-    k_sem_take(&cpld_polling_sem, K_FOREVER);
+void plat_wait_for_cpld_polling_trigger(void)
+{
+	k_sem_take(&cpld_polling_sem, K_FOREVER);
 }
 
-void plat_trigger_cpld_polling(void){
-    LOG_WRN("triggering CPLD polling");
-    k_sem_give(&cpld_polling_sem);
+void plat_trigger_cpld_polling(void)
+{
+	LOG_WRN("triggering CPLD polling");
+	k_sem_give(&cpld_polling_sem);
 }
 
 /* Timer for dc status checking
@@ -53,8 +59,9 @@ bool ubc_status = false; // "ubc_enabled_delayed_status" in rainbow
 void plat_check_ubc_delayed_timer_handler(struct k_timer *timer);
 K_TIMER_DEFINE(check_ubc_delayed_timer, plat_check_ubc_delayed_timer_handler, NULL);
 
-void plat_check_ubc_delayed_timer_handler(struct k_timer *timer){
-		/* FM_PLD_UBC_EN_R
+void plat_check_ubc_delayed_timer_handler(struct k_timer *timer)
+{
+	/* FM_PLD_UBC_EN_R
 	 * 1 -> UBC is enabled
 	 * 0 -> UBC is disabled
 	 */
@@ -62,13 +69,15 @@ void plat_check_ubc_delayed_timer_handler(struct k_timer *timer){
 	ubc_status = is_ubc_enabled;
 }
 
-void plat_update_ubc_status(void){
-    // delay 1 second for power sequence
-    k_timer_start(&check_ubc_delayed_timer, K_MSEC(1000), K_NO_WAIT);
+void plat_update_ubc_status(void)
+{
+	// delay 1 second for power sequence
+	k_timer_start(&check_ubc_delayed_timer, K_MSEC(1000), K_NO_WAIT);
 }
 
-bool plat_get_ubc_status(void){
-    return ubc_status;
+bool plat_get_ubc_status(void)
+{
+	return ubc_status;
 }
 
 /* Timer for check and handle power sequence events */
@@ -77,14 +86,16 @@ K_TIMER_DEFINE(pwr_sequence_event_work_timer, pwr_sequence_event_timer_handler, 
 void pwr_sequence_event(struct k_work *work);
 K_WORK_DEFINE(pwr_sequence_event_work, pwr_sequence_event);
 
-void pwr_sequence_event_timer_handler(struct k_timer *timer){
+void pwr_sequence_event_timer_handler(struct k_timer *timer)
+{
 	k_work_submit(&pwr_sequence_event_work);
 }
 
-void pwr_sequence_event(struct k_work *work){
+void pwr_sequence_event(struct k_work *work)
+{
 	bool is_dc_on_status = is_mb_dc_on();
 	// if dc off
-    // Handle power-on sequence event if failure.
+	// Handle power-on sequence event if failure.
 	if (!is_dc_on_status) {
 		plat_find_power_seq_fail();
 		uint8_t idx = plat_get_power_seq_fail_id();
@@ -110,7 +121,26 @@ void pwr_sequence_event(struct k_work *work){
 	}
 }
 
-void plat_handle_pwr_sequence_event(void){
-    // delay 1 second for power sequence
-    k_timer_start(&pwr_sequence_event_work_timer, K_MSEC(1000), K_NO_WAIT);
+void plat_handle_pwr_sequence_event(void)
+{
+	// delay 1 second for power sequence
+	k_timer_start(&pwr_sequence_event_work_timer, K_MSEC(1000), K_NO_WAIT);
+}
+
+/* timeout can be K_NO_WAIT, K_MSEC(x), K_SECONDS(x), or K_FOREVER */
+int pwr_level_mutex_lock(k_timeout_t timeout)
+{
+	return k_mutex_lock(&pwrlevel_mutex, timeout);
+}
+
+int pwr_level_mutex_unlock(void)
+{
+	return k_mutex_unlock(&pwrlevel_mutex);
+}
+
+void pwr_level_mutex_init(void)
+{
+	k_mutex_init(&pwrlevel_mutex);
+
+	return;
 }

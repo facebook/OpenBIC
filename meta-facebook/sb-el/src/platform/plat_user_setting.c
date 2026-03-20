@@ -14,6 +14,11 @@
  * limitations under the License.
  */
 
+#include <stdio.h>
+#include <string.h>
+#include "libutil.h"
+#include <logging/log.h>
+#include "plat_i2c.h"
 #include "plat_hook.h"
 #include "plat_fru.h"
 #include "sensor.h"
@@ -21,14 +26,20 @@
 #include "emc1413.h"
 #include "tmp75.h"
 #include "plat_user_setting.h"
-#include <logging/log.h>
+#include "plat_kernel_obj.h"
 
 LOG_MODULE_REGISTER(plat_user_setting);
 
-#define EEPROM_MAX_WRITE_TIME 5
+#define EEPROM_MAX_WRITE_TIME 5 // the BR24G512 eeprom max write time is 3.5 ms
 
 temp_threshold_user_settings_struct temp_threshold_user_settings = { 0 };
 struct temp_threshold_user_settings_struct temp_threshold_default_settings = { 0 };
+
+// pwrlevel
+// bool alert_level_is_assert = false;
+static bool uart_pwr_event_is_enable = true;
+int32_t alert_level_mA_default = 180000;
+int32_t alert_level_mA_user_setting = 180000;
 
 // to do need check remot or local
 temp_threshold_mapping_sensor temp_index_threshold_type_table[] = {
@@ -46,12 +57,12 @@ temp_threshold_mapping_sensor temp_index_threshold_type_table[] = {
 	  "SB_RB_BOT_OUTLET_TEMP_HIGH_LIM" },
 	{ ASIC_NUWA0_SENSOR0_LOW_LIMIT, REMOTE_1_LOW_LIMIT, SENSOR_NUM_ASIC_NUWA0_SENSOR0_TEMP_C,
 	  "SB_RB_ASIC_NUWA0_SENSOR0_TEMP_LOW_LIM" },
-	{ ASIC_NUWA0_SENSOR0_HIGH_LIMIT, REMOTE_1_HIGH_LIMIT,
-	  SENSOR_NUM_ASIC_NUWA0_SENSOR0_TEMP_C, "SB_RB_ASIC_NUWA0_SENSOR0_TEMP_HIGH_LIM" },
+	{ ASIC_NUWA0_SENSOR0_HIGH_LIMIT, REMOTE_1_HIGH_LIMIT, SENSOR_NUM_ASIC_NUWA0_SENSOR0_TEMP_C,
+	  "SB_RB_ASIC_NUWA0_SENSOR0_TEMP_HIGH_LIM" },
 	{ ASIC_NUWA0_SENSOR1_LOW_LIMIT, REMOTE_2_LOW_LIMIT, SENSOR_NUM_ASIC_NUWA0_SENSOR1_TEMP_C,
 	  "SB_RB_ASIC_NUWA0_SENSOR1_TEMP_LOW_LIM" },
-	{ ASIC_NUWA0_SENSOR1_HIGH_LIMIT, REMOTE_2_HIGH_LIMIT,
-	  SENSOR_NUM_ASIC_NUWA0_SENSOR1_TEMP_C, "SB_RB_ASIC_NUWA0_SENSOR1_TEMP_HIGH_LIM" },
+	{ ASIC_NUWA0_SENSOR1_HIGH_LIMIT, REMOTE_2_HIGH_LIMIT, SENSOR_NUM_ASIC_NUWA0_SENSOR1_TEMP_C,
+	  "SB_RB_ASIC_NUWA0_SENSOR1_TEMP_HIGH_LIM" },
 	{ ASIC_OWL_W_LOW_LIMIT, REMOTE_1_LOW_LIMIT, SENSOR_NUM_ASIC_OWL_W_TEMP_C,
 	  "SB_RB_ASIC_OWL_W_TEMP_LOW_LIM" },
 	{ ASIC_OWL_W_HIGH_LIMIT, REMOTE_1_HIGH_LIMIT, SENSOR_NUM_ASIC_OWL_W_TEMP_C,
@@ -62,12 +73,12 @@ temp_threshold_mapping_sensor temp_index_threshold_type_table[] = {
 	  "SB_RB_ASIC_OWL_E_TEMP_HIGH_LIM" },
 	{ ASIC_NUWA1_SENSOR0_LOW_LIMIT, REMOTE_1_LOW_LIMIT, SENSOR_NUM_ASIC_NUWA1_SENSOR0_TEMP_C,
 	  "SB_RB_ASIC_NUWA1_SENSOR0_TEMP_LOW_LIM" },
-	{ ASIC_NUWA1_SENSOR0_HIGH_LIMIT, REMOTE_1_HIGH_LIMIT,
-	  SENSOR_NUM_ASIC_NUWA1_SENSOR0_TEMP_C, "SB_RB_ASIC_NUWA1_SENSOR0_TEMP_HIGH_LIM" },
+	{ ASIC_NUWA1_SENSOR0_HIGH_LIMIT, REMOTE_1_HIGH_LIMIT, SENSOR_NUM_ASIC_NUWA1_SENSOR0_TEMP_C,
+	  "SB_RB_ASIC_NUWA1_SENSOR0_TEMP_HIGH_LIM" },
 	{ ASIC_NUWA1_SENSOR1_LOW_LIMIT, REMOTE_2_LOW_LIMIT, SENSOR_NUM_ASIC_NUWA1_SENSOR1_TEMP_C,
 	  "SB_RB_ASIC_NUWA1_SENSOR1_TEMP_LOW_LIM" },
-	{ ASIC_NUWA1_SENSOR1_HIGH_LIMIT, REMOTE_2_HIGH_LIMIT,
-	  SENSOR_NUM_ASIC_NUWA1_SENSOR1_TEMP_C, "SB_RB_ASIC_NUWA1_SENSOR1_TEMP_HIGH_LIM" },
+	{ ASIC_NUWA1_SENSOR1_HIGH_LIMIT, REMOTE_2_HIGH_LIMIT, SENSOR_NUM_ASIC_NUWA1_SENSOR1_TEMP_C,
+	  "SB_RB_ASIC_NUWA1_SENSOR1_TEMP_HIGH_LIM" },
 	{ ASIC_HAMSA_CRM_LOW_LIMIT, REMOTE_1_LOW_LIMIT, SENSOR_NUM_ASIC_HAMSA_CRM_TEMP_C,
 	  "SB_RB_ASIC_HAMSA_CRM_TEMP_LOW_LIM" },
 	{ ASIC_HAMSA_CRM_HIGH_LIMIT, REMOTE_1_HIGH_LIMIT, SENSOR_NUM_ASIC_HAMSA_CRM_TEMP_C,
@@ -78,6 +89,7 @@ temp_threshold_mapping_sensor temp_index_threshold_type_table[] = {
 	  "SB_RB_ASIC_HAMSA_LS_TEMP_HIGH_LIM" },
 };
 
+// temp
 bool set_temp_threshold_user_settings(void *temp_threshold_user_settings)
 {
 	CHECK_NULL_ARG_WITH_RETURN(temp_threshold_user_settings, false);
@@ -130,6 +142,7 @@ bool temp_threshold_default_settings_init(void)
 
 	return true;
 }
+
 bool temp_threshold_user_settings_init(void)
 {
 	if (temp_threshold_user_settings_get(&temp_threshold_user_settings) == false) {
@@ -184,7 +197,8 @@ bool plat_get_temp_threshold(uint8_t temp_index_threshold_type, uint32_t *millid
 		}
 		break;
 	case sensor_dev_emc1413:
-		if (!emc1413_get_temp_threshold(cfg, temp_threshold_type_tmp, millidegree_celsius)) {
+		if (!emc1413_get_temp_threshold(cfg, temp_threshold_type_tmp,
+						millidegree_celsius)) {
 			LOG_ERR("The EMC1413 temp threshold reading failed");
 			return false;
 		}
@@ -254,7 +268,8 @@ bool plat_set_temp_threshold(uint8_t temp_index_threshold_type, uint32_t *millid
 		}
 		break;
 	case sensor_dev_emc1413:
-		if (!emc1413_set_temp_threshold(cfg, temp_threshold_type_tmp, millidegree_celsius)) {
+		if (!emc1413_set_temp_threshold(cfg, temp_threshold_type_tmp,
+						millidegree_celsius)) {
 			LOG_ERR("The EMC1413 temp threshold setting failed");
 			return false;
 		}
@@ -279,12 +294,141 @@ bool plat_set_temp_threshold(uint8_t temp_index_threshold_type, uint32_t *millid
 	return true;
 }
 
+// pwrlevel
+int32_t plat_get_alert_level_mA_user_setting(void)
+{
+	return alert_level_mA_user_setting;
+}
+
+void set_alert_level_to_default_or_user_setting(bool is_default, int32_t user_setting)
+{
+	if (pwr_level_mutex_lock(K_MSEC(1000)) != 0) {
+		LOG_ERR("failed to lock pwrlevel mutex");
+		return;
+	}
+
+	if (is_default == true) {
+		alert_level_mA_user_setting = alert_level_mA_default;
+	} else {
+		alert_level_mA_user_setting = user_setting;
+	}
+
+	pwr_level_mutex_unlock();
+
+	return;
+}
+
+void set_uart_power_event_is_enable(bool is_enable)
+{
+	if (is_enable == true) {
+		uart_pwr_event_is_enable = true;
+	} else {
+		uart_pwr_event_is_enable = false;
+	}
+
+	return;
+}
+
+int power_level_send_event(bool is_assert, int ubc1_current, int ubc2_current)
+{
+	if (is_assert == true) {
+		//To Do: need to send assert event to BMC
+	} else {
+		//To Do: need to send deassert event to BMC
+	}
+
+	if (uart_pwr_event_is_enable == true) {
+		//print send event to consloe
+		LOG_INF("send power level event ubc1_current=%dmA,ubc2_current=%dmA,alert_level_mA_user_setting=%dmA",
+			ubc1_current, ubc2_current, alert_level_mA_user_setting);
+	}
+
+	return 0;
+}
+
+int get_alert_level_info(bool *is_assert, int32_t *default_value, int32_t *setting_value)
+{
+	CHECK_NULL_ARG_WITH_RETURN(is_assert, -1);
+	CHECK_NULL_ARG_WITH_RETURN(default_value, -1);
+	CHECK_NULL_ARG_WITH_RETURN(setting_value, -1);
+
+	if (pwr_level_mutex_lock(K_MSEC(1000)) != 0) {
+		LOG_ERR("failed to lock pwrlevel mutex");
+		return -1;
+	}
+
+	*is_assert = plat_get_alert_level_is_assert();
+	*default_value = alert_level_mA_default;
+	*setting_value = alert_level_mA_user_setting;
+
+	pwr_level_mutex_unlock();
+
+	return 0;
+}
+
+int set_user_settings_alert_level_to_eeprom(void *user_settings, uint8_t data_length)
+{
+	CHECK_NULL_ARG_WITH_RETURN(user_settings, -1);
+
+	//bool plat_eeprom_write(uint32_t offset, uint8_t *data, uint16_t data_len)
+	if (!plat_eeprom_write(ALERT_LEVEL_USER_SETTINGS_OFFSET, user_settings, data_length)) {
+		LOG_ERR("Failed to write alert level to eeprom");
+		return -1;
+	}
+	k_msleep(EEPROM_MAX_WRITE_TIME);
+
+	return 0;
+}
+
+int get_user_settings_alert_level_from_eeprom(void *user_settings, uint8_t data_length)
+{
+	CHECK_NULL_ARG_WITH_RETURN(user_settings, -1);
+
+	if (!plat_eeprom_read(ALERT_LEVEL_USER_SETTINGS_OFFSET, user_settings, data_length)) {
+		LOG_ERR("Failed to read alert level from eeprom");
+		return -1;
+	}
+
+	return 0;
+}
+
+static int alert_level_user_settings_init(void)
+{
+	char setting_data[4] = { 0 };
+
+	if (get_user_settings_alert_level_from_eeprom(setting_data, sizeof(setting_data)) == -1) {
+		LOG_ERR("get alert level user settings failed");
+		return -1;
+	}
+
+	int32_t alert_level_value = ((setting_data[3] << 24) | (setting_data[2] << 16) |
+				     (setting_data[1] << 8) | setting_data[0]);
+
+	if (alert_level_value != 0xffffffff) {
+		alert_level_mA_user_setting = alert_level_value;
+	} else {
+		alert_level_mA_user_setting = alert_level_mA_default;
+	}
+
+	return 0;
+}
+
+// other
 bool perm_config_clear(void)
 {
 	/* clear all temp_threshold perm parameters */
 	memset(temp_threshold_user_settings.temperature_reg_val, 0xFF,
 	       sizeof(temp_threshold_user_settings.temperature_reg_val));
 	if (!set_temp_threshold_user_settings(&temp_threshold_user_settings)) {
+		LOG_ERR("The perm_config clear failed");
+		return false;
+	}
+
+	// pwrlevel
+	int32_t setting_value = 0xffffffff;
+	char setting_data[4] = { 0 };
+	memcpy(setting_data, &setting_value, sizeof(setting_data));
+	if (set_user_settings_alert_level_to_eeprom(setting_data, sizeof(setting_data)) != 0) {
 		LOG_ERR("The perm_config clear failed");
 		return false;
 	}
@@ -297,4 +441,5 @@ void user_settings_init(void)
 	vr_vout_range_user_settings_init();
 	bootstrap_default_settings_init();
 	bootstrap_user_settings_init();
+	alert_level_user_settings_init();
 }

@@ -32,6 +32,7 @@
 #include "plat_ioexp.h"
 #include "plat_thermal.h"
 #include "plat_power_capping.h"
+#include "plat_kernel_obj.h"
 #include "plat_event.h"
 #include "plat_hwmon.h"
 #include "plat_gpio.h"
@@ -51,6 +52,7 @@ void pal_pre_init()
 	plat_led_init();
 	vr_mutex_init();
 	init_pwm_dev();
+	pwr_level_mutex_init();
 	// plat_i3c_set_pid();
 }
 

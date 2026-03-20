@@ -89,12 +89,23 @@ typedef struct temp_threshold_user_settings_struct {
 
 extern temp_threshold_user_settings_struct temp_threshold_user_settings;
 
+// temp
 bool get_temp_index_threshold_type_name(uint8_t type, uint8_t **name);
 bool plat_get_temp_threshold(uint8_t temp_index_threshold_type, uint32_t *millidegree_celsius);
 bool temp_threshold_user_settings_init(void);
 bool plat_set_temp_threshold(uint8_t temp_index_threshold_type, uint32_t *millidegree_celsius,
 			     bool is_default, bool is_perm);
 bool temp_threshold_default_settings_init(void);
+
+// pwrlevel
+void set_alert_level_to_default_or_user_setting(bool is_default, int32_t user_setting);
+int get_alert_level_info(bool *is_assert, int32_t *default_value, int32_t *setting_value);
+int get_user_settings_alert_level_from_eeprom(void *user_settings, uint8_t data_length);
+int set_user_settings_alert_level_to_eeprom(void *user_settings, uint8_t data_length);
+int32_t plat_get_alert_level_mA_user_setting(void);
+int power_level_send_event(bool is_assert, int ubc1_current, int ubc2_current);
+
+// other
 void user_settings_init(void);
 bool perm_config_clear(void);
 
