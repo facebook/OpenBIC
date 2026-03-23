@@ -34,12 +34,23 @@ typedef struct _dimm_pre_proc_arg {
 	bool is_present_checked;
 } dimm_pre_proc_arg;
 
+typedef struct _mp5998_init_arg {
+	uint16_t vin_ov_fault_limit;
+	uint16_t vin_ov_warn_limit;
+	uint16_t vin_uv_warn_limit;
+	uint16_t iin_oc_fault_limit;
+	uint16_t iin_oc_warn_limit;
+	uint16_t fault_mask;
+	uint16_t protect_en;
+} mp5998_init_arg;
+
 /**************************************************************************************************
  * INIT ARGS
 **************************************************************************************************/
 extern adc_asd_init_arg adc_asd_init_args[];
 extern adm1278_init_arg adm1278_init_args[];
 extern mp5990_init_arg mp5990_init_args[];
+extern mp5998_init_arg mp5998_init_args[];
 extern pmic_init_arg pmic_init_args[];
 extern max16550a_init_arg max16550a_init_args[];
 extern ltc4286_init_arg ltc4286_init_args[];

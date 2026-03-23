@@ -124,5 +124,6 @@ void init_e1s_boot_drive_module();
 void init_platform_config();
 void read_adm1278_model();
 void read_mp5990_model();
+void mp5998_init();
 
 #endif
