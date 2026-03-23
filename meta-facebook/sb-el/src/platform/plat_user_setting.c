@@ -34,6 +34,7 @@ LOG_MODULE_REGISTER(plat_user_setting);
 
 temp_threshold_user_settings_struct temp_threshold_user_settings = { 0 };
 struct temp_threshold_user_settings_struct temp_threshold_default_settings = { 0 };
+thermaltrip_user_settings_struct thermaltrip_user_settings = { 0xFF };
 
 // pwrlevel
 // bool alert_level_is_assert = false;
@@ -413,6 +414,76 @@ static int alert_level_user_settings_init(void)
 	return 0;
 }
 
+// thermaltrip
+bool get_user_settings_thermaltrip_from_eeprom(void *thermaltrip_user_settings, uint8_t data_length)
+{
+	CHECK_NULL_ARG_WITH_RETURN(thermaltrip_user_settings, false);
+
+	if (!plat_eeprom_read(THERMALTRIP_USER_SETTINGS_OFFSET, thermaltrip_user_settings,
+			      data_length)) {
+		LOG_ERR("Failed to write thermaltrip to eeprom");
+		return false;
+	}
+
+	k_msleep(EEPROM_MAX_WRITE_TIME);
+
+	return true;
+}
+
+bool set_user_settings_thermaltrip_to_eeprom(void *thermaltrip_user_settings, uint8_t data_length)
+{
+	CHECK_NULL_ARG_WITH_RETURN(thermaltrip_user_settings, false);
+
+	if (!plat_eeprom_write(THERMALTRIP_USER_SETTINGS_OFFSET, thermaltrip_user_settings,
+			       data_length)) {
+		LOG_ERR("Failed to write thermaltrip to eeprom");
+		return false;
+	}
+
+	k_msleep(EEPROM_MAX_WRITE_TIME);
+
+	return true;
+}
+
+bool set_thermaltrip_user_settings(bool thermaltrip_enable, bool is_perm)
+{
+	uint8_t thermaltrip_enable_value = thermaltrip_enable ? 1 : 0;
+	if (!plat_write_cpld(CPLD_THERMALTRIP_SWITCH_ADDR, &thermaltrip_enable_value)) {
+		LOG_ERR("Failed to read thermaltrip CPLD");
+		return false;
+	}
+
+	if (is_perm) {
+		thermaltrip_user_settings.thermaltrip_user_setting_value =
+			(thermaltrip_enable ? 0x01 : 0x00);
+
+		if (!set_user_settings_thermaltrip_to_eeprom(&thermaltrip_user_settings,
+							     sizeof(thermaltrip_user_settings))) {
+			LOG_ERR("Failed to write thermaltrip to eeprom error");
+			return false;
+		}
+	}
+	return true;
+}
+
+static bool thermaltrip_user_settings_init(void)
+{
+	uint8_t setting_data = 0xFF;
+	if (!get_user_settings_thermaltrip_from_eeprom(&setting_data, sizeof(setting_data))) {
+		LOG_ERR("get thermaltrip user settings fail");
+		return false;
+	}
+
+	if (setting_data != 0xFF) {
+		if (!plat_write_cpld(CPLD_THERMALTRIP_SWITCH_ADDR, &setting_data)) {
+			LOG_ERR("Can't set thermaltrip=%d by user settings", setting_data);
+			return false;
+		}
+	}
+
+	return true;
+}
+
 // other
 bool perm_config_clear(void)
 {
@@ -424,11 +495,19 @@ bool perm_config_clear(void)
 		return false;
 	}
 
-	// pwrlevel
+	/* clear pwrlevel perm parameter */
 	int32_t setting_value = 0xffffffff;
 	char setting_data[4] = { 0 };
 	memcpy(setting_data, &setting_value, sizeof(setting_data));
 	if (set_user_settings_alert_level_to_eeprom(setting_data, sizeof(setting_data)) != 0) {
+		LOG_ERR("The perm_config clear failed");
+		return false;
+	}
+
+	/* clear thermaltrip perm parameter */
+	uint8_t setting_value_for_thermaltrip = 0xFF;
+	if (!set_user_settings_thermaltrip_to_eeprom(&setting_value_for_thermaltrip,
+						     sizeof(setting_value_for_thermaltrip))) {
 		LOG_ERR("The perm_config clear failed");
 		return false;
 	}
@@ -442,4 +521,5 @@ void user_settings_init(void)
 	bootstrap_default_settings_init();
 	bootstrap_user_settings_init();
 	alert_level_user_settings_init();
+	thermaltrip_user_settings_init();
 }
