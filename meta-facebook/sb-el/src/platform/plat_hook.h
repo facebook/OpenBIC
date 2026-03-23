@@ -226,6 +226,7 @@ typedef struct bootstrap_mapping_register {
 typedef struct bootstrap_user_settings_struct {
 	uint16_t user_setting_value[STRAP_INDEX_MAX];
 } bootstrap_user_settings_struct;
+extern bootstrap_user_settings_struct bootstrap_user_settings;
 
 extern vr_vout_range_user_settings_struct vout_range_user_settings;
 extern mp2971_init_arg mp2971_init_args[];
