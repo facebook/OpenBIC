@@ -35,6 +35,7 @@ LOG_MODULE_REGISTER(plat_user_setting);
 temp_threshold_user_settings_struct temp_threshold_user_settings = { 0 };
 struct temp_threshold_user_settings_struct temp_threshold_default_settings = { 0 };
 thermaltrip_user_settings_struct thermaltrip_user_settings = { 0xFF };
+throttle_user_settings_struct throttle_user_settings = { 0xFF };
 
 // pwrlevel
 // bool alert_level_is_assert = false;
@@ -500,6 +501,78 @@ static bool thermaltrip_user_settings_init(void)
 	return true;
 }
 
+// throttle
+bool get_user_settings_throttle_from_eeprom(void *user_settings, uint8_t data_length)
+{
+	CHECK_NULL_ARG_WITH_RETURN(user_settings, false);
+
+	if (!plat_eeprom_read(THROTTLE_USER_SETTINGS_OFFSET, user_settings, data_length)) {
+		LOG_ERR("Failed to write thermaltrip to eeprom");
+		return false;
+	}
+
+	LOG_HEXDUMP_DBG(user_settings, data_length, "EEPROM data read throttle");
+
+	return true;
+}
+
+bool set_user_settings_throttle_to_eeprom(void *throttle_user_settings, uint8_t data_length)
+{
+	CHECK_NULL_ARG_WITH_RETURN(throttle_user_settings, false);
+
+	/* write the throttle_user_settings to eeprom */
+
+	if (!plat_eeprom_write(THROTTLE_USER_SETTINGS_OFFSET, (uint8_t *)throttle_user_settings,
+			       data_length)) {
+		LOG_ERR("throttle user settings failed to write into eeprom");
+		return false;
+	}
+
+	k_msleep(EEPROM_MAX_WRITE_TIME);
+
+	return true;
+}
+
+bool set_throttle_user_settings(uint8_t *throttle_status_reg, bool is_perm)
+{
+	CHECK_NULL_ARG_WITH_RETURN(throttle_status_reg, false);
+
+	if (!plat_write_cpld(CPLD_THROTTLE_SWITCH_ADDR, throttle_status_reg)) {
+		LOG_ERR("Failed to write throttle to cpld error");
+		return false;
+	}
+
+	if (is_perm) {
+		throttle_user_settings.throttle_user_setting_value = *throttle_status_reg;
+
+		if (!set_user_settings_throttle_to_eeprom(&throttle_user_settings,
+							  sizeof(throttle_user_settings))) {
+			LOG_ERR("Failed to write throttle to eeprom error");
+			return false;
+		}
+	}
+	return true;
+}
+
+static bool throttle_user_settings_init(void)
+{
+	uint8_t setting_data = 0xFF;
+	if (!get_user_settings_throttle_from_eeprom(&setting_data, sizeof(setting_data))) {
+		LOG_ERR("get throttle user settings fail");
+		return false;
+	}
+
+	if (setting_data != 0xFF) {
+		if (!plat_write_cpld(CPLD_THROTTLE_SWITCH_ADDR, &setting_data)) {
+			LOG_ERR("Can't set throttle=%d by user settings", setting_data);
+			return false;
+		}
+		LOG_INF("set throttle=%x by user settings", setting_data);
+	}
+
+	return true;
+}
+
 // other
 bool perm_config_clear(void)
 {
@@ -528,6 +601,14 @@ bool perm_config_clear(void)
 		return false;
 	}
 
+	/* clear throttle perm parameter */
+	uint8_t setting_value_for_throttle = 0xFF;
+	if (!set_user_settings_throttle_to_eeprom(&setting_value_for_throttle,
+						  sizeof(setting_value_for_throttle))) {
+		LOG_ERR("The perm_config clear failed");
+		return false;
+	}
+
 	return true;
 }
 
@@ -538,4 +619,5 @@ void user_settings_init(void)
 	bootstrap_user_settings_init();
 	alert_level_user_settings_init();
 	thermaltrip_user_settings_init();
+	throttle_user_settings_init();
 }

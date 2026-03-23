@@ -93,6 +93,10 @@ typedef struct thermaltrip_user_settings_struct {
 	uint8_t thermaltrip_user_setting_value;
 } thermaltrip_user_settings_struct;
 
+typedef struct throttle_user_settings_struct {
+	uint8_t throttle_user_setting_value;
+} throttle_user_settings_struct;
+
 // temp
 bool get_temp_index_threshold_type_name(uint8_t type, uint8_t **name);
 bool get_temp_threshold_type_enum(uint8_t *name, uint8_t *num);
@@ -112,6 +116,10 @@ int power_level_send_event(bool is_assert, int ubc1_current, int ubc2_current);
 
 // thermaltrip
 bool set_thermaltrip_user_settings(bool thermaltrip_enable, bool is_perm);
+
+// throttle
+bool set_throttle_user_settings(uint8_t *throttle_status_reg, bool is_perm);
+bool get_user_settings_throttle_from_eeprom(void *user_settings, uint8_t data_length);
 
 // other
 void user_settings_init(void);
