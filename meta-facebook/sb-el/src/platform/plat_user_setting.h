@@ -116,6 +116,8 @@ int power_level_send_event(bool is_assert, int ubc1_current, int ubc2_current);
 
 // thermaltrip
 bool set_thermaltrip_user_settings(bool thermaltrip_enable, bool is_perm);
+bool get_user_settings_thermaltrip_from_eeprom(void *thermaltrip_user_settings,
+					       uint8_t data_length);
 
 // throttle
 bool set_throttle_user_settings(uint8_t *throttle_status_reg, bool is_perm);
