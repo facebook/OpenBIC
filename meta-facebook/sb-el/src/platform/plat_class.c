@@ -50,8 +50,12 @@ const char *vr_vendor_module_name[] = {
 	"DELTA_UBC_AND_RNS_VR",
 	"MPS_UBC_AND_MPS_VR",
 	"MPS_UBC_AND_RNS_VR",
+	"FLEX_UBC_AND_MPS_VR",
+	"FLEX_UBC_AND_RNS_VR",
 	"LUXSHURE_UBC_AND_MPS_VR",
 	"LUXSHURE_UBC_AND_RNS_VR",
+	"CYNTEX_UBC_AND_MPS_VR",
+	"CYNTEX_UBC_AND_RNS_VR",
 	"VENDOR_TYPE_UNKNOWN",
 };
 
@@ -66,6 +70,7 @@ const char *ubc_module_name[] = {
 	"UBC_MODULE_MPS",
 	"UBC_MODULE_FLEX",
 	"UBC_MODULE_LUXSHARE",
+	"UBC_MODULE_CYNTEX",
 	"UBC_MODULE_UNKNOWN",
 };
 // clang-format on
@@ -284,13 +289,19 @@ void pal_show_board_types(const struct shell *shell)
 		    (vr_vendor_module == DELTA_UBC_AND_RNS_VR)	  ? "DELTA_UBC_AND_RNS_VR" :
 		    (vr_vendor_module == MPS_UBC_AND_MPS_VR)	  ? "MPS_UBC_AND_MPS_VR" :
 		    (vr_vendor_module == MPS_UBC_AND_RNS_VR)	  ? "MPS_UBC_AND_RNS_VR" :
+			(vr_vendor_module == FLEX_UBC_AND_MPS_VR) ? "FLEX_UBC_AND_MPS_VR" :
+		    (vr_vendor_module == FLEX_UBC_AND_RNS_VR) ? "FLEX_UBC_AND_RNS_VR" :
 		    (vr_vendor_module == LUXSHURE_UBC_AND_MPS_VR) ? "LUXSHURE_UBC_AND_MPS_VR" :
 		    (vr_vendor_module == LUXSHURE_UBC_AND_RNS_VR) ? "LUXSHURE_UBC_AND_RNS_VR" :
+			(vr_vendor_module == CYNTEX_UBC_AND_MPS_VR) ? "CYNTEX_UBC_AND_MPS_VR" :
+		    (vr_vendor_module == CYNTEX_UBC_AND_RNS_VR) ? "CYNTEX_UBC_AND_RNS_VR" :
 								    "not supported");
 	shell_print(shell, "* UBC_TYPE:      (0x%02X)%s", ubc_module,
 		    (ubc_module == UBC_MODULE_DELTA)	? "UBC_DELTA_S54SS4P1A2" :
 		    (ubc_module == UBC_MODULE_MPS)	? "UBC_MPS_MPC12109" :
+			(ubc_module == UBC_MODULE_LUXSHARE) ? "UBC_FLEX" :
 		    (ubc_module == UBC_MODULE_LUXSHARE) ? "UBC_LUXSHURE_LX6310" :
+			(ubc_module == UBC_MODULE_LUXSHARE) ? "UBC_CYNTEX" :
 							  "not supported");
 
 	shell_print(shell, "* VR_TYPE:       (0x%02X)%s", vr_module,
@@ -306,7 +317,6 @@ void pal_show_board_types(const struct shell *shell)
 	shell_print(shell, "* ADC_TYPE:      (0x%02X)%s", adc_type,
 		    (adc_type == ADI_AD4058) ? "ADI_AD4058" :
 		    (adc_type == TIC_ADS7066) ? "TI_ADS7066" : "not supported");
-	
 	shell_print(shell, "* I2C connection for MEDHA0/1 to MMC: Disable");
 	return;
 }
