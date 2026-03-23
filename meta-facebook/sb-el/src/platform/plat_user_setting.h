@@ -89,6 +89,10 @@ typedef struct temp_threshold_user_settings_struct {
 
 extern temp_threshold_user_settings_struct temp_threshold_user_settings;
 
+typedef struct thermaltrip_user_settings_struct {
+	uint8_t thermaltrip_user_setting_value;
+} thermaltrip_user_settings_struct;
+
 // temp
 bool get_temp_index_threshold_type_name(uint8_t type, uint8_t **name);
 bool plat_get_temp_threshold(uint8_t temp_index_threshold_type, uint32_t *millidegree_celsius);
@@ -104,6 +108,9 @@ int get_user_settings_alert_level_from_eeprom(void *user_settings, uint8_t data_
 int set_user_settings_alert_level_to_eeprom(void *user_settings, uint8_t data_length);
 int32_t plat_get_alert_level_mA_user_setting(void);
 int power_level_send_event(bool is_assert, int ubc1_current, int ubc2_current);
+
+// thermaltrip
+bool set_thermaltrip_user_settings(bool thermaltrip_enable, bool is_perm);
 
 // other
 void user_settings_init(void);
