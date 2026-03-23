@@ -116,5 +116,6 @@ bool set_thermaltrip_user_settings(bool thermaltrip_enable, bool is_perm);
 // other
 void user_settings_init(void);
 bool perm_config_clear(void);
+void set_uart_power_event_is_enable(bool is_enable);
 
 #endif
