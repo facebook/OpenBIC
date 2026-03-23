@@ -60,7 +60,7 @@ const struct _i2c_target_config I2C_TARGET_CONFIG_TABLE[MAX_TARGET_NUM] = {
 	{ 0xFF, 0xA },
 	{ 0xFF, 0xA },
 	{ 0xFF, 0xA },
-	{ 0x42, 0xA, command_reply_data_handle, command_set_slot_handle },
+	{ 0xA2, 0xA, command_reply_data_handle, command_set_slot_handle },
 	{ 0xFF, 0xA },
 };
 
