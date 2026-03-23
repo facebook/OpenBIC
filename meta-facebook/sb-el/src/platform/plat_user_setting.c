@@ -231,6 +231,22 @@ bool get_temp_index_threshold_type_name(uint8_t type, uint8_t **name)
 	return true;
 }
 
+bool get_temp_threshold_type_enum(uint8_t *name, uint8_t *num)
+{
+	CHECK_NULL_ARG_WITH_RETURN(name, false);
+	CHECK_NULL_ARG_WITH_RETURN(num, false);
+
+	for (int i = 0; i < PLAT_TEMP_INDEX_THRESHOLD_TYPE_MAX; i++) {
+		if (strcmp(name, temp_index_threshold_type_table[i].temp_threshold_name) == 0) {
+			*num = i;
+			return true;
+		}
+	}
+
+	LOG_ERR("invalid tmp threshold type name %s", name);
+	return false;
+}
+
 bool plat_set_temp_threshold(uint8_t temp_index_threshold_type, uint32_t *millidegree_celsius,
 			     bool is_default, bool is_perm)
 {

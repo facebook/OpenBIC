@@ -95,6 +95,7 @@ typedef struct thermaltrip_user_settings_struct {
 
 // temp
 bool get_temp_index_threshold_type_name(uint8_t type, uint8_t **name);
+bool get_temp_threshold_type_enum(uint8_t *name, uint8_t *num);
 bool plat_get_temp_threshold(uint8_t temp_index_threshold_type, uint32_t *millidegree_celsius);
 bool temp_threshold_user_settings_init(void);
 bool plat_set_temp_threshold(uint8_t temp_index_threshold_type, uint32_t *millidegree_celsius,
