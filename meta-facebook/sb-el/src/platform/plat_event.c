@@ -121,7 +121,7 @@ void process_mtia_vr_power_fault_sel(cpld_info *cpld_info, uint8_t *current_cpld
 	CHECK_NULL_ARG(cpld_info);
 	CHECK_NULL_ARG(current_cpld_value);
 	LOG_INF("process_mtia_vr_power_fault_sel");
-	bool dc_status = plat_get_ubc_status(); // get_ubc_enabled_delayed_status in rainbow
+	bool dc_status = plat_get_ubc_status(); // get_ubc_enabled_delayed_status in electra
 	uint8_t expected_val =
 		dc_status ? cpld_info->dc_on_defaut : cpld_info->dc_off_defaut;
 

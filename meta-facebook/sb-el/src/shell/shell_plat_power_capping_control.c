@@ -40,7 +40,7 @@ LOG_MODULE_REGISTER(power_capping_control, LOG_LEVEL_DBG);
 #define NUWA1_PWR_CAP_LV2_BIT 6
 #define NUWA0_PWR_CAP_LV3_BIT 5
 #define NUWA1_PWR_CAP_LV3_BIT 4
-#define VR_HOT_RAINBOW_BIT 0
+#define VR_HOT_ELECTRA_BIT 0
 #define VR_HOT_EVB_BIT HAMSA_MFIO19_BIT
 
 #define POWER_CAPPING_SET_BIT(orig, bit) ((uint8_t)((orig) | (1u << (bit))))
@@ -53,7 +53,7 @@ static const cpld_pin_map_t pwr_cap_list[] = {
 	{ "NUWA1_PWR_CAP_LV2_CPLD", NUWA1_PWR_CAP_LV2_BIT, POWER_CAPPING_LV2_LV3_CPLD_OFFSET },
 	{ "NUWA0_PWR_CAP_LV3_CPLD", NUWA0_PWR_CAP_LV3_BIT, POWER_CAPPING_LV2_LV3_CPLD_OFFSET },
 	{ "NUWA1_PWR_CAP_LV3_CPLD", NUWA1_PWR_CAP_LV3_BIT, POWER_CAPPING_LV2_LV3_CPLD_OFFSET },
-	{ "VR_HOT", VR_HOT_RAINBOW_BIT, ASIC_VR_HOT_SWITCH },
+	{ "VR_HOT", VR_HOT_ELECTRA_BIT, ASIC_VR_HOT_SWITCH },
 };
 
 static const cpld_pin_map_t *get_power_capping_item(const char *name)
