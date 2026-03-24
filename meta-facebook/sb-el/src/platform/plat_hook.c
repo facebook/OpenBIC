@@ -358,42 +358,115 @@ bool post_vr_read(sensor_cfg *cfg, void *args, int *const reading)
 	return true;
 }
 
-bool post_tmp432_read(sensor_cfg *cfg, void *args, int *reading)
+uint8_t emc1413_cache_status_0 = 0;
+uint8_t emc1413_cache_status_1 = 0;
+uint8_t emc1413_cache_status_2 = 0;
+uint8_t emc1413_cache_status_3 = 0;
+
+bool emc1413_check_open_status(sensor_cfg *cfg, uint8_t status)
+{
+	uint8_t bit = (cfg->offset == EMC1413_REMOTE_TEMPERATRUE_1) ? BIT(1) :
+		      (cfg->offset == EMC1413_REMOTE_TEMPERATRUE_2) ? BIT(2) :
+								      0;
+	// only check BIT(1), BIT(2)
+	if (status & bit) {
+		cfg->cache_status = SENSOR_OPEN_CIRCUIT;
+		return false;
+	}
+	return true;
+}
+
+uint8_t get_emc1413_cache_status(uint8_t idx)
+{
+	uint8_t cache_status[4] = { emc1413_cache_status_0, emc1413_cache_status_1,
+				    emc1413_cache_status_2, emc1413_cache_status_3 };
+	if (idx > 3) {
+		LOG_ERR("Invalid emc1413 cache status index %u", idx);
+		return 0;
+	}
+	return cache_status[idx];
+}
+
+bool post_tmp_read(sensor_cfg *cfg, void *args, int *reading)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	ARG_UNUSED(args);
 	ARG_UNUSED(reading);
-
-	uint8_t status = 0;
 	uint8_t bit = 0;
 
-	switch (cfg->type) {
-	case sensor_dev_tmp431:
-		bit = (cfg->offset == TMP432_REMOTE_TEMPERATRUE_1) ? BIT(1) :
-		      (cfg->offset == TMP432_REMOTE_TEMPERATRUE_2) ? BIT(2) :
-								     0;
-		if (!tmp432_get_temp_open_status(cfg, &status)) {
-			LOG_ERR("Failed to get temp open status for sensor 0x%x", cfg->num);
-			return false;
+	if (cfg->type == sensor_dev_tmp431) {
+		uint8_t status = 0;
+		if (tmp432_get_temp_open_status(cfg, &status)) {
+			bit = (cfg->offset == TMP432_REMOTE_TEMPERATRUE_1) ? BIT(1) :
+			      (cfg->offset == TMP432_REMOTE_TEMPERATRUE_2) ? BIT(2) :
+									     0;
+			// only check BIT(1), BIT(2)
+			if (status & bit) {
+				cfg->cache_status = SENSOR_OPEN_CIRCUIT;
+				return false;
+			}
 		}
-		break;
-	case sensor_dev_emc1413:
-		bit = (cfg->offset == EMC1413_REMOTE_TEMPERATRUE_1) ? BIT(1) :
-		      (cfg->offset == EMC1413_REMOTE_TEMPERATRUE_2) ? BIT(2) :
-								      0;
-		if (!emc1413_get_temp_open_status(cfg, &status)) {
-			LOG_ERR("Failed to get temp open status for sensor 0x%x", cfg->num);
-			return false;
+	}else if (cfg->type == sensor_dev_emc1413) {
+		switch (cfg->num) {
+		/*
+		SENSOR_NUM_ASIC_MEDHA0_SENSOR0_TEMP_C
+		SENSOR_NUM_ASIC_MEDHA0_SENSOR1_TEMP_C
+		SENSOR_NUM_ASIC_OWL_W_TEMP_C
+		SENSOR_NUM_ASIC_OWL_E_TEMP_C
+		SENSOR_NUM_ASIC_MEDHA1_SENSOR0_TEMP_C
+		SENSOR_NUM_ASIC_MEDHA1_SENSOR1_TEMP_C
+		SENSOR_NUM_ASIC_HAMSA_CRM_TEMP_C
+		SENSOR_NUM_ASIC_HAMSA_LS_TEMP_C
+		*/
+		case SENSOR_NUM_ASIC_NUWA0_SENSOR0_TEMP_C:
+			if (emc1413_get_temp_open_status(cfg, &emc1413_cache_status_0)) {
+				// update the open status to cache
+				if (!emc1413_check_open_status(cfg, emc1413_cache_status_0))
+					return false;
+			}
+			break;
+		case SENSOR_NUM_ASIC_NUWA0_SENSOR1_TEMP_C:
+			if (!emc1413_check_open_status(cfg, emc1413_cache_status_0))
+				return false;
+			break;
+		case SENSOR_NUM_ASIC_OWL_W_TEMP_C:
+			if (emc1413_get_temp_open_status(cfg, &emc1413_cache_status_1)) {
+				// update the open status to cache
+				if (!emc1413_check_open_status(cfg, emc1413_cache_status_1))
+					return false;
+			}
+			break;
+		case SENSOR_NUM_ASIC_OWL_E_TEMP_C:
+			if (!emc1413_check_open_status(cfg, emc1413_cache_status_1))
+				return false;
+			break;
+		case SENSOR_NUM_ASIC_NUWA1_SENSOR0_TEMP_C:
+			if (emc1413_get_temp_open_status(cfg, &emc1413_cache_status_2)) {
+				// update the open status to cache
+				if (!emc1413_check_open_status(cfg, emc1413_cache_status_2))
+					return false;
+			}
+			break;
+		case SENSOR_NUM_ASIC_NUWA1_SENSOR1_TEMP_C:
+			if (!emc1413_check_open_status(cfg, emc1413_cache_status_2))
+				return false;
+			break;
+		case SENSOR_NUM_ASIC_HAMSA_CRM_TEMP_C:
+			if (emc1413_get_temp_open_status(cfg, &emc1413_cache_status_3)) {
+				// update the open status to cache
+				if (!emc1413_check_open_status(cfg, emc1413_cache_status_3))
+					return false;
+			}
+			break;
+		case SENSOR_NUM_ASIC_HAMSA_LS_TEMP_C:
+			if (!emc1413_check_open_status(cfg, emc1413_cache_status_3))
+				return false;
+			break;
+		default:
+			break;
 		}
-		break;
-	default:
-		LOG_ERR("Unsupported sensor type 0x%x for post_tmp432_read", cfg->type);
-		return false;
-	}
-
-	// only check BIT(1), BIT(2)
-	if (status & bit) {
-		cfg->cache_status = SENSOR_OPEN_CIRCUIT;
+	}else{
+			LOG_ERR("Unsupported sensor type 0x%x for post_tmp_read", cfg->type);
 		return false;
 	}
 

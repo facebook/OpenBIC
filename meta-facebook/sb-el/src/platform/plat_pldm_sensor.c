@@ -443,7 +443,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
-			.post_sensor_read_hook = post_tmp432_read,
+			.post_sensor_read_hook = post_tmp_read,
 		},
 	},
 	{
@@ -512,7 +512,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
-			.post_sensor_read_hook = post_tmp432_read,
+			.post_sensor_read_hook = post_tmp_read,
 		},
 	},
 	{
@@ -581,7 +581,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
-			.post_sensor_read_hook = post_tmp432_read,
+			.post_sensor_read_hook = post_tmp_read,
 		},
 	},
 	{
@@ -650,7 +650,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
-			.post_sensor_read_hook = post_tmp432_read,
+			.post_sensor_read_hook = post_tmp_read,
 		},
 	},
 	{
@@ -719,7 +719,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
-			.post_sensor_read_hook = post_tmp432_read,
+			.post_sensor_read_hook = post_tmp_read,
 		},
 	},
 	{
@@ -788,7 +788,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
-			.post_sensor_read_hook = post_tmp432_read,
+			.post_sensor_read_hook = post_tmp_read,
 		},
 	},
 	{
@@ -857,7 +857,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
-			.post_sensor_read_hook = post_tmp432_read,
+			.post_sensor_read_hook = post_tmp_read,
 		},
 	},
 	{
@@ -926,7 +926,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
-			.post_sensor_read_hook = post_tmp432_read,
+			.post_sensor_read_hook = post_tmp_read,
 		},
 	},
 };
@@ -13162,11 +13162,11 @@ void change_sensor_cfg(uint8_t asic_board_id, uint8_t tmp_module, uint8_t vr_mod
 	switch (asic_board_id) {
 	case ASIC_BOARD_ID_EVB:
 		if (tmp_module == TMP_MODULE_EMC1413) {
-			LOG_WRN("change TMP address to old RNS");
+			LOG_WRN("change TMP address to EMC1413");
 			tmp_change_mode = FAB1_2ND_EMC1413;
 		}
 		if (vr_module == VR_MODULE_RNS) {
-			LOG_WRN("change VR address to old RNS");
+			LOG_WRN("change VR address to RNS");
 			vr_change_mode = FAB1_2ND_RNS;
 		}
 		// default is old settings so do nothing

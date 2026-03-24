@@ -235,7 +235,7 @@ void plat_set_arke_temp_error_log(bool is_assert, uint8_t sensor_id)
 	error_log_event(error_code, (is_assert ? LOG_ASSERT : LOG_DEASSERT));
 
 	if (is_assert == LOG_ASSERT) {
-		LOG_INF("Generated IRIS temp error code: 0x%x", error_code);
+		LOG_INF("Generated ARKE temp error code: 0x%x", error_code);
 	}
 	set_led_flag(true);
 	k_msleep(500);

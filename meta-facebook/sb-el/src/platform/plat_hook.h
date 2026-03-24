@@ -234,7 +234,7 @@ extern mp2971_init_arg mp2971_init_args[];
 //  vr sensor
 bool pre_vr_read(sensor_cfg *cfg, void *args);
 bool post_vr_read(sensor_cfg *cfg, void *args, int *const reading);
-bool post_tmp432_read(sensor_cfg *cfg, void *args, int *reading);
+bool post_tmp_read(sensor_cfg *cfg, void *args, int *reading);
 bool is_mb_dc_on();
 void *vr_mutex_get(enum VR_INDEX_E vr_index);
 void vr_mutex_init(void);
@@ -270,4 +270,5 @@ bool set_bootstrap_table_val_to_ioexp(void);
 bool set_ioexp_val_to_bootstrap_table(void);
 bool set_bootstrap_val_to_device(uint8_t strap, uint8_t val);
 uint8_t get_strap_index_max();
+uint8_t get_emc1413_cache_status(uint8_t idx);
 #endif
