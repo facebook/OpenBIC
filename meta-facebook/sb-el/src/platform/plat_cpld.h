@@ -94,6 +94,12 @@
 #define CPLD_POWER_INFO_0_REG 0xB6
 #define CPLD_POWER_INFO_1_REG 0xB7
 
+// delay pcie perst
+#define CPLD_PERST_DELAY_0_REG 0x9D
+#define CPLD_PERST_DELAY_1_REG 0xB3
+#define CPLD_PERST_DELAY_2_REG 0xB4
+#define CPLD_PERST_DELAY_3_REG 0xB5
+
 // Other CPLD registers
 #define CPLD_OFFSET_ASIC_RESET 0x00
 #define VR_EN_PIN_READING_5 0x05

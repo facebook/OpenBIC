@@ -123,6 +123,11 @@ bool get_user_settings_thermaltrip_from_eeprom(void *thermaltrip_user_settings,
 bool set_throttle_user_settings(uint8_t *throttle_status_reg, bool is_perm);
 bool get_user_settings_throttle_from_eeprom(void *user_settings, uint8_t data_length);
 
+// delay pcie perst
+bool get_user_settings_delay_pcie_perst_from_eeprom(void *user_settings, uint8_t data_length);
+bool set_user_settings_delay_pcie_perst_to_eeprom(void *user_settings, uint8_t data_length,
+						  uint8_t user_settings_offset);
+
 // other
 void user_settings_init(void);
 bool perm_config_clear(void);

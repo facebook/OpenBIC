@@ -573,6 +573,71 @@ static bool throttle_user_settings_init(void)
 	return true;
 }
 
+// delay pcie perst
+bool get_user_settings_delay_pcie_perst_from_eeprom(void *user_settings, uint8_t data_length)
+{
+	CHECK_NULL_ARG_WITH_RETURN(user_settings, false);
+
+	if (!plat_eeprom_read(DELAY_PCIE_PERST_USER_SETTINGS_OFFSET, user_settings, data_length)) {
+		LOG_ERR("Failed to read delay_pcie_perst from eeprom");
+		return false;
+	}
+	return true;
+}
+
+bool set_user_settings_delay_pcie_perst_to_eeprom(void *user_settings, uint8_t data_length,
+						  uint8_t user_settings_offset)
+{
+	CHECK_NULL_ARG_WITH_RETURN(user_settings, false);
+
+	if (!plat_eeprom_write(DELAY_PCIE_PERST_USER_SETTINGS_OFFSET + user_settings_offset,
+			       user_settings, data_length)) {
+		LOG_ERR("delay_pcie_perst Failed to write eeprom");
+		return false;
+	}
+	k_msleep(EEPROM_MAX_WRITE_TIME);
+
+	return true;
+}
+
+static int delay_pcie_perst_user_settings_init(void)
+{
+	uint32_t setting_values[4] = { 0 };
+
+	if (get_user_settings_delay_pcie_perst_from_eeprom(&setting_values,
+							   sizeof(setting_values)) == false) {
+		LOG_ERR("get delay pcie perst user settings failed");
+		return -1;
+	}
+	uint8_t setting_value = 0;
+	if (setting_values[0] != 0xffffffff) {
+		setting_value = setting_values[0] & 0xff;
+		if (!plat_write_cpld(CPLD_PERST_DELAY_0_REG, &setting_value)) {
+			LOG_ERR("plat delay_pcie_perst PCIE0 set failed");
+		}
+	}
+	if (setting_values[1] != 0xffffffff) {
+		setting_value = setting_values[1] & 0xff;
+		if (!plat_write_cpld(CPLD_PERST_DELAY_1_REG, &setting_value)) {
+			LOG_ERR("plat delay_pcie_perst PCIE1 set failed");
+		}
+	}
+	if (setting_values[2] != 0xffffffff) {
+		setting_value = setting_values[2] & 0xff;
+		if (!plat_write_cpld(CPLD_PERST_DELAY_2_REG, &setting_value)) {
+			LOG_ERR("plat delay_pcie_perst PCIE2 set failed");
+		}
+	}
+	if (setting_values[3] != 0xffffffff) {
+		setting_value = setting_values[3] & 0xff;
+		if (!plat_write_cpld(CPLD_PERST_DELAY_3_REG, &setting_value)) {
+			LOG_ERR("plat delay_pcie_perst PCIE3 set failed");
+		}
+	}
+
+	return 0;
+}
+
 // other
 bool perm_config_clear(void)
 {
@@ -620,4 +685,5 @@ void user_settings_init(void)
 	alert_level_user_settings_init();
 	thermaltrip_user_settings_init();
 	throttle_user_settings_init();
+	delay_pcie_perst_user_settings_init();
 }
