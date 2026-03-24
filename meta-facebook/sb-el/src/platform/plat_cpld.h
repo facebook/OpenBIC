@@ -90,6 +90,10 @@
 #define CPLD_OFFSET_POWER_CLAMP 0x25
 #define CPLD_OFFSET_POWER_CAPPING_LV1_TIME 0x36
 
+// power information from BMC reg
+#define CPLD_POWER_INFO_0_REG 0xB6
+#define CPLD_POWER_INFO_1_REG 0xB7
+
 // Other CPLD registers
 #define CPLD_OFFSET_ASIC_RESET 0x00
 #define VR_EN_PIN_READING_5 0x05
