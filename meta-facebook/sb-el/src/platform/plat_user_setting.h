@@ -128,6 +128,12 @@ bool get_user_settings_delay_pcie_perst_from_eeprom(void *user_settings, uint8_t
 bool set_user_settings_delay_pcie_perst_to_eeprom(void *user_settings, uint8_t data_length,
 						  uint8_t user_settings_offset);
 
+// delay asic rst
+bool set_user_settings_delay_asic_rst_to_eeprom(void *user_settings, uint8_t data_length);
+
+// delay module pg
+bool set_user_settings_delay_module_pg_to_eeprom(void *user_settings, uint8_t data_length);
+
 // other
 void user_settings_init(void);
 bool perm_config_clear(void);

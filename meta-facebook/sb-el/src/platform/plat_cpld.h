@@ -100,6 +100,12 @@
 #define CPLD_PERST_DELAY_2_REG 0xB4
 #define CPLD_PERST_DELAY_3_REG 0xB5
 
+// delay asic rst
+#define CPLD_OFFSET_ASIC_RST_DELAY 0xA4
+
+// delay module pg
+#define CPLD_OFFSET_MODULE_PG_DELAY 0xA5
+
 // Other CPLD registers
 #define CPLD_OFFSET_ASIC_RESET 0x00
 #define VR_EN_PIN_READING_5 0x05
