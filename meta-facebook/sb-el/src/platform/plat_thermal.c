@@ -89,14 +89,6 @@ temp_mapping_sensor temp_index_table[] = {
 	{ TEMP_INDEX_ASIC_HAMSA_LS, SENSOR_NUM_ASIC_HAMSA_LS_TEMP_C, "SB_EL_ASIC_HAMSA_LS_TEMP" },
 };
 
-void read_temp_status(uint8_t bus, uint8_t target_addr)
-{
-	uint8_t clear_status_data[1];
-	LOG_DBG("bus is %d, target_addr is 0x%x", bus, target_addr);
-	plat_i2c_read(bus, target_addr, TMP_HIGH_LIMIT_STATUS_REG, clear_status_data, 1);
-	LOG_DBG("temp status is 0x%x", clear_status_data[0]);
-}
-
 uint8_t get_thermal_status_val_for_log(uint8_t sensor_num)
 {
 	for (uint8_t i = 0; i < ARRAY_SIZE(temp_alert_index_table); i++) {
@@ -293,7 +285,7 @@ void check_thermal_handler(void *arg1, void *arg2, void *arg3)
 				}
 			}
 
-			// if status BIT(3), BIT(4) is high than send error log;
+			// if status BIT(3), BIT(4) is high then send error log;
 			if (status_data & TEMP_LIMIT_STATUS) {
 				if (temp_cfg->type == sensor_dev_tmp431) {
 					remote_bit =

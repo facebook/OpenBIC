@@ -31,7 +31,7 @@ typedef struct __attribute__((__packed__)) {
 } sensor_entry;
 
 typedef struct __attribute__((__packed__)) {
-	uint8_t device_type; // Device type (Aegis = 0x01, Rainbow = 0x02)
+	uint8_t device_type; // Device type (Aegis = 0x01, Rainbow = 0x02, Electra = 0x03, etc.)
 	uint8_t register_layout_version; // Register layout version (e.g. VERSION_1 = 0x01)
 	uint16_t sensor_base_index; // Sensor base index (SBI)
 	uint8_t max_sbi_off; // Max sensor base index offset in this register (0 <= MAX_SBI_OFF <= 49)

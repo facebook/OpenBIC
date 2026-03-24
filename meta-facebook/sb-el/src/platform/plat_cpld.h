@@ -124,7 +124,7 @@ typedef struct _cpld_info_ {
 	bool is_fault_log; // if true, check the value is defaut or not
 	uint8_t is_fault_bit_map; //flag for fault
 
-	/* is_send_bmc in rainbow */
+	/* is_send_bmc in electra */
 	bool send_to_bmc_flag; //flag for sending alert to bmc
 
 	//temp data for last polling

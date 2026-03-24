@@ -13150,7 +13150,7 @@ void change_sensor_cfg(uint8_t asic_board_id, uint8_t tmp_module, uint8_t vr_mod
 	uint8_t ubc_change_type = sensor_dev_u50su4p180pmdafc;
 	uint8_t bus = SENSOR_CFG_UNKNOW;
 	/*
-	When changing the address version, you first need to check the board type (EVB or Rainbow), and then check the board revision ID.
+	When changing the address version, you first need to check the board type (EVB or Electra), and then check the board revision ID.
 	FAB2 corresponds to EVT1B
 	FAB3 corresponds to EVT2
 	There are both two VR and TMP venders, each settings are different.

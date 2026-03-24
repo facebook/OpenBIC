@@ -317,34 +317,34 @@ bool get_error_data(uint16_t error_code, uint8_t *data)
 
 	switch (trigger_case) {
 		case TEMPERATURE_TRIGGER_CAUSE: {
-			uint8_t temperature_sensoor_num = error_code & 0xFF;
-			LOG_WRN("trigger_case: 0x%x, temperature_sensoor_num: 0x%x", trigger_case,
-				temperature_sensoor_num);
-			sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(temperature_sensoor_num);
-			data[0] = get_thermal_status_val_for_log(temperature_sensoor_num);
+			uint8_t temperature_sensor_num = error_code & 0xFF;
+			LOG_WRN("trigger_case: 0x%x, temperature_sensor_num: 0x%x", trigger_case,
+				temperature_sensor_num);
+			sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(temperature_sensor_num);
+			data[0] = get_thermal_status_val_for_log(temperature_sensor_num);
 			if (data[0] & TEMP_STATUS_OPEN) {
 				if (cfg->type == sensor_dev_tmp431) {
 					if (!tmp432_get_temp_open_status(cfg, &data[1])) {
 						LOG_ERR("Failed to get tmp432 0x%02x temperature open status",
-							temperature_sensoor_num);
+							temperature_sensor_num);
 						return false;
 					}
 				} else if (cfg->type == sensor_dev_emc1413) {
 					if (!emc1413_get_temp_open_status(cfg, &data[1])) {
 						LOG_ERR("Failed to get emc14130x%02x temperature open status",
-							temperature_sensoor_num);
+							temperature_sensor_num);
 						return false;
 					}
 				} else {
 					LOG_ERR("Unsupported sensor type 0x%x for sensor num 0x%02x",
-						cfg->type, temperature_sensoor_num);
+						cfg->type, temperature_sensor_num);
 					return false;
 				}
 			} else {
-				data[1] = get_thermal_limit_status_val_for_log(temperature_sensoor_num);
+				data[1] = get_thermal_limit_status_val_for_log(temperature_sensor_num);
 			}
 			// save sensor num to data and keep raw data
-			data[2] = temperature_sensoor_num;
+			data[2] = temperature_sensor_num;
 			LOG_INF("Temperature status: 0x%x, sensor num: 0x%x", data[0], data[1]);
 			return true;
 		}

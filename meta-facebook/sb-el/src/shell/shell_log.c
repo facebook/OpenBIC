@@ -137,7 +137,7 @@ const cpld_bit_name_table_t cpld_bit_name_table[] = {
 		  "RSVD",
 		  "RSVD",
 		  "RSVD",
-		  "FM_MODULE_PWRBRK_R_N (MB CPLD to Rainbow CPLD) (1-->0)",
+		  "FM_MODULE_PWRBRK_R_N (MB CPLD to Electra CPLD) (1-->0)",
 	  } },
 	{ ASIC_TEMP_OVER_REG,
 	  "ASIC TEMP OVER, Event log",
