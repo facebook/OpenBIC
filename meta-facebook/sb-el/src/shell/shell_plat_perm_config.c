@@ -56,33 +56,33 @@ static int cmd_perm_config_get(const struct shell *shell, size_t argc, char **ar
 		}
 	}
 
-	// uint32_t setting_data_for_delay_pcie_perst[4] = { 0 };
-	// if (!get_user_settings_delay_pcie_perst_from_eeprom(
-	// 	    &setting_data_for_delay_pcie_perst[0],
-	// 	    sizeof(setting_data_for_delay_pcie_perst))) {
-	// 	LOG_ERR("get delay_pcie_perst user settings failed");
-	// } else {
-	// 	if (setting_data_for_delay_pcie_perst[0] != 0xffffffff) {
-	// 		shell_print(shell, "delay_pcie_perst PCIE0                      val=%d",
-	// 			    setting_data_for_delay_pcie_perst[0] & 0xff);
-	// 		config_count++;
-	// 	}
-	// 	if (setting_data_for_delay_pcie_perst[1] != 0xffffffff) {
-	// 		shell_print(shell, "delay_pcie_perst PCIE1                      val=%d",
-	// 			    setting_data_for_delay_pcie_perst[1] & 0xff);
-	// 		config_count++;
-	// 	}
-	// 	if (setting_data_for_delay_pcie_perst[2] != 0xffffffff) {
-	// 		shell_print(shell, "delay_pcie_perst PCIE2                      val=%d",
-	// 			    setting_data_for_delay_pcie_perst[2] & 0xff);
-	// 		config_count++;
-	// 	}
-	// 	if (setting_data_for_delay_pcie_perst[3] != 0xffffffff) {
-	// 		shell_print(shell, "delay_pcie_perst PCIE3                      val=%d",
-	// 			    setting_data_for_delay_pcie_perst[3] & 0xff);
-	// 		config_count++;
-	// 	}
-	// }
+	uint32_t setting_data_for_delay_pcie_perst[4] = { 0 };
+	if (!get_user_settings_delay_pcie_perst_from_eeprom(
+		    &setting_data_for_delay_pcie_perst[0],
+		    sizeof(setting_data_for_delay_pcie_perst))) {
+		LOG_ERR("get delay_pcie_perst user settings failed");
+	} else {
+		if (setting_data_for_delay_pcie_perst[0] != 0xffffffff) {
+			shell_print(shell, "delay_pcie_perst PCIE0                      val=%d",
+				    setting_data_for_delay_pcie_perst[0] & 0xff);
+			config_count++;
+		}
+		if (setting_data_for_delay_pcie_perst[1] != 0xffffffff) {
+			shell_print(shell, "delay_pcie_perst PCIE1                      val=%d",
+				    setting_data_for_delay_pcie_perst[1] & 0xff);
+			config_count++;
+		}
+		if (setting_data_for_delay_pcie_perst[2] != 0xffffffff) {
+			shell_print(shell, "delay_pcie_perst PCIE2                      val=%d",
+				    setting_data_for_delay_pcie_perst[2] & 0xff);
+			config_count++;
+		}
+		if (setting_data_for_delay_pcie_perst[3] != 0xffffffff) {
+			shell_print(shell, "delay_pcie_perst PCIE3                      val=%d",
+				    setting_data_for_delay_pcie_perst[3] & 0xff);
+			config_count++;
+		}
+	}
 
 	for (int i = 0; i < get_strap_index_max(); i++) {
 		if (bootstrap_user_settings.user_setting_value[i] != 0xffff) {
