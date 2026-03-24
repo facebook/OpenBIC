@@ -244,6 +244,7 @@ bool vr_rail_enum_get(uint8_t *name, uint8_t *num);
 bool vr_status_enum_get(uint8_t *name, uint8_t *num);
 bool plat_get_vr_status(uint8_t rail, uint8_t vr_status_rail, uint16_t *vr_status);
 bool plat_clear_vr_status(uint8_t rail);
+bool plat_get_vout_command(uint8_t rail, uint16_t *millivolt);
 bool post_common_sensor_read(sensor_cfg *cfg, void *args, int *const reading);
 bool vr_vout_range_user_settings_init(void);
 bool vr_rail_voltage_peak_get(uint8_t *name, int *peak_value);
