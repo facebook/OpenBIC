@@ -38,6 +38,7 @@ static CARD_STATUS _2ou_status = { false, TYPE_2OU_UNKNOWN };
 
 static uint8_t vr_module = VR_MODULE_UNKNOWN;
 static uint8_t e1s_boot_drive_module = E1S_BOOT_DRIVE_MODULE_UNKNOWN;
+static bool bootdrive_exist = false;
 
 uint8_t get_system_class()
 {
@@ -368,4 +369,27 @@ void mp5998_init()
 	data[2] = (init_args->protect_en >> 8) & 0xFF;
 	msg = construct_i2c_message(bus, addr, 3, data, 0);
 	i2c_master_write(&msg, retry);
+}
+
+void set_bootdrive_exist_status()
+{
+	int retry = 5;
+	I2C_MSG msg = { 0 };
+
+	// read CPLD to check if bootdrive exist
+	msg.bus = I2C_BUS1;
+	msg.target_addr = CPLD_ADDR;
+	msg.tx_len = 1;
+	msg.rx_len = 1;
+	msg.data[0] = E1S_BOOT_OFFSET_CARD_PRSNT;
+
+	if (i2c_master_read(&msg, retry) != 0) {
+		return;
+	}
+	bootdrive_exist = !(msg.data[0] & (1 << PRSNT_E1S_BOOT_BIT));
+}
+
+bool get_bootdrive_exist_status()
+{
+	return bootdrive_exist;
 }

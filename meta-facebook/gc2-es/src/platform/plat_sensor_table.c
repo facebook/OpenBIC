@@ -62,6 +62,14 @@ bool m2_access(uint8_t sensor_num)
 	return get_post_status();
 }
 
+bool bootdrive_access(uint8_t sensor_num)
+{
+	if (!get_bootdrive_exist_status()) {
+		return false;
+	}
+	return post_access(sensor_num);
+}
+
 sensor_cfg plat_sensor_config[] = {
 	/* number,                  type,       port,      address,      offset,
 	   access check arg0, arg1, sample_count, cache, cache_status, mux_ADDRess, mux_offset,
@@ -429,30 +437,30 @@ sensor_cfg vr_isl69259_sensor_config_table[] = {
 
 sensor_cfg ina233_sensor_config_table[] = {
 	{ MB_PMON_E1S_Boot_VOLT_V, sensor_dev_ina233, I2C_BUS2, ADDR_E1S_BOOT_INA233,
-	  PMBUS_READ_VOUT, post_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  PMBUS_READ_VOUT, bootdrive_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
 	  &ina233_init_args[2] },
 	{ MB_PMON_E1S_Boot_CURR_A, sensor_dev_ina233, I2C_BUS2, ADDR_E1S_BOOT_INA233,
-	  PMBUS_READ_IOUT, post_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  PMBUS_READ_IOUT, bootdrive_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
 	  &ina233_init_args[2] },
 	{ MB_PMON_E1S_Boot_PWR_W, sensor_dev_ina233, I2C_BUS2, ADDR_E1S_BOOT_INA233,
-	  PMBUS_READ_POUT, post_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  PMBUS_READ_POUT, bootdrive_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
 	  &ina233_init_args[2] },
 };
 
 sensor_cfg sq52205_sensor_config_table[] = {
 	{ MB_PMON_E1S_Boot_VOLT_V, sensor_dev_sq52205, I2C_BUS2, ADDR_E1S_BOOT_SQ52205,
-	  SQ52205_READ_VOL_OFFSET, post_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  SQ52205_READ_VOL_OFFSET, bootdrive_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
 	  &sq52205_init_args[0] },
 	{ MB_PMON_E1S_Boot_CURR_A, sensor_dev_sq52205, I2C_BUS2, ADDR_E1S_BOOT_SQ52205,
-	  SQ52205_READ_CUR_OFFSET, post_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  SQ52205_READ_CUR_OFFSET, bootdrive_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
 	  &sq52205_init_args[0] },
 	{ MB_PMON_E1S_Boot_PWR_W, sensor_dev_sq52205, I2C_BUS2, ADDR_E1S_BOOT_SQ52205,
-	  SQ52205_READ_PWR_OFFSET, post_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  SQ52205_READ_PWR_OFFSET, bootdrive_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
 	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
 	  &sq52205_init_args[0] },
 };
