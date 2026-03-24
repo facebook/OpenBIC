@@ -12491,28 +12491,28 @@ bool is_ubc_access(uint8_t sensor_num)
 {
 	if (get_plat_sensor_one_step_enable_flag() == ONE_STEP_POWER_MAGIC_NUMBER) {
 		return (get_plat_sensor_ubc_polling_enable_flag() &&
-			get_plat_sensor_polling_enable_flag());
+			get_plat_sensor_polling_enable_flag() && is_update_state_idle());
 	} else {
 		return (is_dc_access(sensor_num) && get_plat_sensor_ubc_polling_enable_flag() &&
-			get_plat_sensor_polling_enable_flag());
+			get_plat_sensor_polling_enable_flag() && is_update_state_idle());
 	}
 }
 
 bool is_temp_access(uint8_t cfg_idx)
 {
 	return (get_plat_sensor_temp_polling_enable_flag() &&
-		get_plat_sensor_polling_enable_flag());
+		get_plat_sensor_polling_enable_flag() && is_update_state_idle());
 }
 
 bool is_vr_access(uint8_t sensor_num)
 {
 	if (get_plat_sensor_one_step_enable_flag() == ONE_STEP_POWER_MAGIC_NUMBER) {
 		return (get_plat_sensor_vr_polling_enable_flag() &&
-			get_plat_sensor_polling_enable_flag());
+			get_plat_sensor_polling_enable_flag() && is_update_state_idle());
 
 	} else {
 		return (is_dc_access(sensor_num) && get_plat_sensor_vr_polling_enable_flag() &&
-			get_plat_sensor_polling_enable_flag());
+			get_plat_sensor_polling_enable_flag() && is_update_state_idle());
 	}
 }
 
