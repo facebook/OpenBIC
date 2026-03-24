@@ -13147,6 +13147,7 @@ void change_sensor_cfg(uint8_t asic_board_id, uint8_t tmp_module, uint8_t vr_mod
 {
 	uint8_t tmp_change_mode = FAB1_1ND_TMP432;
 	uint8_t vr_change_mode = FAB1_1ND_MPS;
+	uint8_t ubc_change_type = sensor_dev_u50su4p180pmdafc;
 	uint8_t bus = SENSOR_CFG_UNKNOW;
 	/*
 	When changing the address version, you first need to check the board type (EVB or Rainbow), and then check the board revision ID.
@@ -13256,6 +13257,59 @@ void change_sensor_cfg(uint8_t asic_board_id, uint8_t tmp_module, uint8_t vr_mod
 				vr_table[j].pldm_sensor_cfg.target_addr, vr_change_mode);
 			LOG_INF("change VR sensors 0x%x address to 0x%x",
 				vr_table[j].pldm_sensor_cfg.num, vr_table[j].pldm_sensor_cfg.target_addr);
+		}
+	}
+
+	// UBC sensor type only, address keeps unchanged
+	switch (ubc_module) {
+	case UBC_MODULE_MPS:
+		ubc_change_type = sensor_dev_mpc12109;
+		LOG_WRN("change UBC type to MPS");
+		break;
+	case UBC_MODULE_FLEX:
+		ubc_change_type = sensor_dev_bmr313;
+		LOG_WRN("change UBC type to FLEX");
+		break;
+	case UBC_MODULE_LUXSHARE:
+		ubc_change_type = sensor_dev_lx6301;
+		LOG_WRN("change UBC type to LUXSHARE");
+		break;
+	case UBC_MODULE_CYNTEX:
+		// To Do
+		break;
+	case UBC_MODULE_UNKNOWN:
+	default:
+		LOG_WRN("unknown UBC module, keep default UBC type");
+		break;
+	}
+
+	// UBC sensor
+	LOG_INF("ubc change type: 0x%x", ubc_change_type);
+	if (ubc_change_type != sensor_dev_u50su4p180pmdafc) {
+		pldm_sensor_info *ubc_table = plat_pldm_sensor_load(UBC_SENSOR_THREAD_ID);
+		if (ubc_table == NULL) {
+			LOG_ERR("UBC: plat_pldm_sensor_load(UBC_SENSOR_THREAD_ID) failed");
+			return;
+		}
+
+		int ubc_count = plat_pldm_sensor_get_sensor_count(UBC_SENSOR_THREAD_ID);
+		if (ubc_count < 0) {
+			LOG_ERR("UBC: invalid sensor count %d", ubc_count);
+			return;
+		}
+
+		for (uint8_t j = 0; j < ubc_count; j++) {
+			uint8_t num = ubc_table[j].pldm_sensor_cfg.num;
+
+			if (num < SENSOR_NUM_UBC1_P12V_VOLT_V ||
+			    num > SENSOR_NUM_UBC2_P12V_CURR_A) {
+				continue;
+			}
+
+			ubc_table[j].pldm_sensor_cfg.type = ubc_change_type;
+
+			LOG_INF("change UBC sensor 0x%x type to 0x%x",
+				num, ubc_table[j].pldm_sensor_cfg.type);
 		}
 	}
 }
