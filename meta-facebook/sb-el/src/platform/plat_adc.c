@@ -306,9 +306,8 @@ static void update_vr_base_power_info()
 	for (uint8_t i = 0; i < ADC_IDX_MAX; i++) {
 		adc_info_t *adc = &adc_info[i];
 		adc->sum -= adc->buf[adc->buf_idx];
-		adc->buf[adc->buf_idx] = ((i == ADC_IDX_NUWA0_1) || (i == ADC_IDX_NUWA0_2)) ?
-						 val_nuwa0 :
-						 val_nuwa1;
+		adc->buf[adc->buf_idx] =
+			((i == ADC_IDX_NUWA0_1) || (i == ADC_IDX_NUWA0_2)) ? val_nuwa0 : val_nuwa1;
 		adc->sum += adc->buf[adc->buf_idx];
 		adc->avg_val = adc->sum / adc->avg_times;
 
