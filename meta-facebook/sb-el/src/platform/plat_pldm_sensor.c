@@ -36,9 +36,6 @@ static bool plat_sensor_vr_polling_enable_flag = true;
 static uint8_t plat_sensor_one_step_power_enable_flag = 0;
 uint8_t pwr_capping_pollng_rate_type = 0;
 
-static uint32_t quick_vr_poll_interval = QUICK_POLL_INTERVAL;
-static bool is_quick_vr_poll_changed = false;
-
 static struct pldm_sensor_thread pal_pldm_sensor_thread[MAX_SENSOR_THREAD_ID] = {
 	// thread id, thread name
 	{ TEMP_SENSOR_THREAD_ID, "TEMP_SENSOR_THREAD" },
@@ -8998,6 +8995,7 @@ pldm_sensor_info plat_pldm_sensor_quick_vr_table[] = {
 			.post_sensor_read_hook = post_vr_read,
 			.post_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_2 * 2],
 		},
+		.poll_interval_ms = 1000, //1000ms
 	},
 	{
 		{
@@ -9070,6 +9068,7 @@ pldm_sensor_info plat_pldm_sensor_quick_vr_table[] = {
 			.post_sensor_read_hook = post_vr_read,
 			.post_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_2 * 2],
 		},
+		.poll_interval_ms = 10, //10ms
 	},
 	{
 		{
@@ -9142,6 +9141,7 @@ pldm_sensor_info plat_pldm_sensor_quick_vr_table[] = {
 			.post_sensor_read_hook = post_vr_read,
 			.post_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_1 * 2],
 		},
+		.poll_interval_ms = 1000, //1000ms
 	},
 	{
 		{
@@ -9214,6 +9214,7 @@ pldm_sensor_info plat_pldm_sensor_quick_vr_table[] = {
 			.post_sensor_read_hook = post_vr_read,
 			.post_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_1 * 2],
 		},
+		.poll_interval_ms = 10, //10ms
 	},
 	{
 		{
@@ -9286,6 +9287,7 @@ pldm_sensor_info plat_pldm_sensor_quick_vr_table[] = {
 			.post_sensor_read_hook = post_vr_read,
 			.post_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_10 * 2],
 		},
+		.poll_interval_ms = 1000, //1000ms
 	},
 	{
 		{
@@ -9358,6 +9360,7 @@ pldm_sensor_info plat_pldm_sensor_quick_vr_table[] = {
 			.post_sensor_read_hook = post_vr_read,
 			.post_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_6 * 2],
 		},
+		.poll_interval_ms = 1000, //1000ms
 	},
 	{
 		{
@@ -9430,6 +9433,7 @@ pldm_sensor_info plat_pldm_sensor_quick_vr_table[] = {
 			.post_sensor_read_hook = post_vr_read,
 			.post_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_5 * 2],
 		},
+		.poll_interval_ms = 1000, //1000ms
 	},
 	{
 		{
@@ -9502,6 +9506,7 @@ pldm_sensor_info plat_pldm_sensor_quick_vr_table[] = {
 			.post_sensor_read_hook = post_vr_read,
 			.post_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_12 * 2],
 		},
+		.poll_interval_ms = 1000, //1000ms
 	},
 	{
 		{
@@ -9574,6 +9579,7 @@ pldm_sensor_info plat_pldm_sensor_quick_vr_table[] = {
 			.post_sensor_read_hook = post_vr_read,
 			.post_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_7 * 2 + 1],
 		},
+		.poll_interval_ms = 1000, //1000ms
 	},
 };
 
@@ -13398,10 +13404,10 @@ bool is_vr_access(uint8_t sensor_num)
 	}
 }
 
-uint32_t plat_pldm_sensor_get_quick_vr_poll_interval()
-{
-	return quick_vr_poll_interval;
-}
+// uint32_t plat_pldm_sensor_get_quick_vr_poll_interval()
+// {
+// 	return quick_vr_poll_interval;
+// }
 
 power_capping_time_setting pwr_capping_setting_table[] = {
 	{ SENSOR_NUM_ASIC_P0V75_NUWA0_VDD_PWR_W, { 10, 5, 2, 1, 2, 5, 5, 2 } },
@@ -13535,19 +13541,6 @@ uint16_t get_quick_nuwa_polling_rate()
 	return pwr_capping_setting_table[0].case_time_ms[pwr_capping_pollng_rate_type];
 }
 
-void plat_pldm_sensor_change_poll_interval(int thread_id, uint32_t *poll_interval_ms)
-{
-	CHECK_NULL_ARG(poll_interval_ms);
-
-	if (thread_id == QUICK_VR_SENSOR_THREAD_ID) {
-		if (is_quick_vr_poll_changed) {
-			*poll_interval_ms = quick_vr_poll_interval;
-			is_quick_vr_poll_changed = false;
-		}
-	}
-
-	return;
-}
 
 uint8_t get_ioe_init_flag()
 {
