@@ -32,7 +32,7 @@ static plat_asic_error_event asic_error_event;
 
 const vr_fault_info vr_fault_table[] = {
 	// { arke_event_source, cpld_reg_offset, cpld_reg_bit }
-    // "VR_RAIL_E_ASIC_P0V9_VDDQ_HBM1357" and "VR_RAIL_E_ASIC_P0V9_VDDQ_HBM0246" waiting for CPLD table
+	// "VR_RAIL_E_ASIC_P0V9_VDDQ_HBM1357" and "VR_RAIL_E_ASIC_P0V9_VDDQ_HBM0246" waiting for CPLD table
 	// VR Power Fault 1
 	{ ARKE_OWL_E_TRVDD0P9, VR_POWER_FAULT_1_REG, BIT(7), true,
 	  VR_RAIL_E_ASIC_P0V9_OWL_E_TRVDD },
@@ -122,8 +122,7 @@ void process_mtia_vr_power_fault_sel(cpld_info *cpld_info, uint8_t *current_cpld
 	CHECK_NULL_ARG(current_cpld_value);
 	LOG_INF("process_mtia_vr_power_fault_sel");
 	bool dc_status = plat_get_ubc_status(); // get_ubc_enabled_delayed_status in electra
-	uint8_t expected_val =
-		dc_status ? cpld_info->dc_on_defaut : cpld_info->dc_off_defaut;
+	uint8_t expected_val = dc_status ? cpld_info->dc_on_defaut : cpld_info->dc_off_defaut;
 
 	uint8_t current_fault = (*current_cpld_value ^ expected_val) & cpld_info->bit_check_mask;
 	uint8_t status_changed_bit = current_fault ^ cpld_info->is_fault_bit_map;

@@ -20,7 +20,6 @@
 #include "sensor.h"
 
 bool emc1413_get_temp_status(sensor_cfg *cfg, uint8_t *temp_status);
-bool emc1413_get_temp_open_status(sensor_cfg *cfg, uint8_t *temp_status);
 bool emc1413_clear_temp_status(sensor_cfg *cfg);
 
 enum EMC1413_CHANNELS {

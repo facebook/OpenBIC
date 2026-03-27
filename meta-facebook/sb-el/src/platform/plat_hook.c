@@ -406,7 +406,7 @@ bool post_tmp_read(sensor_cfg *cfg, void *args, int *reading)
 				return false;
 			}
 		}
-	}else if (cfg->type == sensor_dev_emc1413) {
+	} else if (cfg->type == sensor_dev_emc1413) {
 		switch (cfg->num) {
 		/*
 		SENSOR_NUM_ASIC_MEDHA0_SENSOR0_TEMP_C
@@ -465,8 +465,8 @@ bool post_tmp_read(sensor_cfg *cfg, void *args, int *reading)
 		default:
 			break;
 		}
-	}else{
-			LOG_ERR("Unsupported sensor type 0x%x for post_tmp_read", cfg->type);
+	} else {
+		LOG_ERR("Unsupported sensor type 0x%x for post_tmp_read", cfg->type);
 		return false;
 	}
 
