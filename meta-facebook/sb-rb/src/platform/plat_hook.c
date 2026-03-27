@@ -1615,7 +1615,7 @@ void set_delta_ubc_time_of_vout_rise()
 	if (ubc_module == UBC_MODULE_DELTA) {
 		for (int i = 0; i < ARRAY_SIZE(sensor_ids); i++) {
 			uint8_t id = sensor_ids[i];
-			sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(id);
+			const sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(id);
 			if (!cfg) {
 				LOG_ERR("DELTA UBC vout rising init: sensor cfg not found (sensor_id=0x%02X)",
 					id);
@@ -1633,8 +1633,8 @@ void set_delta_ubc_time_of_vout_rise()
 				return;
 			}
 			if (write_data[0] == 0x78 && write_data[1] == 0x00) {
-				LOG_INF("UBC vout rising time already set, skip setting. vout_rise: 0x%02X, bus: %d, address: 0x%x",
-					(write_data[0] << 8) | write_data[1], bus, addr);
+				LOG_INF("UBC vout rising time already set, skip setting. vout_rise: 0x%02X%02X, bus: %d, address: 0x%x",
+					write_data[0], write_data[1], bus, addr);
 				continue;
 			}
 

@@ -449,13 +449,7 @@ void pwer_gd_get_status(const struct shell *shell)
 	for (int i = 0; i < sizeof(ioe_pwrgd_status_table) / sizeof(ioe_pwrgd_status_table[0]);
 	     i++) {
 		uint8_t tmp_value = (check_value >> i) & 0x01;
-		if (tmp_value) {
-			shell_print(shell, "%s : %d", ioe_pwrgd_status_table[i].ioe_pwrgd_name,
-				    tmp_value);
-		} else {
-			shell_print(shell, "%s : %d", ioe_pwrgd_status_table[i].ioe_pwrgd_name,
-				    tmp_value);
-		}
+		shell_print(shell, "%s : %d", ioe_pwrgd_status_table[i].ioe_pwrgd_name, tmp_value);
 	}
 }
 void steps_on_p3v3_osfp(const struct shell *shell)

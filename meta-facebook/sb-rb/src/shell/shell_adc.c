@@ -162,8 +162,8 @@ void shell_adc_get_buf(const struct shell *shell, uint8_t idx)
 {
 	uint8_t lv = (idx == 0 || idx == 1) ? 2 : 3;
 	uint16_t len = get_adc_averge_times(idx);
-	uint16_t *buf = get_adc_buf(idx);
-	uint16_t *vr_buf = get_vr_buf(idx);
+	const uint16_t *buf = get_adc_buf(idx);
+	const uint16_t *vr_buf = get_vr_buf(idx);
 	float vref = 0;
 	uint8_t adc_type = get_adc_type();
 	uint16_t *adc_snapshot = malloc(sizeof(uint16_t) * len);
