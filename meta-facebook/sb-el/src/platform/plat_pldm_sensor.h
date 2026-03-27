@@ -20,7 +20,7 @@
 #include "pdr.h"
 #include "sensor.h"
 
-#define QUICK_POLL_INTERVAL 1000
+#define QUICK_POLL_INTERVAL 0xFF
 #define VR_DEFAULT_POLLING_INTERVAL_MS 1000
 
 #define ADDR_UNKNOWN (0xFF >> 1)
@@ -351,9 +351,7 @@ void change_sensor_cfg(uint8_t asic_board_id, uint8_t tmp_module, uint8_t vr_mod
 uint8_t convert_tmp_addr(uint8_t bus, uint8_t addr, uint8_t tmp_change_mode);
 uint8_t convert_vr_addr(uint8_t bus, uint8_t addr, uint8_t vr_change_mode);
 uint32_t plat_get_pdr_size(uint8_t pdr_type);
-uint32_t plat_pldm_sensor_get_quick_vr_poll_interval();
 void plat_pldm_sensor_set_quick_vr_poll_interval(uint8_t type, uint8_t capping_source);
-void init_U200051_IO();
 void quick_sensor_poll_init();
 void set_ioe_init_flag(uint8_t flag);
 uint8_t get_ioe_init_flag();
