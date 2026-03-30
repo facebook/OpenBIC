@@ -380,8 +380,8 @@ bool emc1413_check_open_status(sensor_cfg *cfg, uint8_t status)
 
 uint8_t get_emc1413_cache_status(uint8_t idx)
 {
-	uint8_t cache_status[4] = { emc1413_cache_status_0, emc1413_cache_status_1,
-				    emc1413_cache_status_2, emc1413_cache_status_3 };
+	const uint8_t cache_status[4] = { emc1413_cache_status_0, emc1413_cache_status_1,
+					  emc1413_cache_status_2, emc1413_cache_status_3 };
 	if (idx > 3) {
 		LOG_ERR("Invalid emc1413 cache status index %u", idx);
 		return 0;
