@@ -127,6 +127,8 @@ vr_mapping_sensor vr_rail_table[] = {
 	  "CB_ASIC_P0V9_OWL_W_TRVDD", 0xffffffff },
 	{ VR_RAIL_E_ASIC_P0V75_OWL_W_TRVDD, SENSOR_NUM_ASIC_P0V75_OWL_W_TRVDD_VOLT_V,
 	  "CB_ASIC_P0V75_OWL_W_TRVDD", 0xffffffff },
+
+	{ VR_RAIL_E_P3V3_OSFP_VOLT_V, SENSOR_NUM_P3V3_OSFP_VOLT_V, "P3V3_OSFP_VOLT_V", 0xffffffff },
 };
 
 vr_mapping_status vr_status_table[] = {
@@ -626,6 +628,16 @@ bool plat_get_vr_status(uint8_t rail, uint8_t vr_status_rail, uint16_t *vr_statu
 {
 	CHECK_NULL_ARG_WITH_RETURN(vr_status, false);
 
+	if (rail >= VR_RAIL_E_MAX) {
+		LOG_ERR("invalid rail %u", rail);
+		return false;
+	}
+
+	if (vr_status_rail >= VR_STAUS_E_MAX) {
+		LOG_ERR("invalid vr_status_rail %u", vr_status_rail);
+		return false;
+	}
+
 	bool ret = false;
 	uint8_t sensor_id = vr_rail_table[rail].sensor_id;
 	sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
@@ -679,6 +691,11 @@ err:
 
 bool plat_clear_vr_status(uint8_t rail)
 {
+	if (rail >= VR_RAIL_E_MAX) {
+		LOG_ERR("invalid rail %u", rail);
+		return false;
+	}
+
 	bool ret = false;
 	uint8_t sensor_id = vr_rail_table[rail].sensor_id;
 	sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
@@ -734,6 +751,11 @@ err:
 bool plat_get_vout_command(uint8_t rail, uint16_t *millivolt)
 {
 	CHECK_NULL_ARG_WITH_RETURN(millivolt, false);
+
+	if (rail >= VR_RAIL_E_MAX) {
+		LOG_ERR("invalid rail %u", rail);
+		return false;
+	}
 
 	bool ret = false;
 	uint8_t sensor_id = vr_rail_table[rail].sensor_id;
