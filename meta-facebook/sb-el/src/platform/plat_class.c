@@ -194,8 +194,14 @@ void init_vr_vendor_type(void)
 		LOG_ERR("Failed to get CPLD VR_VENDOR_TYPE 0x%02X", CPLD_OFFSET_VR_VENDER_TYPE);
 	}
 
+	vr_vendor_module &= 0x0F;
 	vr_module = (vr_vendor_module & 0x01);
-	ubc_module = (vr_vendor_module >> 1) & 0x03;
+	ubc_module = (vr_vendor_module >> 1) & 0x07;
+
+	if (vr_vendor_module == 0x08 && board_rev_id == REV_ID_EVT1A) {
+		vr_module = 0x01;
+		ubc_module = 0x03;
+	}
 
 	LOG_INF("vr_vendor_module=%s (ubc=%s, vr=%s)", vr_vendor_module_name[vr_vendor_module],
 		ubc_module_name[ubc_module], vr_module_name[vr_module]);

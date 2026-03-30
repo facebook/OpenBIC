@@ -13310,8 +13310,8 @@ void change_sensor_cfg(uint8_t asic_board_id, uint8_t tmp_module, uint8_t vr_mod
 		for (uint8_t j = 0; j < ubc_count; j++) {
 			uint8_t num = ubc_table[j].pldm_sensor_cfg.num;
 
-			if (num < SENSOR_NUM_UBC1_P12V_VOLT_V ||
-			    num > SENSOR_NUM_UBC2_P12V_CURR_A) {
+			if (num < SENSOR_NUM_UBC1_P12V_TEMP_C ||
+			    num > SENSOR_NUM_UBC2_P52V_INPUT_VOLT_V) {
 				continue;
 			}
 
