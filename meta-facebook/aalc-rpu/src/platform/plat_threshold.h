@@ -58,14 +58,10 @@ bool hsc_fail_check();
 bool system_failure_recovery();
 bool check_rpu_ready();
 void pump_change_threshold(uint8_t sensor_num, uint8_t duty);
-void set_is_rack_level_abnormal(bool flag);
-bool get_is_rack_level_abnormal();
-void set_is_rpu_level_abnormal(bool flag);
-bool get_is_rpu_level_abnormal();
-void set_is_press_abnormal(bool flag);
-bool get_is_press_abnormal();
 void set_is_pump_not_access(uint8_t index, bool flag);
 bool get_is_pump_not_access(uint8_t index);
+void set_is_fan_not_access(uint8_t index, bool flag);
+bool get_is_fan_not_access(uint8_t index);
 void set_is_hsc_hsc_fail(bool flag);
 bool get_is_hsc_hsc_fail();
 

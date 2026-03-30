@@ -23,9 +23,9 @@
 pid_cfg hex_fan_pid_table[] = {
 	{
 		.sensor_num = SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_TEMP_C,
-		.setpoint = 40.0,
+		.setpoint = 40,
 		.kp = -15,
-		.ki = -0.1,
+		.ki = -0.12,
 		.kd = -0.01,
 		.i_limit_min = 0,
 		.i_limit_max = 90,
@@ -51,15 +51,17 @@ stepwise_cfg hex_fan_stepwise_table[] = {
 	{
 		.sensor_num = SENSOR_NUM_BPB_RPU_COOLANT_OUTLET_TEMP_C,
 		.step = {
-			{34.0, 5},
-			{35.0, 8},
-			{36.0, 11},
-			{37.0, 14},
-			{38.0, 17},
-			{41.0, 20},
-			{41.2, 25},
-			{41.5, 35},
-			{42.0, 45},
+			{33.0, 5},
+			{34.0, 11},
+			{35.0, 13},
+			{36.0, 15},
+			{37.0, 17},
+			{38.0, 19},
+			{39.0, 21},
+			{40.0, 23},
+			{41.2, 23},
+			{41.5, 25},
+			{42.0, 27},
 		},
 	},
 };
@@ -67,7 +69,7 @@ stepwise_cfg hex_fan_stepwise_table[] = {
 pid_cfg pump_pid_table[] = {
 	{
 		.sensor_num = SENSOR_NUM_BPB_RPU_COOLANT_FLOW_RATE_LPM,
-		.setpoint = 40.0,
+		.setpoint = 40,
 		.kp = 0.5,
 		.ki = 0.03,
 		.kd = 0.01,
