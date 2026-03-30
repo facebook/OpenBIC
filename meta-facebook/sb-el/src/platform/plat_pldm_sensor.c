@@ -13268,6 +13268,9 @@ void change_sensor_cfg(uint8_t asic_board_id, uint8_t tmp_module, uint8_t vr_mod
 
 	// UBC sensor type only, address keeps unchanged
 	switch (ubc_module) {
+	case UBC_MODULE_DELTA:
+		LOG_INF("No need to change UBC type, DELTA is the default");
+		break;
 	case UBC_MODULE_MPS:
 		ubc_change_type = sensor_dev_mpc12109;
 		LOG_WRN("change UBC type to MPS");
