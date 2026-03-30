@@ -299,9 +299,9 @@ void pal_show_board_types(const struct shell *shell)
 	shell_print(shell, "* UBC_TYPE:      (0x%02X)%s", ubc_module,
 		    (ubc_module == UBC_MODULE_DELTA)	? "UBC_DELTA_S54SS4P1A2" :
 		    (ubc_module == UBC_MODULE_MPS)	? "UBC_MPS_MPC12109" :
-			(ubc_module == UBC_MODULE_LUXSHARE) ? "UBC_FLEX" :
+			(ubc_module == UBC_MODULE_FLEX) ? "UBC_FLEX" :
 		    (ubc_module == UBC_MODULE_LUXSHARE) ? "UBC_LUXSHURE_LX6310" :
-			(ubc_module == UBC_MODULE_LUXSHARE) ? "UBC_CYNTEX" :
+			(ubc_module == UBC_MODULE_CYNTEX) ? "UBC_CYNTEX" :
 							  "not supported");
 
 	shell_print(shell, "* VR_TYPE:       (0x%02X)%s", vr_module,
