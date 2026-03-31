@@ -35,6 +35,7 @@
 #include "plat_iris_smbus.h"
 #include "plat_util.h"
 #include "plat_i2c.h"
+#include "shell_iris_power.h"
 
 #define IRIS_BOOT0_IMG_SIZE 0x1FFFFB
 #define PLAT_WAIT_SENSOR_POLLING_END_DELAY_MS 1000
@@ -43,6 +44,7 @@ LOG_MODULE_REGISTER(plat_fwupdate);
 
 static uint8_t pldm_pre_vr_update(void *fw_update_param);
 static uint8_t pldm_post_vr_update(void *fw_update_param);
+static uint8_t plat_pldm_vr_update(void *fw_update_param);
 static uint8_t pldm_pre_bic_update(void *fw_update_param);
 static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len);
 static bool get_boot0_hamsa_fw_version(void *info_p, uint8_t *buf, uint8_t *len);
@@ -692,8 +694,8 @@ void get_fw_version_boot0_from_asic()
 	i2c_msg.data[0] = ASIC_VERSION_BYTE;
 	i2c_master_read(&i2c_msg, I2C_MAX_RETRY);
 
-	LOG_INF(" boot0 VER : %02d.%02d.%02d", i2c_msg.data[9], i2c_msg.data[8], i2c_msg.data[7]);
-	uint32_t data_p = i2c_msg.data[9] << 16 | i2c_msg.data[8] << 8 | i2c_msg.data[7];
+	LOG_INF(" boot0 VER : %02d.%02d.%02d", i2c_msg.data[8], i2c_msg.data[7], i2c_msg.data[6]);
+	uint32_t data_p = i2c_msg.data[8] << 16 | i2c_msg.data[7] << 8 | i2c_msg.data[6];
 	if (data_p) {
 		// update temp data
 		LOG_INF("update boot0 version read from asic");
@@ -702,20 +704,16 @@ void get_fw_version_boot0_from_asic()
 		version_boot0[2] = data_p;
 	}
 }
-bool get_fw_version_boot1_from_asic(uint8_t *data)
+uint32_t get_fw_version_boot1_from_asic()
 {
-	CHECK_NULL_ARG_WITH_RETURN(data, false);
 	I2C_MSG i2c_msg = { .bus = I2C_BUS12, .target_addr = 0x32 };
 	i2c_msg.tx_len = 1;
 	i2c_msg.rx_len = 11;
 	i2c_msg.data[0] = ASIC_VERSION_BYTE;
 	i2c_master_read(&i2c_msg, I2C_MAX_RETRY);
-
-	LOG_INF(" boot1 VER : %02d.%02d.%02d", i2c_msg.data[2], i2c_msg.data[3], i2c_msg.data[4]);
-	uint32_t data_p = i2c_msg.data[2] << 16 | i2c_msg.data[3] << 8 | i2c_msg.data[4];
-	memcpy(data, &data_p, 4);
-
-	return true;
+	LOG_INF(" boot1 VER : %02d.%02d.%02d", i2c_msg.data[1], i2c_msg.data[2], i2c_msg.data[3]);
+	uint32_t version = i2c_msg.data[1] << 16 | i2c_msg.data[2] << 8 | i2c_msg.data[3];
+	return version;
 }
 
 static bool get_boot1_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
@@ -728,8 +726,7 @@ static bool get_boot1_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 	memcpy(buf_p, remain_str_p, strlen(remain_str_p));
 	buf_p += strlen(remain_str_p);
 	*len += strlen(remain_str_p);
-	uint8_t *version_tmp = NULL;
-	uint32_t version = get_fw_version_boot1_from_asic(version_tmp);
+	uint32_t version = get_fw_version_boot1_from_asic();
 
 	*len += bin2hex((uint8_t *)&version, 4, buf_p, 4);
 	buf_p += 4;
@@ -846,7 +843,7 @@ static bool get_boot0_medha1_fw_version(void *info_p, uint8_t *buf, uint8_t *len
 	{                                                                                          \
 		.enable = true, .comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,                 \
 		.comp_identifier = comp_id, .comp_classification_index = 0x00,                     \
-		.pre_update_func = pldm_pre_vr_update, .update_func = pldm_vr_update,              \
+		.pre_update_func = pldm_pre_vr_update, .update_func = plat_pldm_vr_update,         \
 		.pos_update_func = pldm_post_vr_update, .inf = COMP_UPDATE_VIA_I2C,                \
 		.activate_method = COMP_ACT_AC_PWR_CYCLE, .self_act_func = NULL,                   \
 		.get_fw_version_fn = get_vr_fw_version, .self_apply_work_func = NULL,              \
@@ -1093,6 +1090,49 @@ static uint8_t pldm_pre_vr_update(void *fw_update_param)
 
 	return 0;
 }
+
+static uint8_t plat_pldm_vr_update(void *fw_update_param)
+{
+	uint8_t ret = 1;
+	CHECK_NULL_ARG_WITH_RETURN(fw_update_param, 1);
+	pldm_fw_update_param_t *p = (pldm_fw_update_param_t *)fw_update_param;
+	uint8_t sensor_id = 0;
+	char sensor_name[MAX_AUX_SENSOR_NAME_LEN] = { 0 };
+
+	if (!find_sensor_id_and_name_by_firmware_comp_id(p->comp_id, &sensor_id, sensor_name)) {
+		LOG_ERR("Can't find sensor id and name by comp id: 0x%x", p->comp_id);
+		return 1;
+	}
+
+	sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
+	CHECK_NULL_ARG_WITH_RETURN(cfg, 1);
+
+	if (cfg->type == sensor_dev_mp29816a) {
+		if (strncmp(p->comp_version_str, KEYWORD_VR_MP29816A,
+			    ARRAY_SIZE(KEYWORD_VR_MP29816A) - 1)) {
+			LOG_ERR("Wrong VR module stop FW update!");
+			goto exit;
+		}
+	} else if (cfg->type == sensor_dev_mp2971) {
+		if (strncmp(p->comp_version_str, KEYWORD_VR_MP2971,
+			    ARRAY_SIZE(KEYWORD_VR_MP2971) - 1)) {
+			LOG_ERR("Wrong VR module stop FW update!");
+			goto exit;
+		}
+	} else if (cfg->type == sensor_dev_raa228249) {
+		if (strncmp(p->comp_version_str, KEYWORD_VR_RAA228249,
+			    ARRAY_SIZE(KEYWORD_VR_RAA228249) - 1)) {
+			LOG_ERR("Wrong VR module stop FW update!");
+			goto exit;
+		}
+	}
+
+	ret = pldm_vr_update(fw_update_param);
+
+exit:
+	return ret;
+}
+
 static uint8_t pldm_post_vr_update(void *fw_update_param)
 {
 	ARG_UNUSED(fw_update_param);
@@ -1115,7 +1155,7 @@ static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 	uint8_t sensor_id = 0;
 	char sensor_name[MAX_AUX_SENSOR_NAME_LEN] = { 0 };
 
-	if (is_mb_dc_on() == false)
+	if (check_p3v3_p5v_pwrgd() == false)
 		return ret;
 
 	if (!find_sensor_id_and_name_by_firmware_comp_id(p->comp_identifier, &sensor_id,
@@ -1277,13 +1317,13 @@ void plat_reset_prepare()
 				     "I2C_6", "I2C_7", "I2C_8", "I2C_9", "I2C_10", "I2C_11" };
 
 	for (int i = 0; i < ARRAY_SIZE(i2c_labels); i++) {
-		const struct device *i2c_dev = device_get_binding(i2c_labels[i]);
-		if (!i2c_dev) {
+		const struct device *check_i2c_dev_by_bus = device_get_binding(i2c_labels[i]);
+		if (!check_i2c_dev_by_bus) {
 			LOG_ERR("Failed to get binding for %s", i2c_labels[i]);
 			continue;
 		}
 
-		int ret = i2c_npcm_device_disable(i2c_dev);
+		int ret = i2c_npcm_device_disable(check_i2c_dev_by_bus);
 		if (ret) {
 			LOG_ERR("Failed to disable %s (ret=%d)", i2c_labels[i], ret);
 		} else {

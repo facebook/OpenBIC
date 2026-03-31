@@ -23,6 +23,7 @@
 #include "plat_user_setting.h"
 #include "plat_fru.h"
 #include "shell_plat_throttle_switch.h"
+#include "plat_power_capping.h"
 
 LOG_MODULE_REGISTER(plat_throttle_switch_shell, LOG_LEVEL_DBG);
 
@@ -60,6 +61,8 @@ bool set_throttle_user_settings(uint8_t *throttle_status_reg, bool is_perm)
 		LOG_ERR("Failed to write throttle to cpld error");
 		return false;
 	}
+	// save lv_switch_en in MMC
+	set_power_capping_lv_switch_en_val(*throttle_status_reg & 0x0F);
 
 	if (is_perm) {
 		throttle_user_settings.throttle_user_setting_value = *throttle_status_reg;

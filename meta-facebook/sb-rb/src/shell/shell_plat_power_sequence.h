@@ -120,6 +120,8 @@
 #define P1V5_PLL_VDDA_OWL_W_DOWN_REG 0xAF
 #define FM_P3V3_CLK_DOWN_REG 0xB0
 
+#define NO_SENSOR_NUM 0xFF
+
 typedef struct power_sequence {
 	uint8_t index;
 	uint8_t cpld_offsets;
@@ -132,11 +134,12 @@ typedef struct power_sequence_event_pwrgd {
 	uint8_t cpld_offsets;
 	uint8_t *power_rail_name;
 	uint8_t bit_location;
+	uint8_t sensor_num;
 } power_sequence_event_pwrgd;
 
 bool plat_find_power_seq_fail();
 uint8_t plat_get_power_seq_fail_id();
 void plat_get_power_seq_fail_name(uint8_t idx, uint8_t **name);
 void plat_get_power_seq_pwrgd_event_fail_name(uint8_t idx, uint8_t **name);
-
+uint8_t get_pwrgd_sequence_fail_sensor_num();
 #endif

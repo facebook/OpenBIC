@@ -78,6 +78,7 @@
 #define MEDHA_POWER_SOURCE_REG 0x96
 #define POLLING_RATE_TELEMETRY_REG 0x97
 #define TRAY_INFO_REG 0x98
+#define SET_THERMAL_THRESHOLD 0x62
 
 #define SET_SENSOR_POLLING_COMMAND_REG 0xF0
 
@@ -141,6 +142,12 @@ enum VR_ALERT_LEVEL {
 	VR_ALERT_LEVEL_2,
 	VR_ALERT_LEVEL_3,
 	VR_ALERT_MAX,
+};
+enum I2C_TARGET_BUS_IDX {
+	HAMSA_I2C_BUS_IDX = 0,
+	MEDHA0_I2C_BUS_IDX,
+	MEDHA1_I2C_BUS_IDX,
+	ASIC_I2C_BUS_IDX_MAX,
 };
 typedef struct {
 	uint8_t threshold_lsb;
@@ -216,6 +223,10 @@ typedef struct __attribute__((__packed__)) {
 	struct k_work work;
 	uint8_t set_value;
 } plat_control_sensor_polling;
+typedef struct {
+	uint8_t index;
+	uint8_t i2c_bus;
+} asic_i2c_bus_map;
 void plat_telemetry_table_init(void);
 void update_sensor_reading_by_sensor_number(uint8_t sensor_number);
 void update_strap_capability_table(void);
