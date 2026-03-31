@@ -34,6 +34,7 @@
 #include "libutil.h"
 #include "sq52205.h"
 #include <logging/log.h>
+#include "util_sys.h"
 
 LOG_MODULE_REGISTER(plat_sensor_table);
 
@@ -457,6 +458,25 @@ sensor_cfg sq52205_sensor_config_table[] = {
 	  &sq52205_init_args[0] },
 };
 
+void plat_sensor_clear_vr_fault(uint8_t vr_addr, uint8_t vr_bus)
+{
+	// Clear VR fault by command code 03h - CLEAR_FAULTS
+	uint8_t retry = 5;
+	int ret = 0;
+	I2C_MSG msg = { 0 };
+	msg.bus = vr_bus;
+	msg.target_addr = vr_addr;
+
+	/* write CLEAR_FAULTS */
+	msg.tx_len = 1;
+	msg.data[0] = PMBUS_CLEAR_FAULTS;
+	ret = i2c_master_write(&msg, retry);
+	if (ret != 0) {
+		LOG_ERR("Clear faults failed, bus: 0x%x, addr: 0x%x", msg.bus,
+			msg.target_addr);
+	}
+}
+
 const int SENSOR_CONFIG_SIZE = ARRAY_SIZE(plat_sensor_config);
 
 void load_sensor_config(void)
@@ -481,6 +501,10 @@ uint8_t pal_get_extend_sensor_config()
 		break;
 	case HSC_MODULE_MP5990:
 		extend_sensor_config_size += ARRAY_SIZE(mp5990_sensor_config_table);
+		if (is_ac_lost()) {
+			// Clear VR fault bit
+			plat_sensor_clear_vr_fault(MPS_MP5990_ADDR, I2C_BUS2);
+		}
 		break;
 	case HSC_MODULE_LTC4286:
 		extend_sensor_config_size += ARRAY_SIZE(ltc4286_sensor_config_table);
