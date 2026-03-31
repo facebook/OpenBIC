@@ -688,9 +688,10 @@ bool mp29816a_get_vout_command(sensor_cfg *cfg, uint8_t rail, uint16_t *millivol
 	if (vid_step == 0)
 		return false;
 
-	float offset_mv = get_vout_cal_offset(val_cal_offset, vid_step) * 1000.0f;
-	float val = (read_value * 1000.0f) * vid_step + offset_mv;
-	*millivolt = (int)val;
+	float offset_v = get_vout_cal_offset(val_cal_offset, vid_step);
+	float vout_v = read_value * vid_step + offset_v;
+	*millivolt = (uint16_t)(vout_v * 1000.0f);
+
 	return true;
 }
 
@@ -710,11 +711,12 @@ bool mp29816a_set_vout_command(sensor_cfg *cfg, uint8_t rail, uint16_t *millivol
 	}
 
 	uint16_t val_cal_offset = data_cal_offset[0] | (data_cal_offset[1] << 8);
-	float offset_mv = get_vout_cal_offset(val_cal_offset, vid_step);
+	float offset_v = get_vout_cal_offset(val_cal_offset, vid_step);
+	float target_v = ((*millivolt) / 1000.0f) - offset_v;
+	if (target_v < 0)
+		target_v = 0;
 
-	float tmp_value = ((*millivolt - offset_mv) / 1000.0f) / vid_step;
-	uint16_t set_value = (uint16_t)(tmp_value + 0.5f);
-	set_value = set_value & READ_VOUT_MASK;
+	uint16_t set_value = (uint16_t)(target_v / vid_step + 0.5f);
 
 	uint8_t data[2] = { 0 };
 	data[0] = set_value & 0xFF;
