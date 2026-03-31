@@ -32,6 +32,8 @@
 #define I2C_DATA_SIZE 5
 #define NUMBER_OF_ADC_CHANNEL 16
 #define AST1030_ADC_BASE_ADDR 0x7e6e9000
+#define E1S_BOOT_OFFSET_CARD_PRSNT 0x10
+#define PRSNT_E1S_BOOT_BIT 2
 
 #define MAX_1OU_M2_COUNT 4
 
@@ -125,5 +127,6 @@ void init_platform_config();
 void read_adm1278_model();
 void read_mp5990_model();
 void mp5998_init();
-
+void set_bootdrive_exist_status();
+bool get_bootdrive_exist_status();
 #endif
