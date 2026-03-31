@@ -57,5 +57,6 @@ void ISR_RMCA();
 void ISR_CPU_VPP_INT();
 void ISR_NMI();
 void ISR_SMI();
+void ISR_E1S_0_INA233_ALRT();
 
 #endif

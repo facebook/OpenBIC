@@ -635,3 +635,32 @@ void ISR_SMI(void)
         }
     }
 }
+
+static bool send_alert_sel(event_state_t state, uint8_t event_offset)
+{
+    common_addsel_msg_t sel_msg = {0};
+
+    sel_msg.InF_target    = BMC_IPMB;
+    sel_msg.sensor_type   = IPMI_OEM_SENSOR_TYPE_SYS_STA;
+    sel_msg.sensor_number = SENSOR_NUM_SYSTEM_STATUS;
+    sel_msg.event_type = (state == ASSERT) ?
+                         IPMI_EVENT_TYPE_SENSOR_SPECIFIC :
+                         IPMI_OEM_EVENT_TYPE_DEASSERT;
+    sel_msg.event_data1 = event_offset;
+    sel_msg.event_data2 = 0xFF;
+    sel_msg.event_data3 = 0xFF;
+
+    return common_add_sel_evt_record(&sel_msg);
+}
+
+
+void ISR_E1S_0_INA233_ALRT(void) {
+
+       if(gpio_get(SMB_E1S_0_INA233_ALRT_N) == GPIO_LOW){
+               LOG_INF("GPIOB0+");
+               if (!send_alert_sel(ASSERT, IPMI_OEM_EVENT_OFFSET_SYS_E1S0_ALERT)){
+                       LOG_ERR("E1S INA233 alert addsel fail");
+               }
+       }
+
+}
