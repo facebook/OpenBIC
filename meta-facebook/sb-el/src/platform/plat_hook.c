@@ -18,6 +18,7 @@
 #include <string.h>
 #include "libutil.h"
 #include <logging/log.h>
+#include "pldm_sensor.h"
 #include "plat_hook.h"
 #include "pmbus.h"
 #include "plat_gpio.h"
@@ -33,6 +34,7 @@
 #include "plat_class.h"
 #include "tmp431.h"
 #include "emc1413.h"
+#include "shell_plat_average_power.h"
 
 LOG_MODULE_REGISTER(plat_hook);
 
@@ -42,6 +44,10 @@ static struct k_mutex vr_mutex[VR_MAX_NUM];
 bool alert_level_is_assert = false;
 
 #define EEPROM_MAX_WRITE_TIME 5 // the BR24G512 eeprom max write time is 3.5 ms
+
+static uint8_t power_index[UBC_VR_RAIL_E_MAX] = { 0 };
+static uint8_t power_count[UBC_VR_RAIL_E_MAX] = { 0 };
+
 /* VR */
 // clang-format off
 vr_pre_proc_arg vr_pre_read_args[] = {
@@ -139,6 +145,108 @@ vr_mapping_status vr_status_table[] = {
 	{ VR_STAUS_E_STATUS_INPUT, PMBUS_STATUS_INPUT, "STATUS_INPUT" },
 	{ VR_STAUS_E_STATUS_TEMPERATURE, PMBUS_STATUS_TEMPERATURE, "STATUS_TEMPERATURE" },
 	{ VR_STAUS_E_STATUS_CML, PMBUS_STATUS_CML, "STATUS_CML_PMBUS" },
+};
+
+ubc_vr_power_mapping_sensor ubc_vr_power_table[] = {
+	{ UBC_VR_RAIL_E_UBC1, SENSOR_NUM_UBC1_P12V_PWR_W, "UBC1_P12V_PWR_W", { 0 } },
+	{ UBC_VR_RAIL_E_UBC2, SENSOR_NUM_UBC2_P12V_PWR_W, "UBC2_P12V_PWR_W", { 0 } },
+	{ UBC_VR_RAIL_E_ASIC_P0V75_NUWA0_VDD,
+	  SENSOR_NUM_ASIC_P0V75_NUWA0_VDD_PWR_W,
+	  "VR_ASIC_P0V75_NUWA0_VDD_PWR_W",
+	  { 0 } },
+	{ UBC_VR_RAIL_E_ASIC_P0V75_NUWA1_VDD,
+	  SENSOR_NUM_ASIC_P0V75_NUWA1_VDD_PWR_W,
+	  "VR_ASIC_P0V75_NUWA1_VDD_PWR_W",
+	  { 0 } },
+	{ UBC_VR_RAIL_E_ASIC_P0V9_OWL_E_TRVDD,
+	  SENSOR_NUM_ASIC_P0V9_OWL_E_TRVDD_PWR_W,
+	  "VR_ASIC_P0V9_OWL_E_TRVDD_PWR_W",
+	  { 0 } },
+	{ UBC_VR_RAIL_E_ASIC_P0V75_OWL_E_TRVDD,
+	  SENSOR_NUM_ASIC_P0V75_OWL_E_TRVDD_PWR_W,
+	  "VR_ASIC_P0V75_OWL_E_TRVDD_PWR_W",
+	  { 0 } },
+	{ UBC_VR_RAIL_E_ASIC_P0V75_MAX_M_VDD,
+	  SENSOR_NUM_ASIC_P0V75_MAX_M_VDD_PWR_W,
+	  "VR_ASIC_P0V75_MAX_M_VDD_PWR_W",
+	  { 0 } },
+	{ UBC_VR_RAIL_E_ASIC_P0V75_VDDPHY_HBM1357,
+	  SENSOR_NUM_ASIC_P0V75_VDDPHY_HBM1357_PWR_W,
+	  "VR_ASIC_P0V75_VDDPHY_HBM1357_PWR_W",
+	  { 0 } },
+	{ UBC_VR_RAIL_E_ASIC_P0V75_OWL_E_VDD,
+	  SENSOR_NUM_ASIC_P0V75_OWL_E_VDD_PWR_W,
+	  "VR_ASIC_P0V75_OWL_E_VDD_PWR_W",
+	  { 0 } },
+	{ UBC_VR_RAIL_E_ASIC_P0V4_VDDQL_HBM1357,
+	  SENSOR_NUM_ASIC_P0V4_VDDQL_HBM1357_PWR_W,
+	  "VR_ASIC_P0V4_VDDQL_HBM1357_PWR_W",
+	  { 0 } },
+	{ UBC_VR_RAIL_E_ASIC_P1V05_VDDQC_HBM1357,
+	  SENSOR_NUM_ASIC_P1V05_VDDQC_HBM1357_PWR_W,
+	  "VR_ASIC_P1V05_VDDQC_HBM1357_PWR_W",
+	  { 0 } },
+	{ UBC_VR_RAIL_E_ASIC_P1V8_VPP_HBM1357,
+	  SENSOR_NUM_ASIC_P1V8_VPP_HBM1357_PWR_W,
+	  "VR_ASIC_P1V8_VPP_HBM1357_PWR_W",
+	  { 0 } },
+	{ UBC_VR_RAIL_E_ASIC_P0V9_VDDQ_HBM1357,
+	  SENSOR_NUM_ASIC_P0V9_VDDQ_HBM1357_PWR_W,
+	  "VR_ASIC_P0V9_VDDQ_HBM1357_PWR_W",
+	  { 0 } },
+	{ UBC_VR_RAIL_E_ASIC_P0V85_HAMSA_VDD,
+	  SENSOR_NUM_ASIC_P0V85_HAMSA_VDD_PWR_W,
+	  "VR_ASIC_P0V85_HAMSA_VDD_PWR_W",
+	  { 0 } },
+	{ UBC_VR_RAIL_E_ASIC_P0V75_MAX_N_VDD,
+	  SENSOR_NUM_ASIC_P0V75_MAX_N_VDD_PWR_W,
+	  "VR_ASIC_P0V75_MAX_N_VDD_PWR_W",
+	  { 0 } },
+	{ UBC_VR_RAIL_E_ASIC_P0V8_HAMSA_AVDD_PCIE,
+	  SENSOR_NUM_ASIC_P0V8_HAMSA_AVDD_PCIE_PWR_W,
+	  "VR_ASIC_P0V8_HAMSA_AVDD_PCIE_PWR_W",
+	  { 0 } },
+	{ UBC_VR_RAIL_E_ASIC_P0V9_VDDQ_HBM0246,
+	  SENSOR_NUM_ASIC_P0V9_VDDQ_HBM0246_PWR_W,
+	  "VR_ASIC_ASIC_P0V9_VDDQ_HBM0246_PWR_W",
+	  { 0 } },
+	{ UBC_VR_RAIL_E_ASIC_P1V2_HAMSA_VDDHRXTX_PCIE,
+	  SENSOR_NUM_ASIC_P1V2_HAMSA_VDDHRXTX_PCIE_PWR_W,
+	  "VR_ASIC_P1V2_HAMSA_VDDHRXTX_PCIE_PWR_W",
+	  { 0 } },
+	{ UBC_VR_RAIL_E_ASIC_P1V05_VDDQC_HBM0246,
+	  SENSOR_NUM_ASIC_P1V05_VDDQC_HBM0246_PWR_W,
+	  "VR_ASIC_P1V05_VDDQC_HBM0246_PWR_W",
+	  { 0 } },
+	{ UBC_VR_RAIL_E_ASIC_P1V8_VPP_HBM0246,
+	  SENSOR_NUM_ASIC_P1V8_VPP_HBM0246_PWR_W,
+	  "VR_ASIC_P1V8_VPP_HBM0246_PWR_W",
+	  { 0 } },
+	{ UBC_VR_RAIL_E_ASIC_P0V4_VDDQL_HBM0246,
+	  SENSOR_NUM_ASIC_P0V4_VDDQL_HBM0246_PWR_W,
+	  "VR_ASIC_P0V4_VDDQL_HBM0246_PWR_W",
+	  { 0 } },
+	{ UBC_VR_RAIL_E_ASIC_P0V75_VDDPHY_HBM0246,
+	  SENSOR_NUM_ASIC_P0V75_VDDPHY_HBM0246_PWR_W,
+	  "VR_ASIC_P0V75_VDDPHY_HBM0246_PWR_W",
+	  { 0 } },
+	{ UBC_VR_RAIL_E_ASIC_P0V75_OWL_W_VDD,
+	  SENSOR_NUM_ASIC_P0V75_OWL_W_VDD_PWR_W,
+	  "VR_ASIC_P0V75_OWL_W_VDD_PWR_W",
+	  { 0 } },
+	{ UBC_VR_RAIL_E_ASIC_P0V75_MAX_S_VDD,
+	  SENSOR_NUM_ASIC_P0V75_MAX_S_VDD_PWR_W,
+	  "VR_ASIC_P0V75_MAX_S_VDD_PWR_W",
+	  { 0 } },
+	{ UBC_VR_RAIL_E_ASIC_P0V9_OWL_W_TRVDD,
+	  SENSOR_NUM_ASIC_P0V9_OWL_W_TRVDD_PWR_W,
+	  "VR_ASIC_P0V9_OWL_W_TRVDD_PWR_W",
+	  { 0 } },
+	{ UBC_VR_RAIL_E_ASIC_P0V75_OWL_W_TRVDD,
+	  SENSOR_NUM_ASIC_P0V75_OWL_W_TRVDD_PWR_W,
+	  "VR_ASIC_P0V75_OWL_W_TRVDD_PWR_W",
+	  { 0 } },
+	{ UBC_VR_RAIL_E_P3V3_OSFP, SENSOR_NUM_P3V3_OSFP_PWR_W, "VR_RAIL_E_P3V3_OSFP", { 0 } },
 };
 
 /* bootstrap */
@@ -271,6 +379,35 @@ void *vr_mutex_get(enum VR_INDEX_E vr_index)
 	return vr_mutex + vr_index;
 }
 
+bool ubc_vr_rail_name_get(uint8_t rail, uint8_t **name)
+{
+	CHECK_NULL_ARG_WITH_RETURN(name, false);
+
+	if (rail >= UBC_VR_RAIL_E_MAX) {
+		*name = NULL;
+		return false;
+	}
+
+	*name = (uint8_t *)ubc_vr_power_table[rail].sensor_name;
+	return true;
+}
+
+bool ubc_vr_rail_enum_get(uint8_t *name, uint8_t *num)
+{
+	CHECK_NULL_ARG_WITH_RETURN(name, false);
+	CHECK_NULL_ARG_WITH_RETURN(num, false);
+
+	for (int i = 0; i < UBC_VR_RAIL_E_MAX; i++) {
+		if (strcmp(name, ubc_vr_power_table[i].sensor_name) == 0) {
+			*num = i;
+			return true;
+		}
+	}
+
+	LOG_ERR("invalid rail name %s", name);
+	return false;
+}
+
 bool pre_vr_read(sensor_cfg *cfg, void *args)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
@@ -355,7 +492,67 @@ bool post_vr_read(sensor_cfg *cfg, void *args, int *const reading)
 		*reading = 0;
 		LOG_DBG("Negative sensor reading detected. Set reading to 0x%x", *reading);
 	}
-	// post_sensor_reading_hook_func(cfg->num);
+
+	post_sensor_reading_hook_func(cfg->num);
+
+	if (reading != NULL) {
+		float resolution = 0, offset = 0;
+		int cache_reading = 0;
+		int8_t unit_modifier = 0;
+		uint8_t sensor_operational_state = PLDM_SENSOR_STATUSUNKOWN;
+		pldm_sensor_get_info_via_sensor_id(cfg->num, &resolution, &offset, &unit_modifier,
+						   &cache_reading, &sensor_operational_state);
+		if (resolution == 0)
+			LOG_ERR("resolution is 0");
+
+		int16_t integer = *reading & 0xFFFF;
+		float fraction = (float)(*reading >> 16) / 1000.0;
+
+		if (integer < 0 && fraction > 0)
+			fraction = -fraction;
+
+		float tmp_reading_value = (float)integer + fraction;
+
+		if (tmp_reading_value < 0) {
+			tmp_reading_value = 0;
+			*reading = 0;
+			LOG_DBG("Original sensor reading: integer = %d, fraction = %f", integer,
+				fraction);
+			LOG_DBG("Negative sensor reading detected. Set reading to 0x%x", *reading);
+		}
+
+		int decoded_reading =
+			(int)((tmp_reading_value * power(10, -1 * unit_modifier) - offset) /
+			      resolution);
+
+		/* record power history */
+		for (int i = 0; i < UBC_VR_RAIL_E_MAX; i++) {
+			if ((get_asic_board_id() != ASIC_BOARD_ID_EVB) &&
+			    (i == UBC_VR_RAIL_E_P3V3_OSFP))
+				continue; // skip osfp p3v3
+			if (cfg->num == ubc_vr_power_table[i].sensor_id) {
+				ubc_vr_power_table[i].power_history[power_index[i]] =
+					decoded_reading;
+				power_index[i] = (power_index[i] + 1) % POWER_HISTORY_SIZE;
+				if (power_count[i] < POWER_HISTORY_SIZE) {
+					power_count[i]++;
+				}
+			}
+		}
+
+		/* TO_DO wait power capping add
+		if (cfg->num == VR_ASIC_P0V85_PVDD_PWR_W) {
+			update_plat_power_capping_table();
+			ath_vdd_power = (int)tmp_reading;
+			ath_vdd_polling_counter++;
+			// LOG_INF("counter:%d/%d", ath_vdd_polling_counter, comparator_counter_max);
+			if (ath_vdd_polling_counter >= comparator_counter_max) {
+				ath_vdd_polling_counter = 0;
+				power_capping_comparator_handler();
+			}
+		}
+		*/
+	}
 
 	return true;
 }
@@ -545,6 +742,100 @@ bool post_ubc_read(sensor_cfg *cfg, void *args, int *reading)
 
 		pwr_level_mutex_unlock();
 	}
+
+	/* set reading val to 0 if reading val is negative */
+	if (reading != NULL) {
+		float resolution = 0, offset = 0;
+		int cache_reading = 0;
+		int8_t unit_modifier = 0;
+		uint8_t sensor_operational_state = PLDM_SENSOR_STATUSUNKOWN;
+		pldm_sensor_get_info_via_sensor_id(cfg->num, &resolution, &offset, &unit_modifier,
+						   &cache_reading, &sensor_operational_state);
+		if (resolution == 0)
+			LOG_ERR("resolution is 0");
+
+		int16_t integer = *reading & 0xFFFF;
+		float fraction = (float)(*reading >> 16) / 1000.0;
+
+		if (integer < 0 && fraction > 0)
+			fraction = -fraction;
+
+		float tmp_reading = (float)integer + fraction;
+
+		if (tmp_reading < 0) {
+			tmp_reading = 0;
+			*reading = 0;
+			LOG_DBG("Original sensor reading: integer = %d, fraction = %f", integer,
+				fraction);
+			LOG_DBG("Negative sensor reading detected. Set reading to 0x%x", *reading);
+		}
+
+		int decoded_reading =
+			(int)((tmp_reading * power(10, -1 * unit_modifier) - offset) / resolution);
+
+		/* record power history */
+		for (int i = 0; i < UBC_VR_RAIL_E_MAX; i++) {
+			if (cfg->num == ubc_vr_power_table[i].sensor_id) {
+				ubc_vr_power_table[i].power_history[power_index[i]] =
+					decoded_reading;
+				power_index[i] = (power_index[i] + 1) % POWER_HISTORY_SIZE;
+				if (power_count[i] < POWER_HISTORY_SIZE) {
+					power_count[i]++;
+				}
+			}
+		}
+	}
+
+	return true;
+}
+
+bool get_average_power(uint8_t rail, uint32_t *milliwatt)
+{
+	CHECK_NULL_ARG_WITH_RETURN(milliwatt, false);
+
+	if (rail >= UBC_VR_RAIL_E_MAX || power_count[rail] == 0) {
+		*milliwatt = 0;
+		return false;
+	}
+
+	int sum = 0;
+	for (int i = 0; i < power_count[rail]; i++) {
+		sum += ubc_vr_power_table[rail].power_history[i];
+	}
+
+	float avg_sensor_value = sum / (float)power_count[rail];
+	if (avg_sensor_value < 0) {
+		LOG_ERR("avg_sensor_value is negative: %f", avg_sensor_value);
+		*milliwatt = 0;
+		return false;
+	}
+
+	uint8_t sensor_id = ubc_vr_power_table[rail].sensor_id;
+	float resolution = 0, offset = 0;
+	int cache_reading = 0;
+	int8_t unit_modifier = 0;
+	uint8_t sensor_operational_state = PLDM_SENSOR_STATUSUNKOWN;
+	pldm_sensor_get_info_via_sensor_id(sensor_id, &resolution, &offset, &unit_modifier,
+					   &cache_reading, &sensor_operational_state);
+	if (resolution == 0) {
+		*milliwatt = 0;
+		LOG_ERR("resolution is 0");
+		return false;
+	}
+
+	float real_power = (avg_sensor_value * resolution + offset) / power(10, -unit_modifier);
+
+	int16_t integer_part = (int16_t)real_power;
+	int16_t fraction_part = (int16_t)((real_power - integer_part) * 1000.0);
+
+	if (integer_part < 0 && fraction_part > 0) {
+		fraction_part = -fraction_part;
+	}
+
+	*milliwatt = ((uint16_t)fraction_part << 16) | (uint16_t)integer_part;
+
+	LOG_DBG("real_power = %f, integer_part = %d, fraction_part = %d, milliwatt = 0x%x",
+		real_power, integer_part, fraction_part, *milliwatt);
 
 	return true;
 }

@@ -231,10 +231,11 @@ extern bootstrap_user_settings_struct bootstrap_user_settings;
 extern vr_vout_range_user_settings_struct vout_range_user_settings;
 extern mp2971_init_arg mp2971_init_args[];
 
-//  vr sensor
+//  vr & ubc sensor
 bool pre_vr_read(sensor_cfg *cfg, void *args);
 bool post_vr_read(sensor_cfg *cfg, void *args, int *const reading);
 bool post_tmp_read(sensor_cfg *cfg, void *args, int *reading);
+bool get_average_power(uint8_t rail, uint32_t *milliwatt);
 bool is_mb_dc_on();
 void *vr_mutex_get(enum VR_INDEX_E vr_index);
 void vr_mutex_init(void);
@@ -249,6 +250,8 @@ bool post_common_sensor_read(sensor_cfg *cfg, void *args, int *const reading);
 bool vr_vout_range_user_settings_init(void);
 bool vr_rail_voltage_peak_get(uint8_t *name, int *peak_value);
 bool vr_rail_voltage_peak_clear(uint8_t rail_index);
+bool ubc_vr_rail_name_get(uint8_t rail, uint8_t **name);
+bool ubc_vr_rail_enum_get(uint8_t *name, uint8_t *num);
 
 // pwrlevel
 bool post_ubc_read(sensor_cfg *cfg, void *args, int *reading);
