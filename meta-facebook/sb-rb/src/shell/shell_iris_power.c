@@ -588,7 +588,7 @@ void cmd_iris_power_off(const struct shell *shell, size_t argc, char **argv)
 		shell_warn(shell, "iris power off set cpld fail!");
 	// wait 1s
 	k_msleep(1000);
-	if (gpio_get(FM_PLD_UBC_EN_R) == GPIO_LOW) {
+	if (gpio_get(RST_IRIS_PWR_ON_PLD_R1_N) == GPIO_LOW) {
 		shell_print(shell, "iris power off success!");
 	} else {
 		shell_warn(shell, "iris power off fail!");

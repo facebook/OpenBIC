@@ -160,6 +160,7 @@ void process_mtia_vr_power_fault_sel(cpld_info *cpld_info, uint8_t *current_cpld
 			sel_msg.assert_type = is_assert ? LOG_ASSERT : LOG_DEASSERT;
 			sel_msg.event_type = IRIS_FAULT;
 			sel_msg.event_data_1 = vr_fault_table[i].mtia_event_source;
+			sel_msg.event_data_2 = *current_cpld_value;
 
 			if (PLDM_SUCCESS != send_event_log_to_bmc(sel_msg)) {
 				LOG_ERR("Fail send event: 0x%x 0x%x 0x%x", sel_msg.event_data_1,
