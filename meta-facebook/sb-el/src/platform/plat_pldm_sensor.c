@@ -55,8 +55,8 @@ static bool is_quick_vr_sensor(uint8_t sensor_num)
 	case SENSOR_NUM_ASIC_P0V75_NUWA0_VDD_PWR_W:
 	case SENSOR_NUM_ASIC_P0V75_NUWA1_VDD_VOLT_V:
 	case SENSOR_NUM_ASIC_P0V75_NUWA1_VDD_PWR_W:
-	case SENSOR_NUM_ASIC_P1V05_VDDQC_HBM0246_PWR_W:
-	case SENSOR_NUM_ASIC_P1V05_VDDQC_HBM1357_PWR_W:
+	case SENSOR_NUM_ASIC_P1V05_VDDC_HBM0246_PWR_W:
+	case SENSOR_NUM_ASIC_P1V05_VDDC_HBM1357_PWR_W:
 	case SENSOR_NUM_ASIC_P0V75_OWL_E_VDD_PWR_W:
 	case SENSOR_NUM_ASIC_P0V75_OWL_W_VDD_PWR_W:
 	case SENSOR_NUM_ASIC_P0V85_HAMSA_VDD_PWR_W:
@@ -93,7 +93,7 @@ static const addr_map_t vr_addr_map_table[] = {
 	{I2C_BUS2, ASIC_P0V75_VDDPHY_HBM1357_ADDR, ASIC_P0V75_VDDPHY_HBM1357_RNS_ADDR},
 	{I2C_BUS2, ASIC_P0V75_OWL_E_VDD_ADDR, ASIC_P0V75_OWL_E_VDD_RNS_ADDR},
 	{I2C_BUS2, ASIC_P0V4_VDDQL_HBM1357_ADDR, ASIC_P0V4_VDDQL_HBM1357_RNS_ADDR},
-	{I2C_BUS2, ASIC_P1V05_VDDQC_HBM1357_ADDR, ASIC_P1V05_VDDQC_HBM1357_RNS_ADDR},
+	{I2C_BUS2, ASIC_P1V05_VDDC_HBM1357_ADDR, ASIC_P1V05_VDDC_HBM1357_RNS_ADDR},
 	{I2C_BUS2, ASIC_P1V8_VPP_HBM1357_ADDR, ASIC_P1V8_VPP_HBM1357_RNS_ADDR},
 	{I2C_BUS2, ASIC_P0V9_VDDQ_HBM1357_ADDR, ASIC_P0V9_VDDQ_HBM1357_RNS_ADDR},
 	{I2C_BUS3, ASIC_P0V85_HAMSA_VDD_ADDR, ASIC_P0V85_HAMSA_VDD_RNS_ADDR},
@@ -101,7 +101,7 @@ static const addr_map_t vr_addr_map_table[] = {
 	{I2C_BUS3, ASIC_P0V8_HAMSA_AVDD_PCIE_ADDR, ASIC_P0V8_HAMSA_AVDD_PCIE_RNS_ADDR},
 	{I2C_BUS3, ASIC_P0V9_VDDQ_HBM0246_ADDR, ASIC_P0V9_VDDQ_HBM0246_RNS_ADDR},
 	{I2C_BUS3, ASIC_P1V2_HAMSA_VDDHRXTX_PCIE_ADDR, ASIC_P1V2_HAMSA_VDDHRXTX_PCIE_RNS_ADDR},
-	{I2C_BUS3, ASIC_P1V05_VDDQC_HBM0246_ADDR, ASIC_P1V05_VDDQC_HBM0246_RNS_ADDR},
+	{I2C_BUS3, ASIC_P1V05_VDDC_HBM0246_ADDR, ASIC_P1V05_VDDC_HBM0246_RNS_ADDR},
 	{I2C_BUS3, ASIC_P1V8_VPP_HBM0246_ADDR, ASIC_P1V8_VPP_HBM0246_RNS_ADDR},
 	{I2C_BUS3, ASIC_P0V4_VDDQL_HBM0246_ADDR, ASIC_P0V4_VDDQL_HBM0246_RNS_ADDR},
 	{I2C_BUS3, ASIC_P0V75_VDDPHY_HBM0246_ADDR, ASIC_P0V75_VDDPHY_HBM0246_RNS_ADDR},
@@ -6187,7 +6187,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 	},
 	{
 		{
-			// ASIC_P1V05_VDDQC_HBM0246_TEMP_C
+			// ASIC_P1V05_VDDC_HBM0246_TEMP_C
 			/*** PDR common header***/
 			{
 				0x00000000, //uint32_t record_handle
@@ -6199,9 +6199,9 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
-			SENSOR_NUM_ASIC_P1V05_VDDQC_HBM0246_TEMP_C, //uint16_t sensor_id;
+			SENSOR_NUM_ASIC_P1V05_VDDC_HBM0246_TEMP_C, //uint16_t sensor_id;
 			0x0000, //uint16_t entity_type; //Need to check
-			SENSOR_NUM_ASIC_P1V05_VDDQC_HBM0246_TEMP_C, //uint16_t entity_instance_number;
+			SENSOR_NUM_ASIC_P1V05_VDDC_HBM0246_TEMP_C, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
 			0x00, //uint8_t sensor_init; //Need to check
 			0x01, //uint8_t sensor_auxiliary_names_pdr;
@@ -6242,10 +6242,10 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
-			.num = SENSOR_NUM_ASIC_P1V05_VDDQC_HBM0246_TEMP_C,
+			.num = SENSOR_NUM_ASIC_P1V05_VDDC_HBM0246_TEMP_C,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS3,
-			.target_addr = ASIC_P1V05_VDDQC_HBM0246_ADDR,
+			.target_addr = ASIC_P1V05_VDDC_HBM0246_ADDR,
 			.offset = PMBUS_READ_TEMPERATURE_1,
 			.access_checker = is_vr_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
@@ -6259,7 +6259,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 	},
 	{
 		{
-			// ASIC_P1V05_VDDQC_HBM0246_VOLT_V
+			// ASIC_P1V05_VDDC_HBM0246_VOLT_V
 			/*** PDR common header***/
 			{
 				0x00000000, //uint32_t record_handle
@@ -6271,9 +6271,9 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
-			SENSOR_NUM_ASIC_P1V05_VDDQC_HBM0246_VOLT_V, //uint16_t sensor_id;
+			SENSOR_NUM_ASIC_P1V05_VDDC_HBM0246_VOLT_V, //uint16_t sensor_id;
 			0x0000, //uint16_t entity_type; //Need to check
-			SENSOR_NUM_ASIC_P1V05_VDDQC_HBM0246_VOLT_V, //uint16_t entity_instance_number;
+			SENSOR_NUM_ASIC_P1V05_VDDC_HBM0246_VOLT_V, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
 			0x00, //uint8_t sensor_init; //Need to check
 			0x01, //uint8_t sensor_auxiliary_names_pdr;
@@ -6314,10 +6314,10 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
-			.num = SENSOR_NUM_ASIC_P1V05_VDDQC_HBM0246_VOLT_V,
+			.num = SENSOR_NUM_ASIC_P1V05_VDDC_HBM0246_VOLT_V,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS3,
-			.target_addr = ASIC_P1V05_VDDQC_HBM0246_ADDR,
+			.target_addr = ASIC_P1V05_VDDC_HBM0246_ADDR,
 			.offset = PMBUS_READ_VOUT,
 			.access_checker = is_vr_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
@@ -6331,7 +6331,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 	},
 	{
 		{
-			// ASIC_P1V05_VDDQC_HBM0246_CURR_A
+			// ASIC_P1V05_VDDC_HBM0246_CURR_A
 			/*** PDR common header***/
 			{
 				0x00000000, //uint32_t record_handle
@@ -6343,9 +6343,9 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
-			SENSOR_NUM_ASIC_P1V05_VDDQC_HBM0246_CURR_A, //uint16_t sensor_id;
+			SENSOR_NUM_ASIC_P1V05_VDDC_HBM0246_CURR_A, //uint16_t sensor_id;
 			0x0000, //uint16_t entity_type; //Need to check
-			SENSOR_NUM_ASIC_P1V05_VDDQC_HBM0246_CURR_A, //uint16_t entity_instance_number;
+			SENSOR_NUM_ASIC_P1V05_VDDC_HBM0246_CURR_A, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
 			0x00, //uint8_t sensor_init; //Need to check
 			0x01, //uint8_t sensor_auxiliary_names_pdr;
@@ -6386,10 +6386,10 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
-			.num = SENSOR_NUM_ASIC_P1V05_VDDQC_HBM0246_CURR_A,
+			.num = SENSOR_NUM_ASIC_P1V05_VDDC_HBM0246_CURR_A,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS3,
-			.target_addr = ASIC_P1V05_VDDQC_HBM0246_ADDR,
+			.target_addr = ASIC_P1V05_VDDC_HBM0246_ADDR,
 			.offset = PMBUS_READ_IOUT,
 			.access_checker = is_vr_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
@@ -6403,7 +6403,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 	},
 	{
 		{
-			// ASIC_P1V05_VDDQC_HBM0246_INPUT_VOLT_V
+			// ASIC_P1V05_VDDC_HBM0246_INPUT_VOLT_V
 			/*** PDR common header***/
 			{
 				0x00000000, //uint32_t record_handle
@@ -6415,9 +6415,9 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
-			SENSOR_NUM_ASIC_P1V05_VDDQC_HBM0246_INPUT_VOLT_V, //uint16_t sensor_id;
+			SENSOR_NUM_ASIC_P1V05_VDDC_HBM0246_INPUT_VOLT_V, //uint16_t sensor_id;
 			0x0000, //uint16_t entity_type; //Need to check
-			SENSOR_NUM_ASIC_P1V05_VDDQC_HBM0246_INPUT_VOLT_V, //uint16_t entity_instance_number;
+			SENSOR_NUM_ASIC_P1V05_VDDC_HBM0246_INPUT_VOLT_V, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
 			0x00, //uint8_t sensor_init; //Need to check
 			0x01, //uint8_t sensor_auxiliary_names_pdr;
@@ -6458,10 +6458,10 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
-			.num = SENSOR_NUM_ASIC_P1V05_VDDQC_HBM0246_INPUT_VOLT_V,
+			.num = SENSOR_NUM_ASIC_P1V05_VDDC_HBM0246_INPUT_VOLT_V,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS3,
-			.target_addr = ASIC_P1V05_VDDQC_HBM0246_ADDR,
+			.target_addr = ASIC_P1V05_VDDC_HBM0246_ADDR,
 			.offset = PMBUS_READ_VIN,
 			.access_checker = is_vr_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
@@ -6475,7 +6475,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 	},
 	{
 		{
-			// ASIC_P1V05_VDDQC_HBM0246_TEMP_C
+			// ASIC_P1V05_VDDC_HBM0246_TEMP_C
 			/*** PDR common header***/
 			{
 				0x00000000, //uint32_t record_handle
@@ -6547,7 +6547,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 	},
 	{
 		{
-			// ASIC_P1V05_VDDQC_HBM0246_VOLT_V
+			// ASIC_P1V05_VDDC_HBM0246_VOLT_V
 			/*** PDR common header***/
 			{
 				0x00000000, //uint32_t record_handle
@@ -6619,7 +6619,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 	},
 	{
 		{
-			// ASIC_P1V05_VDDQC_HBM0246_CURR_A
+			// ASIC_P1V05_VDDC_HBM0246_CURR_A
 			/*** PDR common header***/
 			{
 				0x00000000, //uint32_t record_handle
@@ -6691,7 +6691,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 	},
 	{
 		{
-			// ASIC_P1V05_VDDQC_HBM0246_PWR_W
+			// ASIC_P1V05_VDDC_HBM0246_PWR_W
 			/*** PDR common header***/
 			{
 				0x00000000, //uint32_t record_handle
@@ -6763,7 +6763,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 	},
 	{
 		{
-			// ASIC_P1V05_VDDQC_HBM0246_INPUT_VOLT_V
+			// ASIC_P1V05_VDDC_HBM0246_INPUT_VOLT_V
 			/*** PDR common header***/
 			{
 				0x00000000, //uint32_t record_handle
@@ -7915,7 +7915,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 	},
 	{
 		{
-			// ASIC_P1V05_VDDQC_HBM1357_TEMP_C
+			// ASIC_P1V05_VDDC_HBM1357_TEMP_C
 			/*** PDR common header***/
 			{
 				0x00000000, //uint32_t record_handle
@@ -7927,9 +7927,9 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
-			SENSOR_NUM_ASIC_P1V05_VDDQC_HBM1357_TEMP_C, //uint16_t sensor_id;
+			SENSOR_NUM_ASIC_P1V05_VDDC_HBM1357_TEMP_C, //uint16_t sensor_id;
 			0x0000, //uint16_t entity_type; //Need to check
-			SENSOR_NUM_ASIC_P1V05_VDDQC_HBM1357_TEMP_C, //uint16_t entity_instance_number;
+			SENSOR_NUM_ASIC_P1V05_VDDC_HBM1357_TEMP_C, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
 			0x00, //uint8_t sensor_init; //Need to check
 			0x01, //uint8_t sensor_auxiliary_names_pdr;
@@ -7970,10 +7970,10 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
-			.num = SENSOR_NUM_ASIC_P1V05_VDDQC_HBM1357_TEMP_C,
+			.num = SENSOR_NUM_ASIC_P1V05_VDDC_HBM1357_TEMP_C,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS2,
-			.target_addr = ASIC_P1V05_VDDQC_HBM1357_ADDR,
+			.target_addr = ASIC_P1V05_VDDC_HBM1357_ADDR,
 			.offset = PMBUS_READ_TEMPERATURE_1,
 			.access_checker = is_vr_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
@@ -7987,7 +7987,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 	},
 	{
 		{
-			// ASIC_P1V05_VDDQC_HBM1357_VOLT_V
+			// ASIC_P1V05_VDDC_HBM1357_VOLT_V
 			/*** PDR common header***/
 			{
 				0x00000000, //uint32_t record_handle
@@ -7999,9 +7999,9 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
-			SENSOR_NUM_ASIC_P1V05_VDDQC_HBM1357_VOLT_V, //uint16_t sensor_id;
+			SENSOR_NUM_ASIC_P1V05_VDDC_HBM1357_VOLT_V, //uint16_t sensor_id;
 			0x0000, //uint16_t entity_type; //Need to check
-			SENSOR_NUM_ASIC_P1V05_VDDQC_HBM1357_VOLT_V, //uint16_t entity_instance_number;
+			SENSOR_NUM_ASIC_P1V05_VDDC_HBM1357_VOLT_V, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
 			0x00, //uint8_t sensor_init; //Need to check
 			0x01, //uint8_t sensor_auxiliary_names_pdr;
@@ -8042,10 +8042,10 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
-			.num = SENSOR_NUM_ASIC_P1V05_VDDQC_HBM1357_VOLT_V,
+			.num = SENSOR_NUM_ASIC_P1V05_VDDC_HBM1357_VOLT_V,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS2,
-			.target_addr = ASIC_P1V05_VDDQC_HBM1357_ADDR,
+			.target_addr = ASIC_P1V05_VDDC_HBM1357_ADDR,
 			.offset = PMBUS_READ_VOUT,
 			.access_checker = is_vr_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
@@ -8059,7 +8059,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 	},
 	{
 		{
-			// ASIC_P1V05_VDDQC_HBM1357_CURR_A
+			// ASIC_P1V05_VDDC_HBM1357_CURR_A
 			/*** PDR common header***/
 			{
 				0x00000000, //uint32_t record_handle
@@ -8071,9 +8071,9 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
-			SENSOR_NUM_ASIC_P1V05_VDDQC_HBM1357_CURR_A, //uint16_t sensor_id;
+			SENSOR_NUM_ASIC_P1V05_VDDC_HBM1357_CURR_A, //uint16_t sensor_id;
 			0x0000, //uint16_t entity_type; //Need to check
-			SENSOR_NUM_ASIC_P1V05_VDDQC_HBM1357_CURR_A, //uint16_t entity_instance_number;
+			SENSOR_NUM_ASIC_P1V05_VDDC_HBM1357_CURR_A, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
 			0x00, //uint8_t sensor_init; //Need to check
 			0x01, //uint8_t sensor_auxiliary_names_pdr;
@@ -8114,10 +8114,10 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
-			.num = SENSOR_NUM_ASIC_P1V05_VDDQC_HBM1357_CURR_A,
+			.num = SENSOR_NUM_ASIC_P1V05_VDDC_HBM1357_CURR_A,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS2,
-			.target_addr = ASIC_P1V05_VDDQC_HBM1357_ADDR,
+			.target_addr = ASIC_P1V05_VDDC_HBM1357_ADDR,
 			.offset = PMBUS_READ_IOUT,
 			.access_checker = is_vr_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
@@ -8131,7 +8131,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 	},
 	{
 		{
-			// ASIC_P1V05_VDDQC_HBM1357_INPUT_VOLT_V
+			// ASIC_P1V05_VDDC_HBM1357_INPUT_VOLT_V
 			/*** PDR common header***/
 			{
 				0x00000000, //uint32_t record_handle
@@ -8143,9 +8143,9 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
-			SENSOR_NUM_ASIC_P1V05_VDDQC_HBM1357_INPUT_VOLT_V, //uint16_t sensor_id;
+			SENSOR_NUM_ASIC_P1V05_VDDC_HBM1357_INPUT_VOLT_V, //uint16_t sensor_id;
 			0x0000, //uint16_t entity_type; //Need to check
-			SENSOR_NUM_ASIC_P1V05_VDDQC_HBM1357_INPUT_VOLT_V, //uint16_t entity_instance_number;
+			SENSOR_NUM_ASIC_P1V05_VDDC_HBM1357_INPUT_VOLT_V, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
 			0x00, //uint8_t sensor_init; //Need to check
 			0x01, //uint8_t sensor_auxiliary_names_pdr;
@@ -8186,10 +8186,10 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 		},
 		.update_time = 0,
 		{
-			.num = SENSOR_NUM_ASIC_P1V05_VDDQC_HBM1357_INPUT_VOLT_V,
+			.num = SENSOR_NUM_ASIC_P1V05_VDDC_HBM1357_INPUT_VOLT_V,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS2,
-			.target_addr = ASIC_P1V05_VDDQC_HBM1357_ADDR,
+			.target_addr = ASIC_P1V05_VDDC_HBM1357_ADDR,
 			.offset = PMBUS_READ_VIN,
 			.access_checker = is_vr_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
@@ -8203,7 +8203,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 	},
 	{
 		{
-			// ASIC_P1V05_VDDQC_HBM1357_TEMP_C
+			// ASIC_P1V05_VDDC_HBM1357_TEMP_C
 			/*** PDR common header***/
 			{
 				0x00000000, //uint32_t record_handle
@@ -8275,7 +8275,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 	},
 	{
 		{
-			// ASIC_P1V05_VDDQC_HBM1357_VOLT_V
+			// ASIC_P1V05_VDDC_HBM1357_VOLT_V
 			/*** PDR common header***/
 			{
 				0x00000000, //uint32_t record_handle
@@ -8347,7 +8347,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 	},
 	{
 		{
-			// ASIC_P1V05_VDDQC_HBM1357_CURR_A
+			// ASIC_P1V05_VDDC_HBM1357_CURR_A
 			/*** PDR common header***/
 			{
 				0x00000000, //uint32_t record_handle
@@ -8419,7 +8419,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 	},
 	{
 		{
-			// ASIC_P1V05_VDDQC_HBM1357_PWR_W
+			// ASIC_P1V05_VDDC_HBM1357_PWR_W
 			/*** PDR common header***/
 			{
 				0x00000000, //uint32_t record_handle
@@ -8491,7 +8491,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 	},
 	{
 		{
-			// ASIC_P1V05_VDDQC_HBM1357_INPUT_VOLT_V
+			// ASIC_P1V05_VDDC_HBM1357_INPUT_VOLT_V
 			/*** PDR common header***/
 			{
 				0x00000000, //uint32_t record_handle
@@ -9218,7 +9218,7 @@ pldm_sensor_info plat_pldm_sensor_quick_vr_table[] = {
 	},
 	{
 		{
-			// ASIC_P1V05_VDDQC_HBM0246_PWR_W
+			// ASIC_P1V05_VDDC_HBM0246_PWR_W
 			/*** PDR common header***/
 			{
 				0x00000000, //uint32_t record_handle
@@ -9230,9 +9230,9 @@ pldm_sensor_info plat_pldm_sensor_quick_vr_table[] = {
 
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
-			SENSOR_NUM_ASIC_P1V05_VDDQC_HBM0246_PWR_W, //uint16_t sensor_id;
+			SENSOR_NUM_ASIC_P1V05_VDDC_HBM0246_PWR_W, //uint16_t sensor_id;
 			0x0000, //uint16_t entity_type; //Need to check
-			SENSOR_NUM_ASIC_P1V05_VDDQC_HBM0246_PWR_W, //uint16_t entity_instance_number;
+			SENSOR_NUM_ASIC_P1V05_VDDC_HBM0246_PWR_W, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
 			0x00, //uint8_t sensor_init; //Need to check
 			0x01, //uint8_t sensor_auxiliary_names_pdr;
@@ -9273,10 +9273,10 @@ pldm_sensor_info plat_pldm_sensor_quick_vr_table[] = {
 		},
 		.update_time = 0,
 		{
-			.num = SENSOR_NUM_ASIC_P1V05_VDDQC_HBM0246_PWR_W,
+			.num = SENSOR_NUM_ASIC_P1V05_VDDC_HBM0246_PWR_W,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS3,
-			.target_addr = ASIC_P1V05_VDDQC_HBM0246_ADDR,
+			.target_addr = ASIC_P1V05_VDDC_HBM0246_ADDR,
 			.offset = PMBUS_READ_POUT,
 			.access_checker = is_vr_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
@@ -9291,7 +9291,7 @@ pldm_sensor_info plat_pldm_sensor_quick_vr_table[] = {
 	},
 	{
 		{
-			// ASIC_P1V05_VDDQC_HBM1357_PWR_W
+			// ASIC_P1V05_VDDC_HBM1357_PWR_W
 			/*** PDR common header***/
 			{
 				0x00000000, //uint32_t record_handle
@@ -9303,9 +9303,9 @@ pldm_sensor_info plat_pldm_sensor_quick_vr_table[] = {
 
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
-			SENSOR_NUM_ASIC_P1V05_VDDQC_HBM1357_PWR_W, //uint16_t sensor_id;
+			SENSOR_NUM_ASIC_P1V05_VDDC_HBM1357_PWR_W, //uint16_t sensor_id;
 			0x0000, //uint16_t entity_type; //Need to check
-			SENSOR_NUM_ASIC_P1V05_VDDQC_HBM1357_PWR_W, //uint16_t entity_instance_number;
+			SENSOR_NUM_ASIC_P1V05_VDDC_HBM1357_PWR_W, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
 			0x00, //uint8_t sensor_init; //Need to check
 			0x01, //uint8_t sensor_auxiliary_names_pdr;
@@ -9346,10 +9346,10 @@ pldm_sensor_info plat_pldm_sensor_quick_vr_table[] = {
 		},
 		.update_time = 0,
 		{
-			.num = SENSOR_NUM_ASIC_P1V05_VDDQC_HBM1357_PWR_W,
+			.num = SENSOR_NUM_ASIC_P1V05_VDDC_HBM1357_PWR_W,
 			.type = sensor_dev_mp2971,
 			.port = I2C_BUS2,
-			.target_addr = ASIC_P1V05_VDDQC_HBM1357_ADDR,
+			.target_addr = ASIC_P1V05_VDDC_HBM1357_ADDR,
 			.offset = PMBUS_READ_POUT,
 			.access_checker = is_vr_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
@@ -12017,11 +12017,11 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = SENSOR_NUM_ASIC_P1V05_VDDQC_HBM0246_TEMP_C,
+		.sensor_id = SENSOR_NUM_ASIC_P1V05_VDDC_HBM0246_TEMP_C,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"ASIC_P1V05_VDDQC_HBM0246_TEMP_C",
+		.sensorName = u"ASIC_P1V05_VDDC_HBM0246_TEMP_C",
 	},
 	{
 		{
@@ -12032,11 +12032,11 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = SENSOR_NUM_ASIC_P1V05_VDDQC_HBM0246_VOLT_V,
+		.sensor_id = SENSOR_NUM_ASIC_P1V05_VDDC_HBM0246_VOLT_V,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"ASIC_P1V05_VDDQC_HBM0246_VOLT_V",
+		.sensorName = u"ASIC_P1V05_VDDC_HBM0246_VOLT_V",
 	},
 	{
 		{
@@ -12047,11 +12047,11 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = SENSOR_NUM_ASIC_P1V05_VDDQC_HBM0246_CURR_A,
+		.sensor_id = SENSOR_NUM_ASIC_P1V05_VDDC_HBM0246_CURR_A,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"ASIC_P1V05_VDDQC_HBM0246_CURR_A",
+		.sensorName = u"ASIC_P1V05_VDDC_HBM0246_CURR_A",
 	},
 	{
 		{
@@ -12062,11 +12062,11 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = SENSOR_NUM_ASIC_P1V05_VDDQC_HBM0246_PWR_W,
+		.sensor_id = SENSOR_NUM_ASIC_P1V05_VDDC_HBM0246_PWR_W,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"ASIC_P1V05_VDDQC_HBM0246_PWR_W",
+		.sensorName = u"ASIC_P1V05_VDDC_HBM0246_PWR_W",
 	},
 	{
 		{
@@ -12077,11 +12077,11 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = SENSOR_NUM_ASIC_P1V05_VDDQC_HBM0246_INPUT_VOLT_V,
+		.sensor_id = SENSOR_NUM_ASIC_P1V05_VDDC_HBM0246_INPUT_VOLT_V,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"ASIC_P1V05_VDDQC_HBM0246_INPUT_VOLT_V",
+		.sensorName = u"ASIC_P1V05_VDDC_HBM0246_INPUT_VOLT_V",
 	},
 	{
 		{
@@ -12392,11 +12392,11 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = SENSOR_NUM_ASIC_P1V05_VDDQC_HBM1357_TEMP_C,
+		.sensor_id = SENSOR_NUM_ASIC_P1V05_VDDC_HBM1357_TEMP_C,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"ASIC_P1V05_VDDQC_HBM1357_TEMP_C",
+		.sensorName = u"ASIC_P1V05_VDDC_HBM1357_TEMP_C",
 	},
 	{
 		{
@@ -12407,11 +12407,11 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = SENSOR_NUM_ASIC_P1V05_VDDQC_HBM1357_VOLT_V,
+		.sensor_id = SENSOR_NUM_ASIC_P1V05_VDDC_HBM1357_VOLT_V,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"ASIC_P1V05_VDDQC_HBM1357_VOLT_V",
+		.sensorName = u"ASIC_P1V05_VDDC_HBM1357_VOLT_V",
 	},
 	{
 		{
@@ -12422,11 +12422,11 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = SENSOR_NUM_ASIC_P1V05_VDDQC_HBM1357_CURR_A,
+		.sensor_id = SENSOR_NUM_ASIC_P1V05_VDDC_HBM1357_CURR_A,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"ASIC_P1V05_VDDQC_HBM1357_CURR_A",
+		.sensorName = u"ASIC_P1V05_VDDC_HBM1357_CURR_A",
 	},
 	{
 		{
@@ -12437,11 +12437,11 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = SENSOR_NUM_ASIC_P1V05_VDDQC_HBM1357_PWR_W,
+		.sensor_id = SENSOR_NUM_ASIC_P1V05_VDDC_HBM1357_PWR_W,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"ASIC_P1V05_VDDQC_HBM1357_PWR_W",
+		.sensorName = u"ASIC_P1V05_VDDC_HBM1357_PWR_W",
 	},
 	{
 		{
@@ -12452,11 +12452,11 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = SENSOR_NUM_ASIC_P1V05_VDDQC_HBM1357_INPUT_VOLT_V,
+		.sensor_id = SENSOR_NUM_ASIC_P1V05_VDDC_HBM1357_INPUT_VOLT_V,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"ASIC_P1V05_VDDQC_HBM1357_INPUT_VOLT_V",
+		.sensorName = u"ASIC_P1V05_VDDC_HBM1357_INPUT_VOLT_V",
 	},
 	{
 		{
@@ -13418,11 +13418,11 @@ power_capping_time_setting pwr_capping_setting_table[] = {
 	{ SENSOR_NUM_ASIC_P0V75_NUWA0_VDD_VOLT_V, { 10, 5, 2, 1, 2, 5, 5, 2 } },
 	{ SENSOR_NUM_ASIC_P0V75_NUWA1_VDD_VOLT_V, { 10, 5, 2, 1, 2, 5, 5, 2 } },
 
-	{ SENSOR_NUM_ASIC_P1V05_VDDQC_HBM0246_PWR_W,
+	{ SENSOR_NUM_ASIC_P1V05_VDDC_HBM0246_PWR_W,
 	  { VR_DEFAULT_POLLING_INTERVAL_MS, VR_DEFAULT_POLLING_INTERVAL_MS,
 	    VR_DEFAULT_POLLING_INTERVAL_MS, VR_DEFAULT_POLLING_INTERVAL_MS, 10, 10, 5, 10 } },
 
-	{ SENSOR_NUM_ASIC_P1V05_VDDQC_HBM1357_PWR_W,
+	{ SENSOR_NUM_ASIC_P1V05_VDDC_HBM1357_PWR_W,
 	  { VR_DEFAULT_POLLING_INTERVAL_MS, VR_DEFAULT_POLLING_INTERVAL_MS,
 	    VR_DEFAULT_POLLING_INTERVAL_MS, VR_DEFAULT_POLLING_INTERVAL_MS, 10, 10, 5, 10 } },
 
