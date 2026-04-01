@@ -352,13 +352,15 @@ uint8_t modbus_pump_setting(modbus_command_mapping *cmd)
 
 	if (cmd->data[0] == 9) // enable auto mode, reset p0p1 error flag
 	{
-		set_is_rack_level_abnormal(false);
-		set_is_rpu_level_abnormal(false);
-		set_is_press_abnormal(false);
 		set_is_hsc_hsc_fail(false);
+		//clean boolean status(pump not access)
 		set_is_pump_not_access(0, false);
 		set_is_pump_not_access(1, false);
 		set_is_pump_not_access(2, false);
+		//clean boolean status(fan not access)
+		for (uint8_t i = 0; i < 14; i++) {
+			set_is_fan_not_access(i, false);
+		}
 		// restore leak led
 		led_ctrl(LED_IDX_E_LEAK, LED_STOP_BLINK); // only stop blind behavior
 		led_ctrl(LED_IDX_E_LEAK, LED_TURN_OFF); // default led status(turn off)
