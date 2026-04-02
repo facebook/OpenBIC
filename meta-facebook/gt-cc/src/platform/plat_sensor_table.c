@@ -1390,6 +1390,97 @@ void update_nic_sensor_config_for_pollara(void)
 	}
 }
 
+void update_nic_sensor_config_for_vulcano(void)
+{
+	if (get_nic_config() != NIC_CONFIG_VULCANO)
+		return;
+
+	LOG_INF("NIC_CONFIG_VULCANO detected, updating NIC sensor configurations");
+
+	// Update NIC temperature and optics sensor configurations
+	for (int i = 0; i < sensor_config_count; i++) {
+		switch (sensor_config[i].num) {
+		// NIC temperature sensors (0-7)
+		case SENSOR_NUM_TEMP_NIC_0:
+			sensor_config[i].type = sensor_dev_cx7;
+			sensor_config[i].init_args = &vulcano_init_args[0];
+			break;
+
+		case SENSOR_NUM_TEMP_NIC_1:
+			sensor_config[i].type = sensor_dev_cx7;
+			sensor_config[i].init_args = &vulcano_init_args[1];
+			break;
+
+		case SENSOR_NUM_TEMP_NIC_2:
+			sensor_config[i].type = sensor_dev_cx7;
+			sensor_config[i].init_args = &vulcano_init_args[2];
+			break;
+
+		case SENSOR_NUM_TEMP_NIC_3:
+			sensor_config[i].type = sensor_dev_cx7;
+			sensor_config[i].init_args = &vulcano_init_args[3];
+			break;
+
+		case SENSOR_NUM_TEMP_NIC_4:
+			sensor_config[i].type = sensor_dev_cx7;
+			sensor_config[i].init_args = &vulcano_init_args[4];
+			break;
+
+		case SENSOR_NUM_TEMP_NIC_5:
+			sensor_config[i].type = sensor_dev_cx7;
+			sensor_config[i].init_args = &vulcano_init_args[5];
+			break;
+
+		case SENSOR_NUM_TEMP_NIC_6:
+			sensor_config[i].type = sensor_dev_cx7;
+			sensor_config[i].init_args = &vulcano_init_args[6];
+			break;
+
+		case SENSOR_NUM_TEMP_NIC_7:
+			sensor_config[i].type = sensor_dev_cx7;
+			sensor_config[i].init_args = &vulcano_init_args[7];
+			break;
+
+		// NIC optics sensors (0-7)
+		case SENSOR_NUM_TEMP_NIC_OPTICS_0:
+			sensor_config[i].type = sensor_dev_cx7;
+			sensor_config[i].init_args = &vulcano_optics_init_args[0];
+			break;
+		case SENSOR_NUM_TEMP_NIC_OPTICS_1:
+			sensor_config[i].type = sensor_dev_cx7;
+			sensor_config[i].init_args = &vulcano_optics_init_args[1];
+			break;
+		case SENSOR_NUM_TEMP_NIC_OPTICS_2:
+			sensor_config[i].type = sensor_dev_cx7;
+			sensor_config[i].init_args = &vulcano_optics_init_args[2];
+			break;
+		case SENSOR_NUM_TEMP_NIC_OPTICS_3:
+			sensor_config[i].type = sensor_dev_cx7;
+			sensor_config[i].init_args = &vulcano_optics_init_args[3];
+			break;
+		case SENSOR_NUM_TEMP_NIC_OPTICS_4:
+			sensor_config[i].type = sensor_dev_cx7;
+			sensor_config[i].init_args = &vulcano_optics_init_args[4];
+			break;
+		case SENSOR_NUM_TEMP_NIC_OPTICS_5:
+			sensor_config[i].type = sensor_dev_cx7;
+			sensor_config[i].init_args = &vulcano_optics_init_args[5];
+			break;
+		case SENSOR_NUM_TEMP_NIC_OPTICS_6:
+			sensor_config[i].type = sensor_dev_cx7;
+			sensor_config[i].init_args = &vulcano_optics_init_args[6];
+			break;
+		case SENSOR_NUM_TEMP_NIC_OPTICS_7:
+			sensor_config[i].type = sensor_dev_cx7;
+			sensor_config[i].init_args = &vulcano_optics_init_args[7];
+			break;
+
+		default:
+			break;
+		}
+	}
+}
+
 void load_sensor_config(void)
 {
 	memcpy(sensor_config, plat_sensor_config, sizeof(plat_sensor_config));
