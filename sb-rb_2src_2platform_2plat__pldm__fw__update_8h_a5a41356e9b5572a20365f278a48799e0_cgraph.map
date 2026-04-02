@@ -1,0 +1,9 @@
+<map id="plat_get_image_crc_checksum_from_flash" name="plat_get_image_crc_checksum_from_flash">
+<area shape="rect" id="node1" title=" " alt="" coords="5,136,161,177"/>
+<area shape="rect" id="node2" href="$sb-rb_2src_2platform_2plat__pldm__fw__update_8c.html#aa7eac217a278126d34d528d24303e5fb" title=" " alt="" coords="209,5,351,47"/>
+<area shape="rect" id="node4" href="$sb-rb_2src_2platform_2plat__pldm__fw__update_8c.html#ac82b1d21cffd47201d7b6bc3026dd46c" title=" " alt="" coords="209,71,351,112"/>
+<area shape="rect" id="node5" href="$sb-rb_2src_2platform_2plat__pldm__fw__update_8c.html#a6fd9059095831aef4e97f80b3c256628" title=" " alt="" coords="209,136,351,177"/>
+<area shape="rect" id="node6" href="$util__spi_8c.html#a90e1b44cc394b7ecb7a898d2fc31b55d" title=" " alt="" coords="225,202,335,229"/>
+<area shape="rect" id="node7" href="$sb-rb_2src_2platform_2plat__pldm__fw__update_8c.html#af39eb6db70a72052f9f9fa11de3543ba" title=" " alt="" coords="219,253,341,279"/>
+<area shape="rect" id="node3" href="$hal__gpio_8c.html#ab1b576cbfd9eddaaf57a5aa5fc383dd1" title=" " alt="" coords="399,111,469,138"/>
+</map>

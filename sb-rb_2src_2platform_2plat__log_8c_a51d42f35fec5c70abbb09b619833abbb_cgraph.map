@@ -1,0 +1,9 @@
+<map id="vr_fault_get_error_data" name="vr_fault_get_error_data">
+<area shape="rect" id="node1" title=" " alt="" coords="5,42,160,69"/>
+<area shape="rect" id="node2" href="$sb-rb_2src_2platform_2plat__pldm__sensor_8c.html#a46562a6841a76e40467323c3cff0e651" title=" " alt="" coords="208,42,404,69"/>
+<area shape="rect" id="node3" href="$minerva-ag_2src_2platform_2plat__pldm__sensor_8c.html#acbdf6ec80f10c919325e5e571427cf6c" title=" " alt="" coords="452,15,647,42"/>
+<area shape="rect" id="node5" href="$minerva-ag_2src_2platform_2plat__isr_8c.html#ad8887b1d0c4bbc7a6f1c25870a6d9051" title=" " alt="" coords="500,67,599,94"/>
+<area shape="rect" id="node4" href="$minerva-ag_2src_2platform_2plat__pldm__sensor_8c.html#a18272dc8dce4f373b85555817c2cc6f3" title=" " alt="" coords="695,5,844,47"/>
+<area shape="rect" id="node6" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="710,71,829,98"/>
+<area shape="rect" id="node7" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="892,71,1035,98"/>
+</map>

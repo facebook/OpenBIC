@@ -1,0 +1,9 @@
+<map id="show_power_good_status" name="show_power_good_status">
+<area shape="rect" id="node1" title=" " alt="" coords="5,56,179,83"/>
+<area shape="rect" id="node2" href="$sb-rb_2src_2platform_2plat__class_8c.html#a9d3145ec260256885f5ad7ae0fee1381" title=" " alt="" coords="233,5,359,32"/>
+<area shape="rect" id="node3" href="$minerva-ag_2src_2platform_2plat__class_8c.html#ab8ed1e1192e4346f34a2396e50d9f1aa" title=" " alt="" coords="432,53,539,80"/>
+<area shape="rect" id="node6" href="$shell__iris__power_8c.html#a5a2992a1c59345c0377094e9cf7fd569" title=" " alt="" coords="227,108,365,135"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="605,83,724,109"/>
+<area shape="rect" id="node5" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="772,83,915,109"/>
+<area shape="rect" id="node7" href="$plat__ioexp_8c.html#ac080827d1752b9dc20adb6fceb655121" title=" " alt="" coords="413,105,557,146"/>
+</map>
