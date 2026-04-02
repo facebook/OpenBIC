@@ -41,8 +41,8 @@
 #define IANA_ID2 0x00A015 // for OEM 1S command supports YV3.5
 
 #define BIC_FW_YEAR_MSB 0x20
-#define BIC_FW_YEAR_LSB 0x25
-#define BIC_FW_WEEK 0x48
+#define BIC_FW_YEAR_LSB 0x26
+#define BIC_FW_WEEK 0x13
 #define BIC_FW_VER 0x01
 #define BIC_FW_platform_0 0x61 // char: a
 #define BIC_FW_platform_1 0x61 // char: a
