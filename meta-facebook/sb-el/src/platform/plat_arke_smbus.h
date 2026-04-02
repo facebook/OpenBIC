@@ -57,10 +57,10 @@
 #define FW_DL_SLV_PROG BIT(1)
 #define FW_SB_EXIT_CMD BIT(0)
 
-#define MEDHA0_I2C_ADDR 0x33
-#define MEDHA1_I2C_ADDR 0x34
-#define OWLW_I2C_ADDR 0x6E
-#define OWLE_I2C_ADDR 0x6E
+// #define MEDHA0_I2C_ADDR 0x33
+// #define MEDHA1_I2C_ADDR 0x34
+// #define OWLW_I2C_ADDR 0x6E
+// #define OWLE_I2C_ADDR 0x6E
 
 #define MAX_DATA_PKT_SIZE 24
 #define STATUS_RETRY_CNT 2

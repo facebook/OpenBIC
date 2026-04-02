@@ -34,7 +34,9 @@
 #include "plat_cpld.h"
 #include "plat_util.h"
 #include "plat_i2c.h"
+#include "plat_arke_smbus.h"
 
+#define ARKE_BOOT0_IMG_SIZE 0x1FFFFB
 #define PLAT_WAIT_SENSOR_POLLING_END_DELAY_MS 1000
 
 LOG_MODULE_REGISTER(plat_fwupdate);
@@ -43,7 +45,16 @@ static uint8_t pldm_pre_vr_update(void *fw_update_param);
 static uint8_t pldm_post_vr_update(void *fw_update_param);
 static uint8_t pldm_pre_bic_update(void *fw_update_param);
 static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len);
+static bool get_boot0_hamsa_fw_version(void *info_p, uint8_t *buf, uint8_t *len);
+static bool get_boot0_nuwa0_fw_version(void *info_p, uint8_t *buf, uint8_t *len);
+static bool get_boot0_nuwa1_fw_version(void *info_p, uint8_t *buf, uint8_t *len);
 
+static uint32_t crc_boot0[3] = { 0 };
+static uint32_t version_boot0[3] = { 0 };
+const struct device *i2c_dev;
+uint8_t slave_id = HAMSA_BOOT1_ADDR;
+static uint32_t write_addr = HAMSA_BOOT1_ASIC_MEM_ADDR;
+bool update_flag = 0;
 const struct device *i2c_dev;
 
 typedef struct {
@@ -61,8 +72,7 @@ compnt_mapping_sensor vr_compnt_mapping_sensor_table[] = {
 	{ COMPNT_VR_6, SENSOR_NUM_ASIC_P1V05_VDDC_HBM1357_TEMP_C, "ASIC_P1V05_VDDC_HBM1357" },
 	{ COMPNT_VR_7, SENSOR_NUM_ASIC_P0V9_VDDQ_HBM1357_TEMP_C, "P0V9_VDDQ_HBM1357" },
 	{ COMPNT_VR_8, SENSOR_NUM_ASIC_P0V75_MAX_N_VDD_TEMP_C, "ASIC_P0V75_MAX_N_VDD" },
-	{ COMPNT_VR_9, SENSOR_NUM_ASIC_P0V9_VDDQ_HBM0246_TEMP_C,
-	  "P0V9_VDDQ_HBM0246" },
+	{ COMPNT_VR_9, SENSOR_NUM_ASIC_P0V9_VDDQ_HBM0246_TEMP_C, "P0V9_VDDQ_HBM0246" },
 	{ COMPNT_VR_10, SENSOR_NUM_ASIC_P1V05_VDDC_HBM0246_TEMP_C, "ASIC_P1V05_VDDC_HBM0246" },
 	{ COMPNT_VR_11, SENSOR_NUM_ASIC_P0V4_VDDQL_HBM0246_TEMP_C, "ASIC_P0V4_VDDQL_HBM0246" },
 	{ COMPNT_VR_12, SENSOR_NUM_ASIC_P0V75_OWL_W_VDD_TEMP_C, "ASIC_P0V75_OWL_W_VDD" },
@@ -110,6 +120,740 @@ void change_spi_node_to_nuwa1()
 	gpio_set(QSPI_CPLD_SEL_1, 1);
 }
 
+void plat_set_cpld_reset_reg(uint8_t value)
+{
+	plat_write_cpld(CPLD_OFFSET_ASIC_RESET, &value);
+}
+
+static uint8_t pldm_pre_mtia_flash_update(void *fw_update_param)
+{
+	CHECK_NULL_ARG_WITH_RETURN(fw_update_param, 1);
+
+	pldm_fw_update_param_t *p = (pldm_fw_update_param_t *)fw_update_param;
+	plat_set_cpld_reset_reg(RESET_CPLD_OFF);
+	uint16_t spi_node = p->comp_id;
+	LOG_DBG("MTIA flash comp id: 0x%x", p->comp_id);
+	switch (spi_node) {
+	case COMPNT_HAMSA:
+		change_spi_node_to_hamsa();
+		LOG_INF("change spi node to hamsa");
+		break;
+	case COMPNT_NUWA0:
+		change_spi_node_to_nuwa0();
+		LOG_INF("change spi node to nuwa0");
+		break;
+	case COMPNT_NUWA1:
+		change_spi_node_to_nuwa1();
+		LOG_INF("change spi node to nuwa1");
+		break;
+	default:
+		LOG_ERR("Unsupported MTIA flash comp id: 0x%x", p->comp_id);
+		plat_set_cpld_reset_reg(RESET_CPLD_ON);
+		return 1;
+	}
+
+	// re-init flash
+	const struct device *flash_dev;
+	flash_dev = device_get_binding("spi_fiu0_cs1");
+	int rc = 0;
+	rc = spi_nor_re_init(flash_dev);
+	if (rc != 0) {
+		LOG_ERR("spi_nor_re_init fail");
+		plat_set_cpld_reset_reg(RESET_CPLD_ON);
+		return 1;
+	}
+
+	return 0;
+}
+
+uint8_t pldm_mtia_flash_update(void *fw_update_param)
+{
+	CHECK_NULL_ARG_WITH_RETURN(fw_update_param, 1);
+
+	return pldm_fw_update(fw_update_param, DEVSPI_SPI1_CS1);
+}
+
+uint32_t plat_get_image_crc_checksum(uint8_t index)
+{
+	if (index >= BOOT0_MAX) {
+		return 0;
+	} else {
+		return crc_boot0[index];
+	}
+}
+
+uint32_t plat_get_image_version(uint8_t index)
+{
+	if (index >= BOOT0_MAX) {
+		return 0;
+	} else {
+		return version_boot0[index];
+	}
+}
+
+static uint8_t pldm_post_mtia_flash_update(void *fw_update_param)
+{
+	CHECK_NULL_ARG_WITH_RETURN(fw_update_param, 1);
+	const pldm_fw_update_param_t *p = (pldm_fw_update_param_t *)fw_update_param;
+
+	//read data back to calculate CRC32
+	uint8_t *rxbuf = NULL;
+	uint8_t *version_rxbuf = NULL;
+	// image data is from 0x0 to 0x1FFFFB, 0x1FFFFC to 0x1FFFFF is CRC32
+	int remain = ARKE_BOOT0_IMG_SIZE + 1;
+	uint32_t offset = 0;
+	uint32_t crc32 = 0;
+
+	rxbuf = malloc(PLAT_CRC32_READ_SIZE);
+	version_rxbuf = malloc(PLAT_CRC32_READ_SIZE);
+	if (rxbuf == NULL) {
+		LOG_ERR("Fail to allocate size %d", PLAT_CRC32_READ_SIZE);
+	} else {
+		while (remain > 0) {
+			if (remain > PLAT_CRC32_READ_SIZE) {
+				if (read_fw_image(offset, PLAT_CRC32_READ_SIZE, rxbuf,
+						  DEVSPI_SPI1_CS1)) {
+					LOG_ERR("Fail to read offset %x", offset);
+					break;
+				}
+				crc32 = crc32_ieee_update(crc32, rxbuf, PLAT_CRC32_READ_SIZE);
+				remain = remain - PLAT_CRC32_READ_SIZE;
+				offset += PLAT_CRC32_READ_SIZE;
+			} else {
+				if (read_fw_image(offset, remain, rxbuf, DEVSPI_SPI1_CS1)) {
+					LOG_ERR("Fail to read offset %x", offset);
+					break;
+				}
+				crc32 = crc32_ieee_update(crc32, rxbuf, remain);
+				remain = 0;
+				break;
+			}
+		}
+	}
+	SAFE_FREE(rxbuf);
+	if (read_fw_image(0x1FFFF8, 3, version_rxbuf, DEVSPI_SPI1_CS1)) {
+		LOG_ERR("read flash : read_fw_image fail");
+		plat_set_cpld_reset_reg(RESET_CPLD_ON);
+		SAFE_FREE(version_rxbuf);
+		return 1;
+	}
+	uint32_t ver_value = version_rxbuf[0] << 16 | version_rxbuf[1] << 8 | version_rxbuf[2];
+
+	LOG_DBG("version: 0x%x, crc32: 0x%x", ver_value, crc32);
+	switch (p->comp_id) {
+	case COMPNT_HAMSA:
+		crc_boot0[BOOT0_HAMSA] = crc32;
+		version_boot0[BOOT0_HAMSA] = ver_value;
+		LOG_DBG("version: 0x%x, crc32: 0x%x", version_boot0[BOOT0_HAMSA],
+			crc_boot0[BOOT0_HAMSA]);
+		SAFE_FREE(version_rxbuf);
+		break;
+	case COMPNT_NUWA0:
+		crc_boot0[BOOT0_NUWA0] = crc32;
+		version_boot0[BOOT0_NUWA0] = ver_value;
+		LOG_DBG("version: 0x%x, crc32: 0x%x", version_boot0[BOOT0_NUWA0],
+			crc_boot0[BOOT0_NUWA0]);
+		SAFE_FREE(version_rxbuf);
+		break;
+	case COMPNT_NUWA1:
+		crc_boot0[BOOT0_NUWA1] = crc32;
+		version_boot0[BOOT0_NUWA1] = ver_value;
+		LOG_DBG("version: 0x%x, crc32: 0x%x", version_boot0[BOOT0_NUWA1],
+			crc_boot0[BOOT0_NUWA1]);
+		SAFE_FREE(version_rxbuf);
+		break;
+	default:
+		break;
+	}
+
+	// disable spi node
+	spi_node_disable();
+	LOG_INF("Disable spi node");
+	plat_set_cpld_reset_reg(RESET_CPLD_ON);
+	return 0;
+}
+
+bool plat_get_image_crc_checksum_from_flash(uint8_t index, uint32_t *data_ver, uint32_t *data_crc)
+{
+	CHECK_NULL_ARG_WITH_RETURN(data_ver, false);
+	CHECK_NULL_ARG_WITH_RETURN(data_crc, false);
+
+	if (index != COMPNT_HAMSA && index != COMPNT_NUWA0 && index != COMPNT_NUWA1) {
+		return false;
+	}
+	uint8_t flash_index = 0;
+
+	switch (index) {
+	case COMPNT_HAMSA:
+		change_spi_node_to_hamsa();
+		flash_index = BOOT0_HAMSA;
+		break;
+	case COMPNT_NUWA0:
+		change_spi_node_to_nuwa0();
+		flash_index = BOOT0_NUWA0;
+		break;
+	case COMPNT_NUWA1:
+		change_spi_node_to_nuwa1();
+		flash_index = BOOT0_NUWA1;
+		break;
+	default:
+		LOG_ERR("wrong id: 0x%x", index);
+		return false;
+	}
+	// re-init flash
+	const struct device *flash_dev;
+	flash_dev = device_get_binding("spi_fiu0_cs1");
+	if (spi_nor_re_init(flash_dev) != 0) {
+		LOG_ERR("spi_nor_re_init fail");
+		spi_node_disable();
+		return false;
+	}
+
+	/*
+	read data back to combine in Ver and CRC32
+	0x1FFFF8 (Byte 0): VERSION_PATCH = 0x00
+	0x1FFFF9 (Byte 1): VERSION_MINOR  = 0x06
+	0x1FFFFA (Byte 2): VERSION_MAJOR  = 0x01
+
+	0x1FFFFC: CRC32 byte 0 (LSB)
+	0x1FFFFD: CRC32 byte 1
+	0x1FFFFE: CRC32 byte 2
+	0x1FFFFF: CRC32 byte 3 (MSB)
+
+	VER : 01.06.00 | CRC32 : e9e2b0ba
+	*/
+
+	uint8_t rxbuf[8] = { 0 };
+	if (read_fw_image(PLAT_FLASH_BOOT0_VER_OFFSET, 8, rxbuf, DEVSPI_SPI1_CS1)) {
+		LOG_ERR("read_fw_image fail");
+		spi_node_disable();
+		return false;
+	}
+
+	*data_ver = rxbuf[0] << 16 | rxbuf[1] << 8 | rxbuf[2];
+	*data_crc = rxbuf[4] << 24 | rxbuf[5] << 16 | rxbuf[6] << 8 | rxbuf[7];
+	version_boot0[flash_index] = *data_ver;
+	crc_boot0[flash_index] = *data_crc;
+
+	spi_node_disable();
+	return true;
+}
+
+int sb_write_byte(uint8_t cmd, uint8_t data)
+{
+	return i2c_reg_write_byte(i2c_dev, slave_id, cmd, data);
+}
+
+int smbus_read_byte(uint8_t cmd, uint8_t *data)
+{
+	uint8_t rd;
+	int ret;
+	ret = i2c_write_read(i2c_dev, slave_id, &cmd, 1, &rd, 1);
+	*data = rd;
+
+	return ret;
+}
+
+static char *prt_mode(uint8_t mode)
+{
+	char *str = NULL;
+
+	switch (mode) {
+	case FASTBOOT_MODE:
+		str = "fastboot";
+		break;
+	case CMRT_SIC_MODE:
+		str = "cmrt_sic";
+		break;
+	case RECOVERY_MODE:
+		str = "recovery";
+		break;
+	default:
+		str = "unknown";
+		break;
+	}
+	return str;
+}
+
+static int word_to_i2c_pkt(uint8_t *dst, uint32_t src)
+{
+	int data_index = 0;
+
+	/* read the data from specified address */
+	dst[data_index++] = (src >> 0) & BYTE_MASK;
+	dst[data_index++] = (src >> 8) & BYTE_MASK;
+	dst[data_index++] = (src >> 16) & BYTE_MASK;
+	dst[data_index++] = (src >> 24) & BYTE_MASK;
+
+	return data_index;
+}
+
+int sb_write_block(uint8_t slv_id, uint8_t cmd, uint8_t *data, uint32_t len)
+{
+	//return i2c_burst_write(i2c_dev, slv_id, cmd, data, len);
+	return plat_i2c_write(I2C_BUS12, slave_id, cmd, data, len);
+}
+
+int sb_read_byte(uint8_t cmd, uint8_t *data)
+{
+	uint8_t rd;
+	int ret;
+	ret = i2c_write_read(i2c_dev, slave_id, &cmd, 1, &rd, 1);
+	*data = rd;
+
+	return ret;
+}
+
+uint32_t smbus_mode_query(void)
+{
+	uint8_t rd = 0;
+	uint8_t cmd = SB_MODE_QUERY;
+	int err = 0xffff;
+	err = i2c_write_read(i2c_dev, slave_id, &cmd, 1, &rd, 1);
+
+	LOG_INF("slave:0x%x in mode:%d, %s", slave_id, rd, prt_mode(rd));
+
+	return err == 0 ? rd & 0x7 : err;
+}
+
+int sb_write_fwblock(uint32_t addr, uint32_t *data, uint32_t data_len)
+{
+	//smbus max payload for a transaction is 32
+	uint8_t buf[SMBUS_MAX_PKT_LEN] = { 0 };
+	uint8_t words = 0;
+	buf[MSG_PKT_LEN_OFFSET] = ADDR_DATA_LEN_SZ + data_len;
+	word_to_i2c_pkt(&buf[MSG_ADDR_OFFSET], addr);
+	buf[MSG_DATA_LEN_OFFSET] = data_len;
+
+	// if data length is multples of word size, packetize each word first
+	while (data_len > 0) {
+		word_to_i2c_pkt(&buf[MSG_RDWR_DATA_START + words * BYTES_PER_WORD],
+				*(data + words));
+		data_len -= BYTES_PER_WORD;
+		words++;
+	}
+
+	//bytes to write = total pkt length(buf[0]) + pkt_len_byte_size(1B)
+	return sb_write_block(slave_id, FW_DATA_WRITE, buf,
+			      buf[MSG_PKT_LEN_OFFSET] + PKT_LEN_BYTE_SZ);
+}
+
+uint8_t pldm_pre_arke_boot_update(void *fw_update_param)
+{
+	CHECK_NULL_ARG_WITH_RETURN(fw_update_param, 1);
+	update_flag = 0;
+	uint8_t rd;
+	write_addr = HAMSA_BOOT1_ASIC_MEM_ADDR;
+	i2c_dev = device_get_binding("I2C_11");
+	// check i2c device
+	if (!i2c_dev) {
+		LOG_ERR("Failed to get binding for I2C_11");
+		update_flag = 1;
+		return 1;
+	}
+	// pre do: check is download mode
+	int err = smbus_mode_query();
+	if (!err) {
+		LOG_ERR("slave not in download mode");
+		goto err_i2c;
+	}
+	// start: Send a FW_DL_START command using FW_CTRL_WRITE
+	err = sb_write_byte(FW_CTRL_WRITE, FW_DL_START);
+	if (err < 0) {
+		LOG_ERR("Firmware download start request failed");
+		goto err_i2c;
+	}
+	// send: send the firmware image to ARKE
+	err = sb_write_fwblock(HAMSA_BOOT1_ADDR, &fw_update_cfg.image_size, 4);
+	if (err == false) {
+		LOG_ERR("sending fw addr-size failed");
+		goto err_i2c;
+	}
+
+	LOG_INF("Waiting for Slave to get ready");
+	// Wait for the slave firmware to get into download mode
+	err = sb_read_byte(FW_CTRL_READ, &rd);
+	if (err < 0) {
+		LOG_ERR("slave status read failed. Abort Download");
+		goto err_i2c;
+	}
+	LOG_INF("slave fw status read: 0x%x", rd);
+	if (rd == FW_DL_SLV_RDY)
+		LOG_INF("device ready to download(0x%x)", rd);
+	else {
+		LOG_ERR("device status error(0x%x)", rd);
+		goto err_i2c;
+	}
+	return 0;
+
+err_i2c:
+	// send download abort command to device
+	LOG_INF("partial download, abort now");
+	err = sb_write_byte(FW_CTRL_WRITE, FW_DL_HST_ABRT);
+	if (err < 0) {
+		LOG_ERR("cmd write failed, %d", err);
+	}
+
+	LOG_INF("check abort status...");
+	// read slave status and check of device aborted download
+	err = sb_read_byte(FW_CTRL_READ, &rd);
+	if (err < 0) {
+		LOG_ERR("cmd status read failed, %d", err);
+	}
+	if (rd & FW_DL_SLV_ABRTD) {
+		LOG_WRN("SMBus device 0x%x aborted download", slave_id);
+	} else {
+		LOG_ERR("SMBus device 0x%x failed to abort(0x%x)", slave_id, rd);
+	}
+	// check what smbus error occurred
+	err = smbus_read_byte(FW_SMBUS_ERROR, &rd);
+	if (err < 0)
+		LOG_ERR("read error status failed, %d", err);
+	else
+		LOG_ERR("smbus error status = 0x%x\n", rd);
+	update_flag = 1;
+	return 1;
+}
+
+int arke_data_write(uint8_t *data, uint32_t data_size)
+{
+	int idx = 0;
+	int err = 0;
+	uint32_t size = data_size;
+	uint32_t dst_addr = HAMSA_BOOT1_ASIC_MEM_ADDR;
+	uint8_t *data_buf = data;
+	uint8_t rd;
+	uint32_t write_size = MAX_DATA_PKT_SIZE;
+	while (size > 0) {
+		int offset = (write_size * idx);
+
+		if (size > MAX_DATA_PKT_SIZE) {
+			write_size = MAX_DATA_PKT_SIZE;
+			size = size - MAX_DATA_PKT_SIZE;
+			idx++;
+		} else {
+			// Last chunk
+			write_size = size;
+			size = 0;
+			idx++;
+		}
+		// if error,  retry up to MAX_RETRIES
+		int tries = MAX_RETRIES;
+		while (tries) {
+			err = sb_write_fwblock(write_addr, (uint32_t *)(data_buf + offset),
+					       write_size);
+			if (err == true)
+				break;
+			tries--;
+			LOG_INF("t%d ", tries);
+		}
+		// if fails after all retries, abort the download cmd
+		if (tries == 0) {
+			LOG_ERR("fw write fail at addr:0x%x,%dB, remaining:%dB", write_addr,
+				write_size, size);
+			LOG_WRN("aborting the firmware download\n");
+			goto err_i2c_write_img;
+		}
+
+		// after first block, ensure fw state is set to progress
+		if (write_addr == dst_addr) {
+			LOG_INF("Verify status progress bit");
+			// If the slave state is not valid, abort download cmd
+			err = sb_read_byte(FW_CTRL_READ, &rd);
+			if (err < 0) {
+				LOG_ERR("status read failed. Abort Download\n");
+				goto err_i2c_write_img;
+			}
+
+			if ((rd & FW_DL_SLV_PROG) == 0) {
+				LOG_ERR("invalid fw status:0x%x\n", rd);
+			} else
+				LOG_INF("fw status set to progress(0x%x)\n", rd);
+		}
+
+		write_addr += write_size;
+	}
+	return 0;
+
+err_i2c_write_img:
+	return 1;
+}
+
+uint8_t pldm_arke_boot_update(void *fw_update_param)
+{
+	CHECK_NULL_ARG_WITH_RETURN(fw_update_param, 1);
+
+	pldm_fw_update_param_t *p = (pldm_fw_update_param_t *)fw_update_param;
+
+	CHECK_NULL_ARG_WITH_RETURN(p->data, 1);
+
+	LOG_DBG("image size: %d", fw_update_cfg.image_size);
+	LOG_DBG("data len: %d", p->data_len);
+
+	uint8_t *data = p->data;
+	uint32_t len = p->data_len;
+	uint32_t sent = 0;
+
+	while (sent < len) {
+		uint32_t chunk = MAX_DATA_PKT_SIZE;
+		if (sent + chunk > len)
+			chunk = len - sent; // last chunk can be < 24 bytes
+
+		bool ok = false;
+		for (int retry = 0; retry < STATUS_RETRY_CNT; retry++) {
+			if (!arke_data_write(data + sent, chunk)) {
+				ok = true;
+				break;
+			}
+		}
+
+		if (!ok) {
+			LOG_ERR("ARKE block transfer failed at PLDM offset %u", p->data_ofs + sent);
+			return 1;
+		}
+
+		sent += chunk;
+	}
+	// update next PLDM offset / length
+	p->next_ofs = p->data_ofs + len;
+	if (p->next_ofs < fw_update_cfg.image_size) {
+		uint32_t remain = fw_update_cfg.image_size - p->next_ofs;
+		p->next_len = (remain > fw_update_cfg.max_buff_size) ? fw_update_cfg.max_buff_size :
+								       remain;
+	} else {
+		p->next_len = 0;
+	}
+
+	return 0;
+}
+
+uint8_t pldm_post_arke_boot_update(void *fw_update_param)
+{
+	ARG_UNUSED(fw_update_param);
+	if (update_flag == 1) {
+		LOG_WRN("FW pre update failed, skip post update");
+		return 0;
+	}
+	// finished: set the bit to inform device that download is complete
+	int err = sb_write_byte(FW_CTRL_WRITE, FW_DL_FINISH);
+	if (err < 0) {
+		// retain original err code returned, i.e. set by ioctl
+		LOG_ERR("Unable to notify download completion state, aborting");
+		goto err_i2c;
+	}
+	LOG_INF("Sent firmware activate command");
+
+	int check_idx = 0;
+	uint8_t rd;
+	/* Wait for the slave to complete firmware update */
+	while (1) {
+		rd = 0;
+		err = sb_read_byte(FW_CTRL_READ, &rd);
+		if (err < 0) {
+			LOG_ERR("fw upgrade state read failed, aborting");
+			goto err_i2c;
+		}
+
+		if (rd & FW_DL_SLV_DONE) {
+			LOG_INF("Read status: FW update complete");
+			break;
+		}
+
+		if (check_idx++ > STATUS_RETRY_CNT) {
+			LOG_ERR("Invalid completion status(0x%x) read", rd);
+			err = -1; // no errno, set card fw error
+			goto err_i2c;
+		}
+	}
+	LOG_INF("~ Firmware Update Completed ~\n");
+	return 0;
+
+err_i2c:
+	// send download abort command to device
+	LOG_INF("partial download, abort now");
+	err = sb_write_byte(FW_CTRL_WRITE, FW_DL_HST_ABRT);
+	if (err < 0) {
+		LOG_ERR("cmd write failed, %d", err);
+	}
+
+	LOG_INF("check abort status...");
+	// read slave status and check of device aborted download
+	err = sb_read_byte(FW_CTRL_READ, &rd);
+	if (err < 0) {
+		LOG_ERR("cmd status read failed, %d", err);
+	}
+	if (rd & FW_DL_SLV_ABRTD) {
+		LOG_WRN("SMBus device 0x%x aborted download", slave_id);
+	} else {
+		LOG_ERR("SMBus device 0x%x failed to abort(0x%x)", slave_id, rd);
+	}
+	// check what smbus error occurred
+	err = smbus_read_byte(FW_SMBUS_ERROR, &rd);
+	if (err < 0)
+		LOG_ERR("read error status failed, %d", err);
+	else
+		LOG_ERR("smbus error status = 0x%x\n", rd);
+	return 1;
+}
+
+#define ASIC_VERSION_BYTE 0x68
+#define I2C_MAX_RETRY 3
+void get_fw_version_boot0_from_asic()
+{
+	I2C_MSG i2c_msg = { .bus = I2C_BUS12, .target_addr = 0x32 };
+	i2c_msg.tx_len = 1;
+	i2c_msg.rx_len = 11;
+	i2c_msg.data[0] = ASIC_VERSION_BYTE;
+	i2c_master_read(&i2c_msg, I2C_MAX_RETRY);
+
+	LOG_INF(" boot0 VER : %02d.%02d.%02d", i2c_msg.data[8], i2c_msg.data[7], i2c_msg.data[6]);
+	uint32_t data_p = i2c_msg.data[8] << 16 | i2c_msg.data[7] << 8 | i2c_msg.data[6];
+	if (data_p) {
+		// update temp data
+		LOG_INF("update boot0 version read from asic");
+		version_boot0[0] = data_p;
+		version_boot0[1] = data_p;
+		version_boot0[2] = data_p;
+	}
+}
+
+uint32_t get_fw_version_boot1_from_asic()
+{
+	I2C_MSG i2c_msg = { .bus = I2C_BUS12, .target_addr = 0x32 };
+	i2c_msg.tx_len = 1;
+	i2c_msg.rx_len = 11;
+	i2c_msg.data[0] = ASIC_VERSION_BYTE;
+	i2c_master_read(&i2c_msg, I2C_MAX_RETRY);
+	LOG_INF(" boot1 VER : %02d.%02d.%02d", i2c_msg.data[1], i2c_msg.data[2], i2c_msg.data[3]);
+	uint32_t version = i2c_msg.data[1] << 16 | i2c_msg.data[2] << 8 | i2c_msg.data[3];
+	return version;
+}
+
+static bool get_boot1_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
+{
+	bool ret = false;
+	const char *remain_str_p = ", BOOT1: ";
+	uint8_t *buf_p = buf;
+	*len = 0;
+
+	memcpy(buf_p, remain_str_p, strlen(remain_str_p));
+	buf_p += strlen(remain_str_p);
+	*len += strlen(remain_str_p);
+	uint32_t version = get_fw_version_boot1_from_asic();
+
+	*len += bin2hex((uint8_t *)&version, 4, buf_p, 4);
+	buf_p += 4;
+
+	ret = true;
+	return ret;
+}
+
+static bool get_boot0_hamsa_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
+{
+	CHECK_NULL_ARG_WITH_RETURN(info_p, false);
+	CHECK_NULL_ARG_WITH_RETURN(buf, false);
+	CHECK_NULL_ARG_WITH_RETURN(len, false);
+	get_fw_version_boot0_from_asic();
+	bool ret = false;
+	const char *remain_str_p = "flash hamsa BOOT0: ";
+	uint8_t *buf_p = buf;
+	*len = 0;
+
+	memcpy(buf_p, remain_str_p, strlen(remain_str_p));
+	buf_p += strlen(remain_str_p);
+	*len += strlen(remain_str_p);
+	uint8_t *version = (uint8_t *)&version_boot0[BOOT0_HAMSA];
+	LOG_INF("version_boot0[BOOT0_HAMSA]: %x", version_boot0[BOOT0_HAMSA]);
+	// bin2hex: 3 bytes → 6 charsgit s
+	int hex_len = bin2hex(version, 3, buf_p, 6);
+
+	buf_p += hex_len;
+	*len += hex_len;
+
+	const char *space = " ";
+	memcpy(buf_p, space, strlen(space));
+	buf_p += strlen(space);
+	*len += strlen(space);
+
+	uint8_t *crc_checksum = (uint8_t *)&crc_boot0[BOOT0_HAMSA];
+	int crc_hex_len = bin2hex(crc_checksum, 4, buf_p, 8);
+	buf_p += crc_hex_len;
+	*len += crc_hex_len;
+
+	ret = true;
+	return ret;
+}
+
+static bool get_boot0_nuwa0_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
+{
+	CHECK_NULL_ARG_WITH_RETURN(info_p, false);
+	CHECK_NULL_ARG_WITH_RETURN(buf, false);
+	CHECK_NULL_ARG_WITH_RETURN(len, false);
+	// read version from asic first
+	get_fw_version_boot0_from_asic();
+	bool ret = false;
+	const char *remain_str_p = "flash nuwa0 BOOT0: ";
+	uint8_t *buf_p = buf;
+	*len = 0;
+
+	memcpy(buf_p, remain_str_p, strlen(remain_str_p));
+	buf_p += strlen(remain_str_p);
+	*len += strlen(remain_str_p);
+	uint8_t *version = (uint8_t *)&version_boot0[BOOT0_NUWA0];
+	LOG_INF("version_boot0[BOOT0_NUWA0]: %x", version_boot0[BOOT0_NUWA0]);
+	// bin2hex: 3 bytes → 6 chars
+	int hex_len = bin2hex(version, 3, buf_p, 6);
+	buf_p += hex_len;
+	*len += hex_len;
+
+	const char *space = " ";
+	memcpy(buf_p, space, strlen(space));
+	buf_p += strlen(space);
+	*len += strlen(space);
+
+	uint8_t *crc_checksum = (uint8_t *)&crc_boot0[BOOT0_NUWA0];
+	int crc_hex_len = bin2hex(crc_checksum, 4, buf_p, 8);
+	buf_p += crc_hex_len;
+	*len += crc_hex_len;
+
+	ret = true;
+	return ret;
+}
+
+static bool get_boot0_nuwa1_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
+{
+	CHECK_NULL_ARG_WITH_RETURN(info_p, false);
+	CHECK_NULL_ARG_WITH_RETURN(buf, false);
+	CHECK_NULL_ARG_WITH_RETURN(len, false);
+	get_fw_version_boot0_from_asic();
+	bool ret = false;
+	const char *remain_str_p = "flash nuwa1 BOOT0: ";
+	uint8_t *buf_p = buf;
+	*len = 0;
+	memcpy(buf_p, remain_str_p, strlen(remain_str_p));
+	buf_p += strlen(remain_str_p);
+	*len += strlen(remain_str_p);
+	uint8_t *version = (uint8_t *)&version_boot0[BOOT0_NUWA1];
+	LOG_INF("version_boot0[BOOT0_NUWA1]: %x", version_boot0[BOOT0_NUWA1]);
+	// bin2hex: 3 bytes → 6 chars
+	int hex_len = bin2hex(version, 3, buf_p, 6);
+	buf_p += hex_len;
+	*len += hex_len;
+
+	const char *space = " ";
+	memcpy(buf_p, space, strlen(space));
+	buf_p += strlen(space);
+	*len += strlen(space);
+
+	uint8_t *crc_checksum = (uint8_t *)&crc_boot0[BOOT0_NUWA1];
+	int crc_hex_len = bin2hex(crc_checksum, 4, buf_p, 8);
+	buf_p += crc_hex_len;
+	*len += crc_hex_len;
+
+	ret = true;
+	return ret;
+}
+
 //clang-format off
 #define VR_COMPONENT_DEF(comp_id)                                                                  \
 	{                                                                                          \
@@ -154,6 +898,66 @@ pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
 	VR_COMPONENT_DEF(COMPNT_VR_12),
 	VR_COMPONENT_DEF(COMPNT_VR_13),
 	VR_COMPONENT_DEF(COMPNT_VR_3V3),
+	{
+		.enable = true,
+		.comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,
+		.comp_identifier = COMPNT_HAMSA,
+		.comp_classification_index = 0x00,
+		.pre_update_func = pldm_pre_mtia_flash_update,
+		.update_func = pldm_mtia_flash_update,
+		.pos_update_func = pldm_post_mtia_flash_update,
+		.inf = COMP_UPDATE_VIA_SPI,
+		.activate_method = COMP_ACT_SELF,
+		.self_act_func = NULL,
+		.get_fw_version_fn = get_boot0_hamsa_fw_version,
+		.self_apply_work_func = NULL,
+		.comp_version_str = NULL,
+	},
+	{
+		.enable = true,
+		.comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,
+		.comp_identifier = COMPNT_NUWA0,
+		.comp_classification_index = 0x00,
+		.pre_update_func = pldm_pre_mtia_flash_update,
+		.update_func = pldm_mtia_flash_update,
+		.pos_update_func = pldm_post_mtia_flash_update,
+		.inf = COMP_UPDATE_VIA_SPI,
+		.activate_method = COMP_ACT_SELF,
+		.self_act_func = NULL,
+		.get_fw_version_fn = get_boot0_nuwa0_fw_version,
+		.self_apply_work_func = NULL,
+		.comp_version_str = NULL,
+	},
+	{
+		.enable = true,
+		.comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,
+		.comp_identifier = COMPNT_NUWA1,
+		.comp_classification_index = 0x00,
+		.pre_update_func = pldm_pre_mtia_flash_update,
+		.update_func = pldm_mtia_flash_update,
+		.pos_update_func = pldm_post_mtia_flash_update,
+		.inf = COMP_UPDATE_VIA_SPI,
+		.activate_method = COMP_ACT_SELF,
+		.self_act_func = NULL,
+		.get_fw_version_fn = get_boot0_nuwa1_fw_version,
+		.self_apply_work_func = NULL,
+		.comp_version_str = NULL,
+	},
+	{
+		.enable = true,
+		.comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,
+		.comp_identifier = COMPNT_HAMSA_BOOT1,
+		.comp_classification_index = 0x00,
+		.pre_update_func = pldm_pre_arke_boot_update,
+		.update_func = pldm_arke_boot_update,
+		.pos_update_func = pldm_post_arke_boot_update,
+		.inf = COMP_UPDATE_VIA_I2C,
+		.activate_method = COMP_ACT_SELF,
+		.self_act_func = NULL,
+		.get_fw_version_fn = get_boot1_fw_version,
+		.self_apply_work_func = NULL,
+		.comp_version_str = NULL,
+	},
 };
 
 uint8_t plat_pldm_query_device_identifiers(const uint8_t *buf, uint16_t len, uint8_t *resp,
@@ -277,10 +1081,11 @@ static uint8_t pldm_pre_vr_update(void *fw_update_param)
 	CHECK_NULL_ARG_WITH_RETURN(fw_update_param, 1);
 
 	pldm_fw_update_param_t *p = (pldm_fw_update_param_t *)fw_update_param;
-	// if (get_asic_board_id() != ASIC_BOARD_ID_EVB && p->comp_id == COMPNT_VR_3V3) {
-	// 	LOG_ERR("only evb support 3V3 vr update");
-	// 	return 1;
-	// }
+
+	if (get_asic_board_id() != ASIC_BOARD_ID_EVB && p->comp_id == COMPNT_VR_3V3) {
+		LOG_ERR("only evb support 3V3 vr update");
+		return 1;
+	}
 
 	/* Stop sensor polling */
 	set_plat_sensor_polling_enable_flag(false);
@@ -303,6 +1108,7 @@ static uint8_t pldm_pre_vr_update(void *fw_update_param)
 
 	return 0;
 }
+
 static uint8_t pldm_post_vr_update(void *fw_update_param)
 {
 	ARG_UNUSED(fw_update_param);
@@ -313,6 +1119,7 @@ static uint8_t pldm_post_vr_update(void *fw_update_param)
 
 	return 0;
 }
+
 static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 {
 	CHECK_NULL_ARG_WITH_RETURN(info_p, false);
@@ -334,7 +1141,7 @@ static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 			p->comp_identifier);
 		return ret;
 	}
-	
+
 	if (!find_sensor_id_and_name_by_firmware_comp_id(p->comp_identifier, &sensor_id,
 							 sensor_name)) {
 		LOG_ERR("Can't find sensor id and name by comp id: 0x%x", p->comp_identifier);
@@ -492,4 +1299,9 @@ void pal_warm_reset_prepare()
 {
 	LOG_INF("cmd platform warm reset prepare");
 	plat_reset_prepare();
+}
+
+void update_temp_boot0_version(uint32_t version, uint8_t index)
+{
+	version_boot0[index] = version;
 }
