@@ -257,7 +257,7 @@ bool vr_status_enum_get(uint8_t *name, uint8_t *num);
 bool plat_get_vr_status(uint8_t rail, uint8_t vr_status_rail, uint16_t *vr_status);
 bool plat_clear_vr_status(uint8_t rail);
 bool plat_get_vout_command(uint8_t rail, uint16_t *millivolt);
-bool plat_set_vout_command(uint8_t rail, uint16_t *millivolt);
+bool plat_set_vout_command(uint8_t rail, uint16_t *millivolt, bool is_perm);
 bool vr_rail_voltage_peak_get(uint8_t *name, int *peak_value);
 bool vr_rail_voltage_peak_clear(uint8_t rail_index);
 bool plat_set_vout_range_min(uint8_t rail, uint16_t *millivolt);

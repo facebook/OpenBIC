@@ -74,6 +74,7 @@ extern const mps_vr_test_mode_setting_t vr_mps_normal_mode_table[];
 extern const uint8_t vr_mps_test_mode_table_size;
 extern const uint8_t vr_mps_normal_mode_table_size;
 
+bool update_vr_reg(uint8_t rail, uint8_t reg, uint16_t val);
 bool get_vr_test_mode_flag(void);
 void vr_test_mode_enable(bool onoff);
 void init_vr_test_mode_polling(void);

@@ -129,6 +129,18 @@ static int cmd_perm_config_get(const struct shell *shell, size_t argc, char **ar
 		}
 	}
 
+	uint16_t setting_data_for_hamsa_avdd_pcie = 0xFFFF;
+	if (!get_user_settings_hamsa_avdd_pcie_from_eeprom(
+		    &setting_data_for_hamsa_avdd_pcie, sizeof(setting_data_for_hamsa_avdd_pcie))) {
+		LOG_ERR("get hamsa_avdd_pcie user settings failed");
+	} else {
+		if (setting_data_for_hamsa_avdd_pcie != 0xFFFF) {
+			shell_print(shell, "hamsa_avdd_pcie                            val=%d",
+				    setting_data_for_hamsa_avdd_pcie);
+			config_count++;
+		}
+	}
+
 	if (!config_count) {
 		shell_print(shell, "no perm parameter exist");
 	}

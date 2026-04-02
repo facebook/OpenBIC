@@ -31,6 +31,7 @@
 #define THROTTLE_USER_SETTINGS_OFFSET 0x8600
 #define DELAY_ASIC_RST_USER_SETTINGS_OFFSET 0x8700
 #define DELAY_MODULE_PG_USER_SETTINGS_OFFSET 0x8800
+#define HAMSA_AVDD_PCIE_VOUT_USER_SETTINGS_OFFSET 0x8900
 
 #define CPLD_THROTTLE_SWITCH_ADDR 0x25
 #define CPLD_THERMALTRIP_SWITCH_ADDR 0x3A
@@ -152,6 +153,8 @@ bool get_user_settings_delay_module_pg_from_eeprom(void *user_settings, uint8_t 
 bool get_user_settings_thermaltrip_from_eeprom(void *thermaltrip_user_settings,
 					       uint8_t data_length);
 bool get_user_settings_throttle_from_eeprom(void *user_settings, uint8_t data_length);
+bool set_user_settings_hamsa_avdd_pcie_to_eeprom(void *user_settings, uint8_t data_length);
+bool get_user_settings_hamsa_avdd_pcie_from_eeprom(void *user_settings, uint8_t data_length);
 bool perm_config_clear();
 bool get_average_power(uint8_t rail, uint32_t *milliwatt);
 bool post_vr_read(sensor_cfg *cfg, void *args, int *const reading);

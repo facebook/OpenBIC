@@ -598,7 +598,7 @@ err:
 
 struct vr_vout_user_settings voltage_command_get = { 0 };
 vr_vout_range_user_settings_struct vout_range_user_settings = { 0 };
-bool plat_set_vout_command(uint8_t rail, uint16_t *millivolt)
+bool plat_set_vout_command(uint8_t rail, uint16_t *millivolt, bool is_perm)
 {
 	CHECK_NULL_ARG_WITH_RETURN(millivolt, false);
 
@@ -645,6 +645,14 @@ bool plat_set_vout_command(uint8_t rail, uint16_t *millivolt)
 	default:
 		LOG_ERR("Unsupport VR type(%x)", cfg->type);
 		goto err;
+	}
+
+	if (is_perm && rail == VR_RAIL_E_ASIC_P0V8_HAMSA_AVDD_PCIE) {
+		if(!set_user_settings_hamsa_avdd_pcie_to_eeprom(&setting_millivolt,
+			sizeof(setting_millivolt))) {
+			LOG_ERR("set user settings hamsa avdd pcie to eeprom failed");
+			goto err;
+		}
 	}
 
 	voltage_command_get.vout[rail] = setting_millivolt;

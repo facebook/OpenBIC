@@ -110,7 +110,7 @@ static int cmd_voltage_set(const struct shell *shell, size_t argc, char **argv)
 		return 0;
 	}
 
-	if (!plat_set_vout_command(rail, &millivolt)) {
+	if (!plat_set_vout_command(rail, &millivolt, false)) {
 		shell_error(shell, "Can't set vout by rail index: %d", rail);
 		return -1;
 	}

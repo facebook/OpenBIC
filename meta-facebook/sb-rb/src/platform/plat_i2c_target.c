@@ -1108,7 +1108,7 @@ void set_control_voltage_handler(struct k_work *work_item)
 	uint16_t millivolt = sensor_data->set_value;
 	LOG_DBG("Setting rail %x to %d mV", rail, millivolt);
 
-	plat_set_vout_command(rail, &millivolt);
+	plat_set_vout_command(rail, &millivolt, false);
 }
 
 void set_power_capping_threshold_time_handler(struct k_work *work_item)
