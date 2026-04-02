@@ -1,0 +1,31 @@
+From f36b99df19e47e49d451298277b47a4b5f5f86e3 Mon Sep 17 00:00:00 2001
+From: Tim Lee <chli30@nuvoton.com>
+Date: Fri, 13 Mar 2026 16:53:36 +0800
+Subject: [PATCH] boards: npcm400f_evb: enable pwm2 with open-drain output
+
+Enable PWM2 node with open-drain output mode support
+---
+ boards/arm/npcm400f_evb/npcm400f_evb.dts | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/boards/arm/npcm400f_evb/npcm400f_evb.dts b/boards/arm/npcm400f_evb/npcm400f_evb.dts
+index df6329de13..ce98f80223 100644
+--- a/boards/arm/npcm400f_evb/npcm400f_evb.dts
++++ b/boards/arm/npcm400f_evb/npcm400f_evb.dts
+@@ -639,6 +639,13 @@
+ 	status = "okay";
+ };
+ 
++&pwm2 {
++	pinctrl-0 = <&pinctrl_pwm2_default>;
++	pinctrl-names = "default";
++	drive-open-drain;
++	status = "okay";
++};
++
+ &pwm4 {
+ 	pinctrl-0 = <&pinctrl_pwm4_default>;
+ 	pinctrl-names = "default";
+-- 
+2.34.1
+
