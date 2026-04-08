@@ -37,6 +37,7 @@ static uint8_t mmc_slot = 0;
 static uint8_t asic_board_id = 0;
 static uint8_t tray_location = 0;
 static uint8_t board_rev_id = 0;
+static uint8_t tmp_type = TMP_TYPE_UNKNOWN;
 
 bool plat_cpld_eerprom_read(uint8_t *data, uint16_t offset, uint8_t len)
 {
@@ -99,6 +100,27 @@ void init_vr_vendor_module(void)
 	LOG_INF("vr_vendor_module=%d (ubc=%d, vr=%d)", vr_vendor_module, ubc_module, vr_module);
 }
 
+void init_tmp_type()
+{
+	I2C_MSG i2c_msg = { 0 };
+	uint8_t retry = 5;
+	i2c_msg.bus = I2C_BUS3;
+	i2c_msg.target_addr = ASIC_MEDHA0_SENSOR0_ADDR; //tmp sensor address
+	i2c_msg.tx_len = 1;
+	i2c_msg.rx_len = 1;
+	i2c_msg.data[0] = 0xFE; //MFG ID REG
+
+	if (i2c_master_read(&i2c_msg, retry)) {
+		LOG_INF("Assume TMP is EMC1413 by address check");
+		tmp_type = TMP_EMC1413;
+		return;
+	} else {
+		LOG_INF("Assume TMP is TMP432 by register check");
+		tmp_type = TMP_TMP432;
+		return;
+	}
+}
+
 void init_plat_config()
 {
 	uint8_t module = 0;
@@ -114,7 +136,8 @@ void init_plat_config()
 	init_vr_vendor_module();
 	change_sensor_cfg(asic_board_id, vr_module, ubc_module, board_rev_id);
 	// check temp sensor
-	check_temp_sensor(TEMP_EMC1413);
+	init_tmp_type();
+	check_temp_sensor(tmp_type);
 	// cpld fru offset 0: slot
 	plat_cpld_eerprom_read(&mmc_slot, 0, 1);
 	// mmc slot 1-4 * 0x0A

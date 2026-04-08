@@ -12877,7 +12877,7 @@ temp_sensor_change_cfg change_mapping_table[] = {
 };
 void check_temp_sensor(uint8_t tmp_module)
 {
-	if (tmp_module == TEMP_EMC1413) {
+	if (tmp_module == TMP_EMC1413) {
 		//change temp sensor type and address to em1413
 		uint8_t table_size = sizeof(plat_pldm_sensor_temp_table) /
 				     sizeof(plat_pldm_sensor_temp_table[0]);
