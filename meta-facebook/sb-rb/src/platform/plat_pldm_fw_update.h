@@ -23,6 +23,8 @@
 #define RESET_CPLD_ON 0x3F
 #define RESET_CPLD_OFF 0x00
 
+#define CIP_VERSION_BYTE 0x69
+
 enum ASIC_BOOT0_COMPONENT {
 	BOOT0_HAMSA,
 	BOOT0_MEDHA0,
@@ -73,4 +75,5 @@ int sb_read_block(uint8_t slv_id, uint8_t cmd, uint8_t *data, uint32_t len);
 bool plat_get_image_crc_checksum_from_flash(uint8_t index, uint32_t *data_ver, uint32_t *data_crc);
 uint32_t plat_get_image_version(uint8_t index);
 void update_temp_boot0_version(uint32_t version, uint8_t index);
+void update_temp_cip_boot0_version(uint32_t version);
 #endif /* _PLAT_FWUPDATE_H_ */

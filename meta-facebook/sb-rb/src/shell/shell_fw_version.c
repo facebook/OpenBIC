@@ -150,6 +150,23 @@ void cmd_get_fw_version_cpld(const struct shell *shell, size_t argc, char **argv
 	return;
 }
 
+void cmd_get_fw_version_cip(const struct shell *shell)
+{
+	I2C_MSG i2c_msg = { .bus = asic_list[BOOT0_HAMSA].bus,
+			    .target_addr = asic_list[BOOT0_HAMSA].addr };
+	i2c_msg.tx_len = 1;
+	i2c_msg.rx_len = 5;
+	i2c_msg.data[0] = CIP_VERSION_BYTE;
+	if (i2c_master_read(&i2c_msg, I2C_MAX_RETRY)) {
+		shell_warn(shell, "Can't get CIP version from ASIC");
+		return;
+	}
+	shell_print(shell, " CIP boot0 VER from asic: %02d.%02d.%02d", i2c_msg.data[1],
+		    i2c_msg.data[2], i2c_msg.data[3]);
+	update_temp_cip_boot0_version(i2c_msg.data[1] << 16 | i2c_msg.data[2] << 8 |
+				      i2c_msg.data[3]);
+}
+
 void cmd_get_fw_version_asic(const struct shell *shell, size_t argc, char **argv)
 {
 	I2C_MSG i2c_msg = { .bus = asic_list[BOOT0_HAMSA].bus,
@@ -165,6 +182,7 @@ void cmd_get_fw_version_asic(const struct shell *shell, size_t argc, char **argv
 		    i2c_msg.data[3]);
 	shell_print(shell, " boot0 VER from asic: %02d.%02d.%02d", i2c_msg.data[8], i2c_msg.data[7],
 		    i2c_msg.data[6]);
+	cmd_get_fw_version_cip(shell);
 	uint32_t tmp_version_boot0 = i2c_msg.data[8] << 16 | i2c_msg.data[7] << 8 | i2c_msg.data[6];
 	// if boot0 version is not 0, update temp data
 	if (tmp_version_boot0) {
