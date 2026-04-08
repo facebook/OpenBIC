@@ -131,8 +131,7 @@ static int cmd_hamsa_avdd_pcie_set(const struct shell *shell, size_t argc, char 
 		return -1;
 	}
 
-	shell_info(shell, "Set hamsa_avdd_pcie vout to %d mV, %svolatile\n", millivolt,
-		   (argc == 3) ? "non-" : "");
+	shell_info(shell, "Set hamsa_avdd_pcie vout to %d mV, non-volatile\n", millivolt);
 
 	if (!set_hamsa_avdd_pcie(&millivolt, is_perm)) {
 		shell_error(shell, "set hamsa_avdd_pcie failed");
