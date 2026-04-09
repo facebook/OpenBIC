@@ -158,13 +158,14 @@ void cmd_get_fw_version_cip(const struct shell *shell)
 	i2c_msg.rx_len = 5;
 	i2c_msg.data[0] = CIP_VERSION_BYTE;
 	if (i2c_master_read(&i2c_msg, I2C_MAX_RETRY)) {
-		shell_warn(shell, "Can't get CIP version from ASIC");
+		shell_warn(shell, "Can't get MEDHA0/1 boot0 version from ASIC");
 		return;
 	}
-	shell_print(shell, " CIP boot0 VER from asic: %02d.%02d.%02d", i2c_msg.data[1],
+	shell_print(shell, "MEDHA0/1 boot0 VER from asic: %02d.%02d.%02d", i2c_msg.data[1],
 		    i2c_msg.data[2], i2c_msg.data[3]);
-	update_temp_cip_boot0_version(i2c_msg.data[1] << 16 | i2c_msg.data[2] << 8 |
-				      i2c_msg.data[3]);
+	const uint32_t version = i2c_msg.data[1] << 16 | i2c_msg.data[2] << 8 | i2c_msg.data[3];
+	update_temp_boot0_version(version, BOOT0_MEDHA0);
+	update_temp_boot0_version(version, BOOT0_MEDHA1);
 }
 
 void cmd_get_fw_version_asic(const struct shell *shell, size_t argc, char **argv)
@@ -172,25 +173,28 @@ void cmd_get_fw_version_asic(const struct shell *shell, size_t argc, char **argv
 	I2C_MSG i2c_msg = { .bus = asic_list[BOOT0_HAMSA].bus,
 			    .target_addr = asic_list[BOOT0_HAMSA].addr };
 	i2c_msg.tx_len = 1;
-	i2c_msg.rx_len = 11;
+	i2c_msg.rx_len = 10;
 	i2c_msg.data[0] = ASIC_VERSION_BYTE;
 	if (i2c_master_read(&i2c_msg, I2C_MAX_RETRY)) {
 		shell_warn(shell, "Can't get boot0, boot1 version from ASIC");
 		return;
 	}
-	shell_print(shell, " boot1 VER from asic: %02d.%02d.%02d", i2c_msg.data[1], i2c_msg.data[2],
-		    i2c_msg.data[3]);
-	shell_print(shell, " boot0 VER from asic: %02d.%02d.%02d", i2c_msg.data[8], i2c_msg.data[7],
-		    i2c_msg.data[6]);
+	shell_print(shell, "HAMSA boot1 VER from asic: %02d.%02d.%02d", i2c_msg.data[1],
+		    i2c_msg.data[2], i2c_msg.data[3]);
+	shell_print(shell, "HAMSA boot0 VER from asic: %02d.%02d.%02d", i2c_msg.data[8],
+		    i2c_msg.data[7], i2c_msg.data[6]);
 	cmd_get_fw_version_cip(shell);
-	uint32_t tmp_version_boot0 = i2c_msg.data[8] << 16 | i2c_msg.data[7] << 8 | i2c_msg.data[6];
+	uint32_t tmp_version = i2c_msg.data[8] << 16 | i2c_msg.data[7] << 8 | i2c_msg.data[6];
 	// if boot0 version is not 0, update temp data
-	if (tmp_version_boot0) {
+	if (tmp_version) {
 		// update temp data
 		shell_print(shell, "update boot0 version read from asic");
-		for (int i = 0; i < BOOT0_MAX; i++) {
-			update_temp_boot0_version(tmp_version_boot0, i);
-		}
+		update_temp_boot0_version(tmp_version, BOOT0_HAMSA);
+	}
+	tmp_version = i2c_msg.data[1] << 16 | i2c_msg.data[2] << 8 | i2c_msg.data[3];
+	if (tmp_version) {
+		shell_print(shell, "update boot1 version read from asic");
+		update_temp_boot0_version(tmp_version, BOOT1_HAMSA);
 	}
 	// get temp version from temp array
 	for (int i = 0; i < BOOT0_MAX; i++) {
@@ -200,8 +204,24 @@ void cmd_get_fw_version_asic(const struct shell *shell, size_t argc, char **argv
 		tmp_bytes[1] = (version_tmp >> 16) & 0xFF;
 		tmp_bytes[2] = (version_tmp >> 8) & 0xFF;
 		tmp_bytes[3] = version_tmp & 0xFF;
-		shell_print(shell, " boot0 VER from temp array: %02d.%02d.%02d.%02d", tmp_bytes[0],
-			    tmp_bytes[1], tmp_bytes[2], tmp_bytes[3]);
+		if (i == BOOT0_HAMSA) {
+			shell_print(shell, "HAMSA boot0 VER from temp array: %02d.%02d.%02d.%02d",
+				    tmp_bytes[0], tmp_bytes[1], tmp_bytes[2], tmp_bytes[3]);
+		} else if (i == BOOT1_HAMSA) {
+			shell_print(shell, "HAMSA boot1 VER from temp array: %02d.%02d.%02d.%02d",
+				    tmp_bytes[0], tmp_bytes[1], tmp_bytes[2], tmp_bytes[3]);
+		} else if (i == BOOT0_MEDHA0) {
+			shell_print(shell, " MEDHA0 boot0 VER from temp array: %02d.%02d.%02d.%02d",
+				    tmp_bytes[0], tmp_bytes[1], tmp_bytes[2], tmp_bytes[3]);
+		} else if (i == BOOT0_MEDHA1) {
+			shell_print(shell, " MEDHA1 boot0 VER from temp array: %02d.%02d.%02d.%02d",
+				    tmp_bytes[0], tmp_bytes[1], tmp_bytes[2], tmp_bytes[3]);
+		} else {
+			shell_print(
+				shell,
+				"Unknown component %d version from temp array: %02d.%02d.%02d.%02d",
+				i, tmp_bytes[0], tmp_bytes[1], tmp_bytes[2], tmp_bytes[3]);
+		}
 	}
 	return;
 }

@@ -53,7 +53,6 @@ static bool get_boot0_medha1_fw_version(void *info_p, uint8_t *buf, uint8_t *len
 
 static uint32_t crc_boot0[3] = { 0 };
 static uint32_t version_boot0[BOOT0_MAX] = { 0 };
-static uint32_t version_cip_boot0 = 0;
 const struct device *i2c_dev;
 uint8_t slave_id = HAMSA_BOOT1_ADDR;
 static uint32_t write_addr = HAMSA_BOOT1_ASIC_MEM_ADDR;
@@ -691,7 +690,7 @@ void get_fw_version_boot0_from_asic()
 {
 	I2C_MSG i2c_msg = { .bus = I2C_BUS12, .target_addr = 0x32 };
 	i2c_msg.tx_len = 1;
-	i2c_msg.rx_len = 11;
+	i2c_msg.rx_len = 10;
 	i2c_msg.data[0] = ASIC_VERSION_BYTE;
 	i2c_master_read(&i2c_msg, I2C_MAX_RETRY);
 
@@ -719,7 +718,7 @@ uint32_t get_fw_version_boot1_from_asic()
 {
 	I2C_MSG i2c_msg = { .bus = I2C_BUS12, .target_addr = 0x32 };
 	i2c_msg.tx_len = 1;
-	i2c_msg.rx_len = 11;
+	i2c_msg.rx_len = 10;
 	i2c_msg.data[0] = ASIC_VERSION_BYTE;
 	i2c_master_read(&i2c_msg, I2C_MAX_RETRY);
 	LOG_INF(" boot1 VER : %02d.%02d.%02d", i2c_msg.data[1], i2c_msg.data[2], i2c_msg.data[3]);
@@ -1359,9 +1358,4 @@ void pal_warm_reset_prepare()
 void update_temp_boot0_version(uint32_t version, uint8_t index)
 {
 	version_boot0[index] = version;
-}
-
-void update_temp_cip_boot0_version(uint32_t version)
-{
-	version_cip_boot0 = version;
 }
