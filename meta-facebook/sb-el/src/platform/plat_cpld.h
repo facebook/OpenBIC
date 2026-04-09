@@ -106,6 +106,9 @@
 // delay module pg
 #define CPLD_OFFSET_MODULE_PG_DELAY 0xA5
 
+// strap_control_manual
+#define CPLD_OFFSE_MANUAL_CONTROL_STRAP 0xB2
+
 // Other CPLD registers
 #define CPLD_OFFSET_ASIC_RESET 0x00
 #define VR_EN_PIN_READING_5 0x05
