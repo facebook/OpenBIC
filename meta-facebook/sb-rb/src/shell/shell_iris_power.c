@@ -386,18 +386,16 @@ ioe_pwr_on ioe_pwr_on_table[] = {
 
 bool check_p3v3_p5v_pwrgd(void)
 {
-	// read p3v3_pwrgf and p5v_pwrgf
-	// PWRGD_P3V3_R, bit-4, VR_PWRGD_PIN_READING_5_REG
+	// read p3v3_pwrgf
+	// PWRGD_P3V3_R, bit-4
 	uint8_t offset = VR_PWRGD_PIN_READING_5_REG;
 	uint8_t reg_data = 0;
 	if (!plat_read_cpld(offset, &reg_data, 1)) {
 		LOG_ERR("Read CPLD offset 0x%x failed", offset);
 	}
 	uint8_t p3v3_value = (reg_data >> 4) & 0x01;
-	// PWRGD_P5V_R, bit-5, VR_PWRGD_PIN_READING_5_REG
-	uint8_t p5v_value = (reg_data >> 5) & 0x01;
-	//if both p3v3 and p5v are all 1, return true
-	if (p3v3_value == 1 && p5v_value == 1)
+	//if p3v3 is 1, return true
+	if (p3v3_value == 1)
 		return true;
 	return false;
 }
@@ -451,13 +449,7 @@ void pwer_gd_get_status(const struct shell *shell)
 	for (int i = 0; i < sizeof(ioe_pwrgd_status_table) / sizeof(ioe_pwrgd_status_table[0]);
 	     i++) {
 		uint8_t tmp_value = (check_value >> i) & 0x01;
-		if (tmp_value) {
-			shell_print(shell, "%s : %d", ioe_pwrgd_status_table[i].ioe_pwrgd_name,
-				    tmp_value);
-		} else {
-			shell_print(shell, "%s : %d", ioe_pwrgd_status_table[i].ioe_pwrgd_name,
-				    tmp_value);
-		}
+		shell_print(shell, "%s : %d", ioe_pwrgd_status_table[i].ioe_pwrgd_name, tmp_value);
 	}
 }
 void steps_on_p3v3_osfp(const struct shell *shell)
@@ -596,7 +588,7 @@ void cmd_iris_power_off(const struct shell *shell, size_t argc, char **argv)
 		shell_warn(shell, "iris power off set cpld fail!");
 	// wait 1s
 	k_msleep(1000);
-	if (gpio_get(FM_PLD_UBC_EN_R) == GPIO_LOW) {
+	if (gpio_get(RST_IRIS_PWR_ON_PLD_R1_N) == GPIO_LOW) {
 		shell_print(shell, "iris power off success!");
 	} else {
 		shell_warn(shell, "iris power off fail!");

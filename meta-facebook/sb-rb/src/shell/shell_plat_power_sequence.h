@@ -122,6 +122,8 @@
 
 #define NO_SENSOR_NUM 0xFF
 
+#define PWR_SEQ_REG_LEN (PWRGD_EVENT_LATCH_6_REG - PWRGD_EVENT_LATCH_1_REG + 1)
+
 typedef struct power_sequence {
 	uint8_t index;
 	uint8_t cpld_offsets;

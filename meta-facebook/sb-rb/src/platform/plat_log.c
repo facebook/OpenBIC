@@ -340,13 +340,12 @@ bool get_error_data(uint16_t error_code, uint8_t *data)
 	}
 	case POWER_ON_SEQUENCE_TRIGGER_CAUSE: {
 		data[0] = plat_get_power_seq_fail_id();
-		uint8_t data_num = 1;
-		for (uint8_t i = PWRGD_EVENT_LATCH_1_REG; i <= PWRGD_EVENT_LATCH_6_REG; i++) {
-			if (!plat_read_cpld(i, &data[data_num], 1)) {
-				LOG_ERR("Fail read cpld reg 0x%x", i);
-				return false;
-			}
-			data_num++;
+		uint8_t data_tmp[PWR_SEQ_REG_LEN]; // 0xBE-0xC4
+		if (!plat_read_cpld(PWRGD_EVENT_LATCH_1_REG, data_tmp, PWR_SEQ_REG_LEN)) {
+			LOG_ERR("Fail read cpld reg 0x%x", PWRGD_EVENT_LATCH_1_REG);
+		}
+		for (uint8_t i = 0; i < PWR_SEQ_REG_LEN; i++) {
+			data[i + 1] = data_tmp[i];
 		}
 		// if have sensor num, read status word(0x79, 2 bytes) and save to data[7:8]
 		uint8_t sensor_num = get_pwrgd_sequence_fail_sensor_num(data[0]);
@@ -355,7 +354,6 @@ bool get_error_data(uint16_t error_code, uint8_t *data)
 			if (!vr_fault_get_error_data(sensor_num, status_word)) {
 				LOG_ERR("Failed to get VR status word for sensor_num: 0x%x",
 					sensor_num);
-				return false;
 			}
 			data[7] = status_word[0];
 			data[8] = status_word[1];

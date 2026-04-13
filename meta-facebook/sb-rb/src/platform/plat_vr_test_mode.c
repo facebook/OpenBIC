@@ -211,7 +211,7 @@ const uint8_t vr_test_mode_table_dafault_size = ARRAY_SIZE(vr_test_mode_table_de
 const uint8_t vr_mps_test_mode_table_size = ARRAY_SIZE(vr_mps_test_mode_table);
 const uint8_t vr_mps_normal_mode_table_size = ARRAY_SIZE(vr_mps_normal_mode_table);
 
-static bool update_vr_reg(uint8_t rail, uint8_t reg, uint16_t val)
+bool update_vr_reg(uint8_t rail, uint8_t reg, uint16_t val)
 {
 	uint8_t data[2];
 	data[0] = val & 0xFF;
@@ -365,7 +365,7 @@ static bool set_vr_test_mode_reg(bool is_default)
 		if (is_default) {
 			// set vout default
 			uint16_t vout_default = cfg->vout_default;
-			if (!plat_set_vout_command(cfg->vr_rail, &vout_default)) {
+			if (!plat_set_vout_command(cfg->vr_rail, &vout_default, false)) {
 				LOG_ERR("VR rail %x set vout to default: %d failed", cfg->vr_rail,
 					cfg[i].vout_default);
 				ret = false;
@@ -411,7 +411,7 @@ static bool set_mps_vr_test_mode_reg(bool is_default)
 		if (is_default) {
 			// set vout default
 			uint16_t vout_default = cfg->vout_default;
-			if (!plat_set_vout_command(cfg->vr_rail, &vout_default)) {
+			if (!plat_set_vout_command(cfg->vr_rail, &vout_default, false)) {
 				LOG_ERR("VR rail %x set vout to default: %d failed", cfg->vr_rail,
 					cfg[i].vout_default);
 				ret = false;

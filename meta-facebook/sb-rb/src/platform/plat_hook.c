@@ -598,7 +598,7 @@ err:
 
 struct vr_vout_user_settings voltage_command_get = { 0 };
 vr_vout_range_user_settings_struct vout_range_user_settings = { 0 };
-bool plat_set_vout_command(uint8_t rail, uint16_t *millivolt)
+bool plat_set_vout_command(uint8_t rail, uint16_t *millivolt, bool is_perm)
 {
 	CHECK_NULL_ARG_WITH_RETURN(millivolt, false);
 
@@ -645,6 +645,14 @@ bool plat_set_vout_command(uint8_t rail, uint16_t *millivolt)
 	default:
 		LOG_ERR("Unsupport VR type(%x)", cfg->type);
 		goto err;
+	}
+
+	if (is_perm && rail == VR_RAIL_E_ASIC_P0V8_HAMSA_AVDD_PCIE) {
+		if (!set_user_settings_hamsa_avdd_pcie_to_eeprom(&setting_millivolt,
+								 sizeof(setting_millivolt))) {
+			LOG_ERR("set user settings hamsa avdd pcie to eeprom failed");
+			goto err;
+		}
 	}
 
 	voltage_command_get.vout[rail] = setting_millivolt;
@@ -1602,4 +1610,70 @@ err:
 		}
 	}
 	return ret;
+}
+
+void set_delta_ubc_time_of_vout_rise()
+{
+	uint8_t ubc_module = get_ubc_module();
+	const uint8_t sensor_ids[2] = {
+		SENSOR_NUM_UBC1_P12V_VOLT_V,
+		SENSOR_NUM_UBC2_P12V_VOLT_V,
+	};
+
+	if (ubc_module == UBC_MODULE_DELTA) {
+		for (int i = 0; i < ARRAY_SIZE(sensor_ids); i++) {
+			uint8_t id = sensor_ids[i];
+			const sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(id);
+			if (!cfg) {
+				LOG_ERR("DELTA UBC vout rising init: sensor cfg not found (sensor_id=0x%02X)",
+					id);
+				return;
+			}
+
+			uint8_t bus = cfg->port;
+			uint8_t addr = cfg->target_addr;
+
+			uint8_t write_data[2] = { 0 };
+			/* read  vout rising time first, if it's 0x0078, just skip*/
+			if (!plat_i2c_read(bus, addr, 0x61, write_data, 2)) {
+				LOG_ERR("UBC(id=0x%02X bus=%u addr=0x%02X): read 0x61 failed", id,
+					bus, addr);
+				return;
+			}
+			if (write_data[0] == 0x78 && write_data[1] == 0x00) {
+				LOG_INF("UBC vout rising time already set, skip setting. vout_rise: 0x%02X%02X, bus: %d, address: 0x%x",
+					write_data[0], write_data[1], bus, addr);
+				continue;
+			}
+
+			/* remove protection: reg 0x10 = 0x00 */
+			write_data[0] = 0x00;
+
+			if (!plat_i2c_write(bus, addr, 0x10, &write_data[0], 1)) {
+				LOG_ERR("UBC(id=0x%02X bus=%u addr=0x%02X): write 0x10 failed", id,
+					bus, addr);
+				return;
+			}
+			LOG_INF("remove UBC protection bus: %d, address: 0x%x", bus, addr);
+			/* set vout rising time: reg 0x61 = 0x78 0x00 */
+			write_data[0] = 0x78;
+			write_data[1] = 0x00;
+
+			if (!plat_i2c_write(bus, addr, 0x61, write_data, 2)) {
+				LOG_ERR("UBC(id=0x%02X bus=%u addr=0x%02X): write 0x51 failed", id,
+					bus, addr);
+				return;
+			}
+			LOG_INF("set UBC vout rising time bus: %d, address: 0x%x", bus, addr);
+			/* Save command's (Reg 0x61) data to OTP */
+			write_data[0] = 0x61;
+
+			if (!plat_i2c_write(bus, addr, 0x17, write_data, 1)) {
+				LOG_ERR("UBC(id=0x%02X bus=%u addr=0x%02X): write 0x4F failed", id,
+					bus, addr);
+				return;
+			}
+			LOG_INF("save UBC command bus: %d, address: 0x%x", bus, addr);
+		}
+	}
 }

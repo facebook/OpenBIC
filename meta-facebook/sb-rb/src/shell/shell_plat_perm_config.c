@@ -118,13 +118,25 @@ static int cmd_perm_config_get(const struct shell *shell, size_t argc, char **ar
 			shell_print(shell, "throttle                            %s",
 				    ((setting_data_for_throttle == 0x00) ?
 					     "sense0 disable, sense1 disable" :
-					     (setting_data_for_throttle == 0x40) ?
+				     (setting_data_for_throttle == 0x40) ?
 					     "sense0 disable, sense1 enable" :
-					     (setting_data_for_throttle == 0x80) ?
+				     (setting_data_for_throttle == 0x80) ?
 					     "sense0 enable, sense1 disable" :
-					     (setting_data_for_throttle == 0xC0) ?
+				     (setting_data_for_throttle == 0xC0) ?
 					     "sense0 enable, sense1 enable" :
 					     "unknown"));
+			config_count++;
+		}
+	}
+
+	uint16_t setting_data_for_hamsa_avdd_pcie = 0xFFFF;
+	if (!get_user_settings_hamsa_avdd_pcie_from_eeprom(
+		    &setting_data_for_hamsa_avdd_pcie, sizeof(setting_data_for_hamsa_avdd_pcie))) {
+		LOG_ERR("get hamsa_avdd_pcie user settings failed");
+	} else {
+		if (setting_data_for_hamsa_avdd_pcie != 0xFFFF) {
+			shell_print(shell, "hamsa_avdd_pcie                            val=%d",
+				    setting_data_for_hamsa_avdd_pcie);
 			config_count++;
 		}
 	}

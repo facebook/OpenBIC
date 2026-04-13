@@ -1569,7 +1569,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t normal_min;
 			0, //uint32_t warning_high;
 			0, //uint32_t warning_low;
-			15000, //uint32_t critical_high;
+			16000, //uint32_t critical_high;
 			0, //uint32_t critical_low;
 			0, //uint32_t fatal_high;
 			0, //uint32_t fatal_low;
@@ -1641,7 +1641,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t normal_min;
 			0, //uint32_t warning_high;
 			0, //uint32_t warning_low;
-			13500, //uint32_t critical_high;
+			15300, //uint32_t critical_high;
 			0, //uint32_t critical_low;
 			0, //uint32_t fatal_high;
 			0, //uint32_t fatal_low;
@@ -2577,7 +2577,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t normal_min;
 			0, //uint32_t warning_high;
 			0, //uint32_t warning_low;
-			15000, //uint32_t critical_high;
+			16000, //uint32_t critical_high;
 			0, //uint32_t critical_low;
 			0, //uint32_t fatal_high;
 			0, //uint32_t fatal_low;
@@ -2649,7 +2649,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t normal_min;
 			0, //uint32_t warning_high;
 			0, //uint32_t warning_low;
-			13500, //uint32_t critical_high;
+			15300, //uint32_t critical_high;
 			0, //uint32_t critical_low;
 			0, //uint32_t fatal_high;
 			0, //uint32_t fatal_low;
@@ -4593,8 +4593,8 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00000000, //uint32_t normal_min;
 			0, //uint32_t warning_high;
 			0, //uint32_t warning_low;
-			848, //uint32_t critical_high;
-			752, //uint32_t critical_low;
+			880, //uint32_t critical_high;
+			770, //uint32_t critical_low;
 			0, //uint32_t fatal_high;
 			0, //uint32_t fatal_low;
 		},
@@ -12491,28 +12491,28 @@ bool is_ubc_access(uint8_t sensor_num)
 {
 	if (get_plat_sensor_one_step_enable_flag() == ONE_STEP_POWER_MAGIC_NUMBER) {
 		return (get_plat_sensor_ubc_polling_enable_flag() &&
-			get_plat_sensor_polling_enable_flag());
+			get_plat_sensor_polling_enable_flag() && is_update_state_idle());
 	} else {
 		return (is_dc_access(sensor_num) && get_plat_sensor_ubc_polling_enable_flag() &&
-			get_plat_sensor_polling_enable_flag());
+			get_plat_sensor_polling_enable_flag() && is_update_state_idle());
 	}
 }
 
 bool is_temp_access(uint8_t cfg_idx)
 {
 	return (get_plat_sensor_temp_polling_enable_flag() &&
-		get_plat_sensor_polling_enable_flag());
+		get_plat_sensor_polling_enable_flag() && is_update_state_idle());
 }
 
 bool is_vr_access(uint8_t sensor_num)
 {
 	if (get_plat_sensor_one_step_enable_flag() == ONE_STEP_POWER_MAGIC_NUMBER) {
 		return (get_plat_sensor_vr_polling_enable_flag() &&
-			get_plat_sensor_polling_enable_flag());
+			get_plat_sensor_polling_enable_flag() && is_update_state_idle());
 
 	} else {
 		return (is_dc_access(sensor_num) && get_plat_sensor_vr_polling_enable_flag() &&
-			get_plat_sensor_polling_enable_flag());
+			get_plat_sensor_polling_enable_flag() && is_update_state_idle());
 	}
 }
 
@@ -12770,4 +12770,48 @@ uint8_t get_pwr_capping_polling_rate_type()
 uint16_t get_quick_medha_polling_rate()
 {
 	return pwr_capping_setting_table[0].case_time_ms[pwr_capping_pollng_rate_type];
+}
+
+uint8_t sensor_polling_cmd(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t instance_id,
+			   uint8_t *resp, uint16_t *resp_len, void *ext_params)
+{
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp_len, PLDM_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(ext_params, PLDM_ERROR);
+
+	struct _sensor_polling_cmd_req *req_p = (struct _sensor_polling_cmd_req *)buf;
+	struct _sensor_polling_cmd_resp *resp_p = (struct _sensor_polling_cmd_resp *)resp;
+
+	if (len < (sizeof(*req_p) - 1)) {
+		LOG_WRN("request len %d is invalid", len);
+		resp_p->completion_code = PLDM_ERROR_INVALID_LENGTH;
+		set_iana(resp_p->iana, sizeof(resp_p->iana));
+		goto exit;
+	}
+
+	if (check_iana(req_p->iana) == PLDM_ERROR) {
+		resp_p->completion_code = PLDM_ERROR_INVALID_DATA;
+		set_iana(resp_p->iana, sizeof(resp_p->iana));
+		goto exit;
+	}
+
+	if (!(req_p->set_value == 1 || req_p->set_value == 0)) {
+		LOG_ERR("set sensor_polling:%x is out of range", req_p->set_value);
+		resp_p->completion_code = PLDM_ERROR_INVALID_DATA;
+		set_iana(resp_p->iana, sizeof(resp_p->iana));
+		goto exit;
+	}
+
+	set_plat_sensor_polling_enable_flag(req_p->set_value);
+
+	LOG_INF("set sensor_polling:%x success", req_p->set_value);
+	resp_p->completion_code = PLDM_SUCCESS;
+	set_iana(resp_p->iana, sizeof(resp_p->iana));
+	resp_p->set_value = req_p->set_value;
+
+exit:
+	*resp_len = sizeof(struct _sensor_polling_cmd_resp);
+	return PLDM_SUCCESS;
 }

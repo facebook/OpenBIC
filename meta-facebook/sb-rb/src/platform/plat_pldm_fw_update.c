@@ -1158,6 +1158,13 @@ static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 	if (check_p3v3_p5v_pwrgd() == false)
 		return ret;
 
+	/* block getting vr fw version during update */
+	if (is_update_state_idle_or_learn_comp() == false) {
+		LOG_INF("Comp id %d FW version request failed due to FW update in progress",
+			p->comp_identifier);
+		return ret;
+	}
+
 	if (!find_sensor_id_and_name_by_firmware_comp_id(p->comp_identifier, &sensor_id,
 							 sensor_name)) {
 		LOG_ERR("Can't find sensor id and name by comp id: 0x%x", p->comp_identifier);
