@@ -259,6 +259,12 @@ static bool get_nic_product_manufacturer(uint8_t fru_id, char *manufacturer,
 		return false;
 	}
 
+	// Validate FRU ID before accessing fru_config array
+	if (fru_id >= MAX_FRU_ID) {
+		LOG_ERR("Invalid FRU ID %d (MAX: %d)", fru_id, MAX_FRU_ID);
+		return false;
+	}
+
 	EEPROM_ENTRY fru_entry;
 	memset(&fru_entry, 0, sizeof(fru_entry));
 
@@ -338,8 +344,183 @@ static bool get_nic_product_manufacturer(uint8_t fru_id, char *manufacturer,
 
 	decode_field(fru_entry.data, field_len, manufacturer, manufacturer_size);
 
-	LOG_DBG("NIC FRU ID %d product manufacturer: %s", fru_id, manufacturer);
+	LOG_INF("NIC FRU ID %d product manufacturer: %s", fru_id, manufacturer);
 	return true;
+}
+
+static bool get_nic_product_name(uint8_t fru_id, char *name, uint8_t name_size)
+{
+	CHECK_NULL_ARG_WITH_RETURN(name, false);
+
+	if (name_size == 0) {
+		LOG_ERR("Invalid name size: %d", name_size);
+		return false;
+	}
+
+	// Validate FRU ID before accessing fru_config array
+	if (fru_id >= MAX_FRU_ID) {
+		LOG_ERR("Invalid FRU ID %d (MAX: %d)", fru_id, MAX_FRU_ID);
+		return false;
+	}
+
+	EEPROM_ENTRY fru_entry;
+	memset(&fru_entry, 0, sizeof(fru_entry));
+
+	fru_entry.config = fru_config[fru_id];
+	fru_entry.offset = 0;
+	fru_entry.data_len = 8;
+
+	if (FRU_read(&fru_entry) != FRU_READ_SUCCESS) {
+		LOG_ERR("Failed to read FRU header for FRU ID %d", fru_id);
+		return false;
+	}
+
+	// Check FRU common header format identifier
+	if (fru_entry.data[0] != 0x01) {
+		LOG_ERR("Invalid FRU format for FRU ID %d", fru_id);
+		return false;
+	}
+
+	// Get product area offset (5th byte * 8)
+	uint16_t product_area_offset = fru_entry.data[4] * 8;
+	if (product_area_offset == 0) {
+		LOG_ERR("No product area found for FRU ID %d", fru_id);
+		return false;
+	}
+
+	// Read product area header (format, length, language)
+	fru_entry.offset = product_area_offset;
+	fru_entry.data_len = 3;
+
+	if (FRU_read(&fru_entry) != FRU_READ_SUCCESS) {
+		LOG_ERR("Failed to read product area header for FRU ID %d", fru_id);
+		return false;
+	}
+
+	// Check product area format version
+	if (fru_entry.data[0] != 0x01) {
+		LOG_ERR("Invalid product area format for FRU ID %d", fru_id);
+		return false;
+	}
+
+	uint16_t area_len = fru_entry.data[1] * 8;
+	if (area_len < 5) {
+		LOG_ERR("Product area too short for FRU ID %d", fru_id);
+		return false;
+	}
+
+	// Read Field 1 (product manufacturer) type/length byte at offset+3
+	fru_entry.offset = product_area_offset + 3;
+	fru_entry.data_len = 1;
+
+	if (FRU_read(&fru_entry) != FRU_READ_SUCCESS) {
+		LOG_ERR("Failed to read product manufacturer type/length for FRU ID %d", fru_id);
+		return false;
+	}
+
+	uint8_t mfr_type_length = fru_entry.data[0];
+	if (mfr_type_length == 0xC1) {
+		LOG_WRN("No product manufacturer field for FRU ID %d, cannot reach product name",
+			fru_id);
+		return false;
+	}
+
+	int mfr_len = mfr_type_length & 0x3F;
+	// Bounds check: manufacturer field must not exceed the area
+	if ((3 + 1 + mfr_len + 1) > area_len) {
+		LOG_ERR("Manufacturer field overflows product area for FRU ID %d", fru_id);
+		return false;
+	}
+
+	// Field 2 (product name) type/length byte is right after manufacturer data
+	uint16_t name_tl_offset = product_area_offset + 3 + 1 + mfr_len;
+	fru_entry.offset = name_tl_offset;
+	fru_entry.data_len = 1;
+
+	if (FRU_read(&fru_entry) != FRU_READ_SUCCESS) {
+		LOG_ERR("Failed to read product name type/length for FRU ID %d", fru_id);
+		return false;
+	}
+
+	uint8_t name_type_length = fru_entry.data[0];
+	if (name_type_length == 0xC1) {
+		LOG_WRN("No product name field found for FRU ID %d", fru_id);
+		return false;
+	}
+
+	int field_len = name_type_length & 0x3F;
+	if (field_len <= 0) {
+		LOG_WRN("Product name field is empty for FRU ID %d", fru_id);
+		return false;
+	}
+
+	// Cap read length to fit in caller's buffer (leave room for NUL terminator)
+	int read_len = (field_len < (name_size - 1)) ? field_len : (name_size - 1);
+
+	// Bounds check: product name field must not exceed the area
+	if ((name_tl_offset - product_area_offset + 1 + read_len) > area_len) {
+		LOG_ERR("Product name field overflows product area for FRU ID %d", fru_id);
+		return false;
+	}
+
+	// Read the product name field data
+	fru_entry.offset = name_tl_offset + 1;
+	fru_entry.data_len = read_len;
+
+	if (FRU_read(&fru_entry) != FRU_READ_SUCCESS) {
+		LOG_ERR("Failed to read product name data for FRU ID %d", fru_id);
+		return false;
+	}
+
+	decode_field(fru_entry.data, read_len, name, name_size);
+
+	LOG_INF("NIC FRU ID %d product name: %s", fru_id, name);
+	return true;
+}
+
+bool get_first_nic_name(char *name, uint8_t name_size)
+{
+	CHECK_NULL_ARG_WITH_RETURN(name, false);
+
+	if (name_size == 0) {
+		LOG_ERR("Invalid name size: %d", name_size);
+		return false;
+	}
+
+	bool found_name = false;
+	char temp_name[32];
+
+	for (uint8_t i = 0; i < NIC_MAX_NUMBER; i++) {
+		// Validate FRU ID before use to prevent accessing invalid memory
+		uint8_t fru_id = NIC0_FRU_ID + i;
+		if (fru_id >= MAX_FRU_ID) {
+			LOG_ERR("Invalid FRU ID %d for NIC%d, skipping", fru_id, i);
+			continue;
+		}
+
+		// Check if NIC is present (presence pin is active low)
+		if (gpio_get(nic_prsnt_pin[i])) {
+			LOG_INF("NIC%d: Not present", i);
+			continue;
+		}
+
+		if (get_nic_product_name(fru_id, temp_name, sizeof(temp_name))) {
+			LOG_INF("NIC%d: Product Name = %s", i, temp_name);
+
+			// Found the first name, save it and return immediately
+			// Use the smaller of the two buffer sizes to prevent overflow
+			uint8_t copy_size =
+				(sizeof(temp_name) < name_size) ? sizeof(temp_name) : name_size;
+			strncpy(name, temp_name, copy_size - 1);
+			name[copy_size - 1] = '\0';
+			found_name = true;
+			break;
+		} else {
+			LOG_INF("NIC%d: Failed to read product name", i);
+		}
+	}
+
+	return found_name;
 }
 
 bool get_first_nic_manufacturer(char *manufacturer, uint8_t manufacturer_size)
