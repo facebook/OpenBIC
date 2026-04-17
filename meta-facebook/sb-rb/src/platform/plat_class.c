@@ -26,6 +26,7 @@
 #include "plat_util.h"
 #include "plat_mctp.h"
 #include "plat_hook.h"
+#include "plat_gpio.h"
 
 LOG_MODULE_REGISTER(plat_class);
 
@@ -37,6 +38,7 @@ static uint8_t asic_board_id = 0;
 static uint8_t tray_location = 0;
 static uint8_t board_rev_id = 0;
 static uint8_t tmp_type = TMP_TYPE_UNKNOWN;
+static uint8_t asic_type = ASIC_TYPE_UNKNOWN;
 
 bool plat_cpld_eerprom_read(uint8_t *data, uint16_t offset, uint8_t len)
 {
@@ -120,6 +122,25 @@ void init_tmp_type()
 	}
 }
 
+void init_asic_type()
+{
+	uint8_t rev_id = get_board_rev_id();
+	if (rev_id <= REV_ID_DVT_FAB3) {
+		asic_type = ASIC_TYPE_QCP1;
+	} else {
+		// after FAB3: gpio ASIC_TYPE_ID1 and ASIC_TYPE_ID0: 01: qcp1, 10: qcp2
+		if (gpio_get(ASIC_TYPE_ID1) == GPIO_LOW && gpio_get(ASIC_TYPE_ID0) == GPIO_HIGH) {
+			asic_type = ASIC_TYPE_QCP1;
+		} else if (gpio_get(ASIC_TYPE_ID1) == GPIO_HIGH &&
+			   gpio_get(ASIC_TYPE_ID0) == GPIO_LOW) {
+			asic_type = ASIC_TYPE_QCP2;
+		} else {
+			asic_type = ASIC_TYPE_UNKNOWN;
+		}
+	}
+	return;
+}
+
 void init_plat_config()
 {
 	uint8_t module = 0;
@@ -145,6 +166,7 @@ void init_plat_config()
 	// cpld fru offset 0x3FF: tray location
 	plat_cpld_eerprom_read(&tray_location, 1023, 1);
 	set_delta_ubc_time_of_vout_rise();
+	init_asic_type();
 	LOG_INF("init_plat_eid: 0x%x", init_plat_eid);
 }
 
@@ -178,6 +200,11 @@ uint8_t get_tray_location()
 	return tray_location;
 }
 
+uint8_t get_asic_type()
+{
+	return asic_type;
+}
+
 // clang-format off
 
 void pal_show_board_types(const struct shell *shell)
@@ -195,18 +222,20 @@ void pal_show_board_types(const struct shell *shell)
 			    (board_rev_id == REV_ID_EVT1A) ? "REV_ID_EVT1A" :
 			    (board_rev_id == REV_ID_EVT1B) ? "REV_ID_EVT1B" :
 			    (board_rev_id == REV_ID_EVT2)  ? "REV_ID_EVT2" :
-			    (board_rev_id == REV_ID_DVT)   ? "REV_ID_DVT" :
-			    (board_rev_id == REV_ID_PVT)   ? "REV_ID_PVT" :
-			    (board_rev_id == REV_ID_MP)	   ? "REV_ID_MP" :
+			    (board_rev_id == REV_ID_DVT_FAB3)   ? "REV_ID_DVT_FAB3" :
+			    (board_rev_id == REV_ID_DVT_FAB4)   ? "REV_ID_DVT_FAB4" :
+			    (board_rev_id == REV_ID_PVT)	   ? "REV_ID_PVT" :
+				(board_rev_id == REV_ID_MP)	   ? "REV_ID_MP" :
 							     "not supported");
 	} else if (asic_board_id == ASIC_BOARD_ID_RAINBOW) {
 		shell_print(shell, "* BOARD_STAGE:   (0x%02X)%s", board_rev_id,
 			    (board_rev_id == REV_ID_EVT1A) ? "REV_ID_EVT1A" :
 			    (board_rev_id == REV_ID_EVT1B) ? "REV_ID_EVT1B" :
 			    (board_rev_id == REV_ID_EVT2)  ? "REV_ID_EVT2" :
-			    (board_rev_id == REV_ID_DVT)   ? "REV_ID_DVT" :
-			    (board_rev_id == REV_ID_PVT)   ? "REV_ID_PVT" :
-			    (board_rev_id == REV_ID_MP)	   ? "REV_ID_MP" :
+			    (board_rev_id == REV_ID_DVT_FAB3)   ? "REV_ID_DVT_FAB3" :
+			    (board_rev_id == REV_ID_DVT_FAB4)   ? "REV_ID_DVT_FAB4" :
+			    (board_rev_id == REV_ID_PVT)	   ? "REV_ID_PVT" :
+				(board_rev_id == REV_ID_MP)	   ? "REV_ID_MP" :
 							     "not supported");
 	}
 
@@ -236,6 +265,10 @@ void pal_show_board_types(const struct shell *shell)
 	shell_print(shell, "* ADC_TYPE:      (0x%02X)%s", adc_type,
 		    (adc_type == ADI_AD4058) ? "ADI_AD4058" :
 		    (adc_type == TIC_ADS7066) ? "TI_ADS7066" : "not supported");
+
+	shell_print(shell, "* ASIC_TYPE:      (0x%02X)%s", asic_type,
+		    (asic_type == ASIC_TYPE_QCP1) ? "ASIC_TYPE_QCP1" :
+		    (asic_type == ASIC_TYPE_QCP2) ? "ASIC_TYPE_QCP2" : "not supported");
 	
 	shell_print(shell, "* I2C connection for MEDHA0/1 to MMC: Enable");
 	return;

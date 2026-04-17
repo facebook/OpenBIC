@@ -981,12 +981,22 @@ bool bootstrap_default_settings_init(void)
 			HAMSA_LS_STRAP_0 = 0x0
 			MEDHA0_CHIP_STRAP_0 = 0x0
 			MEDHA1_CHIP_STRAP_0 = 0x0
+
+		ASIC_TYPE_QCP1:
+			HAMSA_MFIO9 = 1
+			HAMSA_MFIO18 = 1
+		ASIC_TYPE_QCP2:
+			HAMSA_MFIO9 = 0
+			HAMSA_MFIO18 = 0
 		*/
 		uint8_t asic_board_id = get_asic_board_id();
 		uint8_t rev_id = get_board_rev_id();
+		uint8_t asic_type = get_asic_type();
 		uint8_t hamsa_ls_strap_defauilt_setting = 0;
 		uint8_t medha0_chip_strap_defauilt_setting = 0;
 		uint8_t medha1_chip_strap_defauilt_setting = 0;
+		uint8_t hamsa_mfio9_strap_defauilt_setting = 0;
+		uint8_t hamsa_mfio18_strap_defauilt_setting = 0;
 		if (asic_board_id == ASIC_BOARD_ID_RAINBOW) {
 			if (rev_id <= REV_ID_EVT2) {
 				hamsa_ls_strap_defauilt_setting = 0x1;
@@ -998,6 +1008,15 @@ bool bootstrap_default_settings_init(void)
 				medha1_chip_strap_defauilt_setting = 0x0;
 			}
 		}
+
+		if (asic_type == ASIC_TYPE_QCP2) {
+			hamsa_mfio9_strap_defauilt_setting = 0x0;
+			hamsa_mfio18_strap_defauilt_setting = 0x0;
+		} else {
+			hamsa_mfio9_strap_defauilt_setting = 0x1;
+			hamsa_mfio18_strap_defauilt_setting = 0x1;
+		}
+
 		if (bootstrap_table[i].index == STRAP_INDEX_HAMSA_LS_STRAP_0) {
 			bootstrap_table[i].default_setting_value = hamsa_ls_strap_defauilt_setting;
 			if (!set_cpld_bit(bootstrap_table[i].cpld_offsets,
@@ -1025,6 +1044,28 @@ bool bootstrap_default_settings_init(void)
 					  bootstrap_table[i].bit_offset,
 					  bootstrap_table[i].default_setting_value)) {
 				LOG_ERR("Failed to set cpld bit for MEDHA1_CHIP_STRAP_0");
+				return false;
+			}
+		}
+
+		if (bootstrap_table[i].index == STRAP_INDEX_HAMSA_MFIO9) {
+			bootstrap_table[i].default_setting_value =
+				hamsa_mfio9_strap_defauilt_setting;
+			if (!set_cpld_bit(bootstrap_table[i].cpld_offsets,
+					  bootstrap_table[i].bit_offset,
+					  bootstrap_table[i].default_setting_value)) {
+				LOG_ERR("Failed to set cpld bit for HAMSA_MFIO9");
+				return false;
+			}
+		}
+
+		if (bootstrap_table[i].index == STRAP_INDEX_HAMSA_MFIO18) {
+			bootstrap_table[i].default_setting_value =
+				hamsa_mfio18_strap_defauilt_setting;
+			if (!set_cpld_bit(bootstrap_table[i].cpld_offsets,
+					  bootstrap_table[i].bit_offset,
+					  bootstrap_table[i].default_setting_value)) {
+				LOG_ERR("Failed to set cpld bit for HAMSA_MFIO18");
 				return false;
 			}
 		}
