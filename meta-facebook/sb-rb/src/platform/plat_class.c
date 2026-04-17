@@ -31,7 +31,6 @@ LOG_MODULE_REGISTER(plat_class);
 
 static uint8_t vr_module = VR_MODULE_UNKNOWN;
 static uint8_t ubc_module = UBC_MODULE_UNKNOWN;
-static uint8_t tmp_module = TMP_TMP432;
 static uint8_t vr_vendor_module = VENDOR_TYPE_UNKNOWN;
 static uint8_t mmc_slot = 0;
 static uint8_t asic_board_id = 0;
@@ -230,8 +229,9 @@ void pal_show_board_types(const struct shell *shell)
 		    (vr_module == VR_MODULE_RNS) ? "VR_RNS_RAA229140_RAA228249" :
 						   "not supported");
 
-	shell_print(shell, "* TMP_TYPE:      (0x%02X)%s", tmp_module,
-		    (tmp_module == TMP_TMP432) ? "TMP_TMP75_TMP432" : "not supported");
+	shell_print(shell, "* TMP_TYPE:      (0x%02X)%s", tmp_type,
+		    (tmp_type == TMP_TMP432) ? "TMP_TMP75_TMP432" :
+			(tmp_type == TMP_EMC1413) ? "TMP_TMP75_EMC1413" : "not supported");
 
 	shell_print(shell, "* ADC_TYPE:      (0x%02X)%s", adc_type,
 		    (adc_type == ADI_AD4058) ? "ADI_AD4058" :
