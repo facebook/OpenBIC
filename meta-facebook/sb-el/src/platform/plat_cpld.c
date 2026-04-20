@@ -9,6 +9,8 @@
 #include "plat_kernel_obj.h"
 #include "plat_led.h"
 #include <logging/log.h>
+#include "plat_ioexp.h"
+#include "plat_class.h"
 
 #define CPLD_ADDR (0x4C >> 1)
 #define I2C_BUS_CPLD I2C_BUS11
@@ -288,6 +290,70 @@ void plat_poll_cpld_info_table(void){
 	}
 }
 
+static void plat_sync_asic_reset_status_to_ioexp(void)
+{
+	static uint8_t prev_asic_rst = 0xFF;
+	uint8_t asic_rst = 0;
+
+	if (get_asic_board_id() != ASIC_BOARD_ID_EVB) {
+		return;
+	}
+
+	if (!plat_read_cpld(CPLD_ASIC_RESET_STATUS_REG, &asic_rst, 1)) {
+		LOG_ERR("Failed to read CPLD_ASIC_RESET_STATUS_REG (0x%02X)",
+			CPLD_ASIC_RESET_STATUS_REG);
+		return;
+	}
+
+	if (asic_rst == prev_asic_rst) {
+		return;
+	}
+
+	LOG_DBG("ASIC reset status changed: 0x%02X -> 0x%02X",
+		prev_asic_rst, asic_rst);
+	prev_asic_rst = asic_rst;
+
+	uint8_t hamsa_pwron = (asic_rst >> 5) & 0x1;   /* HAMSA_POWER_ON_RESET_PLD_L */
+	uint8_t medha0_pwron = (asic_rst >> 4) & 0x1;  /* MEDHA0_POWER_ON_RESET_PLD_L */
+	uint8_t medha1_pwron = (asic_rst >> 3) & 0x1;  /* MEDHA1_POWER_ON_RESET_PLD_L */
+	uint8_t hamsa_sys_rst = (asic_rst >> 2) & 0x1; /* HAMSA_SYS_RST_PLD_L */
+	uint8_t medha0_sys_rst = (asic_rst >> 1) & 0x1;/* MEDHA0_SYS_RST_PLD_L */
+	uint8_t medha1_sys_rst = (asic_rst >> 0) & 0x1;/* MEDHA1_SYS_RST_PLD_L */
+
+	/* U200070: io0~2 <- bit5~3 */
+	uint8_t new_070 = U200070_IO_INIT_VAL;
+	new_070 &= ~(BIT(0) | BIT(1) | BIT(2));
+	new_070 |= (hamsa_pwron << 0);
+	new_070 |= (medha0_pwron << 1);
+	new_070 |= (medha1_pwron << 2);
+
+	set_pca6554apw_ioe_value(U200070_IO_I2C_BUS, U200070_IO_ADDR,
+				 OUTPUT_PORT, new_070);
+	LOG_DBG("Update U200070 OUTPUT_PORT: 0x%02X -> 0x%02X",
+		U200070_IO_INIT_VAL, new_070);
+
+	/* U200053: bit2 -> io6 */
+	uint8_t new_053 = U200053_IO_INIT_VAL;
+	new_053 &= ~BIT(6);
+	new_053 |= (hamsa_sys_rst << 6);
+
+	set_pca6554apw_ioe_value(U200053_IO_I2C_BUS, U200053_IO_ADDR,
+				 OUTPUT_PORT, new_053);
+	LOG_DBG("Update U200053 OUTPUT_PORT: 0x%02X -> 0x%02X",
+		U200053_IO_INIT_VAL, new_053);
+
+	/* U200052: bit1/bit0 -> io6/io7 */
+	uint8_t new_052 = U200052_IO_INIT_VAL;
+	new_052 &= ~(BIT(6) | BIT(7));
+	new_052 |= (medha0_sys_rst << 6);
+	new_052 |= (medha1_sys_rst << 7);
+
+	set_pca6554apw_ioe_value(U200052_IO_I2C_BUS, U200052_IO_ADDR,
+				 OUTPUT_PORT, new_052);
+	LOG_DBG("Update U200052 OUTPUT_PORT: 0x%02X -> 0x%02X",
+		U200052_IO_INIT_VAL, new_052);
+}
+
 void plat_poll_cpld_registers()
 {
 	// Note: cpld_polling_alert_status is abort due to the trigger mechanism change
@@ -300,6 +366,10 @@ void plat_poll_cpld_registers()
 
 		plat_get_pdb1_pwr_from_bmc();
 		plat_poll_cpld_info_table();
+		if (get_asic_board_id() == ASIC_BOARD_ID_EVB){
+			plat_sync_asic_reset_status_to_ioexp();
+		}
+
 	}
 }
 

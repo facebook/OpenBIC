@@ -26,7 +26,7 @@ LOG_MODULE_REGISTER(plat_kernel);
 
 /* semaphore CPLD polling semaphore */
 K_TIMER_DEFINE(ragular_cpld_polling_sem_timer, plat_ragular_cpld_polling_sem_handler, NULL);
-static struct k_sem cpld_polling_sem;
+static struct k_sem cpld_polling_sem; // "all_vr_pm_alert_sem" in rainbow
 
 /* mutex for pwrlevel */
 static struct k_mutex pwrlevel_mutex;
