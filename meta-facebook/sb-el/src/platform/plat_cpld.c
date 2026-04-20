@@ -354,6 +354,58 @@ static void plat_sync_asic_reset_status_to_ioexp(void)
 		U200052_IO_INIT_VAL, new_052);
 }
 
+static void plat_sync_osfp_p3v3_enable_by_pwrgd(void)
+{
+	uint8_t pwrgd_value = 0;
+	uint8_t en_value = 0;
+	int ret = 0;
+
+	if (get_asic_board_id() != ASIC_BOARD_ID_EVB) {
+		return;
+	}
+
+	/* Read U200052 io0~io5: PWRGD_P3V3_P1~P6 */
+	ret = get_pca6554apw_ioe_value(U200052_IO_I2C_BUS, U200052_IO_ADDR,
+				       INPUT_PORT, &pwrgd_value);
+	if (ret != 0) {
+		LOG_ERR("Failed to read U200052 INPUT_PORT");
+		return;
+	}
+
+	/* Read current U200051 output value */
+	ret = get_pca6554apw_ioe_value(U200051_IO_I2C_BUS, U200051_IO_ADDR,
+				       OUTPUT_PORT, &en_value);
+	if (ret != 0) {
+		LOG_ERR("Failed to read U200051 OUTPUT_PORT");
+		return;
+	}
+
+	uint8_t new_en_value = en_value;
+
+	/*
+	 * U200052 io0~io5 : PWRGD_P3V3_P1~P6
+	 * U200051 io0~io5 : FM_P3V3_P1~P6_EN
+	 *
+	 * PWRGD high -> disable EN
+	 * PWRGD low  -> enable EN
+	 */
+	for (int i = 0; i < 6; i++) {
+		if ((pwrgd_value >> i) & 0x1) {
+			new_en_value &= ~BIT(i);
+		} else {
+			new_en_value |= BIT(i);
+		}
+	}
+
+	if (new_en_value != en_value) {
+		set_pca6554apw_ioe_value(U200051_IO_I2C_BUS, U200051_IO_ADDR,
+					 OUTPUT_PORT, new_en_value);
+
+		LOG_DBG("Update U200051 OUTPUT_PORT: 0x%02X -> 0x%02X (U200052 PWRGD=0x%02X)",
+			en_value, new_en_value, pwrgd_value);
+	}
+}
+
 void plat_poll_cpld_registers()
 {
 	// Note: cpld_polling_alert_status is abort due to the trigger mechanism change
@@ -368,6 +420,7 @@ void plat_poll_cpld_registers()
 		plat_poll_cpld_info_table();
 		if (get_asic_board_id() == ASIC_BOARD_ID_EVB){
 			plat_sync_asic_reset_status_to_ioexp();
+			plat_sync_osfp_p3v3_enable_by_pwrgd();
 		}
 
 	}
