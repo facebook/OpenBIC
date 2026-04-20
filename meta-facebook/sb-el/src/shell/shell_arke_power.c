@@ -389,7 +389,7 @@ void power_on_p3v3_osfp()
 {
 	uint8_t write_data = 0;
 	uint8_t check_value = 0;
-	k_msleep(1000);
+	k_msleep(1500);
 	for (int i = 0; i < sizeof(ioe_pwr_on_table) / sizeof(ioe_pwr_on_table[0]); i++) {
 		// set
 		write_data |= BIT(ioe_pwr_on_table[i].bit_loc);
@@ -560,7 +560,7 @@ void cmd_arke_power_on(const struct shell *shell, size_t argc, char **argv)
 	if (!arke_power_control(1))
 		shell_warn(shell, "arke power on set cpld fail!");
 	// wait 1s
-	k_msleep(1000);
+	k_msleep(1500);
 	if (gpio_get(RST_ARKE_PWR_ON_PLD_R1_N) == GPIO_HIGH) {
 		shell_print(shell, "arke power on success!");
 		set_pwr_steps_on_flag(0);
@@ -575,7 +575,7 @@ void cmd_arke_power_off(const struct shell *shell, size_t argc, char **argv)
 	if (!arke_power_control(0))
 		shell_warn(shell, "arke power off set cpld fail!");
 	// wait 1s
-	k_msleep(1000);
+	k_msleep(1500);
 	if (gpio_get(FM_PLD_UBC_EN_R) == GPIO_LOW) {
 		shell_print(shell, "arke power off success!");
 	} else {
