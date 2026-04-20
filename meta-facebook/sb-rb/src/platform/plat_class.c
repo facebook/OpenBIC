@@ -26,17 +26,19 @@
 #include "plat_util.h"
 #include "plat_mctp.h"
 #include "plat_hook.h"
+#include "plat_gpio.h"
 
 LOG_MODULE_REGISTER(plat_class);
 
 static uint8_t vr_module = VR_MODULE_UNKNOWN;
 static uint8_t ubc_module = UBC_MODULE_UNKNOWN;
-static uint8_t tmp_module = TMP_TMP432;
 static uint8_t vr_vendor_module = VENDOR_TYPE_UNKNOWN;
 static uint8_t mmc_slot = 0;
 static uint8_t asic_board_id = 0;
 static uint8_t tray_location = 0;
 static uint8_t board_rev_id = 0;
+static uint8_t tmp_type = TMP_TYPE_UNKNOWN;
+static uint8_t asic_type = ASIC_TYPE_UNKNOWN;
 
 bool plat_cpld_eerprom_read(uint8_t *data, uint16_t offset, uint8_t len)
 {
@@ -99,6 +101,46 @@ void init_vr_vendor_module(void)
 	LOG_INF("vr_vendor_module=%d (ubc=%d, vr=%d)", vr_vendor_module, ubc_module, vr_module);
 }
 
+void init_tmp_type()
+{
+	I2C_MSG i2c_msg = { 0 };
+	uint8_t retry = 5;
+	i2c_msg.bus = I2C_BUS3;
+	i2c_msg.target_addr = ASIC_MEDHA0_SENSOR0_ADDR; //tmp sensor address
+	i2c_msg.tx_len = 1;
+	i2c_msg.rx_len = 1;
+	i2c_msg.data[0] = 0xFE; //MFG ID REG
+
+	if (i2c_master_read(&i2c_msg, retry)) {
+		LOG_INF("Assume TMP is EMC1413 by address check");
+		tmp_type = TMP_EMC1413;
+		return;
+	} else {
+		LOG_INF("Assume TMP is TMP432 by register check");
+		tmp_type = TMP_TMP432;
+		return;
+	}
+}
+
+void init_asic_type()
+{
+	uint8_t rev_id = get_board_rev_id();
+	if (rev_id <= REV_ID_DVT_FAB3) {
+		asic_type = ASIC_TYPE_QCP1;
+	} else {
+		// after FAB3: gpio ASIC_TYPE_ID1 and ASIC_TYPE_ID0: 01: qcp1, 10: qcp2
+		if (gpio_get(ASIC_TYPE_ID1) == GPIO_LOW && gpio_get(ASIC_TYPE_ID0) == GPIO_HIGH) {
+			asic_type = ASIC_TYPE_QCP1;
+		} else if (gpio_get(ASIC_TYPE_ID1) == GPIO_HIGH &&
+			   gpio_get(ASIC_TYPE_ID0) == GPIO_LOW) {
+			asic_type = ASIC_TYPE_QCP2;
+		} else {
+			asic_type = ASIC_TYPE_UNKNOWN;
+		}
+	}
+	return;
+}
+
 void init_plat_config()
 {
 	uint8_t module = 0;
@@ -113,6 +155,9 @@ void init_plat_config()
 	asic_board_id = board_id & 0x03;
 	init_vr_vendor_module();
 	change_sensor_cfg(asic_board_id, vr_module, ubc_module, board_rev_id);
+	// check temp sensor
+	init_tmp_type();
+	check_temp_sensor(tmp_type);
 	// cpld fru offset 0: slot
 	plat_cpld_eerprom_read(&mmc_slot, 0, 1);
 	// mmc slot 1-4 * 0x0A
@@ -121,6 +166,7 @@ void init_plat_config()
 	// cpld fru offset 0x3FF: tray location
 	plat_cpld_eerprom_read(&tray_location, 1023, 1);
 	set_delta_ubc_time_of_vout_rise();
+	init_asic_type();
 	LOG_INF("init_plat_eid: 0x%x", init_plat_eid);
 }
 
@@ -154,6 +200,11 @@ uint8_t get_tray_location()
 	return tray_location;
 }
 
+uint8_t get_asic_type()
+{
+	return asic_type;
+}
+
 // clang-format off
 
 void pal_show_board_types(const struct shell *shell)
@@ -171,18 +222,20 @@ void pal_show_board_types(const struct shell *shell)
 			    (board_rev_id == REV_ID_EVT1A) ? "REV_ID_EVT1A" :
 			    (board_rev_id == REV_ID_EVT1B) ? "REV_ID_EVT1B" :
 			    (board_rev_id == REV_ID_EVT2)  ? "REV_ID_EVT2" :
-			    (board_rev_id == REV_ID_DVT)   ? "REV_ID_DVT" :
-			    (board_rev_id == REV_ID_PVT)   ? "REV_ID_PVT" :
-			    (board_rev_id == REV_ID_MP)	   ? "REV_ID_MP" :
+			    (board_rev_id == REV_ID_DVT_FAB3)   ? "REV_ID_DVT_FAB3" :
+			    (board_rev_id == REV_ID_DVT_FAB4)   ? "REV_ID_DVT_FAB4" :
+			    (board_rev_id == REV_ID_PVT)	   ? "REV_ID_PVT" :
+				(board_rev_id == REV_ID_MP)	   ? "REV_ID_MP" :
 							     "not supported");
 	} else if (asic_board_id == ASIC_BOARD_ID_RAINBOW) {
 		shell_print(shell, "* BOARD_STAGE:   (0x%02X)%s", board_rev_id,
 			    (board_rev_id == REV_ID_EVT1A) ? "REV_ID_EVT1A" :
 			    (board_rev_id == REV_ID_EVT1B) ? "REV_ID_EVT1B" :
 			    (board_rev_id == REV_ID_EVT2)  ? "REV_ID_EVT2" :
-			    (board_rev_id == REV_ID_DVT)   ? "REV_ID_DVT" :
-			    (board_rev_id == REV_ID_PVT)   ? "REV_ID_PVT" :
-			    (board_rev_id == REV_ID_MP)	   ? "REV_ID_MP" :
+			    (board_rev_id == REV_ID_DVT_FAB3)   ? "REV_ID_DVT_FAB3" :
+			    (board_rev_id == REV_ID_DVT_FAB4)   ? "REV_ID_DVT_FAB4" :
+			    (board_rev_id == REV_ID_PVT)	   ? "REV_ID_PVT" :
+				(board_rev_id == REV_ID_MP)	   ? "REV_ID_MP" :
 							     "not supported");
 	}
 
@@ -205,12 +258,17 @@ void pal_show_board_types(const struct shell *shell)
 		    (vr_module == VR_MODULE_RNS) ? "VR_RNS_RAA229140_RAA228249" :
 						   "not supported");
 
-	shell_print(shell, "* TMP_TYPE:      (0x%02X)%s", tmp_module,
-		    (tmp_module == TMP_TMP432) ? "TMP_TMP75_TMP432" : "not supported");
+	shell_print(shell, "* TMP_TYPE:      (0x%02X)%s", tmp_type,
+		    (tmp_type == TMP_TMP432) ? "TMP_TMP75_TMP432" :
+			(tmp_type == TMP_EMC1413) ? "TMP_TMP75_EMC1413" : "not supported");
 
 	shell_print(shell, "* ADC_TYPE:      (0x%02X)%s", adc_type,
 		    (adc_type == ADI_AD4058) ? "ADI_AD4058" :
 		    (adc_type == TIC_ADS7066) ? "TI_ADS7066" : "not supported");
+
+	shell_print(shell, "* ASIC_TYPE:      (0x%02X)%s", asic_type,
+		    (asic_type == ASIC_TYPE_QCP1) ? "ASIC_TYPE_QCP1" :
+		    (asic_type == ASIC_TYPE_QCP2) ? "ASIC_TYPE_QCP2" : "not supported");
 	
 	shell_print(shell, "* I2C connection for MEDHA0/1 to MMC: Enable");
 	return;
