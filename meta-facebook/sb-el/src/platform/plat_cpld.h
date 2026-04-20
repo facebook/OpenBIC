@@ -36,6 +36,7 @@
 #define VR_4_EN 0x42
 #define VR_AND_CLK_EN_PIN_CTRL 0xA1 // pin control (1-step only)
 #define VR_1STEP_FUNC_EN_REG 0xA9
+#define CPLD_ERRROR_INJECT 0x3D //debug only
 
 // CPLD power good status registers
 #define VR_PWRGD_PIN_READING_1_REG 0x07

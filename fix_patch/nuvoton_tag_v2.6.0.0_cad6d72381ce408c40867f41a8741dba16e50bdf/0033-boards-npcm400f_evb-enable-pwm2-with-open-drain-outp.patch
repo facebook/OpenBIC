@@ -1,12 +1,15 @@
 From f36b99df19e47e49d451298277b47a4b5f5f86e3 Mon Sep 17 00:00:00 2001
 From: Tim Lee <chli30@nuvoton.com>
 Date: Fri, 13 Mar 2026 16:53:36 +0800
-Subject: [PATCH] boards: npcm400f_evb: enable pwm2 with open-drain output
+Subject: [PATCH] boards/soc: npcm400f_evb: enable pwm2 with open-drain
+ output and add PWM2 pinmux signal
 
 Enable PWM2 node with open-drain output mode support
 ---
+ boards/arm/npcm400f_evb/fun_def_list.h  | 4 ++++
  boards/arm/npcm400f_evb/npcm400f_evb.dts | 7 +++++++
- 1 file changed, 7 insertions(+)
+ soc/arm/npcm4xx/npcm400f/sig_def_list.h  | 5 +++++
+ 3 files changed, 16 insertions(+)
 
 diff --git a/boards/arm/npcm400f_evb/npcm400f_evb.dts b/boards/arm/npcm400f_evb/npcm400f_evb.dts
 index df6329de13..ce98f80223 100644
@@ -26,6 +29,37 @@ index df6329de13..ce98f80223 100644
  &pwm4 {
  	pinctrl-0 = <&pinctrl_pwm4_default>;
  	pinctrl-names = "default";
+diff --git a/boards/arm/npcm400f_evb/fun_def_list.h b/boards/arm/npcm400f_evb/fun_def_list.h
+index 8a1b2c3d4e..f5e6a7b8c9 100644
+--- a/boards/arm/npcm400f_evb/fun_def_list.h
++++ b/boards/arm/npcm400f_evb/fun_def_list.h
+@@ -137,6 +137,10 @@ FUN_DEFINE(DT_NODELABEL(pinctrl_pwm1_default), PWM1)
+ FUN_DEFINE(DT_NODELABEL(pinctrl_pwm1_default), PWM1)
+ #endif
+ 
++#if DT_NODE_HAS_STATUS(DT_NODELABEL(pwm2), okay) && CONFIG_PWM_NPCM
++FUN_DEFINE(DT_NODELABEL(pinctrl_pwm2_default), PWM2)
++#endif
++
+ #if DT_NODE_HAS_STATUS(DT_NODELABEL(pwm4), okay) && CONFIG_PWM_NPCM
+ FUN_DEFINE(DT_NODELABEL(pinctrl_pwm4_default), PWM4)
+ #endif
+diff --git a/soc/arm/npcm4xx/npcm400f/sig_def_list.h b/soc/arm/npcm4xx/npcm400f/sig_def_list.h
+index a0904a2a51..b73c1f8d22 100644
+--- a/soc/arm/npcm4xx/npcm400f/sig_def_list.h
++++ b/soc/arm/npcm4xx/npcm400f/sig_def_list.h
+@@ -280,6 +280,11 @@ #if DT_NODE_HAS_STATUS(DT_NODELABEL(pwm1), okay) && CONFIG_PWM_NPCM
+ SIG_DEFINE(PWM1, E1, SIG_DESC_SET(0x14, 3))
+ #endif
+ 
++#if DT_NODE_HAS_STATUS(DT_NODELABEL(pwm2), okay) && CONFIG_PWM_NPCM
++/* DEVALT4 - PWM2 signal on GPIO36 */
++SIG_DEFINE(PWM2, L7, SIG_DESC_SET(0x14, 4))
++#endif
++
+ #if DT_NODE_HAS_STATUS(DT_NODELABEL(pwm4), okay) && CONFIG_PWM_NPCM
+ /* DEVALT4 - PWM4 signal on GPIOA0 */
+ SIG_DEFINE(PWM4, C5, SIG_DESC_SET(0x14, 6))
 -- 
 2.34.1
 

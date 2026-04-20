@@ -69,7 +69,7 @@ void pal_post_init()
 	plat_adc_electra_init();
 	plat_power_capping_init();
 	init_load_eeprom_log();
-	if (get_asic_board_id() == ASIC_BOARD_ID_EVB && get_board_rev_id() >= REV_ID_EVT1B) {
+	if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
 		// if board id >= EVB EVT1B(FAB2)
 		quick_sensor_poll_init();
 		init_U200052_IO();

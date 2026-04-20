@@ -39,8 +39,8 @@ enum power_good_status_type_for_steps_on {
 	PWRGD_HAMSA_AVDD_PCIE_R,
 	PWRGD_HAMSA_VDDHRXTX_PCIE_R,
 	//VR Power Good pin reading(0x08)
-	PWRGD_MEDHA1_VDD,
-	PWRGD_MEDHA0_VDD,
+	PWRGD_NUWA1_VDD,
+	PWRGD_NUWA0_VDD,
 	PWRGD_OWL_E_VDD_R,
 	PWRGD_OWL_W_VDD_R,
 	PWRGD_HAMSA_VDD_R,
@@ -94,8 +94,8 @@ power_good_status power_good_status_table_for_steps_on[] = {
 	{ PWRGD_HAMSA_VDDHRXTX_PCIE_R, 0, VR_PWRGD_PIN_READING_1_REG,
 	  "PWRGD_HAMSA_VDDHRXTX_PCIE_R" },
 	// VR Power Good pin reading(0x08)
-	{ PWRGD_MEDHA1_VDD, 7, VR_PWRGD_PIN_READING_2_REG, "PWRGD_MEDHA1_VDD" },
-	{ PWRGD_MEDHA0_VDD, 6, VR_PWRGD_PIN_READING_2_REG, "PWRGD_MEDHA0_VDD" },
+	{ PWRGD_NUWA1_VDD, 7, VR_PWRGD_PIN_READING_2_REG, "PWRGD_NUWA1_VDD" },
+	{ PWRGD_NUWA0_VDD, 6, VR_PWRGD_PIN_READING_2_REG, "PWRGD_NUWA0_VDD" },
 	{ PWRGD_OWL_E_VDD_R, 5, VR_PWRGD_PIN_READING_2_REG, "PWRGD_OWL_E_VDD_R" },
 	{ PWRGD_OWL_W_VDD_R, 4, VR_PWRGD_PIN_READING_2_REG, "PWRGD_OWL_W_VDD_R" },
 	{ PWRGD_HAMSA_VDD_R, 3, VR_PWRGD_PIN_READING_2_REG, "PWRGD_HAMSA_VDD_R" },
@@ -161,8 +161,8 @@ static steps_on_struct steps_on[] = {
 	{ 1, VR_4_EN, 4, "FM_P1V80_EN", PWRGD_P1V8_R }, //FM_P1V80_EN
 	{ 1, VR_3_EN, 0, "FM_AVDD_HCSL_EN", PWRGD_P0V75_AVDD_HCSL }, //FM_AVDD_HCSL_EN
 	{ 1, VR_1_EN, 3, "FM_HAMSA_VDD_EN", PWRGD_HAMSA_VDD_R }, //FM_HAMSA_VDD_EN
-	{ 1, VR_1_EN, 7, "MEDHA1_VDD_EN", PWRGD_MEDHA1_VDD }, //MEDHA1_VDD_EN
-	{ 1, VR_1_EN, 6, "FM_MEDHA0_VDD_EN", PWRGD_MEDHA0_VDD }, //FM_MEDHA0_VDD_EN
+	{ 1, VR_1_EN, 7, "NUWA1_VDD_EN", PWRGD_NUWA1_VDD }, //NUWA1_VDD_EN
+	{ 1, VR_1_EN, 6, "FM_NUWA0_VDD_EN", PWRGD_NUWA0_VDD }, //FM_NUWA0_VDD_EN
 	{ 1, VR_1_EN, 5, "FM_OWL_E_VDD_EN", PWRGD_OWL_E_VDD_R }, //FM_OWL_E_VDD_EN
 	{ 1, VR_1_EN, 4, "FM_OWL_W_VDD_EN", PWRGD_OWL_W_VDD_R }, //FM_OWL_W_VDD_EN
 	{ 1, VR_1_EN, 1, "FM_MAX_M_VDD_EN", PWRGD_MAX_M_VDD_R }, //FM_MAX_M_VDD_EN
@@ -176,6 +176,10 @@ static steps_on_struct steps_on[] = {
 	  PWRGD_VDDPHY_HBM0_HBM2_HBM4_HBM6_R }, //FM_VDDPHY_HBM0_HBM2_HBM4_HBM6_EN
 	{ 1, VR_2_EN, 0, "FM_VDDPHY_HBM1_HBM3_HBM5_HBM7_EN",
 	  PWRGD_VDDPHY_HBM1_HBM3_HBM5_HBM7_R }, //FM_VDDPHY_HBM1_HBM3_HBM5_HBM7_EN
+	{ 1, CPLD_ERRROR_INJECT, 1, "FM_P1V2_PLL_VDDA_OWL_EN",
+	  NO_DEFINED }, //FM_P1V2_PLL_VDDA_OWL_EN
+	{ 1, CPLD_ERRROR_INJECT, 0, "FM_P1V2_PLL_VDDA_SOC_EN",
+	  NO_DEFINED }, //FM_P1V2_PLL_VDDA_SOC_EN
 	{ 1, VR_4_EN, 1, "FM_P1V5_PLL_VDDA_OWL_EN",
 	  PWRGD_P1V5_PLL_VDDA_OWL_E }, //FM_P1V5_PLL_VDDA_OWL_EN
 	{ 1, VR_4_EN, 0, "FM_P1V5_PLL_VDDA_SOC_EN",
@@ -202,6 +206,10 @@ static steps_on_struct steps_on[] = {
 	  PWRGD_VDDQC_HBM0_HBM2_HBM4_HBM6_R }, //FM_VDDQC_HBM0_HBM2_HBM4_HBM6_EN
 	{ 1, VR_2_EN, 2, "FM_VDDQC_HBM1_HBM3_HBM5_HBM7_EN",
 	  PWRGD_VDDQC_HBM1_HBM3_HBM5_HBM7_R }, //FM_VDDQC_HBM1_HBM3_HBM5_HBM7_EN
+	{ 1, CPLD_ERRROR_INJECT, 3, "FM_VDDQQ_HBM0_HBM2_HBM4_HBM6_EN",
+	  NO_DEFINED }, //FM_VDDQ_HBM0_HBM2_HBM4_HBM6_EN
+	{ 1, CPLD_ERRROR_INJECT, 2, "FM_VDDQQ_HBM1_HBM3_HBM5_HBM7_EN",
+	  NO_DEFINED }, //FM_VDDQ_HBM1_HBM3_HBM5_HBM7_EN
 	{ 1, VR_2_EN, 7, "FM_VDDQL_HBM0_HBM2_HBM4_HBM6_EN",
 	  PWRGD_VDDQL_HBM0_HBM2_HBM4_HBM6_R }, //FM_VDDQL_HBM0_HBM2_HBM4_HBM6_EN
 	{ 1, VR_2_EN, 3, "FM_VDDQL_HBM1_HBM3_HBM5_HBM7_EN",
@@ -426,13 +434,7 @@ void pwer_gd_get_status(const struct shell *shell)
 	for (int i = 0; i < sizeof(ioe_pwrgd_status_table) / sizeof(ioe_pwrgd_status_table[0]);
 	     i++) {
 		uint8_t tmp_value = (check_value >> i) & 0x01;
-		if (tmp_value) {
-			shell_print(shell, "%s : %d", ioe_pwrgd_status_table[i].ioe_pwrgd_name,
-				    tmp_value);
-		} else {
-			shell_print(shell, "%s : %d", ioe_pwrgd_status_table[i].ioe_pwrgd_name,
-				    tmp_value);
-		}
+		shell_print(shell, "%s : %d", ioe_pwrgd_status_table[i].ioe_pwrgd_name, tmp_value);
 	}
 }
 void steps_on_p3v3_osfp(const struct shell *shell)
