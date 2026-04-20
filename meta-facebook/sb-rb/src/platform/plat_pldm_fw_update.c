@@ -51,7 +51,7 @@ static bool get_boot0_hamsa_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 static bool get_boot0_medha0_fw_version(void *info_p, uint8_t *buf, uint8_t *len);
 static bool get_boot0_medha1_fw_version(void *info_p, uint8_t *buf, uint8_t *len);
 
-static uint32_t crc_boot0[3] = { 0 };
+static uint32_t crc_boot0[BOOT0_MAX] = { 0 };
 static uint32_t version_boot0[BOOT0_MAX] = { 0 };
 const struct device *i2c_dev;
 uint8_t slave_id = HAMSA_BOOT1_ADDR;
@@ -169,15 +169,6 @@ uint8_t pldm_mtia_flash_update(void *fw_update_param)
 	CHECK_NULL_ARG_WITH_RETURN(fw_update_param, 1);
 
 	return pldm_fw_update(fw_update_param, DEVSPI_SPI1_CS1);
-}
-
-uint32_t plat_get_image_crc_checksum(uint8_t index)
-{
-	if (index >= BOOT0_MAX) {
-		return 0;
-	} else {
-		return crc_boot0[index];
-	}
 }
 
 uint32_t plat_get_image_version(uint8_t index)

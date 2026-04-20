@@ -33,13 +33,13 @@ static int cmd_temp_status_get(const struct shell *shell, size_t argc, char **ar
 	}
 
 	uint8_t temp_status = 0xFF;
-	uint8_t *name = argv[1];
+	uint8_t const *name = argv[1];
 	uint8_t rail = 0;
 	for (int i = 0; i < TEMP_INDEX_MAX; i++) {
 		if (strcmp(name, temp_index_table[i].sensor_name) == 0 ||
 		    strcmp(name, "all") == 0) {
 			rail = temp_index_table[i].index;
-			sensor_cfg *temp_cfg =
+			const sensor_cfg *temp_cfg =
 				get_sensor_cfg_by_sensor_id(temp_index_table[i].sensor_id);
 			if (!plat_get_temp_status(rail, &temp_status)) {
 				shell_error(shell, "Can't find temp status by rail index: %x",
