@@ -418,7 +418,7 @@ void plat_poll_cpld_registers()
 
 		plat_get_pdb1_pwr_from_bmc();
 		plat_poll_cpld_info_table();
-		if (get_asic_board_id() == ASIC_BOARD_ID_EVB){
+		if (get_asic_board_id() == ASIC_BOARD_ID_EVB  && is_mb_dc_on()){
 			plat_sync_asic_reset_status_to_ioexp();
 			plat_sync_osfp_p3v3_enable_by_pwrgd();
 		}
