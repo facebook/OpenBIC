@@ -1,0 +1,40 @@
+From 26550f4f7abb890672f4d8eaaec7458dd90eb8d0 Mon Sep 17 00:00:00 2001
+From: Jim Liu <JJLIU0@nuvoton.com>
+Date: Mon, 20 Apr 2026 16:20:55 +0800
+Subject: [PATCH] i2c: npcm4xx: handle SLVSTP and NMATCH events in master ISR
+
+Without these handlers the master ISR ignores unexpected SLVSTP and NMATCH status bits,
+which can leave the bus in a stuck state.
+
+Signed-off-by: Jim Liu <JJLIU0@nuvoton.com>
+---
+ drivers/i2c/i2c_npcm4xx.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/drivers/i2c/i2c_npcm4xx.c b/drivers/i2c/i2c_npcm4xx.c
+index 67687b79e0..bf0cbb0b5a 100755
+--- a/drivers/i2c/i2c_npcm4xx.c
++++ b/drivers/i2c/i2c_npcm4xx.c
+@@ -502,6 +502,19 @@ static void i2c_npcm4xx_master_isr(const struct device *dev)
+ 	}
+ #endif
+ 
++	if (inst->SMBnST & BIT(NPCM4XX_SMBnST_SLVSTP)) {
++		data->master_oper_state = I2C_NPCM4XX_OPER_STA_IDLE;
++		i2c_npcm4xx_reset_module(dev);
++		i2c_npcm4xx_notify(dev, -EAGAIN);
++		inst->SMBnST = BIT(NPCM4XX_SMBnST_SLVSTP);
++	}
++
++	if (inst->SMBnST & BIT(NPCM4XX_SMBnST_NMATCH)) {
++		data->master_oper_state = I2C_NPCM4XX_OPER_STA_IDLE;
++		i2c_npcm4xx_nack(dev);
++		inst->SMBnST = BIT(NPCM4XX_SMBnST_NMATCH);
++	}
++
+ 	/* --------------------------------------------- */
+ 	/* NACK occurred                                 */
+ 	/* --------------------------------------------- */
+-- 
+2.34.1
+
