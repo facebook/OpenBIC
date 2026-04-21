@@ -164,7 +164,8 @@ static int cmd_clear_voltage_peak(const struct shell *shell, size_t argc, char *
 
 static void voltage_rname_get(size_t idx, struct shell_static_entry *entry)
 {
-	if ((get_asic_board_id() == ASIC_BOARD_ID_EVB))
+	if (((get_asic_board_id() != ASIC_BOARD_ID_EVB)) &&
+		    (idx == VR_RAIL_E_P3V3_OSFP_VOLT_V))
 		idx++;
 
 	uint8_t *name = NULL;
