@@ -128,14 +128,28 @@ void init_asic_type()
 	if (rev_id <= REV_ID_DVT_FAB3) {
 		asic_type = ASIC_TYPE_QCP1;
 	} else {
-		// after FAB3: gpio ASIC_TYPE_ID1 and ASIC_TYPE_ID0: 01: qcp1, 10: qcp2
-		if (gpio_get(ASIC_TYPE_ID1) == GPIO_LOW && gpio_get(ASIC_TYPE_ID0) == GPIO_HIGH) {
+		// after FAB3: gpio ASIC_TYPE_ID1 and ASIC_TYPE_ID0:
+		//00: QCP1, 01: QCP2 with SOTP, 10 : QCP2 without SOTP, 11: QCP3
+		uint8_t gpio_val = (gpio_get(ASIC_TYPE_ID1) << 1) | gpio_get(ASIC_TYPE_ID0);
+		LOG_INF("ASIC_TYPE_ID1: %d, ASIC_TYPE_ID0: %d, gpio_val: %d",
+			gpio_get(ASIC_TYPE_ID1), gpio_get(ASIC_TYPE_ID0), gpio_val);
+
+		switch (gpio_val) {
+		case 0x00:
 			asic_type = ASIC_TYPE_QCP1;
-		} else if (gpio_get(ASIC_TYPE_ID1) == GPIO_HIGH &&
-			   gpio_get(ASIC_TYPE_ID0) == GPIO_LOW) {
-			asic_type = ASIC_TYPE_QCP2;
-		} else {
+			break;
+		case 0x01:
+			asic_type = ASIC_TYPE_QCP2_WITH_SOTP;
+			break;
+		case 0x02:
+			asic_type = ASIC_TYPE_QCP2_WITHOUT_SOTP;
+			break;
+		case 0x03:
+			asic_type = ASIC_TYPE_QCP3;
+			break;
+		default:
 			asic_type = ASIC_TYPE_UNKNOWN;
+			break;
 		}
 	}
 	return;
@@ -268,7 +282,9 @@ void pal_show_board_types(const struct shell *shell)
 
 	shell_print(shell, "* ASIC_TYPE:      (0x%02X)%s", asic_type,
 		    (asic_type == ASIC_TYPE_QCP1) ? "ASIC_TYPE_QCP1" :
-		    (asic_type == ASIC_TYPE_QCP2) ? "ASIC_TYPE_QCP2" : "not supported");
+		    (asic_type == ASIC_TYPE_QCP2_WITH_SOTP) ? "ASIC_TYPE_QCP2_WITH_SOTP" : 
+			(asic_type == ASIC_TYPE_QCP2_WITHOUT_SOTP) ? "ASIC_TYPE_QCP2_WITHOUT_SOTP" : 
+			(asic_type == ASIC_TYPE_QCP3) ? "ASIC_TYPE_QCP3" : "not supported");
 	
 	shell_print(shell, "* I2C connection for MEDHA0/1 to MMC: Enable");
 	return;
