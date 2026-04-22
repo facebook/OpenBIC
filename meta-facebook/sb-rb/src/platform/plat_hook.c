@@ -983,10 +983,9 @@ bool bootstrap_default_settings_init(void)
 			MEDHA1_CHIP_STRAP_0 = 0x0
 
 		ASIC_TYPE_QCP1:
-		ASIC_TYPE_QCP2_WITHOUT_SOTP:
 			HAMSA_MFIO9 = 1
 			HAMSA_MFIO18 = 1
-		ASIC_TYPE_QCP2_WITH_SOTP:
+		ASIC_TYPE_QCP2:
 			HAMSA_MFIO9 = 0
 			HAMSA_MFIO18 = 0
 		*/
@@ -1010,7 +1009,7 @@ bool bootstrap_default_settings_init(void)
 			}
 		}
 
-		if (asic_type == ASIC_TYPE_QCP2_WITH_SOTP) {
+		if (asic_type == ASIC_TYPE_QCP2) {
 			hamsa_mfio9_strap_defauilt_setting = 0x0;
 			hamsa_mfio18_strap_defauilt_setting = 0x0;
 		} else {
