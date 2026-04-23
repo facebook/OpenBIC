@@ -1,0 +1,10 @@
+<map id="temp_threshold_user_settings_get" name="temp_threshold_user_settings_get">
+<area shape="rect" id="node1" title=" " alt="" coords="5,23,148,65"/>
+<area shape="rect" id="node2" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="525,5,643,32"/>
+<area shape="rect" id="node4" href="$aalc-rpu_2src_2platform_2plat__fru_8c.html#a84caf23c50d29935801d48317ea8ace8" title=" " alt="" coords="196,56,321,83"/>
+<area shape="rect" id="node3" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="871,31,1013,57"/>
+<area shape="rect" id="node5" href="$eeprom_8c.html#af84d506534770494cca55b2db24730ba" title=" " alt="" coords="369,56,467,83"/>
+<area shape="rect" id="node8" href="$fru_8c.html#a4694b8ef2f5e4e98917fc28fe989a2d9" title=" " alt="" coords="370,107,466,133"/>
+<area shape="rect" id="node6" href="$eeprom_8c.html#ac470cc411f066d8f6bc2c1d7a74c8a5a" title=" " alt="" coords="515,56,653,83"/>
+<area shape="rect" id="node7" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="701,56,823,83"/>
+</map>

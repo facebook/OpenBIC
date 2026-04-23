@@ -1,0 +1,13 @@
+<map id="common/dev/include/emc1413.h" name="common/dev/include/emc1413.h">
+<area shape="rect" id="node1" title=" " alt="" coords="844,5,987,47"/>
+<area shape="rect" id="node2" href="$emc1413_8c.html" title=" " alt="" coords="5,109,169,136"/>
+<area shape="rect" id="node3" href="$minerva-ag_2src_2platform_2plat__hook_8c.html" title=" " alt="" coords="193,95,352,151"/>
+<area shape="rect" id="node4" href="$minerva-ag_2src_2platform_2plat__pldm__sensor_8c.html" title=" " alt="" coords="376,95,535,151"/>
+<area shape="rect" id="node5" href="$sb-el_2src_2platform_2plat__hook_8c.html" title=" " alt="" coords="559,102,725,143"/>
+<area shape="rect" id="node6" href="$sb-el_2src_2platform_2plat__log_8c.html" title=" " alt="" coords="749,102,903,143"/>
+<area shape="rect" id="node7" href="$sb-el_2src_2platform_2plat__pldm__sensor_8c.html" title=" " alt="" coords="927,95,1082,151"/>
+<area shape="rect" id="node8" href="$sb-el_2src_2platform_2plat__thermal_8c.html" title=" " alt="" coords="1107,102,1287,143"/>
+<area shape="rect" id="node9" href="$sb-el_2src_2platform_2plat__user__setting_8c.html" title=" " alt="" coords="1311,95,1463,151"/>
+<area shape="rect" id="node10" href="$sb-si_2src_2platform_2plat__hook_8c.html" title=" " alt="" coords="1487,102,1653,143"/>
+<area shape="rect" id="node11" href="$sb-si_2src_2platform_2plat__pldm__sensor_8c.html" title=" " alt="" coords="1677,95,1831,151"/>
+</map>

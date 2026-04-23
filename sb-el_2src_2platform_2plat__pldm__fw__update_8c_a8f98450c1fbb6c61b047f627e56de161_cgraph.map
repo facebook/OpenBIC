@@ -1,0 +1,6 @@
+<map id="pldm_mtia_flash_update" name="pldm_mtia_flash_update">
+<area shape="rect" id="node1" title=" " alt="" coords="5,31,168,57"/>
+<area shape="rect" id="node2" href="$pldm__firmware__update_8c.html#aa1c173eebda7b7929c56484586cfff85" title=" " alt="" coords="216,31,333,57"/>
+<area shape="rect" id="node3" href="$util__spi_8c.html#a42cdb23aad6b4c12e78b0a30ac3d9f5c" title=" " alt="" coords="419,5,501,32"/>
+<area shape="rect" id="node4" href="$util__spi_8c.html#aaffd1b8dea43265280cd76ae120d71f9" title=" " alt="" coords="381,56,539,83"/>
+</map>
