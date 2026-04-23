@@ -153,41 +153,40 @@ static int cmd_bootstrap_set(const struct shell *shell, size_t argc, char **argv
 		shell_error(shell, "Invalid rail name: %s", argv[1]);
 		return -1;
 	}
-	// wait for evb
-	// // check TEST_STRAP for MFIO 6 8 10
-	// int drive_level = -1;
+	// check TEST_STRAP for MFIO 6 8 10
+	int drive_level = -1;
 
-	// switch (rail) {
-	// case STRAP_INDEX_HAMSA_MFIO6:
-	// case STRAP_INDEX_HAMSA_MFIO8:
-	// case STRAP_INDEX_HAMSA_MFIO10:
-	// 	get_bootstrap_change_drive_level(STRAP_INDEX_HAMSA_TEST_STRAP_R, &drive_level);
-	// 	if (drive_level == 0) {
-	// 		shell_error(shell, "Can't change due to HAMSA_TEST_STRAP_R is 0x00 ");
-	// 		return -1;
-	// 	}
-	// 	break;
-	// case STRAP_INDEX_NUWA0_MFIO6:
-	// case STRAP_INDEX_NUWA0_MFIO8:
-	// case STRAP_INDEX_NUWA0_MFIO10:
-	// 	get_bootstrap_change_drive_level(STRAP_INDEX_NUWA0_TEST_STRAP, &drive_level);
-	// 	if (drive_level == 0) {
-	// 		shell_error(shell, "Can't change due to NUWA0_TEST_STRAP is 0x00");
-	// 		return -1;
-	// 	}
-	// 	break;
-	// case STRAP_INDEX_NUWA1_MFIO6:
-	// case STRAP_INDEX_NUWA1_MFIO8:
-	// case STRAP_INDEX_NUWA1_MFIO10:
-	// 	get_bootstrap_change_drive_level(STRAP_INDEX_NUWA1_TEST_STRAP, &drive_level);
-	// 	if (drive_level == 0) {
-	// 		shell_error(shell, "Can't change due to NUWA1_TEST_STRAP is 0x00 ");
-	// 		return -1;
-	// 	}
-	// 	break;
-	// default:
-	// 	break;
-	// }
+	switch (rail) {
+	case STRAP_INDEX_HAMSA_MFIO6:
+	case STRAP_INDEX_HAMSA_MFIO8:
+	case STRAP_INDEX_HAMSA_MFIO10:
+		get_bootstrap_change_drive_level(STRAP_INDEX_HAMSA_TEST_STRAP_R, &drive_level);
+		if (drive_level == 0) {
+			shell_error(shell, "Can't change due to HAMSA_TEST_STRAP_R is 0x00 ");
+			return -1;
+		}
+		break;
+	case STRAP_INDEX_NUWA0_MFIO6:
+	case STRAP_INDEX_NUWA0_MFIO8:
+	case STRAP_INDEX_NUWA0_MFIO10:
+		get_bootstrap_change_drive_level(STRAP_INDEX_NUWA0_TEST_STRAP, &drive_level);
+		if (drive_level == 0) {
+			shell_error(shell, "Can't change due to NUWA0_TEST_STRAP is 0x00");
+			return -1;
+		}
+		break;
+	case STRAP_INDEX_NUWA1_MFIO6:
+	case STRAP_INDEX_NUWA1_MFIO8:
+	case STRAP_INDEX_NUWA1_MFIO10:
+		get_bootstrap_change_drive_level(STRAP_INDEX_NUWA1_TEST_STRAP, &drive_level);
+		if (drive_level == 0) {
+			shell_error(shell, "Can't change due to NUWA1_TEST_STRAP is 0x00 ");
+			return -1;
+		}
+		break;
+	default:
+		break;
+	}
 
 	bool is_default = false;
 	if (!strcmp(argv[2], "default"))

@@ -749,13 +749,12 @@ void cmd_arke_steps_on(const struct shell *shell, size_t argc, char **argv)
 	}
 
 	if (strcmp(steps_on[power_steps].name, "FM_P1V80_EN") == 0) {
-		// wait for evb
-		//if board id is evb, run steps_on_p3v3_osfp
-		// if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
-		// 	steps_on_p3v3_osfp(shell);
-		// 	power_steps += 1;
-		// 	return;
-		// }
+		// if board id is evb, run steps_on_p3v3_osfp
+		if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
+			steps_on_p3v3_osfp(shell);
+			power_steps += 1;
+			return;
+		}
 	}
 	power_steps += 1;
 }
