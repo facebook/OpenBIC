@@ -387,6 +387,21 @@ bool get_error_data(uint16_t error_code, uint8_t *data)
 		data[0] = gpio_get(RST_IRIS_PWR_ON_PLD_R1_N);
 		return true;
 	}
+	case CPLD_UNEXPECTED_VAL_TRIGGER_CAUSE: {
+		// check bit-11 if it's 1, then recoord error list
+		if (((error_code >> 11) & 0x01) == 1) {
+			for (int i = 0; i < 8; i++) {
+				uint8_t bootstrap_err = get_error_bootstrap_index_list(i);
+				if (bootstrap_err == STRAP_INDEX_MAX) {
+					LOG_WRN("No more valid bootstrap error index, stop at index: %d",
+						i);
+					break;
+				}
+				data[i] = bootstrap_err;
+			}
+			return true;
+		}
+	}
 	}
 
 	// Extract CPLD offset and bit position from the error code

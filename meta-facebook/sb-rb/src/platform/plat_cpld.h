@@ -72,6 +72,7 @@
 #define PWRGD_EVENT_LATCH_6_REG 0xC3
 #define VR_UPDATE_REG 0xC4
 
+#define ERROR_CODE_LEN 5
 #define CPLD_ADDR (0x4C >> 1)
 #define I2C_BUS_CPLD I2C_BUS11
 typedef struct _cpld_info_ cpld_info;
@@ -113,4 +114,5 @@ void get_cpld_polling_power_info(int *reading);
 void set_cpld_polling_enable_flag(bool status);
 void reset_error_log_states(uint8_t err_type);
 struct k_timer *get_ubc_delaytimer();
+void check_bootstrap_flag();
 #endif

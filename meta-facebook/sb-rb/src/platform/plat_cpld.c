@@ -464,3 +464,31 @@ void init_cpld_polling(void)
 				NULL, NULL, NULL, CONFIG_MAIN_THREAD_PRIORITY, 0, K_MSEC(1000));
 	k_thread_name_set(&cpld_polling_thread, "cpld_polling_thread");
 }
+
+void check_bootstrap_flag()
+{
+	uint8_t temp_read_value = 0;
+	if (!plat_read_cpld(VR_EN_PIN_READING_5, &temp_read_value, 1)) {
+		LOG_ERR("Failed to read VR_EN_PIN_READING_5 for checking bootstrap flag");
+		return;
+	}
+	//check bit-0 is 1 and pre_read_bootstrap_setting_value is true
+	temp_read_value = temp_read_value & 0x01;
+	if (temp_read_value == 1 && get_pre_read_bootstrap_setting_value()) {
+		LOG_ERR("PWR_EN:%d, Bootstrap setting is different, bootstrap flag: %d", temp_read_value, get_pre_read_bootstrap_setting_value());
+		uint16_t error_code = BOOTSTRAP_EVENT_CAUSE;
+		error_log_event(error_code, LOG_ASSERT);
+
+		struct pldm_addsel_data bootstrap_sel_msg = { 0 };
+		bootstrap_sel_msg.assert_type = LOG_ASSERT;
+		bootstrap_sel_msg.event_type = ASIC_MODULE_ERROR; //ASIC_MODULE_ERROR;
+		bootstrap_sel_msg.event_data_1 = BOOTSTRAP_SET_AFTER_PWR_EN;
+		bootstrap_sel_msg.event_data_2 = get_error_bootstrap_index_list(0); // error BOOTSTRAP index 0
+		bootstrap_sel_msg.event_data_3 = get_error_bootstrap_index_list(1); // error BOOTSTRAP index 1
+		if (send_event_log_to_bmc(bootstrap_sel_msg) != PLDM_SUCCESS) {
+			LOG_ERR("Failed to send bootstrap error code to bmc, event data: 0x%x 0x%x 0x%x\n",
+				bootstrap_sel_msg.event_data_1, bootstrap_sel_msg.event_data_2,
+				bootstrap_sel_msg.event_data_3);
+		}
+	}									
+}

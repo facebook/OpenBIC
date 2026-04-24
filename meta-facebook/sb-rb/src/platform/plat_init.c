@@ -93,6 +93,8 @@ void pal_post_init()
 		if (get_board_rev_id() >= REV_ID_EVT2)
 			init_U200070_IO();
 	}
+	// check bootstrap flag
+	check_bootstrap_flag();
 	plat_set_ac_on_log();
 
 	init_cpld_polling();

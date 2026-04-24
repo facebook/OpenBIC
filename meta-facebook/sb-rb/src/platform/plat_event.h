@@ -20,7 +20,7 @@
 #include "plat_cpld.h"
 
 #define HAMSA_SMB_ERR_EVENT_HEADER 0x60
-
+#define BOOTSTRAP_SET_AFTER_PWR_EN 0x54
 typedef struct _vr_fault_info {
 	uint8_t mtia_event_source;
 	uint8_t cpld_reg_offset;
