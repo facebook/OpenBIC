@@ -272,6 +272,80 @@ sensor_cfg DPV2_sensor_config_table[] = {
 	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &max16550a_init_args[0] },
 };
 
+sensor_cfg vr_tps53689_sensor_config_table[] = {
+	/* VR voltage */
+	{ SENSOR_NUM_VOL_PVCCD_HV, sensor_dev_tps53689, I2C_BUS5, PVCCD_HV_ADDR, VR_VOL_CMD,
+	  vr_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, pre_tps53689_read, &tps53689_pre_read_args[0], NULL, NULL, NULL },
+	{ SENSOR_NUM_VOL_PVCCINFAON, sensor_dev_tps53689, I2C_BUS5, PVCCINFAON_ADDR, VR_VOL_CMD,
+	  vr_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, pre_tps53689_read, &tps53689_pre_read_args[0], NULL, NULL, NULL },
+	{ SENSOR_NUM_VOL_PVCCFA_EHV, sensor_dev_tps53689, I2C_BUS5, PVCCFA_EHV_ADDR, VR_VOL_CMD,
+	  vr_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, pre_tps53689_read, &tps53689_pre_read_args[1], NULL, NULL, NULL },
+	{ SENSOR_NUM_VOL_PVCCIN, sensor_dev_tps53689, I2C_BUS5, PVCCIN_ADDR, VR_VOL_CMD, vr_access,
+	  0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, pre_tps53689_read, &tps53689_pre_read_args[0], NULL, NULL, NULL },
+	{ SENSOR_NUM_VOL_PVCCFA_EHV_FIVRA, sensor_dev_tps53689, I2C_BUS5, PVCCFA_EHV_FIVRA_ADDR,
+	  VR_VOL_CMD, vr_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_tps53689_read,
+	  &tps53689_pre_read_args[1], NULL, NULL, NULL },
+
+	/* VR current */
+	{ SENSOR_NUM_CUR_PVCCD_HV, sensor_dev_tps53689, I2C_BUS5, PVCCD_HV_ADDR, VR_CUR_CMD,
+	  vr_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, pre_tps53689_read, &tps53689_pre_read_args[0], NULL, NULL, NULL },
+	{ SENSOR_NUM_CUR_PVCCINFAON, sensor_dev_tps53689, I2C_BUS5, PVCCINFAON_ADDR, VR_CUR_CMD,
+	  vr_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, pre_tps53689_read, &tps53689_pre_read_args[0], NULL, NULL, NULL },
+	{ SENSOR_NUM_CUR_PVCCFA_EHV, sensor_dev_tps53689, I2C_BUS5, PVCCFA_EHV_ADDR, VR_CUR_CMD,
+	  vr_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, pre_tps53689_read, &tps53689_pre_read_args[1], NULL, NULL, NULL },
+	{ SENSOR_NUM_CUR_PVCCIN, sensor_dev_tps53689, I2C_BUS5, PVCCIN_ADDR, VR_CUR_CMD, vr_access,
+	  0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, pre_tps53689_read, &tps53689_pre_read_args[0], NULL, NULL, NULL },
+	{ SENSOR_NUM_CUR_PVCCFA_EHV_FIVRA, sensor_dev_tps53689, I2C_BUS5, PVCCFA_EHV_FIVRA_ADDR,
+	  VR_CUR_CMD, vr_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_tps53689_read,
+	  &tps53689_pre_read_args[1], NULL, NULL, NULL },
+
+	/* VR temperature */
+	{ SENSOR_NUM_TEMP_PVCCD_HV, sensor_dev_tps53689, I2C_BUS5, PVCCD_HV_ADDR, VR_TEMP_CMD,
+	  vr_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, pre_tps53689_read, &tps53689_pre_read_args[0], NULL, NULL, NULL },
+	{ SENSOR_NUM_TEMP_PVCCINFAON, sensor_dev_tps53689, I2C_BUS5, PVCCINFAON_ADDR, VR_TEMP_CMD,
+	  vr_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, pre_tps53689_read, &tps53689_pre_read_args[0], NULL, NULL, NULL },
+	{ SENSOR_NUM_TEMP_PVCCFA_EHV, sensor_dev_tps53689, I2C_BUS5, PVCCFA_EHV_ADDR, VR_TEMP_CMD,
+	  vr_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, pre_tps53689_read, &tps53689_pre_read_args[1], NULL, NULL, NULL },
+	{ SENSOR_NUM_TEMP_PVCCIN, sensor_dev_tps53689, I2C_BUS5, PVCCIN_ADDR, VR_TEMP_CMD,
+	  vr_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, pre_tps53689_read, &tps53689_pre_read_args[0], NULL, NULL, NULL },
+	{ SENSOR_NUM_TEMP_PVCCFA_EHV_FIVRA, sensor_dev_tps53689, I2C_BUS5, PVCCFA_EHV_FIVRA_ADDR,
+	  VR_TEMP_CMD, vr_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_tps53689_read,
+	  &tps53689_pre_read_args[1], NULL, NULL, NULL },
+
+	/* VR power */
+	{ SENSOR_NUM_PWR_PVCCD_HV, sensor_dev_tps53689, I2C_BUS5, PVCCD_HV_ADDR, VR_PWR_CMD,
+	  vr_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, pre_tps53689_read, &tps53689_pre_read_args[0], NULL, NULL, NULL },
+	{ SENSOR_NUM_PWR_PVCCINFAON, sensor_dev_tps53689, I2C_BUS5, PVCCINFAON_ADDR, VR_PWR_CMD,
+	  vr_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, pre_tps53689_read, &tps53689_pre_read_args[0], NULL, NULL, NULL },
+	{ SENSOR_NUM_PWR_PVCCFA_EHV, sensor_dev_tps53689, I2C_BUS5, PVCCFA_EHV_ADDR, VR_PWR_CMD,
+	  vr_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, pre_tps53689_read, &tps53689_pre_read_args[1], NULL, NULL, NULL },
+	{ SENSOR_NUM_PWR_PVCCIN, sensor_dev_tps53689, I2C_BUS5, PVCCIN_ADDR, VR_PWR_CMD, vr_access,
+	  0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, pre_tps53689_read, &tps53689_pre_read_args[0], NULL, NULL, NULL },
+	{ SENSOR_NUM_PWR_PVCCFA_EHV_FIVRA, sensor_dev_tps53689, I2C_BUS5, PVCCFA_EHV_FIVRA_ADDR,
+	  VR_PWR_CMD, vr_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, pre_tps53689_read,
+	  &tps53689_pre_read_args[1], NULL, NULL, NULL },
+};
+
 sensor_cfg vr_xdpe15284_sensor_config_table[] = {
 	/* VR voltage */
 	{ SENSOR_NUM_VOL_PVCCD_HV, sensor_dev_xdpe15284, I2C_BUS5, PVCCD_HV_ADDR, VR_VOL_CMD,
@@ -480,8 +554,7 @@ void plat_sensor_clear_vr_fault(uint8_t vr_addr, uint8_t vr_bus)
 	msg.data[0] = PMBUS_CLEAR_FAULTS;
 	ret = i2c_master_write(&msg, retry);
 	if (ret != 0) {
-		LOG_ERR("Clear faults failed, bus: 0x%x, addr: 0x%x", msg.bus,
-			msg.target_addr);
+		LOG_ERR("Clear faults failed, bus: 0x%x, addr: 0x%x", msg.bus, msg.target_addr);
 	}
 }
 
@@ -534,7 +607,7 @@ uint8_t pal_get_extend_sensor_config()
 		break;
 	case VR_MODULE_TPS53689:
 		// If independent tables are not yet supported, temporarily use ISL as a placeholder (or create a separate tps53689 table).
-		extend_sensor_config_size += ARRAY_SIZE(vr_isl69259_sensor_config_table);
+		extend_sensor_config_size += ARRAY_SIZE(vr_tps53689_sensor_config_table);
 		break;
 	default:
 		break;
@@ -738,10 +811,9 @@ void pal_extend_sensor_config()
 		}
 		break;
 	case VR_MODULE_TPS53689:
-		/* If the TPS53689 table is not yet available, temporarily use the ISL table for support or supplement it later. */
-		sensor_count = ARRAY_SIZE(vr_isl69259_sensor_config_table);
+		sensor_count = ARRAY_SIZE(vr_tps53689_sensor_config_table);
 		for (int i = 0; i < sensor_count; i++) {
-			add_sensor_config(vr_isl69259_sensor_config_table[i]);
+			add_sensor_config(vr_tps53689_sensor_config_table[i]);
 		}
 		break;
 	default:
