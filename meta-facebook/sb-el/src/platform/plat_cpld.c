@@ -364,11 +364,11 @@ static void plat_sync_osfp_p3v3_enable_by_pwrgd(void)
 		return;
 	}
 
-	/* Read U200052 io0~io5: PWRGD_P3V3_P1~P6 */
-	ret = get_pca6554apw_ioe_value(U200052_IO_I2C_BUS, U200052_IO_ADDR,
+	/* Read U200053 io0~io5: PWRGD_P3V3_P1~P6 */
+	ret = get_pca6554apw_ioe_value(U200053_IO_I2C_BUS, U200053_IO_ADDR,
 				       INPUT_PORT, &pwrgd_value);
 	if (ret != 0) {
-		LOG_ERR("Failed to read U200052 INPUT_PORT");
+		LOG_ERR("Failed to read U200053 INPUT_PORT");
 		return;
 	}
 
@@ -383,11 +383,11 @@ static void plat_sync_osfp_p3v3_enable_by_pwrgd(void)
 	uint8_t new_en_value = en_value;
 
 	/*
-	 * U200052 io0~io5 : PWRGD_P3V3_P1~P6
+	 * U200053 io0~io5 : PRE_OSFP_P1~P6
 	 * U200051 io0~io5 : FM_P3V3_P1~P6_EN
 	 *
-	 * PWRGD high -> disable EN
-	 * PWRGD low  -> enable EN
+	 * PRE_OSFP high -> disable EN
+	 * PRE_OSFP low  -> enable EN
 	 */
 	for (int i = 0; i < 6; i++) {
 		if ((pwrgd_value >> i) & 0x1) {
@@ -401,7 +401,7 @@ static void plat_sync_osfp_p3v3_enable_by_pwrgd(void)
 		set_pca6554apw_ioe_value(U200051_IO_I2C_BUS, U200051_IO_ADDR,
 					 OUTPUT_PORT, new_en_value);
 
-		LOG_DBG("Update U200051 OUTPUT_PORT: 0x%02X -> 0x%02X (U200052 PWRGD=0x%02X)",
+		LOG_INF("Update U200051 OUTPUT_PORT: 0x%02X -> 0x%02X (U200053 PWRGD=0x%02X)",
 			en_value, new_en_value, pwrgd_value);
 	}
 }
