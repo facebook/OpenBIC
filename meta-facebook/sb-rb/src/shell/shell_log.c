@@ -232,15 +232,10 @@ void cmd_log_dump(const struct shell *shell, size_t argc, char **argv)
 
 		shell_print(shell, "sys_time: %lld ms", log.sys_time);
 		uint8_t err_data_len = 2; //sizeof(log.error_data)
+		uint16_t extend_case = log.err_code & 0xFF00;
 		switch (err_type) {
 		case CPLD_UNEXPECTED_VAL_TRIGGER_CAUSE:
-			if (((log.err_code >> 11) & 0x01) == 0) {
-				shell_print(shell, "\t%s", reg_name);
-				shell_print(shell, "\t\t%s", bit_name);
-				shell_print(shell, "read vr sensor status word(0x79):");
-				shell_print(shell, "\tlow  byte: 0x%02x", log.error_data[0]);
-				shell_print(shell, "\thigh byte: 0x%02x", log.error_data[1]);
-			} else {
+			if (extend_case == BOOTSTRAP_EVENT_CAUSE) {
 				shell_print(shell, "\tBOOTSTRAP_DIFFERENT");
 				shell_print(
 					shell,
@@ -260,6 +255,12 @@ void cmd_log_dump(const struct shell *shell, size_t argc, char **argv)
 						break;
 					}
 				}
+			} else {
+				shell_print(shell, "\t%s", reg_name);
+				shell_print(shell, "\t\t%s", bit_name);
+				shell_print(shell, "read vr sensor status word(0x79):");
+				shell_print(shell, "\tlow  byte: 0x%02x", log.error_data[0]);
+				shell_print(shell, "\thigh byte: 0x%02x", log.error_data[1]);
 			}
 			break;
 		case POWER_ON_SEQUENCE_TRIGGER_CAUSE:

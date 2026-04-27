@@ -388,8 +388,9 @@ bool get_error_data(uint16_t error_code, uint8_t *data)
 		return true;
 	}
 	case CPLD_UNEXPECTED_VAL_TRIGGER_CAUSE: {
-		// check bit-11 if it's 1, then recoord error list
-		if (((error_code >> 11) & 0x01) == 1) {
+		uint16_t extend_case = error_code & 0xFF00;
+		switch (extend_case) {
+		case BOOTSTRAP_EVENT_CAUSE:
 			for (int i = 0; i < 8; i++) {
 				uint8_t bootstrap_err = get_error_bootstrap_index_list(i);
 				if (bootstrap_err == STRAP_INDEX_MAX) {
@@ -400,6 +401,9 @@ bool get_error_data(uint16_t error_code, uint8_t *data)
 				data[i] = bootstrap_err;
 			}
 			return true;
+			break;
+		default:
+			break;
 		}
 	}
 	}
