@@ -729,14 +729,6 @@ bool plat_set_vout_command(uint8_t rail, uint16_t *millivolt, bool is_perm)
 		goto err;
 	}
 
-	if (is_perm && rail == VR_RAIL_E_ASIC_P0V8_HAMSA_AVDD_PCIE) {
-		if (!set_user_settings_hamsa_avdd_pcie_to_eeprom(&setting_millivolt,
-								 sizeof(setting_millivolt))) {
-			LOG_ERR("set user settings hamsa avdd pcie to eeprom failed");
-			goto err;
-		}
-	}
-
 	voltage_command_get.vout[rail] = setting_millivolt;
 
 	ret = true;

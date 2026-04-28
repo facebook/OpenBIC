@@ -36,7 +36,6 @@
 #include "pldm_monitor.h"
 #include "sensor.h"
 #include "pldm_sensor.h"
-#include "plat_hamsa_avdd_pcie.h"
 
 LOG_MODULE_REGISTER(plat_user_setting);
 
@@ -895,25 +894,7 @@ static int delay_module_pg_user_settings_init(void)
 
 	return 0;
 }
-static int hamsa_avdd_pcie_user_settings_init(void)
-{
-	uint16_t setting_value = 0;
 
-	if (get_user_settings_hamsa_avdd_pcie_from_eeprom(&setting_value, sizeof(setting_value)) ==
-	    false) {
-		LOG_ERR("get hamsa avdd pcie user settings failed");
-		return -1;
-	}
-
-	if (setting_value != 0xffff) {
-		if (!set_hamsa_avdd_pcie(&setting_value, false)) {
-			LOG_ERR("set hamsa avdd pcie failed");
-			return -1;
-		}
-	}
-
-	return 0;
-}
 bool get_user_settings_delay_pcie_perst_from_eeprom(void *user_settings, uint8_t data_length)
 {
 	CHECK_NULL_ARG_WITH_RETURN(user_settings, false);
@@ -982,30 +963,7 @@ bool set_user_settings_delay_module_pg_to_eeprom(void *user_settings, uint8_t da
 
 	return true;
 }
-bool get_user_settings_hamsa_avdd_pcie_from_eeprom(void *user_settings, uint8_t data_length)
-{
-	CHECK_NULL_ARG_WITH_RETURN(user_settings, false);
 
-	if (!plat_eeprom_read(HAMSA_AVDD_PCIE_VOUT_USER_SETTINGS_OFFSET, user_settings,
-			      data_length)) {
-		LOG_ERR("Failed to read hamsa_avdd_pcie from eeprom");
-		return false;
-	}
-	return true;
-}
-bool set_user_settings_hamsa_avdd_pcie_to_eeprom(void *user_settings, uint8_t data_length)
-{
-	CHECK_NULL_ARG_WITH_RETURN(user_settings, false);
-
-	if (!plat_eeprom_write(HAMSA_AVDD_PCIE_VOUT_USER_SETTINGS_OFFSET, user_settings,
-			       data_length)) {
-		LOG_ERR("hamsa_avdd_pcie Failed to write eeprom");
-		return false;
-	}
-	k_msleep(EEPROM_MAX_WRITE_TIME);
-
-	return true;
-}
 bool perm_config_clear(void)
 {
 	/* clear all temp_threshold perm parameters */
@@ -1055,15 +1013,6 @@ bool perm_config_clear(void)
 	uint8_t setting_value_for_throttle = 0xFF;
 	if (!set_user_settings_throttle_to_eeprom(&setting_value_for_throttle,
 						  sizeof(setting_value_for_throttle))) {
-		LOG_ERR("The perm_config clear failed");
-		return false;
-	}
-
-	/* clear hamsa_avdd_pcie perm parameter */
-	uint16_t setting_value_for_hamsa_avdd_pcie = 0xFFFF;
-	if (!set_user_settings_hamsa_avdd_pcie_to_eeprom(
-		    &setting_value_for_hamsa_avdd_pcie,
-		    sizeof(setting_value_for_hamsa_avdd_pcie))) {
 		LOG_ERR("The perm_config clear failed");
 		return false;
 	}
@@ -1517,5 +1466,4 @@ void user_settings_init(void)
 	delay_asic_rst_user_settings_init();
 	delay_module_pg_user_settings_init();
 	delay_pcie_perst_user_settings_init();
-	hamsa_avdd_pcie_user_settings_init();
 }
