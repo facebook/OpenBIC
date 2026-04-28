@@ -22,6 +22,7 @@
 #include "plat_cpld.h"
 #include "plat_class.h"
 #include "plat_ioexp.h"
+#include "plat_gpio.h"
 
 LOG_MODULE_REGISTER(power_capping_control, LOG_LEVEL_DBG);
 
@@ -41,7 +42,7 @@ LOG_MODULE_REGISTER(power_capping_control, LOG_LEVEL_DBG);
 #define MEDHA0_PWR_CAP_LV3_BIT 5
 #define MEDHA1_PWR_CAP_LV3_BIT 4
 #define VR_HOT_RAINBOW_BIT 0
-#define VR_HOT_EVB_BIT  HAMSA_MFIO19
+#define VR_HOT_EVB_BIT HAMSA_MFIO19
 
 #define POWER_CAPPING_SET_BIT(orig, bit) ((uint8_t)((orig) | (1u << (bit))))
 #define POWER_CAPPING_CLR_BIT(orig, bit) ((uint8_t)((orig) & ~(1u << (bit))))
@@ -77,6 +78,11 @@ static int cmd_power_capping_get(const struct shell *shell, size_t argc, char **
 
 	uint8_t board_id = get_asic_board_id();
 
+	shell_print(shell, "%s  (status, read only) : %d", gpio_name[MEDHA0_PWR_CAP_LV1_LVC33],
+		    gpio_get(MEDHA0_PWR_CAP_LV1_LVC33));
+	shell_print(shell, "%s  (status, read only) : %d", gpio_name[MEDHA1_PWR_CAP_LV1_LVC33],
+		    gpio_get(MEDHA1_PWR_CAP_LV1_LVC33));
+
 	for (int i = 0; i < ARRAY_SIZE(pwr_cap_list); i++) {
 		const cpld_pin_map_t *item = &pwr_cap_list[i];
 		uint8_t bit_val = 0;
@@ -105,7 +111,11 @@ static int cmd_power_capping_get(const struct shell *shell, size_t argc, char **
 			bit_val = (reg_val >> item->bit) & 0x1;
 		}
 
-		shell_print(shell, "%s : %d", item->name, bit_val);
+		if (item->offset == POWER_CAPPING_LV1_CPLD_OFFSET) {
+			shell_print(shell, "%s  (set, debug only) : %d", item->name, bit_val);
+		} else {
+			shell_print(shell, "%s : %d", item->name, bit_val);
+		}
 	}
 
 	return 0;
