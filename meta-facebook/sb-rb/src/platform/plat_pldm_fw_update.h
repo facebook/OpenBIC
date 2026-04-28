@@ -65,7 +65,6 @@ enum FIRMWARE_COMPONENT {
 	COMPNT_MEDHA0,
 	COMPNT_MEDHA1,
 	COMPNT_VR_3V3,
-	COMPNT_HAMSA_BOOT1,
 };
 
 void plat_set_cpld_reset_reg(uint8_t value);

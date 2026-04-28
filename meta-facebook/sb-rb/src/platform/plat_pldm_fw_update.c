@@ -420,82 +420,6 @@ int sb_write_fwblock(uint32_t addr, uint32_t *data, uint32_t data_len)
 			      buf[MSG_PKT_LEN_OFFSET] + PKT_LEN_BYTE_SZ);
 }
 
-uint8_t pldm_pre_iris_boot_update(void *fw_update_param)
-{
-	CHECK_NULL_ARG_WITH_RETURN(fw_update_param, 1);
-	update_flag = 0;
-	uint8_t rd;
-	write_addr = HAMSA_BOOT1_ASIC_MEM_ADDR;
-	i2c_dev = device_get_binding("I2C_11");
-	// check i2c device
-	if (!i2c_dev) {
-		LOG_ERR("Failed to get binding for I2C_11");
-		update_flag = 1;
-		return 1;
-	}
-	// pre do: check is download mode
-	int err = smbus_mode_query();
-	if (!err) {
-		LOG_ERR("slave not in download mode");
-		goto err_i2c;
-	}
-	// start: Send a FW_DL_START command using FW_CTRL_WRITE
-	err = sb_write_byte(FW_CTRL_WRITE, FW_DL_START);
-	if (err < 0) {
-		LOG_ERR("Firmware download start request failed");
-		goto err_i2c;
-	}
-	// send: send the firmware image to IRIS
-	err = sb_write_fwblock(HAMSA_BOOT1_ADDR, &fw_update_cfg.image_size, 4);
-	if (err == false) {
-		LOG_ERR("sending fw addr-size failed");
-		goto err_i2c;
-	}
-
-	LOG_INF("Waiting for Slave to get ready");
-	// Wait for the slave firmware to get into download mode
-	err = sb_read_byte(FW_CTRL_READ, &rd);
-	if (err < 0) {
-		LOG_ERR("slave status read failed. Abort Download");
-		goto err_i2c;
-	}
-	LOG_INF("slave fw status read: 0x%x", rd);
-	if (rd == FW_DL_SLV_RDY)
-		LOG_INF("device ready to download(0x%x)", rd);
-	else {
-		LOG_ERR("device status error(0x%x)", rd);
-		goto err_i2c;
-	}
-	return 0;
-
-err_i2c:
-	// send download abort command to device
-	LOG_INF("partial download, abort now");
-	err = sb_write_byte(FW_CTRL_WRITE, FW_DL_HST_ABRT);
-	if (err < 0) {
-		LOG_ERR("cmd write failed, %d", err);
-	}
-
-	LOG_INF("check abort status...");
-	// read slave status and check of device aborted download
-	err = sb_read_byte(FW_CTRL_READ, &rd);
-	if (err < 0) {
-		LOG_ERR("cmd status read failed, %d", err);
-	}
-	if (rd & FW_DL_SLV_ABRTD) {
-		LOG_WRN("SMBus device 0x%x aborted download", slave_id);
-	} else {
-		LOG_ERR("SMBus device 0x%x failed to abort(0x%x)", slave_id, rd);
-	}
-	// check what smbus error occurred
-	err = smbus_read_byte(FW_SMBUS_ERROR, &rd);
-	if (err < 0)
-		LOG_ERR("read error status failed, %d", err);
-	else
-		LOG_ERR("smbus error status = 0x%x\n", rd);
-	update_flag = 1;
-	return 1;
-}
 int iris_data_write(uint8_t *data, uint32_t data_size)
 {
 	int idx = 0;
@@ -559,122 +483,7 @@ int iris_data_write(uint8_t *data, uint32_t data_size)
 err_i2c_write_img:
 	return 1;
 }
-uint8_t pldm_iris_boot_update(void *fw_update_param)
-{
-	CHECK_NULL_ARG_WITH_RETURN(fw_update_param, 1);
 
-	pldm_fw_update_param_t *p = (pldm_fw_update_param_t *)fw_update_param;
-
-	CHECK_NULL_ARG_WITH_RETURN(p->data, 1);
-
-	LOG_DBG("image size: %d", fw_update_cfg.image_size);
-	LOG_DBG("data len: %d", p->data_len);
-
-	uint8_t *data = p->data;
-	uint32_t len = p->data_len;
-	uint32_t sent = 0;
-
-	while (sent < len) {
-		uint32_t chunk = MAX_DATA_PKT_SIZE;
-		if (sent + chunk > len)
-			chunk = len - sent; // last chunk can be < 24 bytes
-
-		bool ok = false;
-		for (int retry = 0; retry < STATUS_RETRY_CNT; retry++) {
-			if (!iris_data_write(data + sent, chunk)) {
-				ok = true;
-				break;
-			}
-		}
-
-		if (!ok) {
-			LOG_ERR("IRIS block transfer failed at PLDM offset %u", p->data_ofs + sent);
-			return 1;
-		}
-
-		sent += chunk;
-	}
-	// update next PLDM offset / length
-	p->next_ofs = p->data_ofs + len;
-	if (p->next_ofs < fw_update_cfg.image_size) {
-		uint32_t remain = fw_update_cfg.image_size - p->next_ofs;
-		p->next_len = (remain > fw_update_cfg.max_buff_size) ? fw_update_cfg.max_buff_size :
-								       remain;
-	} else {
-		p->next_len = 0;
-	}
-
-	return 0;
-}
-
-uint8_t pldm_post_iris_boot_update(void *fw_update_param)
-{
-	ARG_UNUSED(fw_update_param);
-	if (update_flag == 1) {
-		LOG_WRN("FW pre update failed, skip post update");
-		return 0;
-	}
-	// finished: set the bit to inform device that download is complete
-	int err = sb_write_byte(FW_CTRL_WRITE, FW_DL_FINISH);
-	if (err < 0) {
-		// retain original err code returned, i.e. set by ioctl
-		LOG_ERR("Unable to notify download completion state, aborting");
-		goto err_i2c;
-	}
-	LOG_INF("Sent firmware activate command");
-
-	int check_idx = 0;
-	uint8_t rd;
-	/* Wait for the slave to complete firmware update */
-	while (1) {
-		rd = 0;
-		err = sb_read_byte(FW_CTRL_READ, &rd);
-		if (err < 0) {
-			LOG_ERR("fw upgrade state read failed, aborting");
-			goto err_i2c;
-		}
-
-		if (rd & FW_DL_SLV_DONE) {
-			LOG_INF("Read status: FW update complete");
-			break;
-		}
-
-		if (check_idx++ > STATUS_RETRY_CNT) {
-			LOG_ERR("Invalid completion status(0x%x) read", rd);
-			err = -1; // no errno, set card fw error
-			goto err_i2c;
-		}
-	}
-	LOG_INF("~ Firmware Update Completed ~\n");
-	return 0;
-
-err_i2c:
-	// send download abort command to device
-	LOG_INF("partial download, abort now");
-	err = sb_write_byte(FW_CTRL_WRITE, FW_DL_HST_ABRT);
-	if (err < 0) {
-		LOG_ERR("cmd write failed, %d", err);
-	}
-
-	LOG_INF("check abort status...");
-	// read slave status and check of device aborted download
-	err = sb_read_byte(FW_CTRL_READ, &rd);
-	if (err < 0) {
-		LOG_ERR("cmd status read failed, %d", err);
-	}
-	if (rd & FW_DL_SLV_ABRTD) {
-		LOG_WRN("SMBus device 0x%x aborted download", slave_id);
-	} else {
-		LOG_ERR("SMBus device 0x%x failed to abort(0x%x)", slave_id, rd);
-	}
-	// check what smbus error occurred
-	err = smbus_read_byte(FW_SMBUS_ERROR, &rd);
-	if (err < 0)
-		LOG_ERR("read error status failed, %d", err);
-	else
-		LOG_ERR("smbus error status = 0x%x\n", rd);
-	return 1;
-}
 #define ASIC_VERSION_BYTE 0x68
 #define I2C_MAX_RETRY 3
 void get_fw_version_boot0_from_asic()
@@ -712,25 +521,6 @@ uint32_t get_fw_version_boot1_from_asic()
 	i2c_master_read_without_error_log(&i2c_msg, I2C_MAX_RETRY);
 	uint32_t version = i2c_msg.data[1] << 16 | i2c_msg.data[2] << 8 | i2c_msg.data[3];
 	return version;
-}
-
-static bool get_boot1_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
-{
-	bool ret = false;
-	const char *remain_str_p = ", BOOT1: ";
-	uint8_t *buf_p = buf;
-	*len = 0;
-
-	memcpy(buf_p, remain_str_p, strlen(remain_str_p));
-	buf_p += strlen(remain_str_p);
-	*len += strlen(remain_str_p);
-	uint32_t version = get_fw_version_boot1_from_asic();
-
-	*len += bin2hex((uint8_t *)&version, 4, buf_p, 4);
-	buf_p += 4;
-
-	ret = true;
-	return ret;
 }
 
 static bool get_boot0_hamsa_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
@@ -921,21 +711,6 @@ pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
 		.comp_version_str = NULL,
 	},
 	VR_COMPONENT_DEF(COMPNT_VR_3V3),
-	{
-		.enable = true,
-		.comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,
-		.comp_identifier = COMPNT_HAMSA_BOOT1,
-		.comp_classification_index = 0x00,
-		.pre_update_func = pldm_pre_iris_boot_update,
-		.update_func = pldm_iris_boot_update,
-		.pos_update_func = pldm_post_iris_boot_update,
-		.inf = COMP_UPDATE_VIA_I2C,
-		.activate_method = COMP_ACT_SELF,
-		.self_act_func = NULL,
-		.get_fw_version_fn = get_boot1_fw_version,
-		.self_apply_work_func = NULL,
-		.comp_version_str = NULL,
-	},
 };
 
 uint8_t plat_pldm_query_device_identifiers(const uint8_t *buf, uint16_t len, uint8_t *resp,
