@@ -108,6 +108,18 @@ int power_info = 0;
 
 bool cpld_polling_enable_flag = true;
 
+bool get_is_ubc_enabled()
+{
+	bool is_ubc_enabled = false;
+	uint8_t data = 0;
+	if (!plat_read_cpld(VR_EN_PIN_READING_5, &data, 1)) {
+		LOG_ERR("Failed to read cpld reg: 0x%x", VR_EN_PIN_READING_5);
+	} else {
+		is_ubc_enabled = (data & BIT(0)) ? true : false;
+	}
+	return is_ubc_enabled;
+}
+
 void get_cpld_polling_power_info(int* reading)
 {
 	*reading = power_info;
@@ -131,7 +143,7 @@ void check_ubc_delayed(struct k_work *work)
 	 * 1 -> UBC is enabled
 	 * 0 -> UBC is disabled
 	 */
-	bool is_ubc_enabled = (gpio_get(FM_PLD_UBC_EN_R) == GPIO_HIGH);
+	bool is_ubc_enabled = get_is_ubc_enabled();
 	ubc_enabled_delayed_status = is_ubc_enabled;
 }
 

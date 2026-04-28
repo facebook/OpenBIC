@@ -110,14 +110,16 @@ void ISR_GPIO_FM_PLD_UBC_EN_R()
 	if (get_pwr_steps_on_flag() == 1)
 		return;
 
-	LOG_INF("FM_PLD_UBC_EN_R = %d", gpio_get(FM_PLD_UBC_EN_R));
+	bool is_ubc_enabled = get_is_ubc_enabled();
 
-	if (gpio_get(FM_PLD_UBC_EN_R) == GPIO_HIGH) {
+	LOG_INF("FM_PLD_UBC_EN_R = %d", is_ubc_enabled);
+
+	if (is_ubc_enabled) {
 		plat_set_dc_on_log(LOG_ASSERT);
 		k_timer_start(&pwr_sequence_event_work_timer, K_MSEC(1000), K_NO_WAIT);
 	}
 
-	if (gpio_get(FM_PLD_UBC_EN_R) == GPIO_LOW) {
+	if (!is_ubc_enabled) {
 		plat_set_dc_on_log(LOG_DEASSERT);
 	}
 	k_timer_start(get_ubc_delaytimer(), K_MSEC(1000), K_NO_WAIT);

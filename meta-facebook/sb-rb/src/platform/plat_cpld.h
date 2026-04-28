@@ -115,4 +115,5 @@ void set_cpld_polling_enable_flag(bool status);
 void reset_error_log_states(uint8_t err_type);
 struct k_timer *get_ubc_delaytimer();
 void check_bootstrap_flag();
+bool get_is_ubc_enabled();
 #endif
