@@ -39,6 +39,7 @@ extern "C" {
 #define PLDM_OEM_WF_READ_SPD_CHUNK 0x05
 #define PLDM_OEM_FORCE_UPDATE_SETTING_CMD 0x06
 #define PLDM_OEM_FORCE_UPDATE_GETTING_CMD 0x07
+#define PLDM_OEM_READ_FLASH_DATA_CMD 0x08
 
 #define POWER_CONTROL_LEN 0x01
 
@@ -438,7 +439,7 @@ struct _force_update_flag_get_cmd_resp {
 
 uint8_t check_iana(const uint8_t *iana);
 uint8_t set_iana(uint8_t *buf, uint8_t buf_len);
-uint8_t send_event_log_to_bmc(struct pldm_addsel_data msg);
+uint8_t send_event_log_to_bmc(struct pldm_addsel_data sel_msg);
 
 uint8_t pldm_oem_handler_query(uint8_t code, void **ret_fn);
 
