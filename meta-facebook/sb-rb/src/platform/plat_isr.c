@@ -104,25 +104,39 @@ void ISR_GPIO_ALL_VR_PM_ALERT_R_N()
 	}
 }
 
-void ISR_GPIO_FM_PLD_UBC_EN_R()
+bool ubc_en_changed_callback(cpld_info *info, uint8_t *data)
 {
-	// check step on setting flag
-	if (get_pwr_steps_on_flag() == 1)
-		return;
+	bool ubc_en;
+	bool last_ubc_en;
 
-	bool is_ubc_enabled = get_is_ubc_enabled();
+	if (get_pwr_steps_on_flag())
+		return false;
 
-	LOG_INF("FM_PLD_UBC_EN_R = %d", is_ubc_enabled);
+	ubc_en = !!(*data & info->bit_check_mask);
+	last_ubc_en = !!(info->last_polling_value & info->bit_check_mask);
 
-	if (is_ubc_enabled) {
+	/* no state change */
+	if (ubc_en == last_ubc_en)
+		return false;
+
+	LOG_INF("UBC_EN changed: %d -> %d", last_ubc_en, ubc_en);
+
+	if (ubc_en) {
 		plat_set_dc_on_log(LOG_ASSERT);
 		k_timer_start(&pwr_sequence_event_work_timer, K_MSEC(1000), K_NO_WAIT);
-	}
-
-	if (!is_ubc_enabled) {
+	} else {
 		plat_set_dc_on_log(LOG_DEASSERT);
 	}
+
 	k_timer_start(get_ubc_delaytimer(), K_MSEC(1000), K_NO_WAIT);
+
+	return true;
+}
+
+void ISR_GPIO_FM_PLD_UBC_EN_R()
+{
+	LOG_DBG("gpio_%d_isr called, val=%d , dir= %d", FM_PLD_UBC_EN_R, gpio_get(FM_PLD_UBC_EN_R),
+		gpio_get_direction(FM_PLD_UBC_EN_R));
 }
 
 /* Pin A12 (GPIO73 / SPIP1_CS) dynamic mux switching

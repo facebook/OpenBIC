@@ -28,6 +28,7 @@
 #include "plat_ioexp.h"
 #include "shell_plat_power_sequence.h"
 #include "kernel.h"
+#include "plat_isr.h"
 
 #define POLLING_CPLD_STACK_SIZE 2048
 #define CPLD_POLLING_INTERVAL_MS 1000 // 1 second polling interval
@@ -37,6 +38,7 @@
 #define CHECK_BITS_78 0xC0
 #define CHECK_BITS_678 0xE0
 #define CHECK_BITS_6 0x40
+#define CHECK_BITS_0 0x01
 
 LOG_MODULE_REGISTER(plat_cpld);
 
@@ -91,6 +93,7 @@ bool vr_error_callback(cpld_info *cpld_info, uint8_t *current_cpld_value);
 
 // clang-format off
 cpld_info cpld_info_table[] = {
+	{ VR_EN_PIN_READING_5, 				0x00, 0xFE, true, 0x00, false, 0x00,  .status_changed_cb = ubc_en_changed_callback, .bit_check_mask = CHECK_BITS_0 },
 	{ VR_POWER_FAULT_1_REG, 			0x00, 0x00, true, 0x00, true, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
 	{ VR_POWER_FAULT_2_REG, 			0x00, 0x00, true, 0x00, true, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
 	{ VR_POWER_FAULT_3_REG, 			0x00, 0x00, true, 0x00, true, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
