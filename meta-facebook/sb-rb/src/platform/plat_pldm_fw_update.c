@@ -496,8 +496,6 @@ void get_fw_version_boot0_from_asic()
 
 	uint32_t data_p = i2c_msg.data[8] << 16 | i2c_msg.data[7] << 8 | i2c_msg.data[6];
 	if (data_p) {
-		// update temp data
-		LOG_INF("update boot0 version read from asic");
 		version_boot0[0] = data_p;
 	}
 	i2c_msg.tx_len = 1;
@@ -507,7 +505,6 @@ void get_fw_version_boot0_from_asic()
 
 	uint32_t data_cip = i2c_msg.data[1] << 16 | i2c_msg.data[2] << 8 | i2c_msg.data[3];
 	if (data_cip) {
-		LOG_INF("update cip boot0 version read from asic");
 		version_boot0[1] = data_cip;
 		version_boot0[2] = data_cip;
 	}
