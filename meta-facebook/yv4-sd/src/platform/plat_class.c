@@ -330,6 +330,9 @@ void init_i3c_hub_type(void)
 	if (rg3mxxb12_get_device_info_i3c(I3C_BUS_HUB, &i3c_hub_type) &&
 	    (i3c_hub_type == RG3M87B12_DEVICE_INFO)) {
 		LOG_INF("I3C hub type: rg3mxxb12");
+	} else if (rg3mxxb12_get_device_info_i3c(I3C_BUS_HUB, &i3c_hub_type) &&
+		   (i3c_hub_type == RTS4902A_DEVICE_INFO)) {
+		LOG_INF("I3C hub type: rts4902a");
 	} else if (p3h284x_get_device_info_i3c(I3C_BUS_HUB, &i3c_hub_type) &&
 		   (i3c_hub_type == P3H2840_DEVICE_INFO)) {
 		LOG_INF("I3C hub type: p3h284x");
