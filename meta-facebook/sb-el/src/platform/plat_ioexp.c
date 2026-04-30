@@ -293,6 +293,9 @@ void ioexp_init(void)
 	// read from IO, save value (if output) to table
 	set_ioexp_val_to_bootstrap_table();
 
+	// set value from table
+	set_bootstrap_table_val_to_ioexp();
+
 	if (!pca6416a_init())
 		LOG_ERR("pca6416a init fail");
 
@@ -318,7 +321,4 @@ void ioexp_init(void)
 	if (drive_level == 1) {
 		set_nuwa1_mfio_6_8_10_output();
 	}
-
-	// set value from table
-	set_bootstrap_table_val_to_ioexp();
 }
