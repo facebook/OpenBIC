@@ -26,6 +26,7 @@
 #include <plat_cpld.h>
 #include "pldm_oem.h"
 #include "plat_led.h"
+#include "plat_i2c.h"
 
 LOG_MODULE_REGISTER(plat_event);
 
@@ -276,4 +277,24 @@ void plat_asic_error_error_log(bool is_assert, plat_asic_error_event event)
 plat_asic_error_event *plat_get_asic_error_event()
 {
 	return &asic_error_event;
+}
+
+#define ASIC_I2C_BUS I2C_BUS12
+#define ASIC_I2C_ADDR 0x32
+#define I2C_MAX_RETRY 3
+int read_asic_reg(uint8_t reg, uint8_t *data, uint8_t len)
+{
+	I2C_MSG i2c_msg = {
+		.bus = ASIC_I2C_BUS,
+		.target_addr = ASIC_I2C_ADDR,
+	};
+	i2c_msg.tx_len = 1;
+	i2c_msg.rx_len = len;
+	i2c_msg.data[0] = reg;
+	if (i2c_master_read(&i2c_msg, I2C_MAX_RETRY)) {
+		LOG_ERR("Can't get data from ASIC, reg: 0x%02x", reg);
+		return -1;
+	}
+	memcpy(data, i2c_msg.data, len);
+	return 0;
 }

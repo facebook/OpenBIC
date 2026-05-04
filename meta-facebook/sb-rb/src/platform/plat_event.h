@@ -21,6 +21,16 @@
 
 #define HAMSA_SMB_ERR_EVENT_HEADER 0x60
 #define BOOTSTRAP_SET_AFTER_PWR_EN 0x54
+#define HAMSA_MFIO22_ERR_EVENT 0x55
+#define MEDHA0_MFIO24_ERR_EVENT 0x56
+#define MEDHA1_MFIO24_ERR_EVENT 0x57
+#define HAMSA_MFIO23_ERR_EVENT 0x58
+#define MEDHA0_MFIO31_ERR_EVENT 0x59
+#define MEDHA1_MFIO31_ERR_EVENT 0x5A
+
+#define ASIC_MONITOR_TEMP_REG 0x70
+#define ASIC_MONITOR_TEMP_REG_LEN 10
+
 typedef struct _vr_fault_info {
 	uint8_t mtia_event_source;
 	uint8_t cpld_reg_offset;
@@ -48,4 +58,5 @@ void plat_set_iris_temp_error_log(bool is_assert, uint8_t sensor_id);
 void asic_thermtrip_error_log(bool is_assert);
 void plat_asic_error_error_log(bool is_assert, plat_asic_error_event event);
 plat_asic_error_event *plat_get_asic_error_event();
+int read_asic_reg(uint8_t reg, uint8_t *data, uint8_t len);
 #endif

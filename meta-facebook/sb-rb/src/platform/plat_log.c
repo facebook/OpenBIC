@@ -412,6 +412,43 @@ bool get_error_data(uint16_t error_code, uint8_t *data)
 	uint8_t cpld_offset = error_code & 0xFF;
 	uint8_t bit_position = (error_code >> 8) & 0x07;
 	LOG_WRN("cpld_offset: 0x%x, bit_position: 0x%x", cpld_offset, bit_position);
+	uint8_t asic_temp_data[ASIC_MONITOR_TEMP_REG_LEN] = { 0 };
+	if (read_asic_reg(ASIC_MONITOR_TEMP_REG, (uint8_t *)asic_temp_data,
+			  ASIC_MONITOR_TEMP_REG_LEN) != 0) {
+		LOG_ERR("Can't get max asic temp data from ASIC, reg: 0x%02x",
+			ASIC_MONITOR_TEMP_REG);
+	}
+	// check Asic temp error code
+	if (cpld_offset == MFIO_FOR_RAINBOW) {
+		uint8_t data_read_back = 0;
+		if (!plat_read_cpld(MFIO_FOR_RAINBOW, &data_read_back, 1)) {
+			LOG_ERR("Fail read cpld reg 0x%x", MFIO_FOR_RAINBOW);
+		}
+		switch (bit_position) {
+		case HAMSA_MFIO22:
+			data[0] = data_read_back;
+			data[1] = asic_temp_data[1];
+			break;
+		case MEDHA0_MFIO24:
+			data[0] = data_read_back;
+			data[1] = asic_temp_data[2];
+			break;
+		case MEDHA1_MFIO24:
+			data[0] = data_read_back;
+			data[1] = asic_temp_data[3];
+			break;
+		case HAMSA_MFIO23:
+		case MEDHA0_MFIO31:
+		case MEDHA1_MFIO31:
+			data[0] = data_read_back;
+			break;
+		default:
+			LOG_ERR("unsupported Asic temp error code with cpld_offset: 0x%x, bit_position: 0x%x",
+				cpld_offset, bit_position);
+			return false;
+		}
+		return true;
+	}
 
 	// Initialize sensor number
 	uint8_t sensor_num = 0x00;
@@ -478,14 +515,27 @@ bool get_error_data(uint16_t error_code, uint8_t *data)
 void error_log_event(uint16_t error_code, bool log_status)
 {
 	bool log_todo = false;
+	static uint64_t hamsa_remote_err_last_time_stamp = 0;
+	static uint64_t medha0_remote_err_last_time_stamp = 0;
+	static uint64_t medha1_remote_err_last_time_stamp = 0;
 	// Check if the error_code is already logged
 	for (uint8_t i = 1; i < ARRAY_SIZE(err_code_caches); i++) {
 		if (err_code_caches[i] == error_code) {
 			if (log_status == LOG_ASSERT) {
-				log_todo = false; // Duplicate error, no need to log again
-				LOG_INF("Duplicate error_code: 0x%x, log_status: %d", error_code,
-					log_status);
-				return;
+				// check if is ASIC remote temp error
+				if (error_code == HAMSA_MFIO22_ERROR_CODE) {
+					hamsa_remote_err_last_time_stamp = k_uptime_get();
+				} else if (error_code == MEDHA0_MFIO24_ERROR_CODE) {
+					medha0_remote_err_last_time_stamp = k_uptime_get();
+				} else if (error_code == MEDHA1_MFIO24_ERROR_CODE) {
+					medha1_remote_err_last_time_stamp = k_uptime_get();
+				} else {
+					//other case
+					log_todo = false; // Duplicate error, no need to log again
+					LOG_INF("Duplicate error_code: 0x%x, log_status: %d",
+						error_code, log_status);
+					return;
+				}
 			} else if (log_status == LOG_DEASSERT) {
 				log_todo = true; // The error needs to be cleared
 				err_code_caches[i] = 0; // Remove the error code from the cache
@@ -493,6 +543,62 @@ void error_log_event(uint16_t error_code, bool log_status)
 					log_status);
 				return;
 			}
+		}
+	}
+	// check asic remote temp error time
+	if (error_code == HAMSA_MFIO22_ERROR_CODE) {
+		uint64_t current_time_get = k_uptime_get();
+		//overflow case
+		if (current_time_get < hamsa_remote_err_last_time_stamp) {
+			// assert log
+			log_todo = false;
+			hamsa_remote_err_last_time_stamp = current_time_get;
+		}
+		// 2 same error need diff 10s
+		if ((current_time_get - hamsa_remote_err_last_time_stamp) > 10000) {
+			// deassert log
+			log_todo = true;
+			hamsa_remote_err_last_time_stamp = current_time_get;
+		} else {
+			LOG_INF("same asic remote temp error within 10s, current_time_get: %lld, hamsa_remote_err_last_time_stamp: %lld",
+				current_time_get, hamsa_remote_err_last_time_stamp);
+			return;
+		}
+	} else if (error_code == MEDHA0_MFIO24_ERROR_CODE) {
+		uint64_t current_time_get = k_uptime_get();
+		//overflow case
+		if (current_time_get < medha0_remote_err_last_time_stamp) {
+			// assert log
+			log_todo = false;
+			medha0_remote_err_last_time_stamp = current_time_get;
+		}
+		// 2 same error need diff 10s
+		if ((current_time_get - medha0_remote_err_last_time_stamp) > 10000) {
+			// deassert log
+			log_todo = true;
+			medha0_remote_err_last_time_stamp = current_time_get;
+		} else {
+			LOG_INF("same asic remote temp error within 10s, current_time_get: %lld, medha0_remote_err_last_time_stamp: %lld",
+				current_time_get, medha0_remote_err_last_time_stamp);
+			return;
+		}
+	} else if (error_code == MEDHA1_MFIO24_ERROR_CODE) {
+		uint64_t current_time_get = k_uptime_get();
+		//overflow case
+		if (current_time_get < medha1_remote_err_last_time_stamp) {
+			// assert log
+			log_todo = false;
+			medha1_remote_err_last_time_stamp = current_time_get;
+		}
+		// 2 same error need diff 10s
+		if ((current_time_get - medha1_remote_err_last_time_stamp) > 10000) {
+			// deassert log
+			log_todo = true;
+			medha1_remote_err_last_time_stamp = current_time_get;
+		} else {
+			LOG_INF("same asic remote temp error within 10s, current_time_get: %lld, medha1_remote_err_last_time_stamp: %lld",
+				current_time_get, medha1_remote_err_last_time_stamp);
+			return;
 		}
 	}
 
@@ -662,4 +768,20 @@ bool check_temp_status_bit(uint8_t bit_num)
 	}
 
 	return true;
+}
+
+void packaged_bmc_log(uint8_t event_type, uint8_t event_data_1, uint8_t event_data_2,
+		      uint8_t event_data_3)
+{
+	struct pldm_addsel_data to_bmc_sel_msg = { 0 };
+	to_bmc_sel_msg.assert_type = LOG_ASSERT;
+	to_bmc_sel_msg.event_type = event_type;
+	to_bmc_sel_msg.event_data_1 = event_data_1;
+	to_bmc_sel_msg.event_data_2 = event_data_2;
+	to_bmc_sel_msg.event_data_3 = event_data_3;
+	if (send_event_log_to_bmc(to_bmc_sel_msg) != PLDM_SUCCESS) {
+		LOG_ERR("Failed to send msg to bmc, event_type: 0x%x, event data: 0x%x 0x%x 0x%x\n",
+			to_bmc_sel_msg.event_type, to_bmc_sel_msg.event_data_1,
+			to_bmc_sel_msg.event_data_2, to_bmc_sel_msg.event_data_3);
+	}
 }

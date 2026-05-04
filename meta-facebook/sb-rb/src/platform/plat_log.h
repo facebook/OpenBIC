@@ -40,6 +40,17 @@
 #define TEMP_IC_OVER_FAULT_REG 0x2A
 #define VR_SMBALRT_EVENT_LOG_REG 0x26
 
+#define HAMSA_MFIO22 6 //bit-6
+#define MEDHA0_MFIO24 3 //bit-3
+#define MEDHA1_MFIO24 1 //bit-1
+#define HAMSA_MFIO23 5 //bit-5
+#define MEDHA0_MFIO31 2 //bit-2
+#define MEDHA1_MFIO31 0 //bit-0
+
+#define HAMSA_MFIO22_ERROR_CODE 0x86A8
+#define MEDHA0_MFIO24_ERROR_CODE 0x83A8
+#define MEDHA1_MFIO24_ERROR_CODE 0x81A8
+
 enum VR_ERR_LOG_DEVICE_INDEX_E {
 	//pwr fault reg 1
 	PWRGD_OWL_E_TRVDD0P9_R_FAULT = 1,
@@ -119,9 +130,12 @@ enum LOG_ERROR_TRIGGER_CAUSE {
 };
 
 enum LOG_ERROR_TRIGGER_CAUSE_EXTEND {
-	// start from 0x8800 ~ 0x9F00
+	// start from 0x8800 ~ 0x9E00
 	BOOTSTRAP_EVENT_CAUSE = (CPLD_UNEXPECTED_VAL_TRIGGER_CAUSE << 13) | BIT(11), // 0x8800
+	ASIC_TEMP_EVENT_CAUSE = 0x8900, // 0x8900
 };
 
 bool check_temp_status_bit(uint8_t bit_num);
+void packaged_bmc_log(uint8_t event_type, uint8_t event_data_1, uint8_t event_data_2,
+		      uint8_t event_data_3);
 #endif

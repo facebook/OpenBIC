@@ -255,6 +255,39 @@ void cmd_log_dump(const struct shell *shell, size_t argc, char **argv)
 						break;
 					}
 				}
+			} else if (cpld_offset == MFIO_FOR_RAINBOW) {
+				shell_print(shell, "\tASIC_REMOTE_TEMP_ERROR");
+				switch (bit_position) {
+				case HAMSA_MFIO22:
+					shell_print(shell, "\tHAMSA_MFIO22");
+					err_data_len = 2;
+					break;
+				case MEDHA0_MFIO24:
+					shell_print(shell, "\tMEDHA0_MFIO24");
+					err_data_len = 2;
+					break;
+				case MEDHA1_MFIO24:
+					shell_print(shell, "\tMEDHA1_MFIO24");
+					err_data_len = 2;
+					break;
+				case HAMSA_MFIO23:
+					shell_print(shell, "\tHAMSA_MFIO23");
+					err_data_len = 1;
+					break;
+				case MEDHA0_MFIO31:
+					shell_print(shell, "\tMEDHA0_MFIO31");
+					err_data_len = 1;
+					break;
+				case MEDHA1_MFIO31:
+					shell_print(shell, "\tMEDHA1_MFIO31");
+					err_data_len = 1;
+					break;
+				default:
+					break;
+				}
+				shell_print(shell, "cpld offset(0x%x): 0x%02x", MFIO_FOR_RAINBOW,
+					    log.error_data[0]);
+				shell_print(shell, "asic temp data: 0x%02x", log.error_data[1]);
 			} else {
 				shell_print(shell, "\t%s", reg_name);
 				shell_print(shell, "\t\t%s", bit_name);
