@@ -144,7 +144,7 @@ static int cmd_power_capping_set_time_window(const struct shell *shell, size_t a
 	}
 
 	uint16_t value = strtol(argv[2], NULL, 10);
-	if (value < ADC_AVERGE_TIMES_MIN && value > ADC_AVERGE_TIMES_MAX) {
+	if (value < ADC_AVERGE_TIMES_MIN || value > ADC_AVERGE_TIMES_MAX) {
 		shell_error(shell, "time should be less equal to %d", ADC_AVERGE_TIMES_MAX);
 		return -1;
 	}

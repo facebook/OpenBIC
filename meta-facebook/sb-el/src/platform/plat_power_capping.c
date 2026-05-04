@@ -370,7 +370,7 @@ void set_power_capping_time_w(uint8_t vr_idx, uint8_t lv, uint16_t value)
 		return;
 	}
 
-	if (value < ADC_AVERGE_TIMES_MIN && value > ADC_AVERGE_TIMES_MAX) {
+	if (value < ADC_AVERGE_TIMES_MIN || value > ADC_AVERGE_TIMES_MAX) {
 		LOG_ERR("Wrong value %d", value);
 		return;
 	}
