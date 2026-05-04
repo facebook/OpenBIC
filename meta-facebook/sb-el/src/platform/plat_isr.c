@@ -72,7 +72,7 @@ void ISR_GPIO_RST_ARKE_PWR_ON_PLD_R1_N()
 			init_U200052_IO();
 			init_U200053_IO();
 			init_U200070_IO();
-			power_on_p3v3_osfp();
+			init_U200051_IO();
 		}
 		for (int i = 0; i < CLK_COMPONENT_MAX; i++) {
 			clear_clock_status(NULL, i);
@@ -90,7 +90,6 @@ void ISR_GPIO_RST_ARKE_PWR_ON_PLD_R1_N()
 		reset_error_log_states(err_type);
 	} else {
 		LOG_INF("dc off, clear io expander init flag");
-		set_ioe_init_flag(0);
 		// vr_test_mode_enable(false);
 		// if board id == EVB , ctrl fan pwm
 		if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {

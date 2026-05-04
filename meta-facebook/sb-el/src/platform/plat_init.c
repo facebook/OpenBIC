@@ -75,6 +75,7 @@ void pal_post_init()
 		init_U200052_IO();
 		init_U200053_IO();
 		init_U200070_IO();
+		init_U200051_IO();
 	}
 	plat_set_ac_on_log();
 	init_cpld_polling();

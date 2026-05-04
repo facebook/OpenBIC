@@ -401,7 +401,7 @@ static void plat_sync_osfp_p3v3_enable_by_pwrgd(void)
 		set_pca6554apw_ioe_value(U200051_IO_I2C_BUS, U200051_IO_ADDR,
 					 OUTPUT_PORT, new_en_value);
 
-		LOG_INF("Update U200051 OUTPUT_PORT: 0x%02X -> 0x%02X (U200053 PWRGD=0x%02X)",
+		LOG_INF("Update U200051 OUTPUT_PORT: 0x%02X -> 0x%02X (U200053 PRESENCE=0x%02X)",
 			en_value, new_en_value, pwrgd_value);
 	}
 }
