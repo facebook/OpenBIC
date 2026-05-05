@@ -69,6 +69,7 @@ void ISR_GPIO_RST_ARKE_PWR_ON_PLD_R1_N()
 	if (gpio_get(RST_ARKE_PWR_ON_PLD_R1_N)) {
 		ioexp_init();
 		if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
+			// Ensure U200053 is initialized before initializing U200051.
 			init_U200052_IO();
 			init_U200053_IO();
 			init_U200070_IO();

@@ -155,10 +155,31 @@ int get_pca6554apw_ioe_value(uint8_t ioe_bus, uint8_t ioe_addr, uint8_t ioe_reg,
 
 void init_U200051_IO()
 {
+	uint8_t u200053_input = 0;
+	uint8_t u200051_output = 0x80;
+	int ret = 0;
+
 	LOG_INF("init U200051 IO expander");
-	// io5,io7 default output 1
-	set_pca6554apw_ioe_value(U200051_IO_I2C_BUS, U200051_IO_ADDR, OUTPUT_PORT, 0x80);
-	// only bit6 is input (1)
+
+	/*
+	 * U200051 bit7 default output = 1
+	 * U200051 bit0~5 depends on U200053 bit0~5:
+	 *   U200053 high -> U200051 write 0
+	 *   U200053 low  -> U200051 write 1
+	 */
+	ret = get_pca6554apw_ioe_value(U200053_IO_I2C_BUS, U200053_IO_ADDR, INPUT_PORT,
+				       &u200053_input);
+	if (ret != 0) {
+		LOG_ERR("Failed to read U200053 INPUT_PORT, use default 0x80");
+	} else {
+		u200051_output |= ((~u200053_input) & 0x3F);
+		LOG_INF("U200053 INPUT_PORT=0x%02X, init U200051 OUTPUT_PORT=0x%02X", u200053_input,
+			u200051_output);
+	}
+
+	set_pca6554apw_ioe_value(U200051_IO_I2C_BUS, U200051_IO_ADDR, OUTPUT_PORT, u200051_output);
+
+	/* only bit6 is input (1) */
 	set_pca6554apw_ioe_value(U200051_IO_I2C_BUS, U200051_IO_ADDR, CONFIG, 0x40);
 }
 

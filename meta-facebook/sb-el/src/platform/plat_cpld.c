@@ -364,7 +364,7 @@ static void plat_sync_osfp_p3v3_enable_by_pwrgd(void)
 		return;
 	}
 
-	/* Read U200053 io0~io5: PWRGD_P3V3_P1~P6 */
+	/* Read U200053 io0~io5: PRE_P3V3_P1~P6 */
 	ret = get_pca6554apw_ioe_value(U200053_IO_I2C_BUS, U200053_IO_ADDR,
 				       INPUT_PORT, &pwrgd_value);
 	if (ret != 0) {
