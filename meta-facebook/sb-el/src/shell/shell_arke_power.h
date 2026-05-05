@@ -40,7 +40,6 @@ enum PWR_CLOCK_COMPONENT {
 #define CLK_BUF_100M_BYTE_COUNT 0x7
 
 bool check_p3v3_p5v_pwrgd(void);
-void power_on_p3v3_osfp();
 void pwer_gd_get_status(const struct shell *shell);
 void clear_clock_status(const struct shell *shell, uint8_t clock_index);
 #endif
