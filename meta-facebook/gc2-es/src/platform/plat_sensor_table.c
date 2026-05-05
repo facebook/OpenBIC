@@ -203,6 +203,25 @@ sensor_cfg adm1278_sensor_config_table[] = {
 	  SENSOR_INIT_STATUS, NULL, NULL, post_adm1278_power_read, NULL, &adm1278_init_args[0] },
 };
 
+sensor_cfg tps25990_sensor_config_table[] = {
+	/* number,                  type,       port,      address,      offset,
+	   access check arg0, arg1, sample_count, cache, cache_status, mux_address, mux_offset,
+	   pre_sensor_read_fn, pre_sensor_read_args, post_sensor_read_fn, post_sensor_read_fn  */
+	{ SENSOR_NUM_TEMP_EFUSE, sensor_dev_tps25990, I2C_BUS2, TI_TPS25990_ADDR,
+	  PMBUS_READ_TEMPERATURE_1, stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT,
+	  ENABLE_SENSOR_POLLING, 0, SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL,
+	  &tps25990_init_args[0] },
+	{ SENSOR_NUM_VOL_EFUSE_IN, sensor_dev_tps25990, I2C_BUS2, TI_TPS25990_ADDR, PMBUS_READ_VIN,
+	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &tps25990_init_args[0] },
+	{ SENSOR_NUM_CUR_EFUSE_OUT, sensor_dev_tps25990, I2C_BUS2, TI_TPS25990_ADDR, PMBUS_READ_IIN,
+	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &tps25990_init_args[0] },
+	{ SENSOR_NUM_PWR_EFUSE_IN, sensor_dev_tps25990, I2C_BUS2, TI_TPS25990_ADDR, PMBUS_READ_PIN,
+	  stby_access, 0, 0, SAMPLE_COUNT_DEFAULT, POLL_TIME_DEFAULT, ENABLE_SENSOR_POLLING, 0,
+	  SENSOR_INIT_STATUS, NULL, NULL, NULL, NULL, &tps25990_init_args[0] },
+};
+
 sensor_cfg ltc4286_sensor_config_table[] = {
 	/* number,                  type,       port,      address,      offset,
 	   access check arg0, arg1, sample_count, cache, cache_status, mux_address, mux_offset,
@@ -587,6 +606,13 @@ uint8_t pal_get_extend_sensor_config()
 			plat_sensor_clear_vr_fault(MPS_MP5990_ADDR, I2C_BUS2);
 		}
 		break;
+	case HSC_MODULE_TPS25990:
+		extend_sensor_config_size += ARRAY_SIZE(tps25990_sensor_config_table);
+		if (is_ac_lost()) {
+			// Clear VR fault bit
+			plat_sensor_clear_vr_fault(TI_TPS25990_ADDR, I2C_BUS2);
+		}
+		break;
 	case HSC_MODULE_LTC4286:
 		extend_sensor_config_size += ARRAY_SIZE(ltc4286_sensor_config_table);
 		break;
@@ -773,6 +799,14 @@ void pal_extend_sensor_config()
 		for (int index = 0; index < sensor_count; index++) {
 			mp5990_sensor_config_table[index].init_args = &mp5990_init_args[arg_index];
 			add_sensor_config(mp5990_sensor_config_table[index]);
+		}
+		break;
+	case HSC_MODULE_TPS25990:
+		sensor_count = ARRAY_SIZE(tps25990_sensor_config_table);
+		for (int index = 0; index < sensor_count; index++) {
+			tps25990_sensor_config_table[index].init_args =
+				&tps25990_init_args[arg_index];
+			add_sensor_config(tps25990_sensor_config_table[index]);
 		}
 		break;
 	case HSC_MODULE_LTC4286:

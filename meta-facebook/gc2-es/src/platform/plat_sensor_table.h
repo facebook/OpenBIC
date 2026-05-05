@@ -31,6 +31,7 @@
 #define ADI_ADM1278_ADDR (0x20 >> 1)
 #define ADI_LTC4286_ADDR (0x84 >> 1)
 #define MPS_MP5990_ADDR (0x98 >> 1)
+#define TI_TPS25990_ADDR (0x96 >> 1)
 #define ADI_LTC4282_ADDR (0x88 >> 1)
 #define PCH_ADDR (0x2C >> 1)
 #define ME_SENSOR_NUM_TEMP_PCH 0x08
