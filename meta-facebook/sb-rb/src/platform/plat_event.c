@@ -34,6 +34,7 @@ void get_vr_vout_handler(struct k_work *work);
 K_WORK_DEFINE(vr_vout_work, get_vr_vout_handler);
 
 static plat_asic_error_event asic_error_event;
+static bool temp_polling_flag = false;
 
 const vr_fault_info vr_fault_table[] = {
 	// { iris_event_source, cpld_reg_offset, cpld_reg_bit }
@@ -171,6 +172,7 @@ void process_mtia_vr_power_fault_sel(cpld_info *cpld_info, uint8_t *current_cpld
 					sel_msg.event_data_2, sel_msg.event_data_3);
 			}
 		} else {
+			temp_polling_flag = get_plat_sensor_polling_enable_flag();
 			set_plat_sensor_polling_enable_flag(false);
 			// wait 10ms for vr monitor stop
 			k_msleep(10);
@@ -201,7 +203,7 @@ void process_mtia_vr_power_fault_sel(cpld_info *cpld_info, uint8_t *current_cpld
 				sel_msg[sel_msg_idx].event_data_3 = (uint8_t)(vr_status & 0xFF);
 				sel_msg_idx += 1;
 			}
-			set_plat_sensor_polling_enable_flag(true);
+			set_plat_sensor_polling_enable_flag(temp_polling_flag);
 			// Send SEL to BMC
 			for (int k = 0; k < sel_msg_idx; k++) {
 				if (PLDM_SUCCESS != send_event_log_to_bmc(sel_msg[k])) {
