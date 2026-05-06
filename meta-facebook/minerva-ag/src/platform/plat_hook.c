@@ -2842,17 +2842,17 @@ bool get_user_settings_power_capping_from_eeprom(void *user_settings)
 
 bool set_HC_LC_enable_flag(bool hc_status, bool lc_status)
 {
-	uint8_t data = 0xC0;
+	uint8_t data;
+
+	if (!plat_i2c_read(I2C_BUS5, AEGIS_CPLD_ADDR, CPLD_MTIA_HC_LC_SETTING_ADDR, &data, 1)) {
+		LOG_ERR("Failed to read MTIA HC LC setting (0x%02X)", data);
+		return false;
+	}
 
 	if (hc_status == MTIA_HC_LC_ENABLE)
 		data |= BIT(0);
 	else
 		data &= ~BIT(0);
-
-	if (!plat_i2c_write(I2C_BUS5, AEGIS_CPLD_ADDR, CPLD_MTIA_HC_LC_SETTING_ADDR, &data, 1)) {
-		LOG_ERR("Failed to set MTIA HC setting (0x%02X)", data);
-		return false;
-	}
 
 	if (lc_status == MTIA_HC_LC_ENABLE)
 		data |= BIT(1);
@@ -2860,7 +2860,7 @@ bool set_HC_LC_enable_flag(bool hc_status, bool lc_status)
 		data &= ~BIT(1);
 
 	if (!plat_i2c_write(I2C_BUS5, AEGIS_CPLD_ADDR, CPLD_MTIA_HC_LC_SETTING_ADDR, &data, 1)) {
-		LOG_ERR("Failed to set MTIA LC setting (0x%02X)", data);
+		LOG_ERR("Failed to set MTIA HC LC setting (0x%02X)", data);
 		return false;
 	}
 
