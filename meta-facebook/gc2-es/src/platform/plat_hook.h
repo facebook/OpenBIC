@@ -43,6 +43,10 @@ typedef struct _mp5998_init_arg {
 	uint16_t fault_mask;
 	uint16_t protect_en;
 } mp5998_init_arg;
+typedef struct _tps53689_pre_proc_arg {
+	/* vr page to set */
+	uint8_t vr_page;
+} tps53689_pre_proc_arg;
 
 /**************************************************************************************************
  * INIT ARGS
@@ -66,6 +70,7 @@ extern pmic_pre_proc_arg pmic_pre_read_args[];
 extern dimm_pre_proc_arg dimm_pre_proc_args[];
 extern ina233_init_arg ina233_init_args[];
 extern vr_page_cfg xdpe15284_page[];
+extern tps53689_pre_proc_arg tps53689_pre_read_args[];
 
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK FUNC
@@ -86,5 +91,6 @@ bool post_ltc4286_read(sensor_cfg *cfg, void *args, int *reading);
 bool post_ltc4282_read(sensor_cfg *cfg, void *args, int *reading);
 bool pre_xdpe15284_read(sensor_cfg *cfg, void *args);
 bool post_xdpe15284_read(sensor_cfg *cfg, void *args, int *reading);
+bool pre_tps53689_read(sensor_cfg *cfg, void *args);
 
 #endif

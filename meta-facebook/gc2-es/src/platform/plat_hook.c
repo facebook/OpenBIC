@@ -131,6 +131,12 @@ isl69259_pre_proc_arg isl69259_pre_read_args[] = {
 	[1] = { 0x1 },
 };
 
+/* TPS53689 page arguments: page 0 and page 1 */
+tps53689_pre_proc_arg tps53689_pre_read_args[] = {
+	[0] = { .vr_page = 0x0 },
+	[1] = { .vr_page = 0x1 },
+};
+
 vr_page_cfg xdpe15284_page[] = {
 	[0] = { .vr_page = PMBUS_PAGE_0 },
 	[1] = { .vr_page = PMBUS_PAGE_1 },
@@ -283,6 +289,43 @@ static inline xdpe_vr_state *get_xdpe_vr_state(uint8_t bus, uint8_t addr)
 	return NULL;
 }
 
+/* TPS53689 pre read function
+ *
+ * Sets the PMBus PAGE register before reading.
+ * TPS53689 uses the same page-switch mechanism as ISL69259:
+ * write register 0x00 with the desired page value.
+ * No mutex or write-protect setup is required.
+ *
+ * @param cfg   pointer to sensor_cfg (must not be NULL)
+ * @param args  pointer to tps53689_pre_proc_arg (must not be NULL)
+ * @retval true  if page is set successfully
+ * @retval false if I2C write fails
+ */
+bool pre_tps53689_read(sensor_cfg *cfg, void *args)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(args, false);
+
+	const tps53689_pre_proc_arg *pre_proc_args = (tps53689_pre_proc_arg *)args;
+	uint8_t retry = 5;
+	I2C_MSG msg;
+
+	/* Set PMBus PAGE (register 0x00) */
+	msg.bus = cfg->port;
+	msg.target_addr = cfg->target_addr;
+	msg.tx_len = 2;
+	msg.data[0] = 0x00; /* PAGE command */
+	msg.data[1] = pre_proc_args->vr_page;
+
+	if (i2c_master_write(&msg, retry)) {
+		LOG_ERR("pre_tps53689_read: set page 0x%x fail, sensor: 0x%x",
+			pre_proc_args->vr_page, cfg->num);
+		return false;
+	}
+
+	return true;
+}
+
 /* All WP initialization states reset after a 12V cycle (DC power off/on). */
 void xdpe_reset_wp_states_after_power_cycle(void)
 {
@@ -314,7 +357,7 @@ bool pre_xdpe15284_read(sensor_cfg *cfg, void *args)
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	CHECK_NULL_ARG_WITH_RETURN(args, false);
 
-	vr_page_cfg *xdpe15284_vr_page = (vr_page_cfg *)args;
+	const vr_page_cfg *xdpe15284_vr_page = (const vr_page_cfg *)args;
 	I2C_MSG msg = { 0 };
 	int retry = 3;
 
