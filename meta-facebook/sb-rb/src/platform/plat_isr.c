@@ -39,10 +39,107 @@
 
 LOG_MODULE_REGISTER(plat_isr);
 
+#define CLK_APLL_CHECK_INTERVAL K_SECONDS(10)
+
+static void clk_apll_check_work_handler(struct k_work *work);
+K_WORK_DELAYABLE_DEFINE(clk_apll_check_work, clk_apll_check_work_handler);
+static void start_clk_apll_check_work(void);
+
 void pwr_sequence_event_timer_handler(struct k_timer *timer);
 K_TIMER_DEFINE(pwr_sequence_event_work_timer, pwr_sequence_event_timer_handler, NULL);
 void pwr_sequence_event(struct k_work *work);
 K_WORK_DEFINE(pwr_sequence_event_work, pwr_sequence_event);
+
+void check_read_100MHz_clock_status()
+{
+	uint8_t lock_status = 0;
+	//write to two-byte mode
+	uint8_t write_data = 0x05;
+	if (!plat_i2c_write(I2C_BUS3, 0x9, 0x26, &write_data, 1)) {
+		LOG_ERR("Failed to write 100MHz clock SSI 2-Byte address register");
+		goto end;
+	}
+
+	lock_status = clk_100mhz_get_lock_status();
+	if (lock_status == 0) {
+		uint16_t error_code = CLOCK_APLL_UNLOCK_EVENT_CAUSE | CLK_100MHZ_ERR_IDX;
+		error_log_event(error_code, LOG_ASSERT);
+	}
+end:
+	//write back to 1-byte mode
+	write_data = 0x01;
+	if (!plat_i2c_write(I2C_BUS3, 0x9, 0x26, &write_data, 1)) {
+		LOG_ERR("Failed to write 100MHz clock SSI 1-Byte address register");
+	}
+	return;
+}
+
+void check_read_312_5MHz_clock_status()
+{
+	uint8_t lock_status = 0;
+	lock_status = clk_312_5mhz_get_lock_status();
+	if (lock_status == 0xFF) {
+		// fail to get lock status
+		return;
+	} else if (lock_status == 0) {
+		uint16_t error_code = CLOCK_APLL_UNLOCK_EVENT_CAUSE | CLK_312_5MHZ_ERR_IDX;
+		error_log_event(error_code, LOG_ASSERT);
+	}
+}
+
+void check_clk_buf_loss_status()
+{
+	uint8_t clk_buf_loss_status = 0;
+	if (!plat_read_cpld(CLK_100MHZ_BUF_LOSS_REG, &clk_buf_loss_status, 1)) {
+		LOG_ERR("Failed to read 100MHz clock buffer loss status from CPLD");
+		return;
+	}
+	/*
+	Bit7: BUFF0_100M_LOSB_PLD
+	Bit6: BUFF1_100M_LOSB_PLD
+	Bit5: BUFF2_100M_LOSB_PLD
+	if bit7 bit6 bit5 is 0 means fail
+	*/
+	if ((clk_buf_loss_status & 0xE0) != 0xE0) {
+		if ((clk_buf_loss_status & BIT(7)) == 0) {
+			uint16_t error_code =
+				CLOCK_APLL_UNLOCK_EVENT_CAUSE | CLK_BUF0_100M_LOSB_PLD;
+			error_log_event(error_code, LOG_ASSERT);
+		}
+		if ((clk_buf_loss_status & BIT(6)) == 0) {
+			uint16_t error_code =
+				CLOCK_APLL_UNLOCK_EVENT_CAUSE | CLK_BUF1_100M_LOSB_PLD;
+			error_log_event(error_code, LOG_ASSERT);
+		}
+		if ((clk_buf_loss_status & BIT(5)) == 0) {
+			uint16_t error_code =
+				CLOCK_APLL_UNLOCK_EVENT_CAUSE | CLK_BUF2_100M_LOSB_PLD;
+			error_log_event(error_code, LOG_ASSERT);
+		}
+	}
+}
+static void clk_apll_check_work_handler(struct k_work *work)
+{
+	ARG_UNUSED(work);
+
+	if (!is_mb_dc_on()) {
+		return;
+	}
+
+	check_read_100MHz_clock_status();
+	uint8_t rev_id = get_board_rev_id();
+	if (rev_id >= REV_ID_DVT_FAB4) {
+		check_read_312_5MHz_clock_status();
+	}
+	check_clk_buf_loss_status();
+	start_clk_apll_check_work();
+}
+
+static void start_clk_apll_check_work(void)
+{
+	k_work_reschedule(&clk_apll_check_work, CLK_APLL_CHECK_INTERVAL);
+}
+
 void pwr_sequence_event_timer_handler(struct k_timer *timer)
 {
 	k_work_submit(&pwr_sequence_event_work);
@@ -75,6 +172,8 @@ void pwr_sequence_event(struct k_work *work)
 				sel_msg.event_data_1, sel_msg.event_data_2, sel_msg.event_data_3);
 		}
 	}
+	//check clock APLL lock status
+	start_clk_apll_check_work();
 }
 
 uint8_t pwr_steps_on_flag = 0;
@@ -116,8 +215,10 @@ bool ubc_en_changed_callback(cpld_info *info, uint8_t *data)
 	last_ubc_en = !!(info->last_polling_value & info->bit_check_mask);
 
 	/* no state change */
-	if (ubc_en == last_ubc_en)
+	if (ubc_en == last_ubc_en) {
+		LOG_INF("UBC_EN state not changed, still %d", ubc_en);
 		return false;
+	}
 
 	LOG_INF("UBC_EN changed: %d -> %d", last_ubc_en, ubc_en);
 

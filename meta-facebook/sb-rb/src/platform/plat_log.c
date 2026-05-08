@@ -301,13 +301,46 @@ bool get_multi_vr_status(uint8_t alrt_index, uint8_t *data)
 
 	return true;
 }
+uint8_t clk_100mhz_get_lock_status()
+{
+	I2C_MSG i2c_msg = { 0 };
+	uint8_t retry = 5;
+	i2c_msg.bus = I2C_BUS3;
+	i2c_msg.target_addr = 0x9; //7-bit
+	i2c_msg.tx_len = 2;
+	i2c_msg.rx_len = 1;
+	i2c_msg.data[0] = 0x01; //offset HSB
+	i2c_msg.data[1] = 0x3F; //offset LSB
+
+	if (i2c_master_read_without_error_log(&i2c_msg, retry)) {
+		return 0xFF; // return invalid status
+	}
+	return i2c_msg.data[0] & 0x01; //bit0 is the APLL lock status
+}
+uint8_t clk_312_5mhz_get_lock_status()
+{
+	I2C_MSG i2c_msg = { 0 };
+	uint8_t retry = 5;
+	i2c_msg.bus = I2C_BUS3;
+	i2c_msg.target_addr = 0x8; // 7-bit
+	i2c_msg.tx_len = 2;
+	i2c_msg.rx_len = 1;
+	i2c_msg.data[0] = 0x00; //offset HSB
+	i2c_msg.data[1] = 0xbd; //offset LSB
+	if (i2c_master_read_without_error_log(&i2c_msg, retry)) {
+		return 0xFF; // return invalid status
+	}
+	return i2c_msg.data[0] & 0x01; //bit 0 is the APLL lock status
+}
 
 bool get_error_data(uint16_t error_code, uint8_t *data)
 {
 	CHECK_NULL_ARG_WITH_RETURN(data, false);
 	//  temperature error code
 	uint8_t trigger_case = (error_code >> 13) & 0x07;
-
+	uint8_t clk_idx = error_code & 0xF;
+	uint8_t lock_status = 0x00;
+	uint8_t clk_data_tmp = 0;
 	switch (trigger_case) {
 	case TEMPERATURE_TRIGGER_CAUSE: {
 		uint8_t temperature_sensoor_num = error_code & 0xFF;
@@ -401,6 +434,31 @@ bool get_error_data(uint16_t error_code, uint8_t *data)
 				data[i] = bootstrap_err;
 			}
 			return true;
+			break;
+		case CLOCK_APLL_UNLOCK_EVENT_CAUSE:
+			switch (clk_idx) {
+			case CLK_100MHZ_ERR_IDX:
+				lock_status = clk_100mhz_get_lock_status();
+				data[0] = lock_status;
+				return true;
+				break;
+			case CLK_312_5MHZ_ERR_IDX:
+				lock_status = clk_312_5mhz_get_lock_status();
+				data[0] = lock_status;
+				return true;
+				break;
+			case CLK_BUF0_100M_LOSB_PLD:
+			case CLK_BUF1_100M_LOSB_PLD:
+			case CLK_BUF2_100M_LOSB_PLD:
+				if (!plat_read_cpld(CLK_100MHZ_BUF_LOSS_REG, &clk_data_tmp, 1)) {
+					LOG_ERR("Fail read cpld reg 0x%x", CLK_100MHZ_BUF_LOSS_REG);
+				}
+				data[0] = clk_data_tmp;
+				return true;
+				break;
+			default:
+				break;
+			}
 			break;
 		default:
 			break;
@@ -532,15 +590,21 @@ void error_log_event(uint16_t error_code, bool log_status)
 				} else {
 					//other case
 					log_todo = false; // Duplicate error, no need to log again
-					LOG_INF("Duplicate error_code: 0x%x, log_status: %d",
-						error_code, log_status);
+					if (error_code != CLK_100MHZ_ERR_CODE &&
+					    error_code != CLK_312_5MHZ_ERR_CODE &&
+					    error_code != CLK_BUF0_100M_LOSB_PLD_ERR_CODE &&
+					    error_code != CLK_BUF1_100M_LOSB_PLD_ERR_CODE &&
+					    error_code != CLK_BUF2_100M_LOSB_PLD_ERR_CODE) {
+						LOG_INF("Duplicate error_code(log assert): 0x%x, log_status: %d",
+							error_code, log_status);
+					}
 					return;
 				}
 			} else if (log_status == LOG_DEASSERT) {
 				log_todo = true; // The error needs to be cleared
 				err_code_caches[i] = 0; // Remove the error code from the cache
-				LOG_INF("Duplicate error_code: 0x%x, log_status: %d", error_code,
-					log_status);
+				LOG_INF("Duplicate error_code(log deassert): 0x%x, log_status: %d",
+					error_code, log_status);
 				return;
 			}
 		}

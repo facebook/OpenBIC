@@ -152,6 +152,11 @@ void check_ubc_delayed(struct k_work *work)
 	 */
 	bool is_ubc_enabled = get_is_ubc_enabled();
 	ubc_enabled_delayed_status = is_ubc_enabled;
+	if (ubc_enabled_delayed_status)
+	{
+		//enable 
+		k_timer_start(get_ubc_delaytimer(), K_MSEC(1000), K_NO_WAIT);
+	}
 }
 
 bool is_ubc_enabled_delayed_enabled(void)
