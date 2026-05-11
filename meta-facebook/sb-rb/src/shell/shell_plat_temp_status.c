@@ -33,22 +33,33 @@ static int cmd_temp_status_get(const struct shell *shell, size_t argc, char **ar
 	}
 
 	uint8_t temp_status = 0xFF;
-	uint8_t *name = argv[1];
+	uint8_t const *name = argv[1];
 	uint8_t rail = 0;
 	for (int i = 0; i < TEMP_INDEX_MAX; i++) {
-		if (strcmp(name, temp_index_table[i].sensor_name) == 0 || strcmp(name,"all") == 0) {
+		if (strcmp(name, temp_index_table[i].sensor_name) == 0 ||
+		    strcmp(name, "all") == 0) {
 			rail = temp_index_table[i].index;
+			const sensor_cfg *temp_cfg =
+				get_sensor_cfg_by_sensor_id(temp_index_table[i].sensor_id);
 			if (!plat_get_temp_status(rail, &temp_status)) {
-				shell_error(shell, "Can't find temp status by rail index: %x", rail);
+				shell_error(shell, "Can't find temp status by rail index: %x",
+					    rail);
 				return -1;
 			}
 			if (rail == TEMP_INDEX_TOP_INLET || rail == TEMP_INDEX_BOT_INLET ||
-				rail == TEMP_INDEX_BOT_OUTLET) {
-				shell_print(shell, "%s %s: 0x%02x (ALERT_N)", temp_index_table[i].sensor_name, "(TMP75)", temp_status);
-			} else {
-				shell_print(shell, "%s %s: 0x%02x", temp_index_table[i].sensor_name, "(TMP432)", temp_status);
+			    rail == TEMP_INDEX_BOT_OUTLET) {
+				shell_print(shell, "%s %s: 0x%02x (ALERT_N)",
+					    temp_index_table[i].sensor_name, "(TMP75)",
+					    temp_status);
+			} else if (temp_cfg->type == sensor_dev_tmp431) {
+				shell_print(shell, "%s %s: 0x%02x", temp_index_table[i].sensor_name,
+					    "(TMP432)", temp_status);
+			} else if (temp_cfg->type == sensor_dev_emc1413) {
+				shell_print(shell, "%s %s: 0x%02x", temp_index_table[i].sensor_name,
+					    "(EMC1413)", temp_status);
 			}
-			if(strcmp(name,"all") != 0){
+
+			if (strcmp(name, "all") != 0) {
 				return 0;
 			}
 		}

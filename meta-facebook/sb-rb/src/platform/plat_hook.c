@@ -32,6 +32,7 @@
 #include "shell_plat_average_power.h"
 #include "plat_ioexp.h"
 #include "tmp431.h"
+#include "emc1413.h"
 #include "plat_util.h"
 
 LOG_MODULE_REGISTER(plat_hook);
@@ -120,22 +121,103 @@ bool post_common_sensor_read(sensor_cfg *cfg, void *args, int *const reading)
 	return true;
 }
 
+uint8_t emc1413_cache_status_0 = 0;
+uint8_t emc1413_cache_status_1 = 0;
+uint8_t emc1413_cache_status_2 = 0;
+uint8_t emc1413_cache_status_3 = 0;
+
+bool emc1413_check_open_status(sensor_cfg *cfg, uint8_t status)
+{
+	uint8_t bit = (cfg->offset == EMC1413_REMOTE_TEMPERATRUE_1) ? BIT(1) :
+		      (cfg->offset == EMC1413_REMOTE_TEMPERATRUE_2) ? BIT(2) :
+								      0;
+	// only check BIT(1), BIT(2)
+	if (status & bit) {
+		cfg->cache_status = SENSOR_OPEN_CIRCUIT;
+		return false;
+	}
+	return true;
+}
+
 bool post_tmp432_read(sensor_cfg *cfg, void *args, int *reading)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	ARG_UNUSED(args);
 	ARG_UNUSED(reading);
+	uint8_t bit = 0;
 
-	uint8_t status = 0;
-
-	if (tmp432_get_temp_open_status(cfg, &status)) {
-		uint8_t bit = (cfg->offset == TMP432_REMOTE_TEMPERATRUE_1) ? BIT(1) :
+	if (cfg->type == sensor_dev_tmp431) {
+		uint8_t status = 0;
+		if (tmp432_get_temp_open_status(cfg, &status)) {
+			bit = (cfg->offset == TMP432_REMOTE_TEMPERATRUE_1) ? BIT(1) :
 			      (cfg->offset == TMP432_REMOTE_TEMPERATRUE_2) ? BIT(2) :
 									     0;
-		// only check BIT(1), BIT(2)
-		if (status & bit) {
-			cfg->cache_status = SENSOR_OPEN_CIRCUIT;
-			return false;
+			// only check BIT(1), BIT(2)
+			if (status & bit) {
+				cfg->cache_status = SENSOR_OPEN_CIRCUIT;
+				return false;
+			}
+		}
+	}
+
+	if (cfg->type == sensor_dev_emc1413) {
+		switch (cfg->num) {
+		/*
+		SENSOR_NUM_ASIC_MEDHA0_SENSOR0_TEMP_C
+		SENSOR_NUM_ASIC_MEDHA0_SENSOR1_TEMP_C
+		SENSOR_NUM_ASIC_OWL_W_TEMP_C
+		SENSOR_NUM_ASIC_OWL_E_TEMP_C
+		SENSOR_NUM_ASIC_MEDHA1_SENSOR0_TEMP_C
+		SENSOR_NUM_ASIC_MEDHA1_SENSOR1_TEMP_C
+		SENSOR_NUM_ASIC_HAMSA_CRM_TEMP_C
+		SENSOR_NUM_ASIC_HAMSA_LS_TEMP_C
+		*/
+		case SENSOR_NUM_ASIC_MEDHA0_SENSOR0_TEMP_C:
+			if (emc1413_get_temp_open_status(cfg, &emc1413_cache_status_0)) {
+				// update the open status to cache
+				if (!emc1413_check_open_status(cfg, emc1413_cache_status_0))
+					return false;
+			}
+			break;
+		case SENSOR_NUM_ASIC_MEDHA0_SENSOR1_TEMP_C:
+			if (!emc1413_check_open_status(cfg, emc1413_cache_status_0))
+				return false;
+			break;
+		case SENSOR_NUM_ASIC_OWL_W_TEMP_C:
+			if (emc1413_get_temp_open_status(cfg, &emc1413_cache_status_1)) {
+				// update the open status to cache
+				if (!emc1413_check_open_status(cfg, emc1413_cache_status_1))
+					return false;
+			}
+			break;
+		case SENSOR_NUM_ASIC_OWL_E_TEMP_C:
+			if (!emc1413_check_open_status(cfg, emc1413_cache_status_1))
+				return false;
+			break;
+		case SENSOR_NUM_ASIC_MEDHA1_SENSOR0_TEMP_C:
+			if (emc1413_get_temp_open_status(cfg, &emc1413_cache_status_2)) {
+				// update the open status to cache
+				if (!emc1413_check_open_status(cfg, emc1413_cache_status_2))
+					return false;
+			}
+			break;
+		case SENSOR_NUM_ASIC_MEDHA1_SENSOR1_TEMP_C:
+			if (!emc1413_check_open_status(cfg, emc1413_cache_status_2))
+				return false;
+			break;
+		case SENSOR_NUM_ASIC_HAMSA_CRM_TEMP_C:
+			if (emc1413_get_temp_open_status(cfg, &emc1413_cache_status_3)) {
+				// update the open status to cache
+				if (!emc1413_check_open_status(cfg, emc1413_cache_status_3))
+					return false;
+			}
+			break;
+		case SENSOR_NUM_ASIC_HAMSA_LS_TEMP_C:
+			if (!emc1413_check_open_status(cfg, emc1413_cache_status_3))
+				return false;
+			break;
+		default:
+			break;
 		}
 	}
 
@@ -899,12 +981,22 @@ bool bootstrap_default_settings_init(void)
 			HAMSA_LS_STRAP_0 = 0x0
 			MEDHA0_CHIP_STRAP_0 = 0x0
 			MEDHA1_CHIP_STRAP_0 = 0x0
+
+		ASIC_TYPE_QCP1:
+			HAMSA_MFIO9 = 1
+			HAMSA_MFIO18 = 1
+		ASIC_TYPE_QCP2:
+			HAMSA_MFIO9 = 0
+			HAMSA_MFIO18 = 0
 		*/
 		uint8_t asic_board_id = get_asic_board_id();
 		uint8_t rev_id = get_board_rev_id();
+		uint8_t asic_type = get_asic_type();
 		uint8_t hamsa_ls_strap_defauilt_setting = 0;
 		uint8_t medha0_chip_strap_defauilt_setting = 0;
 		uint8_t medha1_chip_strap_defauilt_setting = 0;
+		uint8_t hamsa_mfio9_strap_defauilt_setting = 0;
+		uint8_t hamsa_mfio18_strap_defauilt_setting = 0;
 		if (asic_board_id == ASIC_BOARD_ID_RAINBOW) {
 			if (rev_id <= REV_ID_EVT2) {
 				hamsa_ls_strap_defauilt_setting = 0x1;
@@ -916,6 +1008,15 @@ bool bootstrap_default_settings_init(void)
 				medha1_chip_strap_defauilt_setting = 0x0;
 			}
 		}
+
+		if (asic_type == ASIC_TYPE_QCP2) {
+			hamsa_mfio9_strap_defauilt_setting = 0x0;
+			hamsa_mfio18_strap_defauilt_setting = 0x0;
+		} else {
+			hamsa_mfio9_strap_defauilt_setting = 0x1;
+			hamsa_mfio18_strap_defauilt_setting = 0x1;
+		}
+
 		if (bootstrap_table[i].index == STRAP_INDEX_HAMSA_LS_STRAP_0) {
 			bootstrap_table[i].default_setting_value = hamsa_ls_strap_defauilt_setting;
 			if (!set_cpld_bit(bootstrap_table[i].cpld_offsets,
@@ -943,6 +1044,28 @@ bool bootstrap_default_settings_init(void)
 					  bootstrap_table[i].bit_offset,
 					  bootstrap_table[i].default_setting_value)) {
 				LOG_ERR("Failed to set cpld bit for MEDHA1_CHIP_STRAP_0");
+				return false;
+			}
+		}
+
+		if (bootstrap_table[i].index == STRAP_INDEX_HAMSA_MFIO9) {
+			bootstrap_table[i].default_setting_value =
+				hamsa_mfio9_strap_defauilt_setting;
+			if (!set_cpld_bit(bootstrap_table[i].cpld_offsets,
+					  bootstrap_table[i].bit_offset,
+					  bootstrap_table[i].default_setting_value)) {
+				LOG_ERR("Failed to set cpld bit for HAMSA_MFIO9");
+				return false;
+			}
+		}
+
+		if (bootstrap_table[i].index == STRAP_INDEX_HAMSA_MFIO18) {
+			bootstrap_table[i].default_setting_value =
+				hamsa_mfio18_strap_defauilt_setting;
+			if (!set_cpld_bit(bootstrap_table[i].cpld_offsets,
+					  bootstrap_table[i].bit_offset,
+					  bootstrap_table[i].default_setting_value)) {
+				LOG_ERR("Failed to set cpld bit for HAMSA_MFIO18");
 				return false;
 			}
 		}
@@ -1676,4 +1799,14 @@ void set_delta_ubc_time_of_vout_rise()
 			LOG_INF("save UBC command bus: %d, address: 0x%x", bus, addr);
 		}
 	}
+}
+uint8_t get_emc1413_cache_status(uint8_t idx)
+{
+	uint8_t const cache_status[4] = { emc1413_cache_status_0, emc1413_cache_status_1,
+					  emc1413_cache_status_2, emc1413_cache_status_3 };
+	if (idx > 3) {
+		LOG_ERR("Invalid emc1413 cache status index %u", idx);
+		return 0;
+	}
+	return cache_status[idx];
 }

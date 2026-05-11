@@ -29,6 +29,7 @@
 #include "plat_class.h"
 #include "plat_pldm_sensor.h"
 #include "tmp431.h"
+#include "emc1413.h"
 #include "plat_gpio.h"
 #include "plat_thermal.h"
 #include "shell_plat_power_sequence.h"
@@ -315,9 +316,21 @@ bool get_error_data(uint16_t error_code, uint8_t *data)
 		sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(temperature_sensoor_num);
 		data[0] = get_thermal_status_val_for_log(temperature_sensoor_num);
 		if (data[0] & TEMP_STATUS_OPEN) {
-			if (!tmp432_get_temp_open_status(cfg, &data[1])) {
-				LOG_ERR("Failed to get 0x%02x temperature open status",
-					temperature_sensoor_num);
+			if (cfg->type == sensor_dev_tmp431) {
+				if (!tmp432_get_temp_open_status(cfg, &data[1])) {
+					LOG_ERR("Failed to get tmp432 0x%02x temperature open status",
+						temperature_sensoor_num);
+					return false;
+				}
+			} else if (cfg->type == sensor_dev_emc1413) {
+				if (!emc1413_get_temp_open_status(cfg, &data[1])) {
+					LOG_ERR("Failed to get emc14130x%02x temperature open status",
+						temperature_sensoor_num);
+					return false;
+				}
+			} else {
+				LOG_ERR("Unsupported sensor type 0x%x for sensor num 0x%02x",
+					cfg->type, temperature_sensoor_num);
 				return false;
 			}
 		} else {

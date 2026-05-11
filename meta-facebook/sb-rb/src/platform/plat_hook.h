@@ -293,4 +293,5 @@ int set_vr_mp29816a_reg(uint8_t rail, uint16_t *set_value, uint8_t set_reg);
 int get_vr_mp2971_reg(uint8_t rail, uint16_t *get_data, uint8_t get_reg);
 int set_vr_mp2971_reg(uint8_t rail, uint16_t *set_data, uint8_t set_reg);
 void set_delta_ubc_time_of_vout_rise();
+uint8_t get_emc1413_cache_status(uint8_t idx);
 #endif

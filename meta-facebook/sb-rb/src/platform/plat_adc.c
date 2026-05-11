@@ -756,7 +756,7 @@ void ads7066_mode_init()
 		ads7066_write_reg(0, 0x1, i);
 		// if rainbow board revid >= EVT1B, disable internal Volt reference
 		if (get_asic_board_id() == ASIC_BOARD_ID_RAINBOW &&
-		    get_board_rev_id() >= REV_ID_DVT)
+		    get_board_rev_id() >= REV_ID_DVT_FAB3)
 			ads7066_write_reg(0x1, 0x2, i);
 		else
 			ads7066_write_reg(0x1, 0x82, i);
