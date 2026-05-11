@@ -29,6 +29,7 @@
 #include "shell_plat_power_sequence.h"
 #include "kernel.h"
 #include "plat_isr.h"
+#include "plat_class.h"
 
 #define POLLING_CPLD_STACK_SIZE 2048
 #define CPLD_POLLING_INTERVAL_MS 1000 // 1 second polling interval
@@ -248,6 +249,10 @@ bool asic_temp_error_callback(cpld_info *cpld_info, uint8_t *current_cpld_value)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cpld_info, false);
 	CHECK_NULL_ARG_WITH_RETURN(current_cpld_value, false);
+	// no support in evb borad
+	if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
+		return true;
+	}
 	LOG_WRN("ASIC temp error callback triggered current_cpld_value: 0x%02X", *current_cpld_value);
 	// Get the expected value based on the current UBC status
 	uint8_t expected_val =
@@ -465,6 +470,13 @@ void poll_cpld_registers()
 
 			if (!cpld_info_table[i].is_fault_log)
 				continue;
+			
+			// evb not support asic temp monitoring
+			if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
+				if (cpld_info_table[i].cpld_offset == MFIO_FOR_RAINBOW) {
+					continue;
+				}
+			}
 
 			uint8_t new_fault_map =
 				(data ^ expected_val) & cpld_info_table[i].bit_check_mask;
