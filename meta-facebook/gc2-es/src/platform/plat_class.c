@@ -29,6 +29,8 @@
 #include "plat_sensor_table.h"
 #include "plat_hook.h"
 
+LOG_MODULE_REGISTER(plat_class);
+
 static uint8_t system_class = SYS_CLASS_1;
 static uint8_t system_sku = 0;
 static uint8_t board_revision = 0x0F;
@@ -199,12 +201,178 @@ void init_e1s_boot_drive_module()
 	e1s_boot_drive_module = detect_e1s_boot_drive_module_via_pmbus();
 }
 
+void mp5998_plat_init()
+{
+	const mp5998_plat_init_arg *init_args = &mp5998_plat_init_args[0];
+	uint8_t retry = 5;
+	I2C_MSG msg;
+	uint8_t data[I2C_DATA_SIZE];
+	uint8_t bus = I2C_BUS2;
+	uint8_t addr = MPS_MP5990_ADDR;
+
+	/* protect_en */
+	data[0] = 0xCA; // 0xCA
+	data[1] = init_args->protect_en & 0xFF;
+	data[2] = (init_args->protect_en >> 8) & 0xFF;
+	msg = construct_i2c_message(bus, addr, 3, data, 0);
+	i2c_master_write(&msg, retry);
+
+	/* vin_ov_fault_limit */
+	data[0] = PMBUS_VIN_OV_FAULT_LIMIT; // 0x55
+	data[1] = init_args->vin_ov_fault_limit & 0xFF;
+	data[2] = (init_args->vin_ov_fault_limit >> 8) & 0xFF;
+	msg = construct_i2c_message(bus, addr, 3, data, 0);
+	i2c_master_write(&msg, retry);
+
+	/* vin_ov_warn_limit */
+	data[0] = PMBUS_VIN_OV_WARN_LIMIT; // 0x57
+	data[1] = init_args->vin_ov_warn_limit & 0xFF;
+	data[2] = (init_args->vin_ov_warn_limit >> 8) & 0xFF;
+	msg = construct_i2c_message(bus, addr, 3, data, 0);
+	i2c_master_write(&msg, retry);
+
+	/* vin_uv_warn_limit */
+	data[0] = PMBUS_VIN_UV_WARN_LIMIT; // 0x58
+	data[1] = init_args->vin_uv_warn_limit & 0xFF;
+	data[2] = (init_args->vin_uv_warn_limit >> 8) & 0xFF;
+	msg = construct_i2c_message(bus, addr, 3, data, 0);
+	i2c_master_write(&msg, retry);
+
+	/* iin_oc_fault_limit */
+	data[0] = PMBUS_IIN_OC_FAULT_LIMIT; // 0x5B
+	data[1] = init_args->iin_oc_fault_limit & 0xFF;
+	data[2] = (init_args->iin_oc_fault_limit >> 8) & 0xFF;
+	msg = construct_i2c_message(bus, addr, 3, data, 0);
+	i2c_master_write(&msg, retry);
+
+	/* iin_oc_warn_limit */
+	data[0] = PMBUS_IIN_OC_WARN_LIMIT; // 0x5D
+	data[1] = init_args->iin_oc_warn_limit & 0xFF;
+	data[2] = (init_args->iin_oc_warn_limit >> 8) & 0xFF;
+	msg = construct_i2c_message(bus, addr, 3, data, 0);
+	i2c_master_write(&msg, retry);
+
+	/* fault_mask */
+	data[0] = 0xD4; // 0xD4
+	data[1] = init_args->fault_mask & 0xFF;
+	data[2] = (init_args->fault_mask >> 8) & 0xFF;
+	msg = construct_i2c_message(bus, addr, 3, data, 0);
+	i2c_master_write(&msg, retry);
+}
+
+void tps25990_plat_init()
+{
+	const tps25990_plat_init_arg *init_args = &tps25990_plat_init_args[0];
+	uint8_t retry = 5;
+	I2C_MSG msg;
+	uint8_t data[I2C_DATA_SIZE];
+	uint8_t bus = I2C_BUS2;
+	uint8_t addr = TI_TPS25990_ADDR;
+
+	/* vin_ov_fault_limit */
+	data[0] = PMBUS_VIN_OV_FAULT_LIMIT; // 0x55
+	data[1] = init_args->vin_ov_fault_limit & 0xFF;
+	data[2] = (init_args->vin_ov_fault_limit >> 8) & 0xFF;
+	msg = construct_i2c_message(bus, addr, 3, data, 0);
+	i2c_master_write(&msg, retry);
+
+	/* vin_ov_warn_limit */
+	data[0] = PMBUS_VIN_OV_WARN_LIMIT; // 0x57
+	data[1] = init_args->vin_ov_warn_limit & 0xFF;
+	data[2] = (init_args->vin_ov_warn_limit >> 8) & 0xFF;
+	msg = construct_i2c_message(bus, addr, 3, data, 0);
+	i2c_master_write(&msg, retry);
+
+	/* vin_uv_warn_limit */
+	data[0] = PMBUS_VIN_UV_WARN_LIMIT; // 0x58
+	data[1] = init_args->vin_uv_warn_limit & 0xFF;
+	data[2] = (init_args->vin_uv_warn_limit >> 8) & 0xFF;
+	msg = construct_i2c_message(bus, addr, 3, data, 0);
+	i2c_master_write(&msg, retry);
+
+	/* vin_uv_fault_limit */
+	data[0] = PMBUS_VIN_UV_FAULT_LIMIT; // 0x59
+	data[1] = init_args->vin_uv_fault_limit & 0xFF;
+	data[2] = (init_args->vin_uv_fault_limit >> 8) & 0xFF;
+	msg = construct_i2c_message(bus, addr, 3, data, 0);
+	i2c_master_write(&msg, retry);
+
+	/* iin_oc_warn_limit */
+	data[0] = PMBUS_IIN_OC_WARN_LIMIT; // 0x5D
+	data[1] = init_args->iin_oc_warn_limit & 0xFF;
+	data[2] = (init_args->iin_oc_warn_limit >> 8) & 0xFF;
+	msg = construct_i2c_message(bus, addr, 3, data, 0);
+	i2c_master_write(&msg, retry);
+
+	/* protect_en */
+	data[0] = 0xF8; // 0xF8
+	data[1] = init_args->protect_en & 0xFF;
+	msg = construct_i2c_message(bus, addr, 2, data, 0);
+	i2c_master_write(&msg, retry);
+}
+
+static uint8_t detect_hsc_module_via_pmbus()
+{
+	uint8_t retry = 5;
+	I2C_MSG msg;
+	memset(&msg, 0, sizeof(msg));
+
+	msg.bus = I2C_BUS2;
+	msg.target_addr = ADI_ADM1278_ADDR;
+	msg.tx_len = 1;
+	msg.rx_len = 8;
+	msg.data[0] = PMBUS_MFR_MODEL;
+
+	if (i2c_master_read(&msg, retry) == 0) {
+		char model_str[8] = { 0 };
+		memcpy(model_str, &msg.data[1], 7);
+
+		if (strncmp(model_str, "ADM1278", 7) == 0 ||
+		    strncmp(model_str, "ADM1281", 7) == 0) {
+			return HSC_MODULE_ADM1278;
+		}
+	}
+
+	memset(&msg, 0, sizeof(msg));
+	msg.bus = I2C_BUS2;
+	msg.target_addr = MPS_MP5990_ADDR;
+	msg.tx_len = 1;
+	msg.rx_len = 6;
+	msg.data[0] = PMBUS_MFR_MODEL;
+
+	if (i2c_master_read(&msg, retry) == 0) {
+		char model_str[6] = { 0 };
+		memcpy(model_str, &msg.data[2], 4);
+
+		if (strncmp(model_str, "8995", 4) == 0) {
+			mp5998_plat_init();
+			return HSC_MODULE_MP5990;
+		}
+	}
+
+	memset(&msg, 0, sizeof(msg));
+	msg.bus = I2C_BUS2;
+	msg.target_addr = TI_TPS25990_ADDR;
+	msg.tx_len = 1;
+	msg.rx_len = 9;
+	msg.data[0] = PMBUS_MFR_MODEL;
+
+	if (i2c_master_read(&msg, retry) == 0) {
+		char model_str[9] = { 0 };
+		memcpy(model_str, &msg.data[1], 8);
+
+		if (strncmp(model_str, "TPS25990", 8) == 0) {
+			tps25990_plat_init();
+			return HSC_MODULE_TPS25990;
+		}
+	}
+
+	return HSC_MODULE_UNKNOWN;
+}
+
 void init_hsc_module()
 {
-	read_adm1278_model();
-	if (hsc_module == HSC_MODULE_UNKNOWN) {
-		read_mp5990_model();
-	}
+	hsc_module = detect_hsc_module_via_pmbus();
 }
 
 static uint8_t detect_vr_module_via_pmbus(void)
@@ -261,114 +429,6 @@ void init_platform_config()
 	// Initialize VR module (for use by pal_extend_sensor_config)
 	init_vr_module();
 	init_e1s_boot_drive_module();
-}
-
-void read_adm1278_model()
-{
-	uint8_t retry = 5;
-	I2C_MSG msg = { 0 };
-
-	msg.bus = I2C_BUS2;
-	msg.target_addr = ADI_ADM1278_ADDR;
-	msg.tx_len = 1;
-	msg.rx_len = 8;
-	msg.data[0] = PMBUS_MFR_MODEL;
-
-	int ret = i2c_master_read(&msg, retry);
-	if (ret != 0) {
-		return;
-	}
-
-	char model_str[8] = { 0 };
-	memcpy(model_str, &msg.data[1], 7);
-	if (strncmp(model_str, "ADM1278", 7) == 0 || strncmp(model_str, "ADM1281", 7) == 0) {
-		hsc_module = HSC_MODULE_ADM1278;
-	} else {
-		return;
-	}
-}
-
-void read_mp5990_model()
-{
-	uint8_t retry = 5;
-	I2C_MSG msg = { 0 };
-
-	msg.bus = I2C_BUS2;
-	msg.target_addr = MPS_MP5990_ADDR;
-	msg.tx_len = 1;
-	msg.rx_len = 6;
-	msg.data[0] = PMBUS_MFR_MODEL;
-
-	int ret = i2c_master_read(&msg, retry);
-	if (ret != 0) {
-		return;
-	}
-
-	char model_str[6] = { 0 };
-	memcpy(model_str, &msg.data[2], 4);
-	if (strncmp(model_str, "8995", 4) == 0) {
-		hsc_module = HSC_MODULE_MP5990;
-		mp5998_init();
-	}
-}
-
-void mp5998_init()
-{
-	mp5998_init_arg *init_args = &mp5998_init_args[0];
-	uint8_t retry = 5;
-	I2C_MSG msg;
-	uint8_t data[I2C_DATA_SIZE];
-	uint8_t bus = I2C_BUS2;
-	uint8_t addr = MPS_MP5990_ADDR;
-
-	/* vin_ov_fault_limit */
-	data[0] = PMBUS_VIN_OV_FAULT_LIMIT; // 0x55
-	data[1] = init_args->vin_ov_fault_limit & 0xFF;
-	data[2] = (init_args->vin_ov_fault_limit >> 8) & 0xFF;
-	msg = construct_i2c_message(bus, addr, 3, data, 0);
-	i2c_master_write(&msg, retry);
-
-	/* vin_ov_warn_limit */
-	data[0] = PMBUS_VIN_OV_WARN_LIMIT; // 0x57
-	data[1] = init_args->vin_ov_warn_limit & 0xFF;
-	data[2] = (init_args->vin_ov_warn_limit >> 8) & 0xFF;
-	msg = construct_i2c_message(bus, addr, 3, data, 0);
-	i2c_master_write(&msg, retry);
-
-	/* vin_uv_warn_limit */
-	data[0] = PMBUS_VIN_UV_WARN_LIMIT; // 0x58
-	data[1] = init_args->vin_uv_warn_limit & 0xFF;
-	data[2] = (init_args->vin_uv_warn_limit >> 8) & 0xFF;
-	msg = construct_i2c_message(bus, addr, 3, data, 0);
-	i2c_master_write(&msg, retry);
-
-	/* iin_oc_fault_limit */
-	data[0] = PMBUS_IIN_OC_FAULT_LIMIT; // 0x5B
-	data[1] = init_args->iin_oc_fault_limit & 0xFF;
-	data[2] = (init_args->iin_oc_fault_limit >> 8) & 0xFF;
-	msg = construct_i2c_message(bus, addr, 3, data, 0);
-	i2c_master_write(&msg, retry);
-
-	/* iin_oc_warn_limit */
-	data[0] = PMBUS_IIN_OC_WARN_LIMIT; // 0x5D
-	data[1] = init_args->iin_oc_warn_limit & 0xFF;
-	data[2] = (init_args->iin_oc_warn_limit >> 8) & 0xFF;
-	msg = construct_i2c_message(bus, addr, 3, data, 0);
-	i2c_master_write(&msg, retry);
-
-	/* fault_mask */
-	data[0] = 0xD4; // 0xD4
-	data[1] = init_args->fault_mask & 0xFF;
-	data[2] = (init_args->fault_mask >> 8) & 0xFF;
-	msg = construct_i2c_message(bus, addr, 3, data, 0);
-	i2c_master_write(&msg, retry);
-
-	/* protect_en */
-	data[0] = 0xCA; // 0xCA
-	data[1] = init_args->protect_en & 0xFF;
-	data[2] = (init_args->protect_en >> 8) & 0xFF;
-	msg = construct_i2c_message(bus, addr, 3, data, 0);
-	i2c_master_write(&msg, retry);
 }
 
 void set_bootdrive_exist_status()

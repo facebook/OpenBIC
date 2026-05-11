@@ -87,6 +87,7 @@ enum HSC_MODULE {
 	HSC_MODULE_MP5990,
 	HSC_MODULE_LTC4282,
 	HSC_MODULE_LTC4286,
+	HSC_MODULE_TPS25990,
 	HSC_MODULE_UNKNOWN,
 };
 
@@ -124,9 +125,8 @@ bool get_adc_voltage(int channel, float *voltage);
 void init_hsc_module();
 void init_e1s_boot_drive_module();
 void init_platform_config();
-void read_adm1278_model();
-void read_mp5990_model();
-void mp5998_init();
+void mp5998_plat_init();
+void tps25990_plat_init();
 void set_bootdrive_exist_status();
 bool get_bootdrive_exist_status();
 #endif

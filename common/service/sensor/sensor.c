@@ -39,9 +39,15 @@ LOG_MODULE_REGISTER(sensor);
 
 #define SENSOR_DRIVE_INIT_DECLARE(name) uint8_t name##_init(sensor_cfg *cfg)
 
-#define SENSOR_DRIVE_TYPE_INIT_MAP(name) { sensor_dev_##name, name##_init }
+#define SENSOR_DRIVE_TYPE_INIT_MAP(name)                                                           \
+	{                                                                                          \
+		sensor_dev_##name, name##_init                                                     \
+	}
 
-#define SENSOR_DRIVE_TYPE_UNUSE(name) { sensor_dev_##name, NULL }
+#define SENSOR_DRIVE_TYPE_UNUSE(name)                                                              \
+	{                                                                                          \
+		sensor_dev_##name, NULL                                                            \
+	}
 
 #define SENSOR_READ_RETRY_MAX 3
 
@@ -152,6 +158,8 @@ const char *const sensor_type_name[] = {
 	sensor_name_to_num(ads7830)
 	sensor_name_to_num(s54ss4p180pmdafc)
 	sensor_name_to_num(pex90144)
+	sensor_name_to_num(octeon)
+	sensor_name_to_num(tps25990)
 };
 // clang-format on
 
@@ -390,6 +398,9 @@ SENSOR_DRIVE_INIT_DECLARE(pex90144);
 #endif
 #ifdef ENABLE_OCTEON
 SENSOR_DRIVE_INIT_DECLARE(octeon);
+#endif
+#ifndef DISABLE_TPS25990
+SENSOR_DRIVE_INIT_DECLARE(tps25990);
 #endif
 
 // The sequence needs to same with SENSOR_DEV ID
@@ -792,6 +803,11 @@ sensor_drive_api sensor_drive_tbl[] = {
 	SENSOR_DRIVE_TYPE_INIT_MAP(octeon),
 #else
 	SENSOR_DRIVE_TYPE_UNUSE(octeon),
+#endif
+#ifndef DISABLE_TPS25990
+	SENSOR_DRIVE_TYPE_INIT_MAP(tps25990),
+#else
+	SENSOR_DRIVE_TYPE_UNUSE(tps25990),
 #endif
 
 };

@@ -196,6 +196,7 @@ enum SENSOR_DEV {
 	sensor_dev_s54ss4p180pmdafc = 0x4E,
 	sensor_dev_pex90144 = 0x4F,
 	sensor_dev_octeon = 0x50,
+	sensor_dev_tps25990 = 0x51,
 	sensor_dev_max
 };
 
@@ -474,6 +475,10 @@ typedef struct _mp5990_init_arg {
 	bool is_init;
 
 } mp5990_init_arg;
+
+typedef struct _tps25990_init_arg {
+	bool is_init;
+} tps25990_init_arg;
 
 typedef struct _rs31380r_init_arg {
 	/* value to sets the gain for output current reporting */

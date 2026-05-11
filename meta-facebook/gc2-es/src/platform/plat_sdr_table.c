@@ -3677,6 +3677,7 @@ uint8_t pal_get_extend_sdr()
 		extend_sdr_size += ARRAY_SIZE(hotswap_sdr_table);
 		break;
 	case HSC_MODULE_MP5990:
+	case HSC_MODULE_TPS25990:
 		extend_sdr_size += ARRAY_SIZE(efuse_sdr_table);
 		break;
 	default:
@@ -3701,6 +3702,7 @@ void pal_extend_full_sdr_table()
 		}
 		break;
 	case HSC_MODULE_MP5990:
+	case HSC_MODULE_TPS25990:
 		extend_array_num = ARRAY_SIZE(efuse_sdr_table);
 		for (int index = 0; index < extend_array_num; index++) {
 			add_full_sdr_table(efuse_sdr_table[index]);
