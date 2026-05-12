@@ -79,6 +79,7 @@ void pal_post_init()
 	}
 	plat_set_ac_on_log();
 	init_cpld_polling();
+	plat_telemetry_table_init();
 	ioexp_init();
 	init_thermal_polling();
 
