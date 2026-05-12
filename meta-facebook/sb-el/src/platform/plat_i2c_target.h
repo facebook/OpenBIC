@@ -172,6 +172,37 @@ typedef struct voltage_rail_mapping_sensor {
 	uint8_t vr_rail_e;
 } voltage_rail_mapping_sensor;
 
+enum I2C_TARGET_BUS_IDX {
+	HAMSA_I2C_BUS_IDX = 0,
+	NUWA0_I2C_BUS_IDX,
+	NUWA1_I2C_BUS_IDX,
+	ASIC_I2C_BUS_IDX_MAX,
+};
+
+typedef struct {
+	uint8_t index;
+	uint8_t i2c_bus;
+} asic_i2c_bus_map;
+
+typedef struct __attribute__((__packed__)) {
+	struct k_work work;
+	uint8_t rail;
+	uint16_t set_value;
+} plat_control_voltage;
+typedef struct __attribute__((__packed__)) {
+	struct k_work work;
+	uint8_t lv;
+	uint8_t in_data[8];
+} plat_power_capping_threshold_time_t;
+typedef struct __attribute__((__packed__)) {
+	struct k_work work;
+	uint8_t set_value;
+} plat_power_capping_method_t;
+typedef struct __attribute__((__packed__)) {
+	struct k_work work;
+	uint8_t set_value;
+} plat_control_sensor_polling;
+
 void update_sensor_reading_by_sensor_number(uint8_t sensor_number);
 int get_cached_sensor_reading_by_sensor_number(uint8_t sensor_number);
 void update_strap_capability_table(void);
