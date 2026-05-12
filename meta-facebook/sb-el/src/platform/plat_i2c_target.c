@@ -37,6 +37,8 @@
 #include "plat_fru.h"
 #include "plat_pldm_sensor.h"
 #include "plat_i2c_target.h"
+#include "plat_power_capping.h"
+#include "plat_adc.h"
 
 LOG_MODULE_REGISTER(plat_i2c_target);
 
@@ -58,8 +60,8 @@ LOG_MODULE_REGISTER(plat_i2c_target);
 #define STRAP_SET_TYPE 0x44 // 01000100
 #define VR_PWR_BUF_SIZE 38
 #define I2C_TARGET_BUS_ASIC I2C_BUS7 // asic HAMSA
-#define I2C_TARGET_BUS_ASIC_MEDHA0 I2C_BUS4 // asic medha0
-#define I2C_TARGET_BUS_ASIC_MEDHA1 I2C_BUS5 // asic medha1
+#define I2C_TARGET_BUS_ASIC_NUWA0 I2C_BUS4 // asic medha0
+#define I2C_TARGET_BUS_ASIC_NUWA1 I2C_BUS5 // asic medha1
 
 plat_sensor_init_data *sensor_init_data_table[DATA_TABLE_LENGTH_2] = { NULL };
 plat_sensor_reading *sensor_reading_table[DATA_TABLE_LENGTH_4] = { NULL };
@@ -462,6 +464,191 @@ telemetry_info telemetry_info_table[] = {
 	{ VR_POWER_READING_REG },
 };
 
+voltage_rail_mapping_sensor voltage_rail_mapping_table[] = {
+	{ CONTROL_VOL_VR_ASIC_P0V75_VDDPHY_HBM0246_REG, VR_RAIL_E_ASIC_P0V75_VDDPHY_HBM0246 },
+	{ CONTROL_VOL_VR_ASIC_P0V75_VDDPHY_HBM1357_REG, VR_RAIL_E_ASIC_P0V75_VDDPHY_HBM1357 },
+	{ CONTROL_VOL_VR_ASIC_P1V05_VDDC_HBM0246_REG, VR_RAIL_E_ASIC_P1V05_VDDC_HBM0246 },
+	{ CONTROL_VOL_VR_ASIC_P1V05_VDDC_HBM1357_REG, VR_RAIL_E_ASIC_P1V05_VDDC_HBM1357 },
+	{ CONTROL_VOL_VR_ASIC_P0V4_VDDQL_HBM0246_REG, VR_RAIL_E_ASIC_P0V4_VDDQL_HBM0246 },
+	{ CONTROL_VOL_VR_ASIC_P0V4_VDDQL_HBM1357_REG, VR_RAIL_E_ASIC_P0V4_VDDQL_HBM1357 },
+	{ CONTROL_VOL_VR_ASIC_P1V8_VPP_HBM0246_REG, VR_RAIL_E_ASIC_P1V8_VPP_HBM0246 },
+	{ CONTROL_VOL_VR_ASIC_P1V8_VPP_HBM1357_REG, VR_RAIL_E_ASIC_P1V8_VPP_HBM1357 },
+	{ CONTROL_VOL_VR_ASIC_P0V75_NUWA0_VDD_REG, VR_RAIL_E_ASIC_P0V75_NUWA0_VDD },
+	{ CONTROL_VOL_VR_ASIC_P0V75_NUWA1_VDD_REG, VR_RAIL_E_ASIC_P0V75_NUWA1_VDD },
+};
+
+uint8_t get_vr_rail_by_control_vol_reg(uint8_t control_vol_reg)
+{
+	for (int i = 0; i < ARRAY_SIZE(voltage_rail_mapping_table); i++) {
+		if (voltage_rail_mapping_table[i].control_vol_reg == control_vol_reg) {
+			return voltage_rail_mapping_table[i].vr_rail_e;
+		}
+	}
+	return VR_RAIL_E_MAX;
+}
+
+uint8_t vr_pwr_sensor_table[] = {
+	SENSOR_NUM_ASIC_P0V75_NUWA0_VDD_PWR_W,
+	SENSOR_NUM_ASIC_P0V75_NUWA1_VDD_PWR_W,
+	SENSOR_NUM_ASIC_P0V9_OWL_E_TRVDD_PWR_W,
+	SENSOR_NUM_ASIC_P0V75_OWL_E_TRVDD_PWR_W,
+	SENSOR_NUM_ASIC_P0V75_MAX_M_VDD_PWR_W,
+	SENSOR_NUM_ASIC_P0V75_VDDPHY_HBM1357_PWR_W,
+	SENSOR_NUM_ASIC_P0V75_OWL_E_VDD_PWR_W,
+	SENSOR_NUM_ASIC_P0V4_VDDQL_HBM1357_PWR_W,
+	SENSOR_NUM_ASIC_P1V05_VDDC_HBM1357_PWR_W,
+	SENSOR_NUM_ASIC_P1V8_VPP_HBM1357_PWR_W,
+	SENSOR_NUM_ASIC_P0V75_MAX_N_VDD_PWR_W,
+	SENSOR_NUM_ASIC_P0V8_HAMSA_AVDD_PCIE_PWR_W,
+	SENSOR_NUM_ASIC_P1V2_HAMSA_VDDHRXTX_PCIE_PWR_W,
+	SENSOR_NUM_ASIC_P0V85_HAMSA_VDD_PWR_W,
+	SENSOR_NUM_ASIC_P1V05_VDDC_HBM0246_PWR_W,
+	SENSOR_NUM_ASIC_P1V8_VPP_HBM0246_PWR_W,
+	SENSOR_NUM_ASIC_P0V4_VDDQL_HBM0246_PWR_W,
+	SENSOR_NUM_ASIC_P0V75_VDDPHY_HBM0246_PWR_W,
+	SENSOR_NUM_ASIC_P0V75_OWL_W_VDD_PWR_W,
+	SENSOR_NUM_ASIC_P0V75_MAX_S_VDD_PWR_W,
+	SENSOR_NUM_ASIC_P0V9_OWL_W_TRVDD_PWR_W,
+	SENSOR_NUM_ASIC_P0V75_OWL_W_TRVDD_PWR_W,
+	SENSOR_NUM_P3V3_OSFP_PWR_W,
+};
+
+void vr_power_reading(uint8_t *buffer, size_t buf_size)
+{
+	/*
+	Response Data
+	[0:1] - x = All VR power except NUWA0_VDD and NUWA1_VDD (Unit: W)
+	[2:3] - Chiplet0 power = NUWA0_VDD + 0.5*x (Unit: W)
+	[4:5] - Chiplet1 power = NUWA1_VDD + 0.5*x (Unit: W)
+	[6:7] - P0V75_NUWA0_VDD (Unit: W)
+	[8:9] - P0V75_NUWA1_VDD (Unit: W)
+	[10:11] - P1V05_VDDC_HBM0246 (Unit: W)
+	[12:13] - P0V75_VDDPHY_HBM0246 (Unit: W)
+	[14:15] - P1V05_VDDC_HBM1357 (Unit: W)
+	[16:17] - P0V75_VDDPHY_HBM1357 (Unit: W)
+	[18:19] - P0V75_MAX_N_VDD (Unit: W)
+	[20:21] - P0V75_MAX_S_VDD (Unit: W)
+	[22:23] - P0V4_VDDQL_HBM0246 (Unit: W)
+	[24:25] - P0V4_VDDQL_HBM1357 (Unit: W)
+	[26:27] - P1V8_VPP_HBM0246 (Unit: W)
+	[28:29] - P1V8_VPP_HBM1357 (Unit: W)
+	[30:31] - P0V75_MAX_M_VDD (Unit: W)
+	[32:33] - P0V75_OWL_E_VDD (Unit: W)
+	[34:35] - P0V75_OWL_W_VDD (Unit: W)
+	[36:37] - PDB1_P52V_ASIC_SENSE_PWR (Unit: W) (Need BMC support)
+	each data is 2 bytes
+	*/
+	float x = 0;
+	float chiplet0 = 0;
+	float chiplet1 = 0;
+	float medha0 = 0;
+	float medha1 = 0;
+
+	for (size_t i = 0; i < ARRAY_SIZE(vr_pwr_sensor_table); i++) {
+		if (get_asic_board_id() != ASIC_BOARD_ID_EVB &&
+		    vr_pwr_sensor_table[i] == SENSOR_NUM_P3V3_OSFP_PWR_W) {
+			continue;
+		}
+
+		uint16_t val = 0;
+		int milivolt = 0;
+		milivolt = get_cached_sensor_reading_by_sensor_number(vr_pwr_sensor_table[i]);
+		val = (milivolt + 500) / 1000;
+
+		switch (vr_pwr_sensor_table[i]) {
+		case SENSOR_NUM_ASIC_P0V75_NUWA0_VDD_PWR_W: {
+			if (get_power_capping_source() == CAPPING_SOURCE_ADC) {
+				/* ADC instant power in W */
+				float pwr_w = get_adc_nuwa_inst_pwr_w(ADC_EL_IDX_NUWA0);
+				uint16_t adc_w = (uint16_t)(pwr_w + 0.5f);
+				memcpy(&buffer[6], &adc_w, 2);
+				medha0 = (int)(pwr_w * 1000.0f + 0.5f);
+			} else {
+				memcpy(&buffer[6], &val, 2);
+				medha0 = milivolt;
+			}
+			break;
+		}
+		case SENSOR_NUM_ASIC_P0V75_NUWA1_VDD_PWR_W: {
+			if (get_power_capping_source() == CAPPING_SOURCE_ADC) {
+				float pwr_w = get_adc_nuwa_inst_pwr_w(ADC_EL_IDX_NUWA1);
+
+				uint16_t adc_w = (uint16_t)(pwr_w + 0.5f);
+				memcpy(&buffer[8], &adc_w, 2);
+
+				medha1 = (int)(pwr_w * 1000.0f + 0.5f);
+			} else {
+				memcpy(&buffer[8], &val, 2);
+				medha1 = milivolt;
+			}
+			break;
+		}
+		case SENSOR_NUM_ASIC_P1V05_VDDC_HBM0246_PWR_W:
+			memcpy(&buffer[10], &val, 2);
+			break;
+		case SENSOR_NUM_ASIC_P0V75_VDDPHY_HBM0246_PWR_W:
+			memcpy(&buffer[12], &val, 2);
+			break;
+		case SENSOR_NUM_ASIC_P1V05_VDDC_HBM1357_PWR_W:
+			memcpy(&buffer[14], &val, 2);
+			break;
+		case SENSOR_NUM_ASIC_P0V75_VDDPHY_HBM1357_PWR_W:
+			memcpy(&buffer[16], &val, 2);
+			break;
+		case SENSOR_NUM_ASIC_P0V75_MAX_N_VDD_PWR_W:
+			memcpy(&buffer[18], &val, 2);
+			break;
+		case SENSOR_NUM_ASIC_P0V75_MAX_S_VDD_PWR_W:
+			memcpy(&buffer[20], &val, 2);
+			break;
+		case SENSOR_NUM_ASIC_P0V4_VDDQL_HBM0246_PWR_W:
+			memcpy(&buffer[22], &val, 2);
+			break;
+		case SENSOR_NUM_ASIC_P0V4_VDDQL_HBM1357_PWR_W:
+			memcpy(&buffer[24], &val, 2);
+			break;
+		case SENSOR_NUM_ASIC_P1V8_VPP_HBM0246_PWR_W:
+			memcpy(&buffer[26], &val, 2);
+			break;
+		case SENSOR_NUM_ASIC_P1V8_VPP_HBM1357_PWR_W:
+			memcpy(&buffer[28], &val, 2);
+			break;
+		case SENSOR_NUM_ASIC_P0V75_MAX_M_VDD_PWR_W:
+			memcpy(&buffer[30], &val, 2);
+			break;
+		case SENSOR_NUM_ASIC_P0V75_OWL_E_VDD_PWR_W:
+			memcpy(&buffer[32], &val, 2);
+			break;
+		case SENSOR_NUM_ASIC_P0V75_OWL_W_VDD_PWR_W:
+			memcpy(&buffer[34], &val, 2);
+			break;
+		default:
+			// do nothing
+			break;
+		}
+
+		if (vr_pwr_sensor_table[i] != SENSOR_NUM_ASIC_P0V75_NUWA0_VDD_PWR_W &&
+		    vr_pwr_sensor_table[i] != SENSOR_NUM_ASIC_P0V75_NUWA1_VDD_PWR_W) {
+			x += milivolt;
+		}
+	}
+	int reading;
+	get_cpld_polling_power_info(&reading);
+	uint16_t val = (uint16_t)reading;
+	memcpy(&buffer[36], &val, 2);
+
+	chiplet0 = ((medha0 + 0.5 * x) + 500) / 1000;
+	chiplet1 = ((medha1 + 0.5 * x) + 500) / 1000;
+	uint16_t val_x = (uint16_t)((x + 500) / 1000);
+	uint16_t val_c0 = (uint16_t)chiplet0;
+	uint16_t val_c1 = (uint16_t)chiplet1;
+	memcpy(&buffer[0], &val_x, 2);
+	memcpy(&buffer[2], &val_c0, 2);
+	memcpy(&buffer[4], &val_c1, 2);
+
+	LOG_HEXDUMP_DBG(buffer, buf_size, "VR power sensor data buffer");
+}
+
 void plat_telemetry_table_init(void)
 {
 	uint8_t buffer_size = 0;
@@ -489,8 +676,267 @@ const bool I2C_TARGET_ENABLE_TABLE[MAX_TARGET_NUM] = {
 
 static bool command_reply_data_handle(void *arg)
 {
-	/*TODO: put board telemetry here*/
+	struct i2c_target_data *data = (struct i2c_target_data *)arg;
+	if (data->wr_buffer_idx >= 1) {
+		if (data->wr_buffer_idx == 1) {
+			uint8_t reg_offset = data->target_wr_msg.msg[0];
+			size_t struct_size = 0;
+			for (int i = 0; i < ARRAY_SIZE(telemetry_info_table); i++) {
+				if (telemetry_info_table[i].telemetry_offset == reg_offset) {
+					struct_size = telemetry_info_table[i].data_size;
+					break;
+				}
+			}
+			// Make sure the target buffer is not exceeded when reading
+			if (struct_size > sizeof(data->target_rd_msg.msg)) {
+				struct_size = sizeof(data->target_rd_msg.msg);
+			}
+			LOG_DBG("Received reg offset(write 1 data): 0x%02x", reg_offset);
+			switch (reg_offset) {
+			case SENSOR_INIT_DATA_0_REG:
+			case SENSOR_INIT_DATA_1_REG: {
+				data->target_rd_msg.msg_length = struct_size;
+				memcpy(data->target_rd_msg.msg,
+				       sensor_init_data_table[reg_offset - SENSOR_INIT_DATA_0_REG],
+				       struct_size);
+				LOG_HEXDUMP_DBG(data->target_rd_msg.msg,
+						data->target_rd_msg.msg_length, "sensor init data");
+			} break;
+			case SENSOR_READING_0_REG:
+			case SENSOR_READING_1_REG:
+			case SENSOR_READING_2_REG:
+			case SENSOR_READING_3_REG: {
+				data->target_rd_msg.msg_length = struct_size;
+				memcpy(data->target_rd_msg.msg,
+				       sensor_reading_table[reg_offset - SENSOR_READING_0_REG],
+				       struct_size);
+				LOG_HEXDUMP_DBG(data->target_rd_msg.msg,
+						data->target_rd_msg.msg_length, "sensor reading");
+			} break;
+			case INVENTORY_IDS_REG: {
+				data->target_rd_msg.msg_length = struct_size;
+				memcpy(data->target_rd_msg.msg,
+				       inventory_ids_table[reg_offset - INVENTORY_IDS_REG],
+				       struct_size);
+				LOG_HEXDUMP_DBG(data->target_rd_msg.msg,
+						data->target_rd_msg.msg_length, "inventory ids");
+			} break;
+			case STRAP_CAPABILTITY_REG: {
+				data->target_rd_msg.msg_length = struct_size;
+				memcpy(data->target_rd_msg.msg,
+				       strap_capability_table[reg_offset - STRAP_CAPABILTITY_REG],
+				       struct_size);
+				LOG_HEXDUMP_DBG(data->target_rd_msg.msg,
+						data->target_rd_msg.msg_length, "strap capability");
+			} break;
+			case I2C_BRIDGE_COMMAND_STATUS_REG: {
+				data->target_rd_msg.msg_length = 1;
+				data->target_rd_msg.msg[0] =
+					i2c_bridge_command_status_table[0] ?
+						i2c_bridge_command_status_table[0]->data_status :
+						I2C_BRIDGE_COMMAND_FAILURE;
+			} break;
+			case I2C_BRIDGE_COMMAND_RESPONSE_REG: {
+				if (i2c_bridge_command_response_data_table[0]) {
+					struct_size = i2c_bridge_command_response_data_table[0]
+							      ->data_length +
+						      1;
+					data->target_rd_msg.msg_length = struct_size;
+					memcpy(data->target_rd_msg.msg,
+					       i2c_bridge_command_response_data_table[0],
+					       struct_size);
+				} else {
+					data->target_rd_msg.msg_length = 1;
+					data->target_rd_msg.msg[0] = 0xFF;
+				}
+				LOG_HEXDUMP_DBG(data->target_rd_msg.msg,
+						data->target_rd_msg.msg_length,
+						"i2c bridge command response");
+			} break;
+			case FRU_BOARD_PART_NUMBER_REG:
+			case FRU_BOARD_SERIAL_NUMBER_REG:
+			case FRU_BOARD_PRODUCT_NAME_REG:
+			case FRU_BOARD_CUSTOM_DATA_1_REG:
+			case FRU_BOARD_CUSTOM_DATA_2_REG:
+			case FRU_BOARD_CUSTOM_DATA_3_REG:
+			case FRU_BOARD_CUSTOM_DATA_4_REG:
+			case FRU_BOARD_CUSTOM_DATA_5_REG:
+			case FRU_BOARD_CUSTOM_DATA_6_REG:
+			case FRU_BOARD_CUSTOM_DATA_7_REG:
+			case FRU_BOARD_CUSTOM_DATA_8_REG:
+			case FRU_BOARD_CUSTOM_DATA_9_REG:
+			case FRU_BOARD_CUSTOM_DATA_10_REG: {
+				data->target_rd_msg.msg_length = struct_size;
+				memcpy(data->target_rd_msg.msg,
+				       fru_board_data_table[reg_offset - FRU_BOARD_PART_NUMBER_REG],
+				       struct_size);
+			} break;
+			case FRU_PRODUCT_NAME_REG:
+			case FRU_PRODUCT_PART_NUMBER_REG:
+			case FRU_PRODUCT_PART_VERSION_REG:
+			case FRU_PRODUCT_SERIAL_NUMBER_REG:
+			case FRU_PRODUCT_ASSET_TAG_REG:
+			case FRU_PRODUCT_CUSTOM_DATA_1_REG:
+			case FRU_PRODUCT_CUSTOM_DATA_2_REG: {
+				data->target_rd_msg.msg_length = struct_size;
+				memcpy(data->target_rd_msg.msg,
+				       fru_product_data_table[reg_offset - FRU_PRODUCT_NAME_REG],
+				       struct_size);
+			} break;
+			case CONTROL_VOL_VR_ASIC_P0V75_VDDPHY_HBM0246_REG:
+			case CONTROL_VOL_VR_ASIC_P0V75_VDDPHY_HBM1357_REG:
+			case CONTROL_VOL_VR_ASIC_P1V05_VDDC_HBM0246_REG:
+			case CONTROL_VOL_VR_ASIC_P1V05_VDDC_HBM1357_REG:
+			case CONTROL_VOL_VR_ASIC_P0V4_VDDQL_HBM0246_REG:
+			case CONTROL_VOL_VR_ASIC_P0V4_VDDQL_HBM1357_REG:
+			case CONTROL_VOL_VR_ASIC_P1V8_VPP_HBM0246_REG:
+			case CONTROL_VOL_VR_ASIC_P1V8_VPP_HBM1357_REG:
+			case CONTROL_VOL_VR_ASIC_P0V75_NUWA0_VDD_REG:
+			case CONTROL_VOL_VR_ASIC_P0V75_NUWA1_VDD_REG: {
+				uint8_t rail = get_vr_rail_by_control_vol_reg(reg_offset);
+				uint16_t vout = 0xFFFF;
+				if (!voltage_command_setting_get(rail, &vout)) {
+					LOG_ERR("Can't voltage_command setting_get by rail: 0x%02x",
+						rail);
+				}
+				memcpy(data->target_rd_msg.msg, &vout, sizeof(vout));
+				data->target_rd_msg.msg_length = 2;
+			} break;
+			case LEVEL_1_PWR_ALERT_THRESHOLD_TIME_REG:
+			case LEVEL_2_PWR_ALERT_THRESHOLD_TIME_REG:
+			case LEVEL_3_PWR_ALERT_THRESHOLD_TIME_REG: {
+				uint8_t lv = 0;
+				uint16_t tmp_value = 0;
+				if (reg_offset == LEVEL_1_PWR_ALERT_THRESHOLD_TIME_REG) {
+					lv = CAPPING_LV_IDX_LV1;
+				} else if (reg_offset == LEVEL_2_PWR_ALERT_THRESHOLD_TIME_REG) {
+					lv = CAPPING_LV_IDX_LV2;
+				} else if (reg_offset == LEVEL_3_PWR_ALERT_THRESHOLD_TIME_REG) {
+					lv = CAPPING_LV_IDX_LV3;
+				}
+				tmp_value = get_power_capping_threshold(CAPPING_VR_IDX_NUWA0, lv);
+				data->target_rd_msg.msg[0] = tmp_value & 0xFF;
+				data->target_rd_msg.msg[1] = tmp_value >> 8;
+				tmp_value = get_power_capping_time_w(CAPPING_VR_IDX_NUWA0, lv);
+				data->target_rd_msg.msg[2] = tmp_value & 0xFF;
+				data->target_rd_msg.msg[3] = tmp_value >> 8;
+				tmp_value = get_power_capping_threshold(CAPPING_VR_IDX_NUWA1, lv);
+				data->target_rd_msg.msg[4] = tmp_value & 0xFF;
+				data->target_rd_msg.msg[5] = tmp_value >> 8;
+				tmp_value = get_power_capping_time_w(CAPPING_VR_IDX_NUWA1, lv);
+				data->target_rd_msg.msg[6] = tmp_value & 0xFF;
+				data->target_rd_msg.msg[7] = tmp_value >> 8;
+				data->target_rd_msg.msg_length = 8;
+			} break;
+			case VR_POWER_READING_REG: {
+				data->target_rd_msg.msg_length = VR_PWR_BUF_SIZE;
+				vr_power_reading(data->target_rd_msg.msg,
+						 data->target_rd_msg.msg_length);
+				LOG_HEXDUMP_DBG(data->target_rd_msg.msg,
+						data->target_rd_msg.msg_length, "vr power reading");
+			} break;
+			case NUWA_SENSOR_VALUE_REG: {
+				data->target_rd_msg.msg_length = 4;
+				uint16_t sensor_value = 0;
 
+				if (get_power_capping_source() == CAPPING_SOURCE_ADC) {
+					/* ADC instant power in W */
+					float pwr_w0 = get_adc_nuwa_inst_pwr_w(ADC_EL_IDX_NUWA0);
+					float pwr_w1 = get_adc_nuwa_inst_pwr_w(ADC_EL_IDX_NUWA1);
+
+					sensor_value = (uint16_t)(pwr_w0 + 0.5f);
+					memcpy(&data->target_rd_msg.msg[0], &sensor_value,
+					       sizeof(sensor_value));
+
+					sensor_value = (uint16_t)(pwr_w1 + 0.5f);
+					memcpy(&data->target_rd_msg.msg[2], &sensor_value,
+					       sizeof(sensor_value));
+				} else {
+					/* VR sensor cache power in W */
+					sensor_value =
+						(get_cached_sensor_reading_by_sensor_number(
+							 SENSOR_NUM_ASIC_P0V75_NUWA0_VDD_PWR_W) +
+						 500) /
+						1000;
+					memcpy(&data->target_rd_msg.msg[0], &sensor_value,
+					       sizeof(sensor_value));
+
+					sensor_value =
+						(get_cached_sensor_reading_by_sensor_number(
+							 SENSOR_NUM_ASIC_P0V75_NUWA1_VDD_PWR_W) +
+						 500) /
+						1000;
+					memcpy(&data->target_rd_msg.msg[2], &sensor_value,
+					       sizeof(sensor_value));
+				}
+			} break;
+			case POWER_CAPPING_METHOD_REG: {
+				data->target_rd_msg.msg[0] = get_power_capping_method();
+				data->target_rd_msg.msg_length = 1;
+			} break;
+			case NUWA_POWER_SOURCE_REG: {
+				data->target_rd_msg.msg[0] = get_power_capping_source();
+				data->target_rd_msg.msg_length = 1;
+			} break;
+			case POLLING_RATE_TELEMETRY_REG: {
+				uint8_t type_val = get_pwr_capping_polling_rate_type();
+				data->target_rd_msg.msg[0] = type_val;
+				data->target_rd_msg.msg_length = 1;
+			} break;
+			case TRAY_INFO_REG: {
+				/* TRAY_INFO_REG:
+				 * Byte0: MMC slot
+				 * Byte1: tray location
+				 */
+				uint8_t slot = get_mmc_slot();
+				uint8_t tray = get_tray_location();
+
+				data->target_rd_msg.msg[0] = slot;
+				data->target_rd_msg.msg[1] = tray;
+				data->target_rd_msg.msg_length = 2;
+
+				LOG_DBG("TRAY_INFO_REG: slot=0x%02x, tray=0x%02x", slot, tray);
+				LOG_HEXDUMP_DBG(data->target_rd_msg.msg,
+						data->target_rd_msg.msg_length, "tray info");
+			} break;
+			default:
+				LOG_ERR("Unknown reg offset: 0x%02x", reg_offset);
+				data->target_rd_msg.msg_length = 1;
+				data->target_rd_msg.msg[0] = 0xFF;
+				break;
+			}
+		} else if (data->wr_buffer_idx == 2) {
+			LOG_DBG("Received reg offset(write 2 data): 0x%02x",
+				data->target_wr_msg.msg[0]);
+			uint8_t reg_offset = data->target_wr_msg.msg[0];
+			switch (reg_offset) {
+			case WRITE_STRAP_PIN_VALUE_REG: {
+				int rail = data->target_wr_msg.msg[1];
+				int drive_level = -1;
+				if (!get_bootstrap_change_drive_level(rail, &drive_level)) {
+					LOG_ERR("Can't get_bootstrap_change_drive_level by rail index: %x",
+						rail);
+					data->target_rd_msg.msg[0] = 0xFF;
+				} else {
+					data->target_rd_msg.msg[0] = drive_level;
+				}
+				data->target_rd_msg.msg_length = 1;
+				LOG_HEXDUMP_DBG(data->target_rd_msg.msg,
+						data->target_rd_msg.msg_length, "strap pin value");
+			} break;
+			default:
+				LOG_ERR("Unknown reg offset: 0x%02x", reg_offset);
+				data->target_rd_msg.msg_length = 1;
+				data->target_rd_msg.msg[0] = 0xFF;
+				break;
+			}
+		} else {
+			LOG_ERR("Received data length: 0x%02x", data->wr_buffer_idx);
+			data->target_rd_msg.msg_length = 1;
+			data->target_rd_msg.msg[0] = 0xFF;
+		}
+	}
+	LOG_DBG("Reply data length: 0x%02x", data->target_rd_msg.msg_length);
 	return false;
 }
 

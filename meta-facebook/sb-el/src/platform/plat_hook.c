@@ -1117,7 +1117,7 @@ bool post_common_sensor_read(sensor_cfg *cfg, void *args, int *const reading)
 	return true;
 }
 
-// struct vr_vout_user_settings voltage_command_get = { 0 };
+struct vr_vout_user_settings voltage_command_get = { 0 };
 vr_vout_range_user_settings_struct vout_range_user_settings = { 0 };
 
 bool plat_get_vout_range(uint8_t rail, uint16_t *vout_max_millivolt, uint16_t *vout_min_millivolt)
@@ -1191,6 +1191,19 @@ uint8_t get_strap_index_max()
 {
 	return (get_asic_board_id() == ASIC_BOARD_ID_EVB) ? STRAP_INDEX_MAX :
 							    STRAP_INDEX_EXCEPT_EVB_MAX;
+}
+
+bool voltage_command_setting_get(uint8_t rail, uint16_t *vout)
+{
+	CHECK_NULL_ARG_WITH_RETURN(vout, false);
+
+	if (rail >= VR_RAIL_E_MAX) {
+		LOG_ERR("invalid rail %d", rail);
+		return false;
+	}
+
+	*vout = voltage_command_get.vout[rail];
+	return true;
 }
 
 static uint8_t reverse_bits(uint8_t byte, uint8_t bit_cnt)
