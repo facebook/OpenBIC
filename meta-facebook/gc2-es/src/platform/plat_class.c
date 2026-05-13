@@ -372,7 +372,13 @@ static uint8_t detect_hsc_module_via_pmbus()
 
 void init_hsc_module()
 {
-	hsc_module = detect_hsc_module_via_pmbus();
+	for (int retry = 0; retry < 5; retry++) {
+		hsc_module = detect_hsc_module_via_pmbus();
+		if (hsc_module != HSC_MODULE_UNKNOWN) {
+			return;
+		}
+		k_sleep(K_SECONDS(1));
+	}
 }
 
 static uint8_t detect_vr_module_via_pmbus(void)
