@@ -337,7 +337,12 @@ void read_adc_info()
 	uint8_t adc_idx = 0;
 	plat_read_cpld(CPLD_OFFSET_ADC_IDX, &adc_idx, 1);
 	adc_idx_read = adc_idx;
-
+	k_msleep(1000);
+	LOG_INF("Pull cnv and cs1 to High");
+	gpio_set(MEDHA0_CNV, 1);
+	gpio_set(MEDHA1_CNV, 1);
+	gpio_set(SPI_ADC_CS1_N, 1);
+	k_msleep(1000);
 	/* read VENDOR_L to determine*/
 	uint8_t value = 0;
 	ad4058_write_reg(0xA8, 0x00, 0);
