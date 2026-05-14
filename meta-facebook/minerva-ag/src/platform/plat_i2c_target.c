@@ -164,6 +164,11 @@ typedef struct __attribute__((__packed__)) {
 	uint16_t set_value_LC;
 } plat_power_capping_set;
 
+typedef struct __attribute__((__packed__)) {
+	struct k_work work;
+	uint16_t set_value;
+} plat_power_capping_switch;
+
 static uint8_t bootstrap_pin;
 static uint8_t user_setting_level;
 
@@ -270,6 +275,15 @@ void set_power_capping_handler(struct k_work *work_item)
 	plat_set_power_capping_command(POWER_CAPPING_INDEX_HC, &set_value_HC, false);
 	plat_set_power_capping_command(POWER_CAPPING_INDEX_LC, &set_value_LC, false);
 	// LOG_DBG("Power capping set HC: %d, LC: %d", set_value_HC, set_value_LC);
+}
+
+void set_power_capping_switch_handler(struct k_work *work_item)
+{
+	const plat_power_capping_switch *sensor_data =
+		CONTAINER_OF(work_item, plat_power_capping_switch, work);
+
+	uint16_t set_value = sensor_data->set_value;
+	plat_set_power_capping_command(POWER_CAPPING_INDEX_SWITCH, &set_value, false);
 }
 
 bool get_fru_info_element(telemetry_info *telemetry_info, char **fru_element,
@@ -1017,6 +1031,21 @@ void plat_master_write_thread_handler()
 			sensor_data->set_value_HC = rdata[1] | (rdata[2] << 8);
 			sensor_data->set_value_LC = rdata[3] | (rdata[4] << 8);
 			k_work_init(&sensor_data->work, set_power_capping_handler);
+			k_work_submit(&sensor_data->work);
+		} break;
+		case POWER_CAPPING_SWITCH_ENABLE_REG: {
+			if (rlen != 2) {
+				LOG_ERR("Invalid length for offset: 0x%02x", reg_offset);
+				break;
+			}
+			plat_power_capping_switch *sensor_data =
+				malloc(sizeof(plat_power_capping_switch));
+			if (!sensor_data) {
+				LOG_ERR("Memory allocation failed!");
+				break;
+			}
+			sensor_data->set_value = rdata[1] & 0x01;
+			k_work_init(&sensor_data->work, set_power_capping_switch_handler);
 			k_work_submit(&sensor_data->work);
 		} break;
 		case SET_SENSOR_POLLING_COMMAND_REG: {
