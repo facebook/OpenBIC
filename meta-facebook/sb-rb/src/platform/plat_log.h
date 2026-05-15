@@ -56,12 +56,14 @@
 #define CLK_BUF0_100M_LOSB_PLD 0x3
 #define CLK_BUF1_100M_LOSB_PLD 0x4
 #define CLK_BUF2_100M_LOSB_PLD 0x5
+#define CLK_312_5MHZ_REINIT_ERR_IDX 0x6
 
 #define CLK_100MHZ_ERR_CODE 0x8a01
 #define CLK_312_5MHZ_ERR_CODE 0x8a02
 #define CLK_BUF0_100M_LOSB_PLD_ERR_CODE 0x8a03
 #define CLK_BUF1_100M_LOSB_PLD_ERR_CODE 0x8a04
 #define CLK_BUF2_100M_LOSB_PLD_ERR_CODE 0x8a05
+#define CLK_312_5MHZ_REINIT_ERR_CODE 0x8a06
 
 enum VR_ERR_LOG_DEVICE_INDEX_E {
 	//pwr fault reg 1
@@ -153,4 +155,5 @@ void packaged_bmc_log(uint8_t event_type, uint8_t event_data_1, uint8_t event_da
 		      uint8_t event_data_3);
 uint8_t clk_100mhz_get_lock_status();
 uint8_t clk_312_5mhz_get_lock_status();
+void check_312_5MHz_init_status();
 #endif

@@ -263,32 +263,43 @@ void cmd_log_dump(const struct shell *shell, size_t argc, char **argv)
 					shell_print(shell,
 						    "read 100MHz clock APLL lock status: 0x%02x",
 						    log.error_data[0]);
+					err_data_len = 1;
 					break;
 				case CLK_312_5MHZ_ERR_IDX:
 					shell_print(shell, "\t312.5MHz CLOCK_APLL_UNLOCK");
 					shell_print(shell,
 						    "read 312.5MHz clock APLL lock status: 0x%02x",
 						    log.error_data[0]);
+					err_data_len = 1;
 					break;
 				case CLK_BUF0_100M_LOSB_PLD:
 					shell_print(shell, "\tCLK_BUF0_100M_LOSB_PLD");
 					shell_print(shell, "read cpld reg 0x31: 0x%02x",
 						    log.error_data[0]);
+					err_data_len = 1;
 					break;
 				case CLK_BUF1_100M_LOSB_PLD:
 					shell_print(shell, "\tCLK_BUF1_100M_LOSB_PLD");
 					shell_print(shell, "read cpld reg 0x31: 0x%02x",
 						    log.error_data[0]);
+					err_data_len = 1;
 					break;
 				case CLK_BUF2_100M_LOSB_PLD:
 					shell_print(shell, "\tCLK_BUF2_100M_LOSB_PLD");
 					shell_print(shell, "read cpld reg 0x31: 0x%02x",
 						    log.error_data[0]);
+					err_data_len = 1;
+					break;
+				case CLK_312_5MHZ_REINIT_ERR_IDX:
+					shell_print(shell, "\tCLK_312_5MHZ_REINIT_ERR");
+					shell_print(
+						shell,
+						"read re-init event data: 0x00A8(4 bytes), 0x0080(1 byte), 0x0088(2 bytes)");
+					err_data_len = 7;
 					break;
 				default:
 					break;
 				}
-				err_data_len = 1;
 			} else if (cpld_offset == MFIO_FOR_RAINBOW) {
 				shell_print(shell, "\tASIC_REMOTE_TEMP_ERROR");
 				switch (bit_position) {

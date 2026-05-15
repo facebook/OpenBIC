@@ -105,6 +105,8 @@ void pal_post_init()
 	// check the thermtrip open-circuit
 	if (!gpio_get(FM_ASIC_0_THERMTRIP_R_N))
 		asic_thermtrip_error_log(LOG_ASSERT);
+	// check clk 312.5Mhz init
+	check_312_5MHz_init_status();
 }
 
 #define DEF_PROJ_GPIO_PRIORITY 78

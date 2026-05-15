@@ -49,6 +49,9 @@ static uint16_t err_code_caches[200]; //extend if error code types > 200
 static uint16_t next_log_position = 0; // Next position to write in the eeprom, 1-based, defaut 0
 static uint16_t next_index = 0; // Next global index to use for logs, 1-based, defaut 0
 static uint8_t log_num; // Number of logs in EEPROM
+static uint8_t clk_312_5_reinit_event_data[7] = { 0 };
+
+void error_log_event(uint16_t error_code, bool log_status);
 
 typedef struct _vr_device_match_sensor_num {
 	uint8_t index;
@@ -333,6 +336,191 @@ uint8_t clk_312_5mhz_get_lock_status()
 	return i2c_msg.data[0] & 0x01; //bit 0 is the APLL lock status
 }
 
+bool clk_312_5mhz_read_or_write_reg_value(uint8_t tx_len, uint8_t rx_len, uint8_t hsb_value,
+					  uint8_t lsb_value, uint8_t *write_read_value)
+{
+	k_msleep(10);
+	I2C_MSG i2c_msg = { 0 };
+	uint8_t retry = 5;
+	i2c_msg.bus = I2C_BUS3;
+	i2c_msg.target_addr = 0x8; // 7-bit
+	i2c_msg.tx_len = tx_len;
+	i2c_msg.rx_len = rx_len;
+	i2c_msg.data[0] = hsb_value; //offset HSB
+	i2c_msg.data[1] = lsb_value; //offset LSB
+	if (rx_len > 0) {
+		if (i2c_master_read(&i2c_msg, retry)) {
+			LOG_ERR("Failed to read clk 312.5MHz reg, offset: 0x%02x%02x", hsb_value,
+				lsb_value);
+			return false; // return invalid value
+		}
+	} else {
+		for (int i = 2; i < tx_len; i++) {
+			i2c_msg.data[i] = write_read_value[i - 2];
+		}
+		if (i2c_master_write(&i2c_msg, retry)) {
+			LOG_ERR("Failed to write clk 312.5MHz reg, offset: 0x%02x%02x", hsb_value,
+				lsb_value);
+			return false; // return invalid value
+		}
+		return true;
+	}
+	// save read back value in *write_read_value
+	memcpy(write_read_value, i2c_msg.data, rx_len);
+	return true;
+}
+
+void check_312_5MHz_init_status()
+{
+	uint8_t board_id = get_asic_board_id();
+	uint8_t rev_id = get_board_rev_id();
+	uint8_t read_pwr_en_value = 0;
+	if (!plat_read_cpld(VR_EN_PIN_READING_5, &read_pwr_en_value, 1)) {
+		LOG_ERR("Failed to read VR_EN_PIN_READING_5 for checking bootstrap flag");
+		return;
+	}
+	read_pwr_en_value = read_pwr_en_value & 0x01; //bit0 is PWR_EN
+	LOG_INF("Board ID: %d, Rev ID: %d, PWR_EN: 0x%02x", board_id, rev_id, read_pwr_en_value);
+	if (board_id == ASIC_BOARD_ID_RAINBOW && rev_id >= REV_ID_DVT_FAB4) {
+		// check 0x00A8
+		uint8_t read_value[4] = { 0 };
+		if (!clk_312_5mhz_read_or_write_reg_value(2, 4, 0x00, 0xA8, read_value)) {
+			LOG_ERR("Failed to read clk 312.5MHz 0x00A8");
+			return;
+		}
+		LOG_INF("Read clk 312.5MHz init reg 0x00A8 value: %02x%02x%02x%02x", read_value[0],
+			read_value[1], read_value[2], read_value[3]);
+		if (read_value[0] != 0x4D || read_value[1] != 0xC8 || read_value[2] != 0x04 ||
+		    read_value[3] != 0x0B) {
+			LOG_WRN("CLK 312.5MHz init reg 0x00A8 value is not expected, value: %02x%02x%02x%02x",
+				read_value[0], read_value[1], read_value[2], read_value[3]);
+			goto CHECK_POWER_ENABLE_AND_REINIT;
+		}
+		// check 0x0080
+		if (!clk_312_5mhz_read_or_write_reg_value(2, 1, 0x00, 0x80, read_value)) {
+			LOG_ERR("Failed to read clk 312.5MHz 0x0080");
+			return;
+		}
+		LOG_INF("Read clk 312.5MHz init reg 0x0080 value: %02x", read_value[0]);
+		if (read_value[0] != 0x6D) {
+			LOG_WRN("CLK 312.5MHz init reg 0x0080 value is not expected, value: %02x",
+				read_value[0]);
+			goto CHECK_POWER_ENABLE_AND_REINIT;
+		}
+		// check 0x0088
+		if (!clk_312_5mhz_read_or_write_reg_value(2, 2, 0x00, 0x88, read_value)) {
+			LOG_ERR("Failed to read clk 312.5MHz 0x0088");
+			return;
+		}
+		LOG_INF("Read clk 312.5MHz init reg 0x0088 value: %02x%02x", read_value[0],
+			read_value[1]);
+		if (read_value[0] != 0x00 || read_value[1] != 0x20) {
+			LOG_WRN("CLK 312.5MHz init reg 0x0088 value is not expected, value: %02x%02x",
+				read_value[0], read_value[1]);
+			goto CHECK_POWER_ENABLE_AND_REINIT;
+		}
+		// all good return
+		LOG_INF("CLK 312.5MHz init status is good");
+		return;
+	} else {
+		LOG_INF("Board is not >= FAB4, no need to check CLK 312.5MHz init status");
+		return;
+	}
+CHECK_POWER_ENABLE_AND_REINIT:
+	// read back all data and put in clk_312_5_reinit_event_data, 4byte + 1byte + 2byte
+	if (!clk_312_5mhz_read_or_write_reg_value(2, 4, 0x00, 0xA8, clk_312_5_reinit_event_data)) {
+		LOG_ERR("Failed to read clk 312.5MHz init reg 0x00A8");
+		return;
+	}
+	if (!clk_312_5mhz_read_or_write_reg_value(2, 1, 0x00, 0x80,
+						  clk_312_5_reinit_event_data + 4)) {
+		LOG_ERR("Failed to read clk 312.5MHz init reg 0x0080");
+		return;
+	}
+	if (!clk_312_5mhz_read_or_write_reg_value(2, 2, 0x00, 0x88,
+						  clk_312_5_reinit_event_data + 5)) {
+		LOG_ERR("Failed to read clk 312.5MHz init reg 0x0088");
+		return;
+	}
+	// check pwr enable
+	if (read_pwr_en_value == 1) {
+		LOG_ERR("Power is on with unexpected CLK 312.5MHz init status");
+		error_log_event(CLK_312_5MHZ_REINIT_ERR_CODE, LOG_ASSERT);
+	} else {
+		uint8_t error_flag = 0;
+		//write 0x00a8, value = 0x4D 0xC8 0x04 0x0B to re-init
+		LOG_INF("Power is off with unexpected CLK 312.5MHz init status, try to re-init clk");
+		uint8_t write_value[4] = { 0x4D, 0xC8, 0x04, 0x0B };
+		if (!clk_312_5mhz_read_or_write_reg_value(6, 0, 0x00, 0xA8, write_value)) {
+			LOG_ERR("Failed to write 0x00A8");
+		}
+		if (!clk_312_5mhz_read_or_write_reg_value(2, 4, 0x00, 0xA8,
+							  clk_312_5_reinit_event_data)) {
+			LOG_ERR("Failed to read 0x00A8 after re-init");
+		}
+		if (clk_312_5_reinit_event_data[0] != 0x4D ||
+		    clk_312_5_reinit_event_data[1] != 0xC8 ||
+		    clk_312_5_reinit_event_data[2] != 0x04 ||
+		    clk_312_5_reinit_event_data[3] != 0x0B) {
+			LOG_ERR("Re-init clk 312.5MHz 0x00A8 failed");
+			error_flag = 1;
+		}
+		k_msleep(15);
+		// write 0x0080, value = 0x6D to re-init
+		uint8_t write_value_0080 = 0x6D;
+		if (!clk_312_5mhz_read_or_write_reg_value(3, 0, 0x00, 0x80, &write_value_0080)) {
+			LOG_ERR("Failed to write 0x0080");
+			error_flag = 1;
+		}
+		if (!clk_312_5mhz_read_or_write_reg_value(2, 1, 0x00, 0x80,
+							  clk_312_5_reinit_event_data + 4)) {
+			LOG_ERR("Failed to read 0x0080 after re-init");
+		}
+		if (clk_312_5_reinit_event_data[4] != 0x6D) {
+			LOG_ERR("Re-init clk 312.5MHz 0x0080 failed");
+			error_flag = 1;
+		}
+		k_msleep(15);
+		// write 0x0088, value = 0x00 0x20 to re-init
+		uint8_t write_value_0088[2] = { 0x00, 0x20 };
+		if (!clk_312_5mhz_read_or_write_reg_value(4, 0, 0x00, 0x88, write_value_0088)) {
+			LOG_ERR("Failed to write 0x0088");
+		}
+		if (!clk_312_5mhz_read_or_write_reg_value(2, 2, 0x00, 0x88,
+							  clk_312_5_reinit_event_data + 5)) {
+			LOG_ERR("Failed to read 0x0088 after re-init");
+		}
+		if (clk_312_5_reinit_event_data[5] != 0x00 ||
+		    clk_312_5_reinit_event_data[6] != 0x20) {
+			LOG_ERR("Re-init clk 312.5MHz 0x0088 failed");
+			error_flag = 1;
+		}
+		// do APLL re-init
+		uint8_t write_value_0D00 = 0x00;
+		if (!clk_312_5mhz_read_or_write_reg_value(2, 0, 0x0D, 0x00, &write_value_0D00)) {
+			LOG_ERR("Failed to write 0x0D00 0x00");
+		}
+		write_value_0D00 = 0x02;
+		if (!clk_312_5mhz_read_or_write_reg_value(2, 0, 0x0D, 0x00, &write_value_0D00)) {
+			LOG_ERR("Failed to write 0x0D00 0x02");
+		}
+		write_value_0D00 = 0x00;
+		if (!clk_312_5mhz_read_or_write_reg_value(2, 0, 0x0D, 0x00, &write_value_0D00)) {
+			LOG_ERR("Failed to write 0x0D00 0x00");
+		}
+		// read pwr en again
+		if (!plat_read_cpld(VR_EN_PIN_READING_5, &read_pwr_en_value, 1)) {
+			LOG_ERR("Failed to read VR_EN_PIN_READING_5 for checking bootstrap flag");
+		}
+		read_pwr_en_value = read_pwr_en_value & 0x01; //bit0 is PWR_EN
+		if (read_pwr_en_value == 1) {
+			LOG_ERR("CLK 312.5MHz init status re-init has error: 0x%02x, pwr en: 0x%02x",
+				error_flag, read_pwr_en_value);
+			error_log_event(CLK_312_5MHZ_REINIT_ERR_CODE, LOG_ASSERT);
+		}
+	}
+}
+
 bool get_error_data(uint16_t error_code, uint8_t *data)
 {
 	CHECK_NULL_ARG_WITH_RETURN(data, false);
@@ -456,6 +644,10 @@ bool get_error_data(uint16_t error_code, uint8_t *data)
 				data[0] = clk_data_tmp;
 				return true;
 				break;
+			case CLK_312_5MHZ_REINIT_ERR_IDX:
+				// save re-init data to data[0-6], total 7 bytes
+				memcpy(data, clk_312_5_reinit_event_data, 7);
+				return true;
 			default:
 				break;
 			}
@@ -594,7 +786,8 @@ void error_log_event(uint16_t error_code, bool log_status)
 					    error_code != CLK_312_5MHZ_ERR_CODE &&
 					    error_code != CLK_BUF0_100M_LOSB_PLD_ERR_CODE &&
 					    error_code != CLK_BUF1_100M_LOSB_PLD_ERR_CODE &&
-					    error_code != CLK_BUF2_100M_LOSB_PLD_ERR_CODE) {
+					    error_code != CLK_BUF2_100M_LOSB_PLD_ERR_CODE &&
+					    error_code != CLK_312_5MHZ_REINIT_ERR_CODE) {
 						LOG_INF("Duplicate error_code(log assert): 0x%x, log_status: %d",
 							error_code, log_status);
 					}
