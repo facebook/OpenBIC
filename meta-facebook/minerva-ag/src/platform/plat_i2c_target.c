@@ -910,6 +910,43 @@ static bool command_reply_data_handle(void *arg)
 				memcpy(data->target_rd_msg.msg, &power, sizeof(power));
 				data->target_rd_msg.msg_length = sizeof(power);
 			} break;
+			case POWER_CAPPING_GET_VR_ASIC_SUM_PWR_W_REG: {
+				static const uint16_t power_sum_sensor_ids[] = {
+					VR_ASIC_P0V85_PVDD_PWR_W,
+					VR_ASIC_P0V9_TRVDD_ZONEA_PWR_W,
+					VR_ASIC_P0V75_TRVDD_ZONEA_PWR_W,
+					VR_ASIC_P0V75_PVDD_CH_N_PWR_W,
+					VR_ASIC_P0V75_MAX_PHY_N_PWR_W,
+					VR_ASIC_P0V9_TRVDD_ZONEB_PWR_W,
+					VR_ASIC_P0V75_TRVDD_ZONEB_PWR_W,
+					VR_ASIC_P0V75_PVDD_CH_S_PWR_W,
+					VR_ASIC_P0V75_MAX_PHY_S_PWR_W,
+					VR_ASIC_P0V8_VDDA_PCIE_PWR_W,
+					VR_ASIC_P1V2_VDDHTX_PCIE_PWR_W,
+					VR_ASIC_P1V1_VDDC_HBM0_HBM2_HBM4_PWR_W,
+					VR_ASIC_P0V4_VDDQL_HBM0_HBM2_HBM4_PWR_W,
+					VR_ASIC_P1V8_VPP_HBM0_HBM2_HBM4_PWR_W,
+					VR_ASIC_P0V75_VDDPHY_HBM0_HBM2_HBM4_PWR_W,
+					VR_ASIC_P1V1_VDDC_HBM1_HBM3_HBM5_PWR_W,
+					VR_ASIC_P0V4_VDDQL_HBM1_HBM3_HBM5_PWR_W,
+					VR_ASIC_P1V8_VPP_HBM1_HBM3_HBM5_PWR_W,
+					VR_ASIC_P0V75_VDDPHY_HBM1_HBM3_HBM5_PWR_W,
+				};
+				uint32_t sum_mw = 0;
+				for (int i = 0; i < ARRAY_SIZE(power_sum_sensor_ids); i++) {
+					int reading = 0;
+					uint8_t sensor_operational_state = PLDM_SENSOR_STATUSUNKOWN;
+					uint8_t status = pldm_sensor_get_reading_from_cache(
+						power_sum_sensor_ids[i], &reading,
+						&sensor_operational_state);
+					if (status == SENSOR_READ_SUCCESS && reading > 0) {
+						sum_mw += reading;
+					}
+				}
+				uint16_t power_sum_w = (uint16_t)(sum_mw / 1000);
+				memcpy(data->target_rd_msg.msg, &power_sum_w, sizeof(power_sum_w));
+				data->target_rd_msg.msg_length = sizeof(power_sum_w);
+			} break;
 			default:
 				LOG_ERR("Unknown reg offset: 0x%02x", reg_offset);
 				data->target_rd_msg.msg_length = 1;
