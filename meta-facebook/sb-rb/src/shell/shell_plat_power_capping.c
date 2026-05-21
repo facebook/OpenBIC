@@ -148,10 +148,9 @@ static int cmd_power_capping_set_time_window(const struct shell *shell, size_t a
 	}
 
 	if (power_capping_item_list[idx].lv == CAPPING_LV_IDX_LV1) {
-		uint8_t tmp_idx = 0;
-		if (!find_cpld_lv1_time_window_idx_by_value(&tmp_idx, value)) {
-			shell_error(shell, "For LV1, the time(us) should be:");
-			shell_print(shell, "{ 0, 1, 3, 5, 10, 15, 20, 50 }");
+		if (value < 10 || value > 100) {
+			shell_error(shell,
+				    "For LV1, the time(us) should be between 10us and 100us");
 			return -1;
 		}
 	}

@@ -86,13 +86,13 @@ void pal_post_init()
 	init_load_eeprom_log();
 	if (get_asic_board_id() == ASIC_BOARD_ID_EVB && get_board_rev_id() >= REV_ID_EVT1B) {
 		// if board id >= EVB EVT1B(FAB2)
-		quick_sensor_poll_init();
 		init_U200052_IO();
 		init_U200053_IO();
 		// if board id >= EVB EVT1B(FAB3)
 		if (get_board_rev_id() >= REV_ID_EVT2)
 			init_U200070_IO();
 	}
+	quick_sensor_poll_init();
 	// check bootstrap flag
 	check_bootstrap_flag();
 	plat_set_ac_on_log();

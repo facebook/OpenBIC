@@ -25,6 +25,8 @@
 #include "plat_class.h"
 #include "shell_plat_average_power.h"
 #include "plat_power_capping.h"
+#include "plat_pldm_fw_update.h"
+#include "plat_gpio.h"
 
 LOG_MODULE_REGISTER(plat_pldm_sensor);
 
@@ -12714,42 +12716,69 @@ void quick_sensor_poll_handler(void *arug0, void *arug1, void *arug2)
 	uint8_t leak_2_value = 0;
 	uint8_t set_io7_value = 0;
 	uint8_t log_show_flag = 0;
+	int count = 0;
+	uint8_t cycle_counter = 0;
 	while (1) {
+		count++;
+		if (is_mb_dc_on() == false || !get_plat_sensor_polling_enable_flag())
+			cycle_counter = 5; //dc off will sleep 1000ms, 5*1000ms = 5s
+		else
+			cycle_counter = 167; // 167*30ms = 5s
+		if (count >= cycle_counter) {
+			count = 0;
+			get_fw_version_boot0_from_asic();
+			uint32_t asic_verion = 0;
+			for (int i = 0; i < BOOT0_MAX; i++) {
+				asic_verion = plat_get_image_version(i);
+				// asic_verion get  bit0~bit23
+				asic_verion = asic_verion & 0xFFFFFF;
+				if (asic_verion != 0 && asic_verion != 0xFFFFFF) {
+					gpio_set(I3C_RAINBOW_ALERT_R_N, 1);
+					break;
+				}
+				gpio_set(I3C_RAINBOW_ALERT_R_N, 0);
+			}
+		}
 		//check dc on/off and polling enable/disable
 		if (is_mb_dc_on() == false || !get_plat_sensor_polling_enable_flag()) {
 			//dc is off, sleep 1 second
 			k_msleep(1000);
 			continue;
 		}
+		// if board id >= EVB EVT1B(FAB2) then do quick sensor polling, else skip
+		if (get_asic_board_id() == ASIC_BOARD_ID_EVB &&
+		    get_board_rev_id() >= REV_ID_EVT1B) {
+			if (!get_ioe_init_flag()) {
+				LOG_INF("U200051 IO expander need init");
+				init_U200051_IO();
+				set_ioe_init_flag(1);
+			}
 
-		if (!get_ioe_init_flag()) {
-			LOG_INF("U200051 IO expander need init");
-			init_U200051_IO();
-			set_ioe_init_flag(1);
-		}
+			k_msleep(quick_sensor_poll_interval_ms);
+			// read mux U200051 IO_6, if change means leak detected set io_7 to 1
+			ret = get_ioe_value(U200051_IO_ADDR, INPUT_PORT, &leak_2_value);
 
-		k_msleep(quick_sensor_poll_interval_ms);
-		// read mux U200051 IO_6, if change means leak detected set io_7 to 1
-		ret = get_ioe_value(U200051_IO_ADDR, INPUT_PORT, &leak_2_value);
+			if (ret != 0) {
+				LOG_ERR("Failed to read IOE(0x%02X). The register is 0x%02X.",
+					U200051_IO_ADDR, OUTPUT_PORT);
+				continue;
+			}
 
-		if (ret != 0) {
-			LOG_ERR("Failed to read IOE(0x%02X). The register is 0x%02X.",
-				U200051_IO_ADDR, OUTPUT_PORT);
+			if (leak_2_value & 0x40) {
+				if (log_show_flag == 0) {
+					LOG_WRN("leak_2 detected");
+					get_ioe_value(U200051_IO_ADDR, OUTPUT_PORT, &set_io7_value);
+					//inverse bit-7
+					set_io7_value ^= 0x80;
+					set_ioe_value(U200051_IO_ADDR, OUTPUT_PORT, set_io7_value);
+					log_show_flag = 1;
+				}
+			} else {
+				log_show_flag = 0;
+			}
 			continue;
 		}
-
-		if (leak_2_value & 0x40) {
-			if (log_show_flag == 0) {
-				LOG_WRN("leak_2 detected");
-				get_ioe_value(U200051_IO_ADDR, OUTPUT_PORT, &set_io7_value);
-				//inverse bit-7
-				set_io7_value ^= 0x80;
-				set_ioe_value(U200051_IO_ADDR, OUTPUT_PORT, set_io7_value);
-				log_show_flag = 1;
-			}
-		} else {
-			log_show_flag = 0;
-		}
+		k_msleep(quick_sensor_poll_interval_ms);
 	}
 }
 
