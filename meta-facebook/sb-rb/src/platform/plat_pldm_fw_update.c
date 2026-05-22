@@ -616,18 +616,12 @@ static bool get_boot0_medha1_fw_version(void *info_p, uint8_t *buf, uint8_t *len
 //clang-format off
 #define VR_COMPONENT_DEF(comp_id)                                                                  \
 	{                                                                                          \
-		.enable = true,                                                                    \
-		.comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,                                 \
-		.comp_identifier = comp_id,                                                        \
-		.comp_classification_index = 0x00,                                                 \
-		.pre_update_func = pldm_pre_vr_update,                                             \
-		.update_func = plat_pldm_vr_update,                                                \
-		.pos_update_func = pldm_post_vr_update,                                            \
-		.inf = COMP_UPDATE_VIA_I2C,                                                        \
-		.activate_method = COMP_ACT_AC_PWR_CYCLE,                                          \
-		.self_act_func = NULL,                                                             \
-		.get_fw_version_fn = get_vr_fw_version,                                            \
-		.self_apply_work_func = NULL,                                                      \
+		.enable = true, .comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,                 \
+		.comp_identifier = comp_id, .comp_classification_index = 0x00,                     \
+		.pre_update_func = pldm_pre_vr_update, .update_func = plat_pldm_vr_update,         \
+		.pos_update_func = pldm_post_vr_update, .inf = COMP_UPDATE_VIA_I2C,                \
+		.activate_method = COMP_ACT_AC_PWR_CYCLE, .self_act_func = NULL,                   \
+		.get_fw_version_fn = get_vr_fw_version, .self_apply_work_func = NULL,              \
 		.comp_version_str = NULL,                                                          \
 	}
 // clang-format on
