@@ -73,9 +73,7 @@ temp_mapping_sensor_t temp_alert_index_table[] = {
 void read_temp_status(uint8_t bus, uint8_t target_addr)
 {
 	uint8_t clear_status_data[1];
-	LOG_DBG("bus is %d, target_addr is 0x%x", bus, target_addr);
 	plat_i2c_read(bus, target_addr, TMP_HIGH_LIMIT_STATUS_REG, clear_status_data, 1);
-	LOG_DBG("temp status is 0x%x", clear_status_data[0]);
 }
 
 uint8_t get_thermal_status_val_for_log(uint8_t sensor_num)
@@ -171,9 +169,9 @@ void check_thermal_handler(void *arg1, void *arg2, void *arg3)
 				if (limit_status_val & remote_bit) {
 					//check if still high, don't send error log again
 					if (temp_alert_index_table[i].last_status == 1) {
-						LOG_DBG("keep error sensor_num 0x%x, bus 0x%x, address 0x%x ",
-							temp_cfg->num, temp_cfg->port,
-							temp_cfg->target_addr);
+						// LOG_DBG("keep error sensor_num 0x%x, bus 0x%x, address 0x%x ",
+						// temp_cfg->num, temp_cfg->port,
+						// temp_cfg->target_addr);
 						// clear temperature status
 						read_temp_status(temp_cfg->port,
 								 temp_cfg->target_addr);
@@ -204,8 +202,8 @@ void check_thermal_handler(void *arg1, void *arg2, void *arg3)
 				}
 			}
 			// clear temperature status
-			LOG_DBG("end clear sensor_num 0x%x, bus 0x%x, address 0x%x ", temp_cfg->num,
-				temp_cfg->port, temp_cfg->target_addr);
+			// LOG_DBG("end clear sensor_num 0x%x, bus 0x%x, address 0x%x ", temp_cfg->num,
+			// temp_cfg->port, temp_cfg->target_addr);
 			read_temp_status(temp_cfg->port, temp_cfg->target_addr);
 		}
 		k_sleep(K_MSEC(1000));

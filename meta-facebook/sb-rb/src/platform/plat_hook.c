@@ -89,7 +89,6 @@ bool pre_vr_read(sensor_cfg *cfg, void *args)
 
 	/* mutex lock */
 	if (pre_proc_args->mutex) {
-		LOG_DBG("%x l %p", cfg->num, pre_proc_args->mutex);
 		if (k_mutex_lock(pre_proc_args->mutex, K_MSEC(VR_MUTEX_LOCK_TIMEOUT_MS))) {
 			LOG_ERR("0x%02x pre_vr_read, mutex lock fail", cfg->num);
 			return false;
@@ -237,7 +236,6 @@ void vr_mutex_init(void)
 {
 	for (uint8_t i = 0; i < ARRAY_SIZE(vr_mutex); i++) {
 		k_mutex_init(vr_mutex + i);
-		LOG_DBG("vr_mutex[%d] %p init", i, vr_mutex + i);
 	}
 }
 
@@ -523,7 +521,6 @@ bool plat_get_vr_status(uint8_t rail, uint8_t vr_status_rail, uint16_t *vr_statu
 
 	if ((cfg->pre_sensor_read_hook)) {
 		if ((cfg->pre_sensor_read_hook)(cfg, cfg->pre_sensor_read_args) == false) {
-			LOG_DBG("%d read vr status pre hook fail!", sensor_id);
 			return false;
 		}
 	};
@@ -704,7 +701,6 @@ bool plat_set_vout_command(uint8_t rail, uint16_t *millivolt, bool is_perm)
 		}
 	}
 
-	LOG_DBG("sensor num 0x%x,page 0x%x, vout 0x%x", sensor_id, page, setting_millivolt);
 	switch (cfg->type) {
 	case sensor_dev_mp2971:
 		if (!mp2971_set_vout_command(cfg, page, millivolt)) {
@@ -1223,7 +1219,7 @@ bool get_bootstrap_change_drive_level(int rail, int *drive_level)
 	}
 
 	*drive_level = bootstrap_item.change_setting_value;
-	LOG_DBG("rail %d, drive_level = %x", rail, *drive_level);
+	// LOG_DBG("rail %d, drive_level = %x", rail, *drive_level);
 	return true;
 }
 bool strap_enum_get(uint8_t *name, uint8_t *num)
@@ -1287,8 +1283,6 @@ bool set_bootstrap_table_and_user_settings(uint8_t rail, uint8_t *change_setting
 				}
 			}
 
-			LOG_DBG("set [%2d]%s: %02x", rail, bootstrap_table[i].strap_name,
-				*change_setting_value);
 			/*
 				save perm parameter to bootstrap_user_settings
 				bit 8: not perm(ff); perm(1)
@@ -1477,7 +1471,6 @@ bool plat_set_vr_reg(uint8_t rail, uint8_t reg, uint8_t *data, uint8_t len)
 
 	if ((cfg->pre_sensor_read_hook)) {
 		if ((cfg->pre_sensor_read_hook)(cfg, cfg->pre_sensor_read_args) == false) {
-			LOG_DBG("0x%02x read vr reg 0x%02x pre hook fail!", sensor_id, reg);
 			return false;
 		}
 	};

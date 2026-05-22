@@ -80,7 +80,6 @@ static int cmd_vqps_get(const struct shell *shell, size_t argc, char **argv)
 	if (argc != 1) {
 		shell_print(shell, "Usage:");
 		shell_print(shell, "  vqps get all");
-		LOG_DBG("invalid argc in get: %d", (int)argc);
 		return -1;
 	}
 
@@ -91,23 +90,17 @@ static int cmd_vqps_get(const struct shell *shell, size_t argc, char **argv)
 	uint8_t bit_val = 0;
 
 	if (!plat_read_cpld(VQPS_STATUS_CPLD_OFFSET, &reg_status, 1)) {
-		LOG_DBG("plat_read_cpld failed: offset=0x%02x", VQPS_STATUS_CPLD_OFFSET);
 		shell_error(shell, "read VQPS status CPLD failed");
 		return -1;
 	}
 
-	LOG_DBG("VQPS status raw [0x%02X] = 0x%02X", VQPS_STATUS_CPLD_OFFSET, reg_status);
-
 	if (board_id == ASIC_BOARD_ID_EVB) {
 		if (!plat_read_cpld(EVB_VQPS_CPLD_OFFSET, &EVB_reg_status, 1)) {
-			LOG_DBG("plat_read_cpld failed: offset=0x%02x", EVB_VQPS_CPLD_OFFSET);
 			shell_error(shell, "read VQPS platform CPLD failed");
 			return -1;
 		}
-		LOG_DBG("VQPS platform raw [0x%02X] = 0x%02X", EVB_VQPS_CPLD_OFFSET,
-			EVB_reg_status);
 	} else {
-		LOG_DBG("VQPS platform register not supported on this board (0x%02X)", board_id);
+		// LOG_DBG("VQPS platform register not supported on this board (0x%02X)", board_id);
 	}
 
 	for (int i = 0; i < 5; i++) {
@@ -129,7 +122,8 @@ static int cmd_vqps_get(const struct shell *shell, size_t argc, char **argv)
 						LOG_ERR("Failed to read IO expander (EVT1B)");
 						return -1;
 					}
-					bit_val = (EVB_reg_status >> EVT1B_P1V8_OWL_EW_VQPS_EN) & 0x1;
+					bit_val =
+						(EVB_reg_status >> EVT1B_P1V8_OWL_EW_VQPS_EN) & 0x1;
 
 				} else if (board_rev == REV_ID_EVT2) {
 					if (get_pca6554apw_ioe_value(U200070_IO_I2C_BUS,
@@ -138,7 +132,8 @@ static int cmd_vqps_get(const struct shell *shell, size_t argc, char **argv)
 						LOG_ERR("EVT2: Failed to read PCA6554 OUTPUT_PORT");
 						return -1;
 					}
-					bit_val = (EVB_reg_status >> EVT2_P1V8_OWL_EW_VQPS_EN) & 0x1;
+					bit_val =
+						(EVB_reg_status >> EVT2_P1V8_OWL_EW_VQPS_EN) & 0x1;
 				} else {
 					LOG_WRN("Board rev (0x%02X) does not support this function",
 						board_rev);
@@ -176,13 +171,11 @@ static int cmd_vqps_set(const struct shell *shell, size_t argc, char **argv)
 
 	if (set_val != 0 && set_val != 1) {
 		shell_error(shell, "Value must be 0 or 1");
-		LOG_DBG("invalid value in set: %ld", set_val);
 		return -1;
 	}
 
 	if (!item) {
 		shell_error(shell, "Unknown name: %s", name);
-		LOG_DBG("unknown name in set: %s", name);
 		return -1;
 	}
 
@@ -194,8 +187,8 @@ static int cmd_vqps_set(const struct shell *shell, size_t argc, char **argv)
 
 		if (board_rev == REV_ID_EVT1B) {
 			/* EVT1B: control via TCA6424A OUTPUT_PORT_2, bit = P1V8_OWL_EW_VQPS_EN */
-			if (!tca6424a_i2c_write_bit(TCA6424A_OUTPUT_PORT_2, EVT1B_P1V8_OWL_EW_VQPS_EN,
-						    (uint8_t)set_val)) {
+			if (!tca6424a_i2c_write_bit(TCA6424A_OUTPUT_PORT_2,
+						    EVT1B_P1V8_OWL_EW_VQPS_EN, (uint8_t)set_val)) {
 				LOG_ERR("EVT1B: Failed to write IO expander for %s", name);
 				shell_error(shell, "write IO expander failed");
 				return -1;
@@ -247,7 +240,6 @@ static int cmd_vqps_set(const struct shell *shell, size_t argc, char **argv)
 	}
 
 	if (!plat_read_cpld(offset, &reg_val, 1)) {
-		LOG_DBG("plat_read_cpld failed: offset=0x%02x", offset);
 		shell_error(shell, "read CPLD failed");
 		return -1;
 	}
@@ -259,7 +251,6 @@ static int cmd_vqps_set(const struct shell *shell, size_t argc, char **argv)
 	}
 
 	if (!plat_write_cpld(offset, &reg_val)) {
-		LOG_DBG("plat_write_cpld failed: offset=0x%02x val=0x%02x", offset, reg_val);
 		shell_error(shell, "write CPLD failed");
 		return -1;
 	}

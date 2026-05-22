@@ -217,9 +217,9 @@ void plat_log_read(uint8_t *log_data, uint8_t cmd_size, uint16_t order)
 	uint16_t eeprom_address =
 		FRU_LOG_START + zero_base_log_position * sizeof(plat_err_log_mapping);
 
-	LOG_DBG("order: %d, log_position: %d, eeprom_address: 0x%X", order,
-		(zero_base_log_position + 1),
-		eeprom_address); //remove after all log function is ready
+	// LOG_DBG("order: %d, log_position: %d, eeprom_address: 0x%X", order,
+	// (zero_base_log_position + 1),
+	// eeprom_address); //remove after all log function is ready
 
 	plat_err_log_mapping log_entry;
 
@@ -297,10 +297,6 @@ bool get_multi_vr_status(uint8_t alrt_index, uint8_t *data)
 		*ptr++ = (uint8_t)(vr_data & 0xFF);
 		*ptr++ = (uint8_t)((vr_data >> 8) & 0xFF);
 	}
-
-	// print VR data
-	for (int i = 0; i < 8; i++)
-		LOG_DBG("data[%d]: %02X ", i, data[i]);
 
 	return true;
 }
@@ -928,7 +924,7 @@ void reset_error_log_event(uint8_t err_type)
 		uint16_t error_code = err_code_caches[i];
 		uint8_t code_type = error_code >> ERROR_CODE_TYPE_SHIFT;
 		if (code_type == err_type) {
-			LOG_DBG("DEASSERT");
+			// LOG_DBG("DEASSERT");
 			error_log_event(error_code, LOG_DEASSERT);
 			err_code_caches[i] = 0;
 		}

@@ -130,7 +130,7 @@ static uint8_t pldm_pre_mtia_flash_update(void *fw_update_param)
 	pldm_fw_update_param_t *p = (pldm_fw_update_param_t *)fw_update_param;
 	plat_set_cpld_reset_reg(RESET_CPLD_OFF);
 	uint16_t spi_node = p->comp_id;
-	LOG_DBG("MTIA flash comp id: 0x%x", p->comp_id);
+	// LOG_DBG("MTIA flash comp id: 0x%x", p->comp_id);
 	switch (spi_node) {
 	case COMPNT_HAMSA:
 		change_spi_node_to_hamsa();
@@ -228,27 +228,20 @@ static uint8_t pldm_post_mtia_flash_update(void *fw_update_param)
 	}
 	uint32_t ver_value = version_rxbuf[0] << 16 | version_rxbuf[1] << 8 | version_rxbuf[2];
 
-	LOG_DBG("version: 0x%x, crc32: 0x%x", ver_value, crc32);
 	switch (p->comp_id) {
 	case COMPNT_HAMSA:
 		crc_boot0[BOOT0_HAMSA] = crc32;
 		version_boot0[BOOT0_HAMSA] = ver_value;
-		LOG_DBG("version: 0x%x, crc32: 0x%x", version_boot0[BOOT0_HAMSA],
-			crc_boot0[BOOT0_HAMSA]);
 		SAFE_FREE(version_rxbuf);
 		break;
 	case COMPNT_MEDHA0:
 		crc_boot0[BOOT0_MEDHA0] = crc32;
 		version_boot0[BOOT0_MEDHA0] = ver_value;
-		LOG_DBG("version: 0x%x, crc32: 0x%x", version_boot0[BOOT0_MEDHA0],
-			crc_boot0[BOOT0_MEDHA0]);
 		SAFE_FREE(version_rxbuf);
 		break;
 	case COMPNT_MEDHA1:
 		crc_boot0[BOOT0_MEDHA1] = crc32;
 		version_boot0[BOOT0_MEDHA1] = ver_value;
-		LOG_DBG("version: 0x%x, crc32: 0x%x", version_boot0[BOOT0_MEDHA1],
-			crc_boot0[BOOT0_MEDHA1]);
 		SAFE_FREE(version_rxbuf);
 		break;
 	default:
@@ -623,12 +616,18 @@ static bool get_boot0_medha1_fw_version(void *info_p, uint8_t *buf, uint8_t *len
 //clang-format off
 #define VR_COMPONENT_DEF(comp_id)                                                                  \
 	{                                                                                          \
-		.enable = true, .comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,                 \
-		.comp_identifier = comp_id, .comp_classification_index = 0x00,                     \
-		.pre_update_func = pldm_pre_vr_update, .update_func = plat_pldm_vr_update,         \
-		.pos_update_func = pldm_post_vr_update, .inf = COMP_UPDATE_VIA_I2C,                \
-		.activate_method = COMP_ACT_AC_PWR_CYCLE, .self_act_func = NULL,                   \
-		.get_fw_version_fn = get_vr_fw_version, .self_apply_work_func = NULL,              \
+		.enable = true,                                                                    \
+		.comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,                                 \
+		.comp_identifier = comp_id,                                                        \
+		.comp_classification_index = 0x00,                                                 \
+		.pre_update_func = pldm_pre_vr_update,                                             \
+		.update_func = plat_pldm_vr_update,                                                \
+		.pos_update_func = pldm_post_vr_update,                                            \
+		.inf = COMP_UPDATE_VIA_I2C,                                                        \
+		.activate_method = COMP_ACT_AC_PWR_CYCLE,                                          \
+		.self_act_func = NULL,                                                             \
+		.get_fw_version_fn = get_vr_fw_version,                                            \
+		.self_apply_work_func = NULL,                                                      \
 		.comp_version_str = NULL,                                                          \
 	}
 // clang-format on
@@ -939,7 +938,7 @@ static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 	}
 
 	if (get_asic_board_id() != ASIC_BOARD_ID_EVB && p->comp_identifier == COMPNT_VR_3V3) {
-		LOG_DBG("only evb support 3V3 vr version get");
+		// LOG_DBG("only evb support 3V3 vr version get");
 		return ret;
 	}
 

@@ -494,7 +494,7 @@ bool plat_clear_temp_status(uint8_t rail)
 		}
 		break;
 	case sensor_dev_tmp75: {
-		LOG_DBG("TMP75 temp_status cannot be cleared; its behavior depends on the temp_threshold settings.");
+		// LOG_DBG("TMP75 temp_status cannot be cleared; its behavior depends on the temp_threshold settings.");
 	} break;
 	case sensor_dev_emc1413: {
 		if (!emc1413_clear_temp_status(cfg)) {
@@ -1226,9 +1226,6 @@ bool post_ubc_read(sensor_cfg *cfg, void *args, int *reading)
 		if (tmp_reading < 0) {
 			tmp_reading = 0;
 			*reading = 0;
-			LOG_DBG("Original sensor reading: integer = %d, fraction = %f", integer,
-				fraction);
-			LOG_DBG("Negative sensor reading detected. Set reading to 0x%x", *reading);
 		}
 
 		int decoded_reading =
@@ -1278,7 +1275,6 @@ bool post_vr_read(sensor_cfg *cfg, void *args, int *const reading)
 
 	/* mutex unlock */
 	if (pre_proc_args->mutex) {
-		LOG_DBG("%x u %p", cfg->num, pre_proc_args->mutex);
 		if (k_mutex_unlock(pre_proc_args->mutex)) {
 			LOG_ERR("0x%02x post_vr_read, mutex unlock fail", cfg->num);
 			return false;
@@ -1294,10 +1290,7 @@ bool post_vr_read(sensor_cfg *cfg, void *args, int *const reading)
 	int32_t sensor_value = tmp_reading.integer * 1000 + tmp_reading.fraction;
 
 	if (sensor_value < 0) {
-		LOG_DBG("Original sensor reading: integer = %d, fraction = %d (combined value * 1000: %d)",
-			tmp_reading.integer, tmp_reading.fraction, sensor_value);
 		*reading = 0;
-		LOG_DBG("Negative sensor reading detected. Set reading to 0x%x", *reading);
 	}
 	post_sensor_reading_hook_func(cfg->num);
 
@@ -1322,9 +1315,6 @@ bool post_vr_read(sensor_cfg *cfg, void *args, int *const reading)
 		if (tmp_reading_value < 0) {
 			tmp_reading_value = 0;
 			*reading = 0;
-			LOG_DBG("Original sensor reading: integer = %d, fraction = %f", integer,
-				fraction);
-			LOG_DBG("Negative sensor reading detected. Set reading to 0x%x", *reading);
 		}
 
 		int decoded_reading =
@@ -1406,9 +1396,6 @@ bool get_average_power(uint8_t rail, uint32_t *milliwatt)
 	}
 
 	*milliwatt = ((uint16_t)fraction_part << 16) | (uint16_t)integer_part;
-
-	LOG_DBG("real_power = %f, integer_part = %d, fraction_part = %d, milliwatt = 0x%x",
-		real_power, integer_part, fraction_part, *milliwatt);
 
 	return true;
 }

@@ -257,7 +257,6 @@ int cmd_power_sequence(const struct shell *shell, size_t argc, char **argv)
 			LOG_ERR("Failed to read cpld register from cpld");
 			continue;
 		}
-		LOG_DBG("read offset 0x%x value 0x%x", cpld_offset, data);
 		power_sequence_table[i].value = data;
 	}
 	if (power_on_off_flag == 1) {
