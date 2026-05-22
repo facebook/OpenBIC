@@ -199,7 +199,7 @@ void ISR_GPIO_ALL_VR_PM_ALERT_R_N()
 	}
 }
 
-bool ubc_en_changed_callback(cpld_info *info, uint8_t *data)
+bool ubc_en_changed_callback(const cpld_info *info, const uint8_t *data)
 {
 	bool ubc_en;
 	bool last_ubc_en;
