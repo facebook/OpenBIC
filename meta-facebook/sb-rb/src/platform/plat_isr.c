@@ -64,6 +64,7 @@ void check_read_100MHz_clock_status()
 	if (lock_status == 0) {
 		uint16_t error_code = CLOCK_APLL_UNLOCK_EVENT_CAUSE | CLK_100MHZ_ERR_IDX;
 		error_log_event(error_code, LOG_ASSERT);
+		packaged_bmc_log(ASIC_MODULE_ERROR, CLOCK_APLL_UNLOCK_EVENT, 0, 0);
 	}
 end:
 	//write back to 1-byte mode
@@ -84,6 +85,7 @@ void check_read_312_5MHz_clock_status()
 	} else if (lock_status == 0) {
 		uint16_t error_code = CLOCK_APLL_UNLOCK_EVENT_CAUSE | CLK_312_5MHZ_ERR_IDX;
 		error_log_event(error_code, LOG_ASSERT);
+		packaged_bmc_log(ASIC_MODULE_ERROR, CLK_312_5M_APLL_UNLOCK_EVENT, 0, 0);
 	}
 }
 
@@ -105,16 +107,19 @@ void check_clk_buf_loss_status()
 			uint16_t error_code =
 				CLOCK_APLL_UNLOCK_EVENT_CAUSE | CLK_BUF0_100M_LOSB_PLD;
 			error_log_event(error_code, LOG_ASSERT);
+			packaged_bmc_log(ASIC_MODULE_ERROR, CLK_BUF0_100M_LOSB_PLD_EVENT, 0, 0);
 		}
 		if ((clk_buf_loss_status & BIT(6)) == 0) {
 			uint16_t error_code =
 				CLOCK_APLL_UNLOCK_EVENT_CAUSE | CLK_BUF1_100M_LOSB_PLD;
 			error_log_event(error_code, LOG_ASSERT);
+			packaged_bmc_log(ASIC_MODULE_ERROR, CLK_BUF1_100M_LOSB_PLD_EVENT, 0, 0);
 		}
 		if ((clk_buf_loss_status & BIT(5)) == 0) {
 			uint16_t error_code =
 				CLOCK_APLL_UNLOCK_EVENT_CAUSE | CLK_BUF2_100M_LOSB_PLD;
 			error_log_event(error_code, LOG_ASSERT);
+			packaged_bmc_log(ASIC_MODULE_ERROR, CLK_BUF2_100M_LOSB_PLD_EVENT, 0, 0);
 		}
 	}
 }
