@@ -45,7 +45,6 @@ static struct pldm_sensor_thread pal_pldm_sensor_thread[MAX_SENSOR_THREAD_ID] = 
 	{ QUICK_VR_SENSOR_THREAD_ID, "QUICK_VR_PLDM_SENSOR_THREAD", QUICK_POLL_INTERVAL, true,
 	  true },
 	{ UBC_SENSOR_THREAD_ID, "UBC_PLDM_SENSOR_THREAD" },
-	{ EVB_SENSOR_THREAD_ID, "EVB_SENSOR_THREAD" },
 };
 
 extern vr_pre_proc_arg vr_pre_read_args[];
@@ -178,7 +177,7 @@ uint8_t check_sensor_type(uint8_t sensor_num)
 		return UBC_SENSOR_THREAD_ID;
 
 	if (sensor_num <= SENSOR_NUM_P3V3_OSFP_PWR_W)
-		return EVB_SENSOR_THREAD_ID;
+		return UBC_SENSOR_THREAD_ID;
 
 	return MAX_SENSOR_THREAD_ID;
 }
@@ -9571,9 +9570,6 @@ pldm_sensor_info plat_pldm_sensor_ubc_table[] = {
 			.post_sensor_read_hook = post_common_sensor_read,
 		},
 	},
-};
-
-pldm_sensor_info plat_pldm_sensor_evb_table[] = {
 	{
 		{
 			// P3V3_OSFP_TEMP_C
@@ -12042,8 +12038,6 @@ pldm_sensor_info *plat_pldm_sensor_load(int thread_id)
 		return plat_pldm_sensor_quick_vr_table;
 	case TEMP_SENSOR_THREAD_ID:
 		return plat_pldm_sensor_temp_table;
-	case EVB_SENSOR_THREAD_ID:
-		return plat_pldm_sensor_evb_table;
 	default:
 		LOG_ERR("Unknow pldm sensor thread id %d", thread_id);
 		return NULL;
@@ -12065,11 +12059,10 @@ int plat_pldm_sensor_get_sensor_count(int thread_id)
 		count = ARRAY_SIZE(plat_pldm_sensor_quick_vr_table);
 		break;
 	case UBC_SENSOR_THREAD_ID:
-		count = ARRAY_SIZE(plat_pldm_sensor_ubc_table);
-		break;
-	case EVB_SENSOR_THREAD_ID:
 		if (get_asic_board_id() == ASIC_BOARD_ID_EVB)
-			count = ARRAY_SIZE(plat_pldm_sensor_evb_table);
+			count = ARRAY_SIZE(plat_pldm_sensor_ubc_table);
+		else
+			count = ARRAY_SIZE(plat_pldm_sensor_ubc_table) - 5;
 		break;
 	default:
 		count = -1;
@@ -12104,12 +12097,6 @@ void plat_pldm_sensor_get_pdr_numeric_sensor(int thread_id, int sensor_num,
 		       &plat_pldm_sensor_ubc_table[sensor_num].pdr_numeric_sensor,
 		       sizeof(PDR_numeric_sensor));
 		break;
-	case EVB_SENSOR_THREAD_ID:
-		if (get_asic_board_id() == ASIC_BOARD_ID_EVB)
-			memcpy(numeric_sensor_table,
-			       &plat_pldm_sensor_evb_table[sensor_num].pdr_numeric_sensor,
-			       sizeof(PDR_numeric_sensor));
-		break;
 	default:
 		LOG_ERR("Unknow pldm sensor thread id %d", thread_id);
 		break;
@@ -12135,10 +12122,12 @@ void plat_load_aux_sensor_names_pdr_table(PDR_sensor_auxiliary_names *aux_sensor
 {
 	memcpy(aux_sensor_name_table, &plat_pdr_sensor_aux_names_table,
 	       sizeof(plat_pdr_sensor_aux_names_table));
-	if (get_asic_board_id() == ASIC_BOARD_ID_EVB)
-		memcpy(&aux_sensor_name_table[ARRAY_SIZE(plat_pdr_sensor_aux_names_table)],
-		       plat_evb_pdr_sensor_aux_names_table,
+	if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
+		aux_sensor_name_table += ARRAY_SIZE(plat_pdr_sensor_aux_names_table);
+
+		memcpy(aux_sensor_name_table, plat_evb_pdr_sensor_aux_names_table,
 		       sizeof(plat_evb_pdr_sensor_aux_names_table));
+	}
 }
 
 uint16_t plat_pdr_entity_aux_names_table_size = 0;
@@ -12301,6 +12290,8 @@ static void change_sensor_cfg_from_thread(uint8_t thread, uint8_t type, uint8_t 
 		return;
 
 	for (uint8_t j = 0; j < count; j++) {
+		if (table[j].pldm_sensor_cfg.num >= SENSOR_NUM_P3V3_OSFP_TEMP_C)
+			continue;
 		if (type != SENSOR_CFG_NO_CHANGE)
 			table[j].pldm_sensor_cfg.type = type;
 		if (addr != SENSOR_CFG_NO_CHANGE)
