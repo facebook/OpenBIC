@@ -129,4 +129,5 @@ void mp5998_plat_init();
 void tps25990_plat_init();
 void set_bootdrive_exist_status();
 bool get_bootdrive_exist_status();
+uint8_t detect_vr_module_via_pmbus(void);
 #endif
