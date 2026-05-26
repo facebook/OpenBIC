@@ -778,15 +778,6 @@ void error_log_event(uint16_t error_code, bool log_status)
 				} else {
 					//other case
 					log_todo = false; // Duplicate error, no need to log again
-					if (error_code != CLK_100MHZ_ERR_CODE &&
-					    error_code != CLK_312_5MHZ_ERR_CODE &&
-					    error_code != CLK_BUF0_100M_LOSB_PLD_ERR_CODE &&
-					    error_code != CLK_BUF1_100M_LOSB_PLD_ERR_CODE &&
-					    error_code != CLK_BUF2_100M_LOSB_PLD_ERR_CODE &&
-					    error_code != CLK_312_5MHZ_REINIT_ERR_CODE) {
-						LOG_INF("Duplicate error_code(log assert): 0x%x, log_status: %d",
-							error_code, log_status);
-					}
 					return;
 				}
 			} else if (log_status == LOG_DEASSERT) {
@@ -887,6 +878,33 @@ void error_log_event(uint16_t error_code, bool log_status)
 		// Clear error data if no valid data is found
 		memset(err_log_data[fru_count].error_data, 0,
 		       sizeof(err_log_data[fru_count].error_data));
+	}
+	// CLK bmc event will send if is the first time to assert
+	uint8_t bmc_err_type = 0;
+	uint8_t *send_err_data = err_log_data[fru_count].error_data;
+	switch (error_code) {
+	case CLK_100MHZ_ERR_CODE:
+		bmc_err_type = CLOCK_APLL_UNLOCK_EVENT;
+		break;
+	case CLK_312_5MHZ_ERR_CODE:
+		bmc_err_type = CLK_312_5M_APLL_UNLOCK_EVENT;
+		break;
+	case CLK_BUF0_100M_LOSB_PLD_ERR_CODE:
+		bmc_err_type = CLK_BUF0_100M_LOSB_PLD_EVENT;
+		break;
+	case CLK_BUF1_100M_LOSB_PLD_ERR_CODE:
+		bmc_err_type = CLK_BUF1_100M_LOSB_PLD_EVENT;
+		break;
+	case CLK_BUF2_100M_LOSB_PLD_ERR_CODE:
+		bmc_err_type = CLK_BUF2_100M_LOSB_PLD_EVENT;
+		break;
+	default:
+		// other error code, no need to send bmc event
+		bmc_err_type = 0;
+	}
+	if (bmc_err_type != 0) {
+		// send bmc event for clock error
+		packaged_bmc_log(ASIC_MODULE_ERROR, bmc_err_type, send_err_data[0], 0);
 	}
 
 	if (!plat_read_cpld(CPLD_REGISTER_1ST_PART_START_OFFSET, err_log_data[fru_count].cpld_dump,
