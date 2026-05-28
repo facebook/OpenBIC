@@ -317,16 +317,16 @@ void ioexp_init(void)
 	// set value from table
 	set_bootstrap_table_val_to_ioexp();
 
-	// if (!pca6416a_init())
-	// 	LOG_ERR("pca6416a init fail");
+	if (!pca6416a_init())
+		LOG_ERR("pca6416a init fail");
 
-	// if (is_evb_ioe_accessible()) {
-	// 	if (!tca6424a_init())
-	// 		LOG_ERR("tca6424a init fail");
+	if (is_evb_ioe_accessible()) {
+		if (!tca6424a_init())
+			LOG_ERR("tca6424a init fail");
 
-	// 	if (!tcal6408r_init())
-	// 		LOG_ERR("tcal6408r init fail");
-	// }
+		if (!tcal6408r_init())
+			LOG_ERR("tcal6408r init fail");
+	}
 
 	// set to output if TEST_STRAP enable
 	int drive_level = 0;
