@@ -300,7 +300,7 @@ void set_power_capping_method(uint8_t value)
 
 	if (value == CAPPING_M_LOOK_UP_TABLE) {
 		data = (data & 0x09) | 0x06;
-	} else if (value == CAPPING_M_CREDIT_BASE) {
+	} else { //if value == CAPPING_M_CREDIT_BASE
 		data = (data & 0x09);
 	}
 
