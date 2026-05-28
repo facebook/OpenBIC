@@ -199,12 +199,19 @@ void reinit_i3c_hub()
 	i3c_hub_type = get_i3c_hub_type();
 
 	// Initialize I3C HUB
-	if(i3c_hub_type == P3H2840_DEVICE_INFO) {
-		if (!p3h284x_i3c_mode_only_init(&i3c_msg, p3h284x_cmd_initial, P3H284X_CMD_INITIAL_SIZE)) {
+	if (i3c_hub_type == P3H2840_DEVICE_INFO) {
+		if (!p3h284x_i3c_mode_only_init(&i3c_msg, p3h284x_cmd_initial,
+						P3H284X_CMD_INITIAL_SIZE)) {
 			printk("failed to initialize 1ou p3h284x\n");
 		}
+	} else if (i3c_hub_type == RTS4902A_DEVICE_INFO) {
+		if (!rg3mxxb12_i3c_mode_only_init(&i3c_msg, rts4902a_cmd_initial,
+						  RG3MXXB12_CMD_INITIAL_SIZE)) {
+			printk("failed to initialize 1ou rts4902a\n");
+		}
 	} else {
-		if (!rg3mxxb12_i3c_mode_only_init(&i3c_msg, rg3mxxb12_cmd_initial, RG3MXXB12_CMD_INITIAL_SIZE)) {
+		if (!rg3mxxb12_i3c_mode_only_init(&i3c_msg, rg3mxxb12_cmd_initial,
+						  RG3MXXB12_CMD_INITIAL_SIZE)) {
 			printk("failed to initialize 1ou rg3mxxb12\n");
 		}
 	}
@@ -730,7 +737,7 @@ void ISR_VR_PWR_FAULT()
 	LOG_INF("VR power fault event triggered");
 	hw_event_register[7]++;
 	k_work_schedule_for_queue(&plat_work_q, &vr_event_work_item[0].add_sel_work,
-					K_MSEC(VR_EVENT_DELAY_MS));
+				  K_MSEC(VR_EVENT_DELAY_MS));
 }
 
 void ISR_UV_DETECT()

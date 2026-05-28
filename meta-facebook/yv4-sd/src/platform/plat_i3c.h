@@ -34,6 +34,7 @@
 
 extern const uint8_t rg3mxxb12_cmd_initial[][2];
 extern const uint8_t p3h284x_cmd_initial[][2];
+extern const uint8_t rts4902a_cmd_initial[][2];
 
 void start_setaasa();
 void send_setaasa();
