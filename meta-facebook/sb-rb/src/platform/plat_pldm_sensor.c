@@ -12705,6 +12705,7 @@ void quick_sensor_poll_handler(void *arug0, void *arug1, void *arug2)
 	uint8_t log_show_flag = 0;
 	int count = 0;
 	uint8_t cycle_counter = 0;
+	uint8_t check_flag = 0;
 	while (1) {
 		count++;
 		if (is_mb_dc_on() == false || !get_plat_sensor_polling_enable_flag())
@@ -12719,12 +12720,17 @@ void quick_sensor_poll_handler(void *arug0, void *arug1, void *arug2)
 				asic_verion = plat_get_image_version(i);
 				// asic_verion get  bit0~bit23
 				asic_verion = asic_verion & 0xFFFFFF;
-				if (asic_verion != 0 && asic_verion != 0xFFFFFF) {
-					gpio_set(I3C_RAINBOW_ALERT_R_N, 1);
+				if (asic_verion != 0 && asic_verion != 0xFFFFFF)
+					check_flag += 1;
+				else
 					break;
-				}
-				gpio_set(I3C_RAINBOW_ALERT_R_N, 0);
 			}
+			// all not 0
+			if (check_flag != BOOT0_MAX)
+				gpio_set(I3C_RAINBOW_ALERT_R_N, 1);
+			else
+				gpio_set(I3C_RAINBOW_ALERT_R_N, 0);
+			check_flag = 0;
 		}
 		//check dc on/off and polling enable/disable
 		if (is_mb_dc_on() == false || !get_plat_sensor_polling_enable_flag()) {
