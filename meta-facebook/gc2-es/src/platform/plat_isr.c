@@ -388,10 +388,17 @@ void ISR_SOC_THMALTRIP()
 		}
 	}
 }
-
-void ISR_SYS_THROTTLE()
+/* Delay handler to prevent false SYS_THROTTLE SEL during power-off.
+ * FM_CPU_BIC_PROCHOT_LVT3_N may have a short low pulse from CPLD during
+ * power-off, triggering a false falling edge interrupt. By delaying 1ms,
+ * PWRGD_SYS_PWROK will have dropped, and the condition check below will
+ * correctly filter out the false event.
+ */
+static void sys_throttle_handler(struct k_work *work)
 {
 	common_addsel_msg_t sel_msg;
+	memset(&sel_msg, 0, sizeof(common_addsel_msg_t));
+
 	if ((gpio_get(RST_PLTRST_PLD_N) == GPIO_HIGH) && (gpio_get(PWRGD_SYS_PWROK) == GPIO_HIGH)) {
 		if (gpio_get(FM_CPU_BIC_PROCHOT_LVT3_N) == GPIO_HIGH) {
 			sel_msg.event_type = IPMI_OEM_EVENT_TYPE_DEASSERT;
@@ -409,6 +416,19 @@ void ISR_SYS_THROTTLE()
 			printf("System Throttle addsel fail\n");
 		}
 	}
+}
+
+K_WORK_DELAYABLE_DEFINE(sys_throttle_work, sys_throttle_handler);
+#define SYS_THROTTLE_DELAY_MS 1
+
+void ISR_SYS_THROTTLE()
+{
+	/* Cancel any pending work to handle rapid edge toggling,
+	 * then reschedule with delay to filter out glitch during power-off.
+	 */
+	if (k_work_cancel_delayable(&sys_throttle_work) != 0) {
+	}
+	k_work_schedule_for_queue(&plat_work_q, &sys_throttle_work, K_MSEC(SYS_THROTTLE_DELAY_MS));
 }
 
 void ISR_PCH_THMALTRIP()
