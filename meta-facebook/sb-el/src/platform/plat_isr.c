@@ -37,9 +37,6 @@ LOG_MODULE_REGISTER(plat_isr);
 
 void ISR_GPIO_ALL_VR_PM_ALERT_R_N()
 {
-	LOG_DBG("gpio_%d_isr called, val=%d , dir= %d", ALL_VR_PM_ALERT_R_N,
-		gpio_get(ALL_VR_PM_ALERT_R_N), gpio_get_direction(ALL_VR_PM_ALERT_R_N));
-
 	if (gpio_get(ALL_VR_PM_ALERT_R_N) == GPIO_LOW) {
 		plat_trigger_cpld_polling();
 	}
@@ -107,7 +104,6 @@ uint8_t pwr_steps_on_flag = 0;
 void set_pwr_steps_on_flag(uint8_t flag_value)
 {
 	pwr_steps_on_flag = flag_value;
-	LOG_DBG("set pwr_steps_on_flag = %d", pwr_steps_on_flag);
 	//check value
 	if (pwr_steps_on_flag != flag_value)
 		LOG_ERR("set pwr_steps_on_flag failed, now pwr_steps_on_flag = %d",

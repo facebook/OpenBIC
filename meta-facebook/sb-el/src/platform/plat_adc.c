@@ -242,7 +242,6 @@ float uint16_voltage_transfer_to_float(uint16_t temp_voltage_value)
 
 static void update_adc_info(uint16_t raw_data, uint8_t base_idx, float vref)
 {
-	LOG_DBG("base_idx: %d", base_idx);
 	for (uint8_t i = base_idx; i < ADC_IDX_MAX; i += 2) {
 		uint16_t m_sample_buffer[BUFFER_SIZE];
 		m_sample_buffer[0] = raw_data;
@@ -843,7 +842,7 @@ void adc_electra_polling_handler(void *p1, void *p2, void *p3)
 					ads7066_read_voltage(ADC_EL_IDX_NUWA1);
 					break;
 				default:
-					LOG_DBG("Invalid ADC index %d", adc_idx_read);
+					LOG_ERR("Invalid ADC index %d", adc_idx_read);
 					break;
 				}
 			}

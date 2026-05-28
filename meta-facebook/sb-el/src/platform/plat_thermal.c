@@ -56,18 +56,16 @@ temp_mapping_sensor_t temp_alert_index_table[] = {
 	  "SB_EL_ASIC_NUWA0_SENSOR0_TEMP", 0, false },
 	{ TEMP_INDEX_ASIC_NUWA0_SENSOR1, SENSOR_NUM_ASIC_NUWA0_SENSOR1_TEMP_C,
 	  "SB_EL_ASIC_NUWA0_SENSOR1_TEMP", 0, false },
-	{ TEMP_INDEX_ASIC_OWL_W, SENSOR_NUM_ASIC_OWL_W_TEMP_C, "SB_EL_ASIC_OWL_W_TEMP", 0,
-	  false },
-	{ TEMP_INDEX_ASIC_OWL_E, SENSOR_NUM_ASIC_OWL_E_TEMP_C, "SB_EL_ASIC_OWL_E_TEMP", 0,
-	  false },
+	{ TEMP_INDEX_ASIC_OWL_W, SENSOR_NUM_ASIC_OWL_W_TEMP_C, "SB_EL_ASIC_OWL_W_TEMP", 0, false },
+	{ TEMP_INDEX_ASIC_OWL_E, SENSOR_NUM_ASIC_OWL_E_TEMP_C, "SB_EL_ASIC_OWL_E_TEMP", 0, false },
 	{ TEMP_INDEX_ASIC_NUWA1_SENSOR0, SENSOR_NUM_ASIC_NUWA1_SENSOR0_TEMP_C,
 	  "SB_EL_ASIC_NUWA1_SENSOR0_TEMP", 0, false },
 	{ TEMP_INDEX_ASIC_NUWA1_SENSOR1, SENSOR_NUM_ASIC_NUWA1_SENSOR1_TEMP_C,
 	  "SB_EL_ASIC_NUWA1_SENSOR1_TEMP", 0, false },
-	{ TEMP_INDEX_ASIC_HAMSA_CRM, SENSOR_NUM_ASIC_HAMSA_CRM_TEMP_C,
-	  "SB_EL_ASIC_HAMSA_CRM_TEMP", 0, false },
-	{ TEMP_INDEX_ASIC_HAMSA_LS, SENSOR_NUM_ASIC_HAMSA_LS_TEMP_C,
-	  "SB_EL_ASIC_HAMSA_LS_TEMP", 0, false },
+	{ TEMP_INDEX_ASIC_HAMSA_CRM, SENSOR_NUM_ASIC_HAMSA_CRM_TEMP_C, "SB_EL_ASIC_HAMSA_CRM_TEMP",
+	  0, false },
+	{ TEMP_INDEX_ASIC_HAMSA_LS, SENSOR_NUM_ASIC_HAMSA_LS_TEMP_C, "SB_EL_ASIC_HAMSA_LS_TEMP", 0,
+	  false },
 };
 
 temp_mapping_sensor temp_index_table[] = {
@@ -319,9 +317,6 @@ void check_thermal_handler(void *arg1, void *arg2, void *arg3)
 				if (limit_status_val & remote_bit) {
 					//check if still high, don't send error log again
 					if (temp_alert_index_table[i].last_status == 1) {
-						LOG_DBG("keep error sensor_num 0x%x, bus 0x%x, address 0x%x ",
-							temp_cfg->num, temp_cfg->port,
-							temp_cfg->target_addr);
 						continue;
 					} else {
 						temp_alert_index_table[i].log_status_val =

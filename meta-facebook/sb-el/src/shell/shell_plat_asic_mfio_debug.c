@@ -118,17 +118,14 @@ static int cmd_mfio_get_all(const struct shell *shell, size_t argc, char **argv)
 		if (config != mfio_list[i].config_reg) {
 			config = mfio_list[i].config_reg;
 			if (!plat_read_cpld(mfio_list[i].config_reg, &config_value, 1)) {
-				LOG_DBG("plat_read_cpld failed: offset=0x%02x", config);
 				shell_error(shell, "read MFIO config from CPLD failed");
 				return -1;
 			}
 			if (!plat_read_cpld(mfio_list[i].input_reg, &input_value, 1)) {
-				LOG_DBG("plat_read_cpld failed: offset=0x%02x", config);
 				shell_error(shell, "read MFIO input from CPLD failed");
 				return -1;
 			}
 			if (!plat_read_cpld(mfio_list[i].output_reg, &output_value, 1)) {
-				LOG_DBG("plat_read_cpld failed: offset=0x%02x", config);
 				shell_error(shell, "read MFIO output from CPLD failed");
 				return -1;
 			}
@@ -151,22 +148,16 @@ static int cmd_mfio_get_all(const struct shell *shell, size_t argc, char **argv)
 			config = port_map[unassigned_mfio_list[i].port].config_reg;
 			if (!tca6424a_i2c_read(port_map[unassigned_mfio_list[i].port].config_reg,
 					       &config_value, 1)) {
-				LOG_DBG("tca6424a_i2c_read failed: offset=0x%02x",
-					port_map[unassigned_mfio_list[i].port].config_reg);
 				shell_error(shell, "read MFIO config from ioexp failed");
 				return -1;
 			}
 			if (!tca6424a_i2c_read(port_map[unassigned_mfio_list[i].port].input_reg,
 					       &input_value, 1)) {
-				LOG_DBG("tca6424a_i2c_read failed: offset=0x%02x",
-					port_map[unassigned_mfio_list[i].port].input_reg);
 				shell_error(shell, "read MFIO input from ioexp failed");
 				return -1;
 			}
 			if (!tca6424a_i2c_read(port_map[unassigned_mfio_list[i].port].output_reg,
 					       &output_value, 1)) {
-				LOG_DBG("plat_read_cpld failed: offset=0x%02x",
-					port_map[unassigned_mfio_list[i].port].input_reg);
 				shell_error(shell, "read MFIO output from ioexp failed");
 				return -1;
 			}
@@ -229,8 +220,6 @@ static int cmd_set_mfio_value(const struct shell *shell, size_t argc, char **arg
 	for (int i = 0; i < ARRAY_SIZE(mfio_list); i++) {
 		if (!strcmp(mfio_list[i].name, argv[1])) {
 			if (!plat_read_cpld(mfio_list[i].config_reg, &config_value, 1)) {
-				LOG_DBG("plat_read_cpld failed: offset=0x%02x",
-					mfio_list[i].config_reg);
 				shell_error(shell, "read MFIO config from CPLD failed");
 				return -1;
 			}

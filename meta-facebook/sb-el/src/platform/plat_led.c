@@ -43,15 +43,14 @@ void heartbeat_led_handler(struct k_work *work)
 	/* Lit heartbeat LED */
 	static bool led_status = true;
 	led_status = !led_status;
-	LOG_DBG("heartbeat LED %s ", led_status ? "OFF" : "ON");
 	gpio_set(LED_MMC_HEARTBEAT_R, led_status);
 	uint16_t overall_interval = 500;
 
 	uint32_t sensor_ids[] = {
 		SENSOR_NUM_ASIC_NUWA0_SENSOR0_TEMP_C, SENSOR_NUM_ASIC_NUWA0_SENSOR1_TEMP_C,
-		SENSOR_NUM_ASIC_OWL_W_TEMP_C,	       SENSOR_NUM_ASIC_OWL_E_TEMP_C,
+		SENSOR_NUM_ASIC_OWL_W_TEMP_C,	      SENSOR_NUM_ASIC_OWL_E_TEMP_C,
 		SENSOR_NUM_ASIC_NUWA1_SENSOR0_TEMP_C, SENSOR_NUM_ASIC_NUWA1_SENSOR1_TEMP_C,
-		SENSOR_NUM_ASIC_HAMSA_CRM_TEMP_C,      SENSOR_NUM_ASIC_HAMSA_LS_TEMP_C
+		SENSOR_NUM_ASIC_HAMSA_CRM_TEMP_C,     SENSOR_NUM_ASIC_HAMSA_LS_TEMP_C
 	};
 
 	size_t num_sensors = sizeof(sensor_ids) / sizeof(sensor_ids[0]);
@@ -63,14 +62,10 @@ void heartbeat_led_handler(struct k_work *work)
 
 		uint8_t status = pldm_sensor_get_reading_from_cache(sensor_id, &cache_reading,
 								    &sensor_operational_state);
-		LOG_DBG("Sensor 0x%x: status = 0x%x, operational state = 0x%x", sensor_id, status,
-			sensor_operational_state);
 
 		// If the sensor reading fails, consider it critical and set the overall interval to 50 ms
 		if (status != PLDM_SUCCESS) {
 			overall_interval = 50;
-			LOG_DBG("Sensor 0x%x read failed, setting overall_interval to 50ms",
-				sensor_id);
 			continue;
 		}
 
@@ -88,13 +83,12 @@ void heartbeat_led_handler(struct k_work *work)
 		if (candidate_interval < overall_interval) {
 			overall_interval = candidate_interval;
 		}
-		}
+	}
 	if (overall_interval == 500 && led_set_flag) {
 		// event occurred, set the interval to 2 times per sec
 		overall_interval = 1000;
 	}
 
-	LOG_DBG("Overall heartbeat interval: %d ms", overall_interval);
 	k_work_schedule(&heartbeat_led_work, K_MSEC(overall_interval));
 }
 
