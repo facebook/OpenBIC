@@ -129,6 +129,11 @@ int i2c_master_read(I2C_MSG *msg, uint8_t retry)
 		return EMSGSIZE;
 	}
 
+	if (msg->rx_len > I2C_BUFF_SIZE) {
+		LOG_ERR("rx_len %d is over limit %d", msg->rx_len, I2C_BUFF_SIZE);
+		return -1;
+	}
+
 	if (msg->tx_len > I2C_BUFF_SIZE) {
 		LOG_ERR("tx_len %d is over limit %d", msg->tx_len, I2C_BUFF_SIZE);
 		return -1;
@@ -143,12 +148,12 @@ int i2c_master_read(I2C_MSG *msg, uint8_t retry)
 
 	int ret = -1;
 	uint8_t *txbuf = NULL, *rxbuf = NULL;
-	txbuf = (uint8_t *)malloc(I2C_BUFF_SIZE * sizeof(uint8_t));
+	txbuf = (uint8_t *)malloc(I2C_BUFF_SIZE);
 	if (!txbuf) {
 		LOG_ERR("Failed to malloc txbuf");
 		goto exit;
 	}
-	rxbuf = (uint8_t *)malloc(I2C_BUFF_SIZE * sizeof(uint8_t));
+	rxbuf = (uint8_t *)malloc(I2C_BUFF_SIZE);
 	if (!rxbuf) {
 		LOG_ERR("Failed to malloc rxbuf");
 		goto exit;
@@ -210,7 +215,7 @@ int i2c_master_write(I2C_MSG *msg, uint8_t retry)
 
 	int ret = -1;
 	uint8_t *txbuf = NULL;
-	txbuf = (uint8_t *)malloc(I2C_BUFF_SIZE * sizeof(uint8_t));
+	txbuf = (uint8_t *)malloc(I2C_BUFF_SIZE);
 	if (!txbuf) {
 		LOG_ERR("Failed to malloc txbuf");
 		goto exit;
@@ -255,6 +260,11 @@ int i2c_master_read_without_mutex(I2C_MSG *msg, uint8_t retry)
 		return EMSGSIZE;
 	}
 
+	if (msg->rx_len > I2C_BUFF_SIZE) {
+		LOG_ERR("rx_len %d is over limit %d", msg->rx_len, I2C_BUFF_SIZE);
+		return -1;
+	}
+
 	if (msg->tx_len > I2C_BUFF_SIZE) {
 		LOG_ERR("tx_len %d is over limit %d", msg->tx_len, I2C_BUFF_SIZE);
 		return -1;
@@ -262,12 +272,12 @@ int i2c_master_read_without_mutex(I2C_MSG *msg, uint8_t retry)
 
 	int ret = -1;
 	uint8_t *txbuf = NULL, *rxbuf = NULL;
-	txbuf = (uint8_t *)malloc(I2C_BUFF_SIZE * sizeof(uint8_t));
+	txbuf = (uint8_t *)malloc(I2C_BUFF_SIZE);
 	if (!txbuf) {
 		LOG_ERR("Failed to malloc txbuf");
 		goto exit;
 	}
-	rxbuf = (uint8_t *)malloc(I2C_BUFF_SIZE * sizeof(uint8_t));
+	rxbuf = (uint8_t *)malloc(I2C_BUFF_SIZE);
 	if (!rxbuf) {
 		LOG_ERR("Failed to malloc rxbuf");
 		goto exit;
@@ -318,7 +328,7 @@ int i2c_master_write_without_mutex(I2C_MSG *msg, uint8_t retry)
 
 	int ret = -1;
 	uint8_t *txbuf = NULL;
-	txbuf = (uint8_t *)malloc(I2C_BUFF_SIZE * sizeof(uint8_t));
+	txbuf = (uint8_t *)malloc(I2C_BUFF_SIZE);
 	if (!txbuf) {
 		LOG_ERR("Failed to malloc txbuf");
 		goto exit;
