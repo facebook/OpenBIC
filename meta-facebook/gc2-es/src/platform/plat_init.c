@@ -23,6 +23,7 @@
 #include "plat_kcs.h"
 #include "plat_pmic.h"
 #include "util_worker.h"
+#include "plat_isr.h"
 
 SCU_CFG scu_cfg[] = {
 	//register    value
@@ -39,6 +40,7 @@ void pal_pre_init()
 	init_platform_config();
 	disable_PRDY_interrupt();
 	scu_init(scu_cfg, sizeof(scu_cfg) / sizeof(SCU_CFG));
+	init_vr_event_work();
 	init_plat_worker(CONFIG_MAIN_THREAD_PRIORITY + 1); // work queue for low priority jobs
 }
 

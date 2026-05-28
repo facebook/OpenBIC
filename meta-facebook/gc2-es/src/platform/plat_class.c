@@ -381,7 +381,7 @@ void init_hsc_module()
 	}
 }
 
-static uint8_t detect_vr_module_via_pmbus(void)
+uint8_t detect_vr_module_via_pmbus(void)
 {
 	uint8_t retry = 5;
 	I2C_MSG msg;
