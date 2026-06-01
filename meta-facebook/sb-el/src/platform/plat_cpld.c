@@ -296,18 +296,18 @@ static void plat_sync_asic_reset_status_to_ioexp(void)
 	prev_asic_rst = asic_rst;
 
 	uint8_t hamsa_pwron = (asic_rst >> 5) & 0x1;   /* HAMSA_POWER_ON_RESET_PLD_L */
-	uint8_t medha0_pwron = (asic_rst >> 4) & 0x1;  /* MEDHA0_POWER_ON_RESET_PLD_L */
-	uint8_t medha1_pwron = (asic_rst >> 3) & 0x1;  /* MEDHA1_POWER_ON_RESET_PLD_L */
+	uint8_t nuwa0_pwron = (asic_rst >> 4) & 0x1;  /* NUWA0_POWER_ON_RESET_PLD_L */
+	uint8_t nuwa1_pwron = (asic_rst >> 3) & 0x1;  /* NUWA1_POWER_ON_RESET_PLD_L */
 	uint8_t hamsa_sys_rst = (asic_rst >> 2) & 0x1; /* HAMSA_SYS_RST_PLD_L */
-	uint8_t medha0_sys_rst = (asic_rst >> 1) & 0x1;/* MEDHA0_SYS_RST_PLD_L */
-	uint8_t medha1_sys_rst = (asic_rst >> 0) & 0x1;/* MEDHA1_SYS_RST_PLD_L */
+	uint8_t nuwa0_sys_rst = (asic_rst >> 1) & 0x1;/* NUWA0_SYS_RST_PLD_L */
+	uint8_t nuwa1_sys_rst = (asic_rst >> 0) & 0x1;/* NUWA1_SYS_RST_PLD_L */
 
 	/* U200070: io0~2 <- bit5~3 */
 	uint8_t new_070 = U200070_IO_INIT_VAL;
 	new_070 &= ~(BIT(0) | BIT(1) | BIT(2));
 	new_070 |= (hamsa_pwron << 0);
-	new_070 |= (medha0_pwron << 1);
-	new_070 |= (medha1_pwron << 2);
+	new_070 |= (nuwa0_pwron << 1);
+	new_070 |= (nuwa1_pwron << 2);
 
 	set_pca6554apw_ioe_value(U200070_IO_I2C_BUS, U200070_IO_ADDR,
 				 OUTPUT_PORT, new_070);
@@ -323,8 +323,8 @@ static void plat_sync_asic_reset_status_to_ioexp(void)
 	/* U200052: bit1/bit0 -> io6/io7 */
 	uint8_t new_052 = U200052_IO_INIT_VAL;
 	new_052 &= ~(BIT(6) | BIT(7));
-	new_052 |= (medha0_sys_rst << 6);
-	new_052 |= (medha1_sys_rst << 7);
+	new_052 |= (nuwa0_sys_rst << 6);
+	new_052 |= (nuwa1_sys_rst << 7);
 
 	set_pca6554apw_ioe_value(U200052_IO_I2C_BUS, U200052_IO_ADDR,
 				 OUTPUT_PORT, new_052);
