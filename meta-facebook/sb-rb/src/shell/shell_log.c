@@ -339,6 +339,7 @@ void cmd_log_dump(const struct shell *shell, size_t argc, char **argv)
 				shell_print(shell, "read vr sensor status word(0x79):");
 				shell_print(shell, "\tlow  byte: 0x%02x", log.error_data[0]);
 				shell_print(shell, "\thigh byte: 0x%02x", log.error_data[1]);
+				err_data_len = 7;
 			}
 			break;
 		case POWER_ON_SEQUENCE_TRIGGER_CAUSE:
