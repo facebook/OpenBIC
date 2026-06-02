@@ -163,4 +163,5 @@ bool set_user_settings_delay_pcie_perst_to_eeprom(void *user_settings, uint8_t d
 bool set_user_settings_delay_asic_rst_to_eeprom(void *user_settings, uint8_t data_length);
 bool set_user_settings_delay_module_pg_to_eeprom(void *user_settings, uint8_t data_length);
 void set_clock_u87_u88_lphcsl_amp_ctrl_to_1v();
+bool vr_vout_user_settings_init(void);
 #endif

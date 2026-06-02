@@ -133,6 +133,29 @@ static void voltage_rname_get(size_t idx, struct shell_static_entry *entry)
 	entry->subcmd = NULL;
 }
 
+static void cmd_svs_flag_get(const struct shell *shell, size_t argc, char **argv)
+{
+	uint8_t svs_flag = get_svs_flag();
+	shell_print(shell, "Current SVS flag: %d", svs_flag);
+}
+
+static void cmd_svs_flag_set(const struct shell *shell, size_t argc, char **argv)
+{
+	if (argc < 2) {
+		shell_error(shell, "Usage: set svs flag <0/1>");
+		return;
+	}
+
+	uint8_t svs_flag = strtol(argv[1], NULL, 0);
+	//flag only support 0 or 1
+	if (svs_flag > 1) {
+		shell_error(shell, "Invalid SVS flag value: %d. Only 0 or 1 is allowed.", svs_flag);
+		return;
+	}
+	set_svs_flag(svs_flag);
+	shell_print(shell, "Current SVS flag: %d", svs_flag);
+}
+
 SHELL_DYNAMIC_CMD_CREATE(voltage_rname, voltage_rname_get);
 
 /* level 2 */
@@ -141,12 +164,17 @@ SHELL_STATIC_SUBCMD_SET_CREATE(sub_voltage_get_cmds,
 					 cmd_voltage_get_all),
 			       SHELL_SUBCMD_SET_END);
 
+SHELL_STATIC_SUBCMD_SET_CREATE(sub_svs_cmds, SHELL_CMD(get, NULL, "get svs flag", cmd_svs_flag_get),
+			       SHELL_CMD(set, NULL, "set svs flag <0/1>", cmd_svs_flag_set),
+			       SHELL_SUBCMD_SET_END);
+
 /* level 1 */
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_voltage_cmds,
 			       SHELL_CMD(get, &sub_voltage_get_cmds, "get voltage all", NULL),
 			       SHELL_CMD_ARG(set, &voltage_rname,
 					     "set <voltage-rail> <new-voltage>|default [perm]",
 					     cmd_voltage_set, 3, 1),
+			       SHELL_CMD(svs_flag, &sub_svs_cmds, "svs flag commands", NULL),
 			       SHELL_SUBCMD_SET_END);
 
 /* Root of command test */

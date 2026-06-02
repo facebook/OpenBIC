@@ -23,8 +23,6 @@
 #include "plat_gpio.h"
 #include "plat_pldm_sensor.h"
 #include "mp2971.h"
-#include "mp29816a.h"
-#include "raa228249.h"
 #include "plat_user_setting.h"
 #include "plat_fru.h"
 #include "plat_class.h"
@@ -676,8 +674,9 @@ err:
 }
 
 struct vr_vout_user_settings voltage_command_get = { 0 };
+struct vr_vout_offset vr_offset_init = { 0 };
 vr_vout_range_user_settings_struct vout_range_user_settings = { 0 };
-bool plat_set_vout_command(uint8_t rail, uint16_t *millivolt, bool is_perm)
+bool plat_set_vout_command(uint8_t rail, uint16_t *millivolt, bool is_default)
 {
 	CHECK_NULL_ARG_WITH_RETURN(millivolt, false);
 
@@ -1912,4 +1911,104 @@ bool get_pre_read_bootstrap_setting_value()
 uint8_t get_error_bootstrap_index_list(uint8_t index)
 {
 	return error_bootstrap_setting_value_index[index];
+}
+
+static uint8_t svs_flag = 0;
+uint8_t get_svs_flag()
+{
+	return svs_flag;
+}
+
+void set_svs_flag(uint8_t flag)
+{
+	svs_flag = flag;
+}
+bool vr_vout_default_settings_init(void)
+{
+	for (int i = 0; i < VR_RAIL_E_MAX; i++) {
+		if ((get_asic_board_id() == ASIC_BOARD_ID_EVB) &&
+		    (i == VR_RAIL_E_P3V3_OSFP_VOLT_V)) {
+			voltage_command_get.vout[i] = 0xffff;
+			continue; // skip osfp p3v3 on AEGIS BD
+		}
+		uint16_t vout = 0;
+		if (!plat_get_vout_command(i, &vout)) {
+			LOG_ERR("Can't find vout default by rail index: %d", i);
+			return false;
+		}
+		voltage_command_get.vout[i] = vout;
+	}
+	return true;
+}
+
+bool plat_get_get_vout_offset(uint8_t rail, uint16_t *vout_offset)
+{
+	CHECK_NULL_ARG_WITH_RETURN(vout_offset, false);
+
+	bool ret = false;
+	uint8_t sensor_id = vr_rail_table[rail].sensor_id;
+	sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
+	if (cfg == NULL) {
+		LOG_ERR("Failed to get sensor config for sensor 0x%x", sensor_id);
+		return false;
+	}
+
+	if (cfg->pre_sensor_read_hook) {
+		if (!cfg->pre_sensor_read_hook(cfg, cfg->pre_sensor_read_args)) {
+			LOG_ERR("sensor id: 0x%x pre-read fail", sensor_id);
+			goto err;
+		}
+	}
+
+	switch (cfg->type) {
+	case sensor_dev_mp29816a:
+		if (!mp29816a_get_vout_offset(cfg, vout_offset)) {
+			LOG_ERR("The VR MPS29816a vout setting failed");
+			goto err;
+		}
+		break;
+	case sensor_dev_raa228249:
+		if (!raa228249_get_vout_offset(cfg, vout_offset)) {
+			LOG_ERR("The VR RAA228249 vout setting failed");
+			goto err;
+		}
+		break;
+	default:
+		LOG_ERR("Unsupport VR type(%x)", cfg->type);
+		goto err;
+	}
+
+	ret = true;
+err:
+	if (cfg->post_sensor_read_hook) {
+		if (cfg->post_sensor_read_hook(cfg, cfg->post_sensor_read_args, NULL) == false) {
+			LOG_ERR("sensor id: 0x%x post-read fail", sensor_id);
+		}
+	}
+	return ret;
+}
+bool vr_vout_offset_get_init(void)
+{
+	for (int i = 0; i < VR_RAIL_E_ASIC_P0V9_OWL_E_TRVDD; i++) {
+		uint16_t vout_offset = 0;
+		if (!plat_get_get_vout_offset(i, &vout_offset)) {
+			LOG_ERR("Can't find vout default by rail index: %d", i);
+			return false;
+		}
+		vr_offset_init.vout_offset[i] = vout_offset;
+		LOG_INF("init rail %d, vout_offset = 0x%04x", i, vout_offset);
+	}
+	return true;
+}
+bool voltage_offset_get(uint8_t rail, uint16_t *vout_offset)
+{
+	CHECK_NULL_ARG_WITH_RETURN(vout_offset, false);
+
+	if (rail >= VR_RAIL_E_ASIC_P0V9_OWL_E_TRVDD) {
+		LOG_ERR("invalid rail %d", rail);
+		return false;
+	}
+
+	*vout_offset = vr_offset_init.vout_offset[rail];
+	return true;
 }
