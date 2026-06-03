@@ -22,6 +22,7 @@
 #include "plat_cpld.h"
 #include "plat_class.h"
 #include "plat_ioexp.h"
+#include "plat_gpio.h"
 
 LOG_MODULE_REGISTER(power_capping_control, LOG_LEVEL_DBG);
 
@@ -41,7 +42,7 @@ LOG_MODULE_REGISTER(power_capping_control, LOG_LEVEL_DBG);
 #define MEDHA0_PWR_CAP_LV3_BIT 5
 #define MEDHA1_PWR_CAP_LV3_BIT 4
 #define VR_HOT_RAINBOW_BIT 0
-#define VR_HOT_EVB_BIT  HAMSA_MFIO19
+#define VR_HOT_EVB_BIT HAMSA_MFIO19
 
 #define POWER_CAPPING_SET_BIT(orig, bit) ((uint8_t)((orig) | (1u << (bit))))
 #define POWER_CAPPING_CLR_BIT(orig, bit) ((uint8_t)((orig) & ~(1u << (bit))))
@@ -71,11 +72,15 @@ static int cmd_power_capping_get(const struct shell *shell, size_t argc, char **
 	if (argc != 2) {
 		shell_print(shell, "Usage:");
 		shell_print(shell, "  power_capping_control get all");
-		LOG_DBG("invalid argc in get: %d", (int)argc);
 		return -1;
 	}
 
 	uint8_t board_id = get_asic_board_id();
+
+	shell_print(shell, "%s  (status, read only) : %d", gpio_name[MEDHA0_PWR_CAP_LV1_LVC33],
+		    gpio_get(MEDHA0_PWR_CAP_LV1_LVC33));
+	shell_print(shell, "%s  (status, read only) : %d", gpio_name[MEDHA1_PWR_CAP_LV1_LVC33],
+		    gpio_get(MEDHA1_PWR_CAP_LV1_LVC33));
 
 	for (int i = 0; i < ARRAY_SIZE(pwr_cap_list); i++) {
 		const cpld_pin_map_t *item = &pwr_cap_list[i];
@@ -85,8 +90,6 @@ static int cmd_power_capping_get(const struct shell *shell, size_t argc, char **
 			uint8_t io_val = 0;
 
 			if (!tca6424a_i2c_read(VR_HOT_EVB_IOEXP_OUTPUT_OFFSET, &io_val, 1)) {
-				LOG_DBG("tca6424a_i2c_read VR_HOT failed: offset=0x%02x",
-					VR_HOT_EVB_IOEXP_OUTPUT_OFFSET);
 				shell_error(shell, "read VR_HOT via IO exp failed");
 				return -1;
 			}
@@ -97,7 +100,6 @@ static int cmd_power_capping_get(const struct shell *shell, size_t argc, char **
 			uint8_t reg_val = 0;
 
 			if (!plat_read_cpld(item->offset, &reg_val, 1)) {
-				LOG_DBG("plat_read_cpld failed: offset=0x%02x", item->offset);
 				shell_error(shell, "read CPLD failed");
 				return -1;
 			}
@@ -105,7 +107,11 @@ static int cmd_power_capping_get(const struct shell *shell, size_t argc, char **
 			bit_val = (reg_val >> item->bit) & 0x1;
 		}
 
-		shell_print(shell, "%s : %d", item->name, bit_val);
+		if (item->offset == POWER_CAPPING_LV1_CPLD_OFFSET) {
+			shell_print(shell, "%s  (set, debug only) : %d", item->name, bit_val);
+		} else {
+			shell_print(shell, "%s : %d", item->name, bit_val);
+		}
 	}
 
 	return 0;
@@ -115,7 +121,6 @@ static int cmd_power_capping_set(const struct shell *shell, size_t argc, char **
 {
 	if (argc != 3) {
 		shell_print(shell, "Usage: power_capping_control set <NAME> <0|1>");
-		LOG_DBG("invalid argc in set: %d", (int)argc);
 		return -1;
 	}
 
@@ -125,14 +130,12 @@ static int cmd_power_capping_set(const struct shell *shell, size_t argc, char **
 
 	if (set_val != 0 && set_val != 1) {
 		shell_error(shell, "Value must be 0 or 1");
-		LOG_DBG("invalid value in set: %ld", set_val);
 		return -1;
 	}
 
 	const cpld_pin_map_t *item = get_power_capping_item(name);
 	if (!item) {
 		shell_error(shell, "Unknown name: %s", name);
-		LOG_DBG("unknown name in set: %s", name);
 		return -1;
 	}
 
@@ -140,8 +143,6 @@ static int cmd_power_capping_set(const struct shell *shell, size_t argc, char **
 		if (!tca6424a_i2c_write_bit(VR_HOT_EVB_IOEXP_OUTPUT_OFFSET, VR_HOT_EVB_BIT,
 					    (uint8_t)set_val)) {
 			shell_error(shell, "write VR_HOT via IO exp failed");
-			LOG_DBG("tca6424a_i2c_write_bit failed: offset=0x%02x bit=%d val=%ld",
-				VR_HOT_EVB_IOEXP_OUTPUT_OFFSET, VR_HOT_EVB_BIT, set_val);
 			return -1;
 		}
 
@@ -152,7 +153,6 @@ static int cmd_power_capping_set(const struct shell *shell, size_t argc, char **
 	uint8_t reg_val = 0;
 
 	if (!plat_read_cpld(item->offset, &reg_val, 1)) {
-		LOG_DBG("plat_read_cpld failed: offset=0x%02x", item->offset);
 		shell_error(shell, "read CPLD failed");
 		return -1;
 	}
@@ -164,7 +164,6 @@ static int cmd_power_capping_set(const struct shell *shell, size_t argc, char **
 	}
 
 	if (!plat_write_cpld(item->offset, &reg_val)) {
-		LOG_DBG("plat_write_cpld failed: offset=0x%02x val=0x%02x", item->offset, reg_val);
 		shell_error(shell, "write CPLD failed");
 		return -1;
 	}

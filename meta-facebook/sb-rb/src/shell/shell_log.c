@@ -22,6 +22,7 @@
 #include "plat_cpld.h"
 #include "plat_user_setting.h"
 #include "shell_plat_power_sequence.h"
+#include "plat_hook.h"
 
 typedef struct {
 	uint8_t cpld_offset;
@@ -225,20 +226,120 @@ void cmd_log_dump(const struct shell *shell, size_t argc, char **argv)
 
 		uint8_t cpld_offset = log.err_code & 0xFF;
 		uint8_t bit_position = (log.err_code >> 8) & 0x07;
+		uint8_t clk_idx = log.err_code & 0x0F;
 
 		const char *reg_name = get_cpld_reg_name(cpld_offset);
 		const char *bit_name = get_cpld_bit_name(cpld_offset, bit_position);
 
 		shell_print(shell, "sys_time: %lld ms", log.sys_time);
 		uint8_t err_data_len = 2; //sizeof(log.error_data)
-
+		uint16_t extend_case = log.err_code & 0xFF00;
 		switch (err_type) {
 		case CPLD_UNEXPECTED_VAL_TRIGGER_CAUSE:
-			shell_print(shell, "\t%s", reg_name);
-			shell_print(shell, "\t\t%s", bit_name);
-			shell_print(shell, "read vr sensor status word(0x79):");
-			shell_print(shell, "\tlow  byte: 0x%02x", log.error_data[0]);
-			shell_print(shell, "\thigh byte: 0x%02x", log.error_data[1]);
+			if (extend_case == BOOTSTRAP_EVENT_CAUSE) {
+				shell_print(shell, "\tBOOTSTRAP_DIFFERENT");
+				shell_print(
+					shell,
+					"Bootstrap setting index list (index with value different):");
+				uint8_t *bootstrap_name = NULL;
+
+				for (int j = 0; j < 8; j++) {
+					uint8_t bootstrap_index = log.error_data[j];
+					if (bootstrap_index < STRAP_INDEX_MAX) {
+						//show index and name
+						strap_name_get((uint8_t)bootstrap_index,
+							       &bootstrap_name);
+						shell_print(shell, "\tindex: %d, name: %s",
+							    bootstrap_index, bootstrap_name);
+					} else {
+						err_data_len = j;
+						break;
+					}
+				}
+			} else if (extend_case == CLOCK_APLL_UNLOCK_EVENT_CAUSE) {
+				switch (clk_idx) {
+				case CLK_100MHZ_ERR_IDX:
+					shell_print(shell, "\t100MHz CLOCK_APLL_UNLOCK");
+					shell_print(shell,
+						    "read 100MHz clock APLL lock status: 0x%02x",
+						    log.error_data[0]);
+					err_data_len = 1;
+					break;
+				case CLK_312_5MHZ_ERR_IDX:
+					shell_print(shell, "\t312.5MHz CLOCK_APLL_UNLOCK");
+					shell_print(shell,
+						    "read 312.5MHz clock APLL lock status: 0x%02x",
+						    log.error_data[0]);
+					err_data_len = 1;
+					break;
+				case CLK_BUF0_100M_LOSB_PLD:
+					shell_print(shell, "\tCLK_BUF0_100M_LOSB_PLD");
+					shell_print(shell, "read cpld reg 0x31: 0x%02x",
+						    log.error_data[0]);
+					err_data_len = 1;
+					break;
+				case CLK_BUF1_100M_LOSB_PLD:
+					shell_print(shell, "\tCLK_BUF1_100M_LOSB_PLD");
+					shell_print(shell, "read cpld reg 0x31: 0x%02x",
+						    log.error_data[0]);
+					err_data_len = 1;
+					break;
+				case CLK_BUF2_100M_LOSB_PLD:
+					shell_print(shell, "\tCLK_BUF2_100M_LOSB_PLD");
+					shell_print(shell, "read cpld reg 0x31: 0x%02x",
+						    log.error_data[0]);
+					err_data_len = 1;
+					break;
+				case CLK_312_5MHZ_REINIT_ERR_IDX:
+					shell_print(shell, "\tCLK_312_5MHZ_REINIT_ERR");
+					shell_print(
+						shell,
+						"read re-init event data: 0x00A8(4 bytes), 0x0080(1 byte), 0x0088(2 bytes)");
+					err_data_len = 7;
+					break;
+				default:
+					break;
+				}
+			} else if (cpld_offset == MFIO_FOR_RAINBOW) {
+				shell_print(shell, "\tASIC_REMOTE_TEMP_ERROR");
+				switch (bit_position) {
+				case HAMSA_MFIO22:
+					shell_print(shell, "\tHAMSA_MFIO22");
+					err_data_len = 2;
+					break;
+				case MEDHA0_MFIO24:
+					shell_print(shell, "\tMEDHA0_MFIO24");
+					err_data_len = 2;
+					break;
+				case MEDHA1_MFIO24:
+					shell_print(shell, "\tMEDHA1_MFIO24");
+					err_data_len = 2;
+					break;
+				case HAMSA_MFIO23:
+					shell_print(shell, "\tHAMSA_MFIO23");
+					err_data_len = 1;
+					break;
+				case MEDHA0_MFIO31:
+					shell_print(shell, "\tMEDHA0_MFIO31");
+					err_data_len = 1;
+					break;
+				case MEDHA1_MFIO31:
+					shell_print(shell, "\tMEDHA1_MFIO31");
+					err_data_len = 1;
+					break;
+				default:
+					break;
+				}
+				shell_print(shell, "cpld offset(0x%x): 0x%02x", MFIO_FOR_RAINBOW,
+					    log.error_data[0]);
+				shell_print(shell, "asic temp data: 0x%02x", log.error_data[1]);
+			} else {
+				shell_print(shell, "\t%s", reg_name);
+				shell_print(shell, "\t\t%s", bit_name);
+				shell_print(shell, "read vr sensor status word(0x79):");
+				shell_print(shell, "\tlow  byte: 0x%02x", log.error_data[0]);
+				shell_print(shell, "\thigh byte: 0x%02x", log.error_data[1]);
+			}
 			break;
 		case POWER_ON_SEQUENCE_TRIGGER_CAUSE:
 			shell_print(shell, "\tPOWER_ON_SEQUENCE_FAILURE");

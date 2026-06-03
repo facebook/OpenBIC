@@ -43,8 +43,6 @@ typedef struct {
 } power_capping_info_t;
 
 static power_capping_info_t power_capping_info = { 0 };
-static const uint16_t cpld_lv1_time_window_list[CPLD_LV1_TIME_WINDOW_NUM] = { 0,  1,  3,  5,
-									      10, 15, 20, 50 };
 static uint8_t prev_set_ucr_status = 0;
 const static uint8_t volt_sensor_id_list[2] = { SENSOR_NUM_ASIC_P0V85_MEDHA0_VDD_VOLT_V,
 						SENSOR_NUM_ASIC_P0V85_MEDHA1_VDD_VOLT_V };
@@ -141,7 +139,7 @@ void add_sync_oc_warn_to_work()
 
 bool set_power_capping_vr_oc_warn_limit(uint8_t vr_idx, uint16_t value)
 {
-	/* input value unit: 1W */
+	/* input value unit: 1A */
 
 	if (!is_mb_dc_on()) {
 		LOG_WRN("need to DC on!");
@@ -178,38 +176,44 @@ bool set_power_capping_vr_oc_warn_limit(uint8_t vr_idx, uint16_t value)
 	}
 
 	if (get_vr_module() == VR_MODULE_MPS) {
-		uint16_t voltage_value = 0;
-		float float_value = 0;
-		ret = mp29816a_get_vout_command(cfg, 0, &voltage_value);
+		const uint16_t current_val = value;
+		uint16_t check_cur_val = 0;
+		ret = mp29816a_set_iout_oc_warn_limit(cfg, current_val);
 		if (ret) {
-			float_value = voltage_value / 1000.0;
-			uint16_t current_val = value / float_value;
-			ret = mp29816a_set_iout_oc_warn_limit(cfg, current_val);
-			if (ret) {
-				mp29816a_get_iout_oc_warn_limit(cfg, &current_val);
-				power_capping_info.current_threshold[vr_idx] = current_val;
+			mp29816a_get_iout_oc_warn_limit(cfg, &check_cur_val);
+			power_capping_info.current_threshold[vr_idx] = check_cur_val;
+			// update lv1 threshold
+			uint16_t voltage_value = 0;
+			if (mp29816a_get_vout_command(cfg, 0, &voltage_value)) {
+				float float_voltage_value = voltage_value / 1000.0;
+				power_capping_info.threshold[vr_idx][CAPPING_LV_IDX_LV1] =
+					check_cur_val * float_voltage_value;
 			} else {
-				LOG_ERR("Can't set IOUT_OC_WARN 0x%x", sensor_id);
+				LOG_ERR("Can't get VOUT_COMMAND when setting LV1 threshold: 0x%x",
+					sensor_id);
 			}
 		} else {
-			LOG_ERR("Can't get VOUT_COMMAND: 0x%x", sensor_id);
+			LOG_ERR("Can't set IOUT_OC_WARN 0x%x", sensor_id);
 		}
 	} else if (get_vr_module() == VR_MODULE_RNS) {
-		uint16_t voltage_value = 0;
-		float float_value = 0;
-		ret = raa228249_get_vout_command(cfg, 0, &voltage_value);
+		const uint16_t current_val = value;
+		uint16_t check_cur_val = 0;
+		ret = raa228249_set_iout_oc_warn_limit(cfg, current_val);
 		if (ret) {
-			float_value = voltage_value / 1000.0;
-			uint16_t current_val = value / float_value;
-			ret = raa228249_set_iout_oc_warn_limit(cfg, current_val);
-			if (ret) {
-				raa228249_get_iout_oc_warn_limit(cfg, &current_val);
-				power_capping_info.current_threshold[vr_idx] = current_val;
+			raa228249_get_iout_oc_warn_limit(cfg, &check_cur_val);
+			power_capping_info.current_threshold[vr_idx] = check_cur_val;
+			// update lv1 threshold
+			uint16_t voltage_value = 0;
+			if (raa228249_get_vout_command(cfg, 0, &voltage_value)) {
+				float float_voltage_value = voltage_value / 1000.0;
+				power_capping_info.threshold[vr_idx][CAPPING_LV_IDX_LV1] =
+					check_cur_val * float_voltage_value;
 			} else {
-				LOG_ERR("Can't set IOUT_OC_WARN 0x%x", sensor_id);
+				LOG_ERR("Can't get VOUT_COMMAND when setting LV1 threshold: 0x%x",
+					sensor_id);
 			}
 		} else {
-			LOG_ERR("Can't get VOUT_COMMAND: 0x%x", sensor_id);
+			LOG_ERR("Can't set IOUT_OC_WARN 0x%x", sensor_id);
 		}
 	} else {
 		LOG_ERR("Unknown VR module: %d", get_vr_module());
@@ -221,17 +225,6 @@ bool set_power_capping_vr_oc_warn_limit(uint8_t vr_idx, uint16_t value)
 	}
 
 	return ret;
-}
-
-bool find_cpld_lv1_time_window_idx_by_value(uint8_t *idx, uint16_t value)
-{
-	for (uint8_t i = 0; i < CPLD_LV1_TIME_WINDOW_NUM; i++) {
-		if (cpld_lv1_time_window_list[i] == value) {
-			*idx = i;
-			return true;
-		}
-	}
-	return false;
 }
 
 uint16_t get_power_capping_avg_power(uint8_t vr_idx, uint8_t lv)
@@ -370,24 +363,21 @@ void set_power_capping_time_w(uint8_t vr_idx, uint8_t lv, uint16_t value)
 		return;
 	}
 
-	if (value < ADC_AVERGE_TIMES_MIN && value > ADC_AVERGE_TIMES_MAX) {
+	if (value < ADC_AVERGE_TIMES_MIN || value > ADC_AVERGE_TIMES_MAX) {
 		LOG_ERR("Wrong value %d", value);
 		return;
 	}
 
-	uint8_t tmp_idx = 0;
-	uint8_t data = 0;
 	switch (lv) {
 	case CAPPING_LV_IDX_LV1:
-		if (find_cpld_lv1_time_window_idx_by_value(&tmp_idx, value)) {
-			data = (tmp_idx << 5);
-			if (!plat_write_cpld(CPLD_OFFSET_POWER_CAPPING_LV1_TIME, &data)) {
-				LOG_ERR("can't w cpld offset %d",
-					CPLD_OFFSET_POWER_CAPPING_LV1_TIME);
-				return;
-			}
-		} else {
-			LOG_ERR("can't find lv1 time by %d", value);
+		// 0x0a ~ 0x64, unit 1us
+		if (value < 10 || value > 100) {
+			LOG_ERR("Wrong setting value %d for LV1", value);
+			return;
+		}
+		uint8_t write_time_w_value = value;
+		if (!plat_write_cpld(CPLD_OFFSET_POWER_CAPPING_LV1_TIME, &write_time_w_value)) {
+			LOG_ERR("can't w cpld offset %d", CPLD_OFFSET_POWER_CAPPING_LV1_TIME);
 			return;
 		}
 		break;
@@ -447,13 +437,11 @@ void set_power_capping_threshold(uint8_t vr_idx, uint8_t lv, uint16_t value)
 	switch (lv) {
 	case CAPPING_LV_IDX_LV1:
 		if (vr_idx == CAPPING_VR_IDX_MEDHA0) {
-			if (!set_power_capping_vr_oc_warn_limit(ADC_IDX_MEDHA0_1, value)) {
-				return;
-			}
+			set_power_capping_vr_oc_warn_limit(ADC_IDX_MEDHA0_1, value);
+			return;
 		} else if (vr_idx == CAPPING_VR_IDX_MEDHA1) {
-			if (!set_power_capping_vr_oc_warn_limit(ADC_IDX_MEDHA1_1, value)) {
-				return;
-			}
+			set_power_capping_vr_oc_warn_limit(ADC_IDX_MEDHA1_1, value);
+			return;
 		}
 		break;
 	case CAPPING_LV_IDX_LV2:
@@ -507,12 +495,13 @@ void plat_power_capping_init()
 	// sync avg_times
 	uint8_t data = 0;
 	if (plat_read_cpld(CPLD_OFFSET_POWER_CAPPING_LV1_TIME, &data, 1)) {
-		uint8_t idx = data >> 5;
-		if (idx < CPLD_LV1_TIME_WINDOW_NUM) {
-			power_capping_info.time_w[CAPPING_VR_IDX_MEDHA0][CAPPING_LV_IDX_LV1] =
-				cpld_lv1_time_window_list[idx];
-			power_capping_info.time_w[CAPPING_VR_IDX_MEDHA1][CAPPING_LV_IDX_LV1] =
-				cpld_lv1_time_window_list[idx];
+		if (data >= 10 && data <= 100) {
+			power_capping_info.time_w[CAPPING_VR_IDX_MEDHA0][CAPPING_LV_IDX_LV1] = data;
+			power_capping_info.time_w[CAPPING_VR_IDX_MEDHA1][CAPPING_LV_IDX_LV1] = data;
+			LOG_INF("cpld lv1 time window idx: %d, medha0: %d us, medha1: %d us", data,
+				power_capping_info.time_w[CAPPING_VR_IDX_MEDHA0][CAPPING_LV_IDX_LV1],
+				power_capping_info
+					.time_w[CAPPING_VR_IDX_MEDHA1][CAPPING_LV_IDX_LV1]);
 		} else {
 			LOG_ERR("invalid cpld lv1 time data 0x%02x", data);
 		}

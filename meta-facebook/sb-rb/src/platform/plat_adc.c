@@ -237,7 +237,7 @@ float uint16_voltage_transfer_to_float(uint16_t temp_voltage_value)
 
 static void update_adc_info(uint16_t raw_data, uint8_t base_idx, float vref)
 {
-	LOG_DBG("base_idx: %d", base_idx);
+	// LOG_DBG("base_idx: %d", base_idx);
 	for (uint8_t i = base_idx; i < ADC_IDX_MAX; i += 2) {
 		uint16_t m_sample_buffer[BUFFER_SIZE];
 		m_sample_buffer[0] = raw_data;
@@ -337,7 +337,12 @@ void read_adc_info()
 	uint8_t adc_idx = 0;
 	plat_read_cpld(CPLD_OFFSET_ADC_IDX, &adc_idx, 1);
 	adc_idx_read = adc_idx;
-
+	k_msleep(1000);
+	LOG_INF("Pull cnv and cs1 to High");
+	gpio_set(MEDHA0_CNV, 1);
+	gpio_set(MEDHA1_CNV, 1);
+	gpio_set(SPI_ADC_CS1_N, 1);
+	k_msleep(1000);
 	/* read VENDOR_L to determine*/
 	uint8_t value = 0;
 	ad4058_write_reg(0xA8, 0x00, 0);
@@ -834,7 +839,7 @@ void adc_rainbow_polling_handler(void *p1, void *p2, void *p3)
 					ads7066_read_voltage(ADC_RB_IDX_MEDHA1);
 					break;
 				default:
-					LOG_DBG("Invalid ADC index %d", adc_idx_read);
+					// LOG_DBG("Invalid ADC index %d", adc_idx_read);
 					break;
 				}
 			}

@@ -122,14 +122,12 @@ static int cmd_soc_pwron_reset_get(const struct shell *shell, size_t argc, char 
 		shell_print(shell, "Usage:");
 		shell_print(shell, "  soc_pwron_reset get all");
 		shell_print(shell, "  soc_pwron_reset get <NAME>");
-		LOG_DBG("invalid argc in get: %d", (int)argc);
 		return -1;
 	}
 
 	uint8_t reg_val = 0;
 
 	if (!plat_read_cpld(IRIS_POWER_RESET_OFFSET, &reg_val, 1)) {
-		LOG_DBG("plat_read_cpld failed: offset=0x%02x", IRIS_POWER_RESET_OFFSET);
 		shell_print(shell, "read CPLD failed");
 		return -1;
 	}
@@ -149,7 +147,6 @@ static int cmd_soc_pwron_reset_get(const struct shell *shell, size_t argc, char 
 	const soc_pwron_reset_item_t *item = get_item_by_name(argv[1]);
 	if (!item) {
 		shell_print(shell, "Unknown name: %s", argv[1]);
-		LOG_DBG("unknown name in get: %s", argv[1]);
 		return -1;
 	}
 
@@ -162,7 +159,6 @@ static int cmd_soc_pwron_reset_set(const struct shell *shell, size_t argc, char 
 {
 	if (argc != 3) {
 		shell_print(shell, "Usage: soc_pwron_reset set <NAME> <0|1>");
-		LOG_DBG("invalid argc in set: %d", (int)argc);
 		return -1;
 	}
 
@@ -171,21 +167,18 @@ static int cmd_soc_pwron_reset_set(const struct shell *shell, size_t argc, char 
 
 	if ((set_val != 0) && (set_val != 1)) {
 		shell_print(shell, "Value must be 0 or 1");
-		LOG_DBG("invalid value in set: %ld", set_val);
 		return -1;
 	}
 
 	const soc_pwron_reset_item_t *item = get_item_by_name(name);
 	if (!item) {
 		shell_print(shell, "Unknown name: %s", name);
-		LOG_DBG("unknown name in set: %s", name);
 		return -1;
 	}
 
 	uint8_t reg_val = 0;
 
 	if (!plat_read_cpld(IRIS_POWER_RESET_OFFSET, &reg_val, 1)) {
-		LOG_DBG("plat_read_cpld failed: offset=0x%02x", IRIS_POWER_RESET_OFFSET);
 		shell_print(shell, "read CPLD failed");
 		return -1;
 	}
@@ -197,8 +190,6 @@ static int cmd_soc_pwron_reset_set(const struct shell *shell, size_t argc, char 
 	}
 
 	if (!plat_write_cpld(IRIS_POWER_RESET_OFFSET, &reg_val)) {
-		LOG_DBG("plat_write_cpld failed: offset=0x%02x val=0x%02x", IRIS_POWER_RESET_OFFSET,
-			reg_val);
 		shell_print(shell, "write CPLD failed");
 		return -1;
 	}

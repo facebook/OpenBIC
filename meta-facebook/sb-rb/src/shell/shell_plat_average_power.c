@@ -33,7 +33,7 @@ static int cmd_power_get(const struct shell *shell, size_t argc, char **argv)
 {
 	/* is_ubc_enabled_delayed_enabled() is to wait for all VR to be enabled  */
 	/* (gpio_get(FM_PLD_UBC_EN_R) == GPIO_HIGH) is to shut down polling immediately when UBC is disabled */
-	if (!((gpio_get(FM_PLD_UBC_EN_R) == GPIO_HIGH) && is_ubc_enabled_delayed_enabled())) {
+	if (!(get_is_ubc_enabled() && is_ubc_enabled_delayed_enabled())) {
 		shell_error(shell, "Can't get power command because VR has no power yet.");
 		return -1;
 	}

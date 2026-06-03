@@ -57,8 +57,7 @@ static int cmd_power_capping_get_all(const struct shell *shell, size_t argc, cha
 	shell_print(shell, "---------------------MEDHA0---------------------");
 	shell_print(shell, "MEDHA0 LV1 time window: %4d (us)",
 		    get_power_capping_time_w(CAPPING_VR_IDX_MEDHA0, CAPPING_LV_IDX_LV1));
-	shell_print(shell, "MEDHA0 LV1 threshold: %6d (W), %4d (A)\n",
-		    get_power_capping_threshold(CAPPING_VR_IDX_MEDHA0, CAPPING_LV_IDX_LV1),
+	shell_print(shell, "MEDHA0 LV1 threshold: %6d (A)\n",
 		    get_power_capping_current_threshold(CAPPING_VR_IDX_MEDHA0));
 	shell_print(shell, "MEDHA0 LV2 time window: %4d (ms)",
 		    get_power_capping_time_w(CAPPING_VR_IDX_MEDHA0, CAPPING_LV_IDX_LV2));
@@ -75,8 +74,7 @@ static int cmd_power_capping_get_all(const struct shell *shell, size_t argc, cha
 	shell_print(shell, "---------------------MEDHA1---------------------");
 	shell_print(shell, "MEDHA1 LV1 time window: %4d (us)",
 		    get_power_capping_time_w(CAPPING_VR_IDX_MEDHA1, CAPPING_LV_IDX_LV1));
-	shell_print(shell, "MEDHA1 LV1 threshold: %6d (W), %4d (A)\n",
-		    get_power_capping_threshold(CAPPING_VR_IDX_MEDHA1, CAPPING_LV_IDX_LV1),
+	shell_print(shell, "MEDHA1 LV1 threshold: %6d (A)\n",
 		    get_power_capping_current_threshold(CAPPING_VR_IDX_MEDHA1));
 	shell_print(shell, "MEDHA1 LV2 time window: %4d (ms)",
 		    get_power_capping_time_w(CAPPING_VR_IDX_MEDHA1, CAPPING_LV_IDX_LV2));
@@ -144,16 +142,15 @@ static int cmd_power_capping_set_time_window(const struct shell *shell, size_t a
 	}
 
 	uint16_t value = strtol(argv[2], NULL, 10);
-	if (value < ADC_AVERGE_TIMES_MIN && value > ADC_AVERGE_TIMES_MAX) {
+	if (value < ADC_AVERGE_TIMES_MIN || value > ADC_AVERGE_TIMES_MAX) {
 		shell_error(shell, "time should be less equal to %d", ADC_AVERGE_TIMES_MAX);
 		return -1;
 	}
 
 	if (power_capping_item_list[idx].lv == CAPPING_LV_IDX_LV1) {
-		uint8_t tmp_idx = 0;
-		if (!find_cpld_lv1_time_window_idx_by_value(&tmp_idx, value)) {
-			shell_error(shell, "For LV1, the time(us) should be:");
-			shell_print(shell, "{ 0, 1, 3, 5, 10, 15, 20, 50 }");
+		if (value < 10 || value > 100) {
+			shell_error(shell,
+				    "For LV1, the time(us) should be between 10us and 100us");
 			return -1;
 		}
 	}

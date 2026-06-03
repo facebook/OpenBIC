@@ -33,20 +33,19 @@ static int cmd_get_bootstrap_status(const struct shell *shell, size_t argc, char
 	uint8_t reg_status = 0;
 
 	if (!plat_read_cpld(MFIO16_BOOTSTRAP_STATUS_CPLD_OFFSET, &reg_status, 1)) {
-			LOG_DBG("plat_read_cpld failed: offset=0x%02x", MFIO16_BOOTSTRAP_STATUS_CPLD_OFFSET);
-			shell_error(shell, "read MFIO16 status from CPLD failed");
-			return -1;
-		}
-	shell_print(shell, "HAMSA_MFIO16 : %d", (reg_status >> HAMSA_MFIO16_BOOTSTRAP_BIT)&1);
-	shell_print(shell, "MEDHA0_MFIO16 : %d", (reg_status >> MEDHA0_MFIO16_BOOTSTRAP_BIT)&1);
-	shell_print(shell, "MEDHA1_MFIO16 : %d", (reg_status >> MEDHA1_MFIO16_BOOTSTRAP_BIT)&1);
+		shell_error(shell, "read MFIO16 status from CPLD failed");
+		return -1;
+	}
+	shell_print(shell, "HAMSA_MFIO16 : %d", (reg_status >> HAMSA_MFIO16_BOOTSTRAP_BIT) & 1);
+	shell_print(shell, "MEDHA0_MFIO16 : %d", (reg_status >> MEDHA0_MFIO16_BOOTSTRAP_BIT) & 1);
+	shell_print(shell, "MEDHA1_MFIO16 : %d", (reg_status >> MEDHA1_MFIO16_BOOTSTRAP_BIT) & 1);
 
-	return reg_status;	
+	return reg_status;
 }
 
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_set_spimux_oob_cmds,
 			       SHELL_CMD_ARG(status, NULL, "bootstrap status command",
-					 cmd_get_bootstrap_status, 1, 0),
+					     cmd_get_bootstrap_status, 1, 0),
 			       SHELL_SUBCMD_SET_END);
 
 /* Root of command spi test */

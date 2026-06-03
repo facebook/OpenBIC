@@ -409,7 +409,6 @@ void power_on_p3v3_osfp()
 		// set
 		write_data |= BIT(ioe_pwr_on_table[i].bit_loc);
 		//print write data
-		LOG_DBG("%s : %20d", ioe_pwr_on_table[i].ioe_enable_name, write_data);
 		set_pca6554apw_ioe_value(ioe_pwr_on_table[i].bus, ioe_pwr_on_table[i].addr,
 					 OUTPUT_PORT, write_data);
 
@@ -418,7 +417,6 @@ void power_on_p3v3_osfp()
 		get_pca6554apw_ioe_value(ioe_pwr_on_table[i].bus, ioe_pwr_on_table[i].addr,
 					 OUTPUT_PORT, &check_value);
 		uint8_t temp_value = (check_value >> i) & 0x01;
-		LOG_DBG("check_value : %d", check_value);
 		if (!temp_value)
 			LOG_INF("%s : %20s", ioe_pwr_on_table[i].ioe_enable_name, "fail");
 	}

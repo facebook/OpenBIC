@@ -65,7 +65,6 @@ enum FIRMWARE_COMPONENT {
 	COMPNT_MEDHA0,
 	COMPNT_MEDHA1,
 	COMPNT_VR_3V3,
-	COMPNT_HAMSA_BOOT1,
 };
 
 void plat_set_cpld_reset_reg(uint8_t value);
@@ -76,4 +75,5 @@ int sb_read_block(uint8_t slv_id, uint8_t cmd, uint8_t *data, uint32_t len);
 bool plat_get_image_crc_checksum_from_flash(uint8_t index, uint32_t *data_ver, uint32_t *data_crc);
 uint32_t plat_get_image_version(uint8_t index);
 void update_temp_boot0_version(uint32_t version, uint8_t index);
+void get_fw_version_boot0_from_asic();
 #endif /* _PLAT_FWUPDATE_H_ */

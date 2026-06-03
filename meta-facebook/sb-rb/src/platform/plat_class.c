@@ -124,15 +124,23 @@ void init_tmp_type()
 
 void init_asic_type()
 {
-	uint8_t rev_id = get_board_rev_id();
-	if (rev_id <= REV_ID_DVT_FAB3) {
-		asic_type = ASIC_TYPE_QCP1;
-	} else {
-		// after FAB3: gpio ASIC_TYPE_ID1 and ASIC_TYPE_ID0: 01: qcp1, 10: qcp2
-		if (gpio_get(ASIC_TYPE_ID1) == GPIO_LOW && gpio_get(ASIC_TYPE_ID0) == GPIO_HIGH) {
+	if (get_asic_board_id() == ASIC_BOARD_ID_RAINBOW) {
+		if (get_board_rev_id() <= REV_ID_DVT_FAB3) {
 			asic_type = ASIC_TYPE_QCP1;
-		} else if (gpio_get(ASIC_TYPE_ID1) == GPIO_HIGH &&
-			   gpio_get(ASIC_TYPE_ID0) == GPIO_LOW) {
+		} else {
+			// after FAB3: gpio ASIC_TYPE_ID1 and ASIC_TYPE_ID0: 01: qcp1, 10: qcp2
+			if (gpio_get(ASIC_TYPE_ID1) == GPIO_LOW &&
+			    gpio_get(ASIC_TYPE_ID0) == GPIO_HIGH) {
+				asic_type = ASIC_TYPE_QCP1;
+			} else if (gpio_get(ASIC_TYPE_ID1) == GPIO_HIGH &&
+				   gpio_get(ASIC_TYPE_ID0) == GPIO_LOW) {
+				asic_type = ASIC_TYPE_QCP2;
+			} else {
+				asic_type = ASIC_TYPE_UNKNOWN;
+			}
+		}
+	} else {
+		if (get_board_rev_id() >= MAX_REV_ID) {
 			asic_type = ASIC_TYPE_QCP2;
 		} else {
 			asic_type = ASIC_TYPE_UNKNOWN;
@@ -222,11 +230,11 @@ void pal_show_board_types(const struct shell *shell)
 			    (board_rev_id == REV_ID_EVT1A) ? "REV_ID_EVT1A" :
 			    (board_rev_id == REV_ID_EVT1B) ? "REV_ID_EVT1B" :
 			    (board_rev_id == REV_ID_EVT2)  ? "REV_ID_EVT2" :
-			    (board_rev_id == REV_ID_DVT_FAB3)   ? "REV_ID_DVT_FAB3" :
-			    (board_rev_id == REV_ID_DVT_FAB4)   ? "REV_ID_DVT_FAB4" :
-			    (board_rev_id == REV_ID_PVT)	   ? "REV_ID_PVT" :
-				(board_rev_id == REV_ID_MP)	   ? "REV_ID_MP" :
-							     "not supported");
+			    (board_rev_id == REV_ID_DVT_FAB3)   ? "not supported" :
+			    (board_rev_id == REV_ID_DVT_FAB4)   ? "not supported" :
+			    (board_rev_id == REV_ID_PVT)	   ? "not supported" :
+				(board_rev_id == REV_ID_MP)	   ? "not supported" :
+							     "EVB_QCP2");
 	} else if (asic_board_id == ASIC_BOARD_ID_RAINBOW) {
 		shell_print(shell, "* BOARD_STAGE:   (0x%02X)%s", board_rev_id,
 			    (board_rev_id == REV_ID_EVT1A) ? "REV_ID_EVT1A" :
@@ -266,7 +274,7 @@ void pal_show_board_types(const struct shell *shell)
 		    (adc_type == ADI_AD4058) ? "ADI_AD4058" :
 		    (adc_type == TIC_ADS7066) ? "TI_ADS7066" : "not supported");
 
-	shell_print(shell, "* ASIC_TYPE:      (0x%02X)%s", asic_type,
+	shell_print(shell, "* ASIC_TYPE:     (0x%02X)%s", asic_type,
 		    (asic_type == ASIC_TYPE_QCP1) ? "ASIC_TYPE_QCP1" :
 		    (asic_type == ASIC_TYPE_QCP2) ? "ASIC_TYPE_QCP2" : "not supported");
 	

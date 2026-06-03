@@ -16,6 +16,7 @@
 
 #ifndef PLAT_ISR_H
 #define PLAT_ISR_H
+#include "plat_cpld.h"
 
 void ISR_GPIO_ALL_VR_PM_ALERT_R_N();
 void ISR_GPIO_FM_PLD_UBC_EN_R();
@@ -25,4 +26,5 @@ uint8_t get_pwr_steps_on_flag(void);
 void ISR_GPIO_SMB_HAMSA_MMC_LVC33_ALERT_N();
 void ISR_ASIC_THERMTRIP_TRIGGER();
 void plat_switch_pin_a12(bool use_gpio73);
+bool ubc_en_changed_callback(cpld_info *info, uint8_t *data);
 #endif

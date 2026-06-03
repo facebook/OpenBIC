@@ -49,6 +49,9 @@ static uint16_t err_code_caches[200]; //extend if error code types > 200
 static uint16_t next_log_position = 0; // Next position to write in the eeprom, 1-based, defaut 0
 static uint16_t next_index = 0; // Next global index to use for logs, 1-based, defaut 0
 static uint8_t log_num; // Number of logs in EEPROM
+static uint8_t clk_312_5_reinit_event_data[7] = { 0 };
+
+void error_log_event(uint16_t error_code, bool log_status);
 
 typedef struct _vr_device_match_sensor_num {
 	uint8_t index;
@@ -214,9 +217,9 @@ void plat_log_read(uint8_t *log_data, uint8_t cmd_size, uint16_t order)
 	uint16_t eeprom_address =
 		FRU_LOG_START + zero_base_log_position * sizeof(plat_err_log_mapping);
 
-	LOG_DBG("order: %d, log_position: %d, eeprom_address: 0x%X", order,
-		(zero_base_log_position + 1),
-		eeprom_address); //remove after all log function is ready
+	// LOG_DBG("order: %d, log_position: %d, eeprom_address: 0x%X", order,
+	// (zero_base_log_position + 1),
+	// eeprom_address); //remove after all log function is ready
 
 	plat_err_log_mapping log_entry;
 
@@ -295,11 +298,223 @@ bool get_multi_vr_status(uint8_t alrt_index, uint8_t *data)
 		*ptr++ = (uint8_t)((vr_data >> 8) & 0xFF);
 	}
 
-	// print VR data
-	for (int i = 0; i < 8; i++)
-		LOG_DBG("data[%d]: %02X ", i, data[i]);
-
 	return true;
+}
+uint8_t clk_100mhz_get_lock_status()
+{
+	I2C_MSG i2c_msg = { 0 };
+	uint8_t retry = 5;
+	i2c_msg.bus = I2C_BUS3;
+	i2c_msg.target_addr = 0x9; //7-bit
+	i2c_msg.tx_len = 2;
+	i2c_msg.rx_len = 1;
+	i2c_msg.data[0] = 0x01; //offset HSB
+	i2c_msg.data[1] = 0x3F; //offset LSB
+
+	if (i2c_master_read_without_error_log(&i2c_msg, retry)) {
+		return 0xFF; // return invalid status
+	}
+	return i2c_msg.data[0] & 0x01; //bit0 is the APLL lock status
+}
+uint8_t clk_312_5mhz_get_lock_status()
+{
+	I2C_MSG i2c_msg = { 0 };
+	uint8_t retry = 5;
+	i2c_msg.bus = I2C_BUS3;
+	i2c_msg.target_addr = 0x8; // 7-bit
+	i2c_msg.tx_len = 2;
+	i2c_msg.rx_len = 1;
+	i2c_msg.data[0] = 0x00; //offset HSB
+	i2c_msg.data[1] = 0xbd; //offset LSB
+	if (i2c_master_read_without_error_log(&i2c_msg, retry)) {
+		return 0xFF; // return invalid status
+	}
+	return i2c_msg.data[0] & 0x01; //bit 0 is the APLL lock status
+}
+
+bool clk_312_5mhz_read_or_write_reg_value(uint8_t tx_len, uint8_t rx_len, uint8_t hsb_value,
+					  uint8_t lsb_value, uint8_t *write_read_value)
+{
+	k_msleep(10);
+	I2C_MSG i2c_msg = { 0 };
+	uint8_t retry = 5;
+	i2c_msg.bus = I2C_BUS3;
+	i2c_msg.target_addr = 0x8; // 7-bit
+	i2c_msg.tx_len = tx_len;
+	i2c_msg.rx_len = rx_len;
+	i2c_msg.data[0] = hsb_value; //offset HSB
+	i2c_msg.data[1] = lsb_value; //offset LSB
+	if (rx_len > 0) {
+		if (i2c_master_read(&i2c_msg, retry)) {
+			LOG_ERR("Failed to read clk 312.5MHz reg, offset: 0x%02x%02x", hsb_value,
+				lsb_value);
+			return false; // return invalid value
+		}
+	} else {
+		for (int i = 2; i < tx_len; i++) {
+			i2c_msg.data[i] = write_read_value[i - 2];
+		}
+		if (i2c_master_write(&i2c_msg, retry)) {
+			LOG_ERR("Failed to write clk 312.5MHz reg, offset: 0x%02x%02x", hsb_value,
+				lsb_value);
+			return false; // return invalid value
+		}
+		return true;
+	}
+	// save read back value in *write_read_value
+	memcpy(write_read_value, i2c_msg.data, rx_len);
+	return true;
+}
+
+void check_312_5MHz_init_status()
+{
+	uint8_t board_id = get_asic_board_id();
+	uint8_t rev_id = get_board_rev_id();
+	uint8_t read_pwr_en_value = 0;
+	if (!plat_read_cpld(VR_EN_PIN_READING_5, &read_pwr_en_value, 1)) {
+		LOG_ERR("Failed to read VR_EN_PIN_READING_5 for checking bootstrap flag");
+		return;
+	}
+	read_pwr_en_value = read_pwr_en_value & 0x01; //bit0 is PWR_EN
+	LOG_INF("Board ID: %d, Rev ID: %d, PWR_EN: 0x%02x", board_id, rev_id, read_pwr_en_value);
+	if (board_id == ASIC_BOARD_ID_RAINBOW && rev_id >= REV_ID_DVT_FAB4) {
+		// check 0x00A8
+		uint8_t read_value[4] = { 0 };
+		if (!clk_312_5mhz_read_or_write_reg_value(2, 4, 0x00, 0xA8, read_value)) {
+			LOG_ERR("Failed to read clk 312.5MHz 0x00A8");
+			return;
+		}
+		LOG_INF("Read clk 312.5MHz init reg 0x00A8 value: %02x%02x%02x%02x", read_value[0],
+			read_value[1], read_value[2], read_value[3]);
+		if (read_value[0] != 0x4D || read_value[1] != 0xC8 || read_value[2] != 0x04 ||
+		    read_value[3] != 0x0B) {
+			LOG_WRN("CLK 312.5MHz init reg 0x00A8 value is not expected, value: %02x%02x%02x%02x",
+				read_value[0], read_value[1], read_value[2], read_value[3]);
+			goto CHECK_POWER_ENABLE_AND_REINIT;
+		}
+		// check 0x0080
+		if (!clk_312_5mhz_read_or_write_reg_value(2, 1, 0x00, 0x80, read_value)) {
+			LOG_ERR("Failed to read clk 312.5MHz 0x0080");
+			return;
+		}
+		LOG_INF("Read clk 312.5MHz init reg 0x0080 value: %02x", read_value[0]);
+		if (read_value[0] != 0x6D) {
+			LOG_WRN("CLK 312.5MHz init reg 0x0080 value is not expected, value: %02x",
+				read_value[0]);
+			goto CHECK_POWER_ENABLE_AND_REINIT;
+		}
+		// check 0x0088
+		if (!clk_312_5mhz_read_or_write_reg_value(2, 2, 0x00, 0x88, read_value)) {
+			LOG_ERR("Failed to read clk 312.5MHz 0x0088");
+			return;
+		}
+		LOG_INF("Read clk 312.5MHz init reg 0x0088 value: %02x%02x", read_value[0],
+			read_value[1]);
+		if (read_value[0] != 0x00 || read_value[1] != 0x20) {
+			LOG_WRN("CLK 312.5MHz init reg 0x0088 value is not expected, value: %02x%02x",
+				read_value[0], read_value[1]);
+			goto CHECK_POWER_ENABLE_AND_REINIT;
+		}
+		// all good return
+		LOG_INF("CLK 312.5MHz init status is good");
+		return;
+	} else {
+		LOG_INF("Board is not >= FAB4, no need to check CLK 312.5MHz init status");
+		return;
+	}
+CHECK_POWER_ENABLE_AND_REINIT:
+	// read back all data and put in clk_312_5_reinit_event_data, 4byte + 1byte + 2byte
+	if (!clk_312_5mhz_read_or_write_reg_value(2, 4, 0x00, 0xA8, clk_312_5_reinit_event_data)) {
+		LOG_ERR("Failed to read clk 312.5MHz init reg 0x00A8");
+		return;
+	}
+	if (!clk_312_5mhz_read_or_write_reg_value(2, 1, 0x00, 0x80,
+						  clk_312_5_reinit_event_data + 4)) {
+		LOG_ERR("Failed to read clk 312.5MHz init reg 0x0080");
+		return;
+	}
+	if (!clk_312_5mhz_read_or_write_reg_value(2, 2, 0x00, 0x88,
+						  clk_312_5_reinit_event_data + 5)) {
+		LOG_ERR("Failed to read clk 312.5MHz init reg 0x0088");
+		return;
+	}
+	// check pwr enable
+	if (read_pwr_en_value == 1) {
+		LOG_ERR("Power is on with unexpected CLK 312.5MHz init status");
+		error_log_event(CLK_312_5MHZ_REINIT_ERR_CODE, LOG_ASSERT);
+	} else {
+		uint8_t error_flag = 0;
+		//write 0x00a8, value = 0x4D 0xC8 0x04 0x0B to re-init
+		LOG_INF("Power is off with unexpected CLK 312.5MHz init status, try to re-init clk");
+		uint8_t write_value[4] = { 0x4D, 0xC8, 0x04, 0x0B };
+		if (!clk_312_5mhz_read_or_write_reg_value(6, 0, 0x00, 0xA8, write_value)) {
+			LOG_ERR("Failed to write 0x00A8");
+		}
+		if (!clk_312_5mhz_read_or_write_reg_value(2, 4, 0x00, 0xA8,
+							  clk_312_5_reinit_event_data)) {
+			LOG_ERR("Failed to read 0x00A8 after re-init");
+		}
+		if (clk_312_5_reinit_event_data[0] != 0x4D ||
+		    clk_312_5_reinit_event_data[1] != 0xC8 ||
+		    clk_312_5_reinit_event_data[2] != 0x04 ||
+		    clk_312_5_reinit_event_data[3] != 0x0B) {
+			LOG_ERR("Re-init clk 312.5MHz 0x00A8 failed");
+			error_flag = 1;
+		}
+		k_msleep(15);
+		// write 0x0080, value = 0x6D to re-init
+		uint8_t write_value_0080 = 0x6D;
+		if (!clk_312_5mhz_read_or_write_reg_value(3, 0, 0x00, 0x80, &write_value_0080)) {
+			LOG_ERR("Failed to write 0x0080");
+			error_flag = 1;
+		}
+		if (!clk_312_5mhz_read_or_write_reg_value(2, 1, 0x00, 0x80,
+							  clk_312_5_reinit_event_data + 4)) {
+			LOG_ERR("Failed to read 0x0080 after re-init");
+		}
+		if (clk_312_5_reinit_event_data[4] != 0x6D) {
+			LOG_ERR("Re-init clk 312.5MHz 0x0080 failed");
+			error_flag = 1;
+		}
+		k_msleep(15);
+		// write 0x0088, value = 0x00 0x20 to re-init
+		uint8_t write_value_0088[2] = { 0x00, 0x20 };
+		if (!clk_312_5mhz_read_or_write_reg_value(4, 0, 0x00, 0x88, write_value_0088)) {
+			LOG_ERR("Failed to write 0x0088");
+		}
+		if (!clk_312_5mhz_read_or_write_reg_value(2, 2, 0x00, 0x88,
+							  clk_312_5_reinit_event_data + 5)) {
+			LOG_ERR("Failed to read 0x0088 after re-init");
+		}
+		if (clk_312_5_reinit_event_data[5] != 0x00 ||
+		    clk_312_5_reinit_event_data[6] != 0x20) {
+			LOG_ERR("Re-init clk 312.5MHz 0x0088 failed");
+			error_flag = 1;
+		}
+		// do APLL re-init
+		uint8_t write_value_0D00 = 0x00;
+		if (!clk_312_5mhz_read_or_write_reg_value(2, 0, 0x0D, 0x00, &write_value_0D00)) {
+			LOG_ERR("Failed to write 0x0D00 0x00");
+		}
+		write_value_0D00 = 0x02;
+		if (!clk_312_5mhz_read_or_write_reg_value(2, 0, 0x0D, 0x00, &write_value_0D00)) {
+			LOG_ERR("Failed to write 0x0D00 0x02");
+		}
+		write_value_0D00 = 0x00;
+		if (!clk_312_5mhz_read_or_write_reg_value(2, 0, 0x0D, 0x00, &write_value_0D00)) {
+			LOG_ERR("Failed to write 0x0D00 0x00");
+		}
+		// read pwr en again
+		if (!plat_read_cpld(VR_EN_PIN_READING_5, &read_pwr_en_value, 1)) {
+			LOG_ERR("Failed to read VR_EN_PIN_READING_5 for checking bootstrap flag");
+		}
+		read_pwr_en_value = read_pwr_en_value & 0x01; //bit0 is PWR_EN
+		if (read_pwr_en_value == 1) {
+			LOG_ERR("CLK 312.5MHz init status re-init has error: 0x%02x, pwr en: 0x%02x",
+				error_flag, read_pwr_en_value);
+			error_log_event(CLK_312_5MHZ_REINIT_ERR_CODE, LOG_ASSERT);
+		}
+	}
 }
 
 bool get_error_data(uint16_t error_code, uint8_t *data)
@@ -307,7 +522,9 @@ bool get_error_data(uint16_t error_code, uint8_t *data)
 	CHECK_NULL_ARG_WITH_RETURN(data, false);
 	//  temperature error code
 	uint8_t trigger_case = (error_code >> 13) & 0x07;
-
+	uint8_t clk_idx = error_code & 0xF;
+	uint8_t lock_status = 0x00;
+	uint8_t clk_data_tmp = 0;
 	switch (trigger_case) {
 	case TEMPERATURE_TRIGGER_CAUSE: {
 		uint8_t temperature_sensoor_num = error_code & 0xFF;
@@ -387,12 +604,97 @@ bool get_error_data(uint16_t error_code, uint8_t *data)
 		data[0] = gpio_get(RST_IRIS_PWR_ON_PLD_R1_N);
 		return true;
 	}
+	case CPLD_UNEXPECTED_VAL_TRIGGER_CAUSE: {
+		uint16_t extend_case = error_code & 0xFF00;
+		switch (extend_case) {
+		case BOOTSTRAP_EVENT_CAUSE:
+			for (int i = 0; i < 8; i++) {
+				uint8_t bootstrap_err = get_error_bootstrap_index_list(i);
+				if (bootstrap_err == STRAP_INDEX_MAX) {
+					LOG_WRN("No more valid bootstrap error index, stop at index: %d",
+						i);
+					break;
+				}
+				data[i] = bootstrap_err;
+			}
+			return true;
+			break;
+		case CLOCK_APLL_UNLOCK_EVENT_CAUSE:
+			switch (clk_idx) {
+			case CLK_100MHZ_ERR_IDX:
+				lock_status = clk_100mhz_get_lock_status();
+				data[0] = lock_status;
+				return true;
+				break;
+			case CLK_312_5MHZ_ERR_IDX:
+				lock_status = clk_312_5mhz_get_lock_status();
+				data[0] = lock_status;
+				return true;
+				break;
+			case CLK_BUF0_100M_LOSB_PLD:
+			case CLK_BUF1_100M_LOSB_PLD:
+			case CLK_BUF2_100M_LOSB_PLD:
+				if (!plat_read_cpld(CLK_100MHZ_BUF_LOSS_REG, &clk_data_tmp, 1)) {
+					LOG_ERR("Fail read cpld reg 0x%x", CLK_100MHZ_BUF_LOSS_REG);
+				}
+				data[0] = clk_data_tmp;
+				return true;
+				break;
+			case CLK_312_5MHZ_REINIT_ERR_IDX:
+				// save re-init data to data[0-6], total 7 bytes
+				memcpy(data, clk_312_5_reinit_event_data, 7);
+				return true;
+			default:
+				break;
+			}
+			break;
+		default:
+			break;
+		}
+	}
 	}
 
 	// Extract CPLD offset and bit position from the error code
 	uint8_t cpld_offset = error_code & 0xFF;
 	uint8_t bit_position = (error_code >> 8) & 0x07;
 	LOG_WRN("cpld_offset: 0x%x, bit_position: 0x%x", cpld_offset, bit_position);
+	uint8_t asic_temp_data[ASIC_MONITOR_TEMP_REG_LEN] = { 0 };
+	if (read_asic_reg(ASIC_MONITOR_TEMP_REG, (uint8_t *)asic_temp_data,
+			  ASIC_MONITOR_TEMP_REG_LEN) != 0) {
+		LOG_ERR("Can't get max asic temp data from ASIC, reg: 0x%02x",
+			ASIC_MONITOR_TEMP_REG);
+	}
+	// check Asic temp error code
+	if (cpld_offset == MFIO_FOR_RAINBOW) {
+		uint8_t data_read_back = 0;
+		if (!plat_read_cpld(MFIO_FOR_RAINBOW, &data_read_back, 1)) {
+			LOG_ERR("Fail read cpld reg 0x%x", MFIO_FOR_RAINBOW);
+		}
+		switch (bit_position) {
+		case HAMSA_MFIO22:
+			data[0] = data_read_back;
+			data[1] = asic_temp_data[1];
+			break;
+		case MEDHA0_MFIO24:
+			data[0] = data_read_back;
+			data[1] = asic_temp_data[2];
+			break;
+		case MEDHA1_MFIO24:
+			data[0] = data_read_back;
+			data[1] = asic_temp_data[3];
+			break;
+		case HAMSA_MFIO23:
+		case MEDHA0_MFIO31:
+		case MEDHA1_MFIO31:
+			data[0] = data_read_back;
+			break;
+		default:
+			LOG_ERR("unsupported Asic temp error code with cpld_offset: 0x%x, bit_position: 0x%x",
+				cpld_offset, bit_position);
+			return false;
+		}
+		return true;
+	}
 
 	// Initialize sensor number
 	uint8_t sensor_num = 0x00;
@@ -459,21 +761,97 @@ bool get_error_data(uint16_t error_code, uint8_t *data)
 void error_log_event(uint16_t error_code, bool log_status)
 {
 	bool log_todo = false;
+	static uint64_t hamsa_remote_err_last_time_stamp = 0;
+	static uint64_t medha0_remote_err_last_time_stamp = 0;
+	static uint64_t medha1_remote_err_last_time_stamp = 0;
 	// Check if the error_code is already logged
 	for (uint8_t i = 1; i < ARRAY_SIZE(err_code_caches); i++) {
 		if (err_code_caches[i] == error_code) {
 			if (log_status == LOG_ASSERT) {
-				log_todo = false; // Duplicate error, no need to log again
-				LOG_INF("Duplicate error_code: 0x%x, log_status: %d", error_code,
-					log_status);
-				return;
+				// check if is ASIC remote temp error
+				if (error_code == HAMSA_MFIO22_ERROR_CODE) {
+					hamsa_remote_err_last_time_stamp = k_uptime_get();
+				} else if (error_code == MEDHA0_MFIO24_ERROR_CODE) {
+					medha0_remote_err_last_time_stamp = k_uptime_get();
+				} else if (error_code == MEDHA1_MFIO24_ERROR_CODE) {
+					medha1_remote_err_last_time_stamp = k_uptime_get();
+				} else {
+					//other case
+					log_todo = false; // Duplicate error, no need to log again
+					if (error_code != CLK_100MHZ_ERR_CODE &&
+					    error_code != CLK_312_5MHZ_ERR_CODE &&
+					    error_code != CLK_BUF0_100M_LOSB_PLD_ERR_CODE &&
+					    error_code != CLK_BUF1_100M_LOSB_PLD_ERR_CODE &&
+					    error_code != CLK_BUF2_100M_LOSB_PLD_ERR_CODE &&
+					    error_code != CLK_312_5MHZ_REINIT_ERR_CODE) {
+						LOG_INF("Duplicate error_code(log assert): 0x%x, log_status: %d",
+							error_code, log_status);
+					}
+					return;
+				}
 			} else if (log_status == LOG_DEASSERT) {
 				log_todo = true; // The error needs to be cleared
 				err_code_caches[i] = 0; // Remove the error code from the cache
-				LOG_INF("Duplicate error_code: 0x%x, log_status: %d", error_code,
-					log_status);
+				LOG_INF("Duplicate error_code(log deassert): 0x%x, log_status: %d",
+					error_code, log_status);
 				return;
 			}
+		}
+	}
+	// check asic remote temp error time
+	if (error_code == HAMSA_MFIO22_ERROR_CODE) {
+		uint64_t current_time_get = k_uptime_get();
+		//overflow case
+		if (current_time_get < hamsa_remote_err_last_time_stamp) {
+			// assert log
+			log_todo = false;
+			hamsa_remote_err_last_time_stamp = current_time_get;
+		}
+		// 2 same error need diff 10s
+		if ((current_time_get - hamsa_remote_err_last_time_stamp) > 10000) {
+			// deassert log
+			log_todo = true;
+			hamsa_remote_err_last_time_stamp = current_time_get;
+		} else {
+			LOG_INF("same asic remote temp error within 10s, current_time_get: %lld, hamsa_remote_err_last_time_stamp: %lld",
+				current_time_get, hamsa_remote_err_last_time_stamp);
+			return;
+		}
+	} else if (error_code == MEDHA0_MFIO24_ERROR_CODE) {
+		uint64_t current_time_get = k_uptime_get();
+		//overflow case
+		if (current_time_get < medha0_remote_err_last_time_stamp) {
+			// assert log
+			log_todo = false;
+			medha0_remote_err_last_time_stamp = current_time_get;
+		}
+		// 2 same error need diff 10s
+		if ((current_time_get - medha0_remote_err_last_time_stamp) > 10000) {
+			// deassert log
+			log_todo = true;
+			medha0_remote_err_last_time_stamp = current_time_get;
+		} else {
+			LOG_INF("same asic remote temp error within 10s, current_time_get: %lld, medha0_remote_err_last_time_stamp: %lld",
+				current_time_get, medha0_remote_err_last_time_stamp);
+			return;
+		}
+	} else if (error_code == MEDHA1_MFIO24_ERROR_CODE) {
+		uint64_t current_time_get = k_uptime_get();
+		//overflow case
+		if (current_time_get < medha1_remote_err_last_time_stamp) {
+			// assert log
+			log_todo = false;
+			medha1_remote_err_last_time_stamp = current_time_get;
+		}
+		// 2 same error need diff 10s
+		if ((current_time_get - medha1_remote_err_last_time_stamp) > 10000) {
+			// deassert log
+			log_todo = true;
+			medha1_remote_err_last_time_stamp = current_time_get;
+		} else {
+			LOG_INF("same asic remote temp error within 10s, current_time_get: %lld, medha1_remote_err_last_time_stamp: %lld",
+				current_time_get, medha1_remote_err_last_time_stamp);
+			return;
 		}
 	}
 
@@ -546,7 +924,7 @@ void reset_error_log_event(uint8_t err_type)
 		uint16_t error_code = err_code_caches[i];
 		uint8_t code_type = error_code >> ERROR_CODE_TYPE_SHIFT;
 		if (code_type == err_type) {
-			LOG_DBG("DEASSERT");
+			// LOG_DBG("DEASSERT");
 			error_log_event(error_code, LOG_DEASSERT);
 			err_code_caches[i] = 0;
 		}
@@ -643,4 +1021,20 @@ bool check_temp_status_bit(uint8_t bit_num)
 	}
 
 	return true;
+}
+
+void packaged_bmc_log(uint8_t event_type, uint8_t event_data_1, uint8_t event_data_2,
+		      uint8_t event_data_3)
+{
+	struct pldm_addsel_data to_bmc_sel_msg = { 0 };
+	to_bmc_sel_msg.assert_type = LOG_ASSERT;
+	to_bmc_sel_msg.event_type = event_type;
+	to_bmc_sel_msg.event_data_1 = event_data_1;
+	to_bmc_sel_msg.event_data_2 = event_data_2;
+	to_bmc_sel_msg.event_data_3 = event_data_3;
+	if (send_event_log_to_bmc(to_bmc_sel_msg) != PLDM_SUCCESS) {
+		LOG_ERR("Failed to send msg to bmc, event_type: 0x%x, event data: 0x%x 0x%x 0x%x\n",
+			to_bmc_sel_msg.event_type, to_bmc_sel_msg.event_data_1,
+			to_bmc_sel_msg.event_data_2, to_bmc_sel_msg.event_data_3);
+	}
 }

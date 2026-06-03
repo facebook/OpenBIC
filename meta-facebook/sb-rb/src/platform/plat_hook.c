@@ -89,7 +89,6 @@ bool pre_vr_read(sensor_cfg *cfg, void *args)
 
 	/* mutex lock */
 	if (pre_proc_args->mutex) {
-		LOG_DBG("%x l %p", cfg->num, pre_proc_args->mutex);
 		if (k_mutex_lock(pre_proc_args->mutex, K_MSEC(VR_MUTEX_LOCK_TIMEOUT_MS))) {
 			LOG_ERR("0x%02x pre_vr_read, mutex lock fail", cfg->num);
 			return false;
@@ -237,7 +236,6 @@ void vr_mutex_init(void)
 {
 	for (uint8_t i = 0; i < ARRAY_SIZE(vr_mutex); i++) {
 		k_mutex_init(vr_mutex + i);
-		LOG_DBG("vr_mutex[%d] %p init", i, vr_mutex + i);
 	}
 }
 
@@ -523,7 +521,6 @@ bool plat_get_vr_status(uint8_t rail, uint8_t vr_status_rail, uint16_t *vr_statu
 
 	if ((cfg->pre_sensor_read_hook)) {
 		if ((cfg->pre_sensor_read_hook)(cfg, cfg->pre_sensor_read_args) == false) {
-			LOG_DBG("%d read vr status pre hook fail!", sensor_id);
 			return false;
 		}
 	};
@@ -704,7 +701,6 @@ bool plat_set_vout_command(uint8_t rail, uint16_t *millivolt, bool is_perm)
 		}
 	}
 
-	LOG_DBG("sensor num 0x%x,page 0x%x, vout 0x%x", sensor_id, page, setting_millivolt);
 	switch (cfg->type) {
 	case sensor_dev_mp2971:
 		if (!mp2971_set_vout_command(cfg, page, millivolt)) {
@@ -727,14 +723,6 @@ bool plat_set_vout_command(uint8_t rail, uint16_t *millivolt, bool is_perm)
 	default:
 		LOG_ERR("Unsupport VR type(%x)", cfg->type);
 		goto err;
-	}
-
-	if (is_perm && rail == VR_RAIL_E_ASIC_P0V8_HAMSA_AVDD_PCIE) {
-		if (!set_user_settings_hamsa_avdd_pcie_to_eeprom(&setting_millivolt,
-								 sizeof(setting_millivolt))) {
-			LOG_ERR("set user settings hamsa avdd pcie to eeprom failed");
-			goto err;
-		}
 	}
 
 	voltage_command_get.vout[rail] = setting_millivolt;
@@ -960,6 +948,21 @@ bool set_ioexp_val_to_bootstrap_table(void)
 
 	return true;
 }
+
+bool pre_read_bootstrap_setting_value = 0;
+uint8_t error_bootstrap_setting_value_index[8] = { STRAP_INDEX_MAX, STRAP_INDEX_MAX,
+						   STRAP_INDEX_MAX, STRAP_INDEX_MAX,
+						   STRAP_INDEX_MAX, STRAP_INDEX_MAX,
+						   STRAP_INDEX_MAX, STRAP_INDEX_MAX };
+void add_error_bootstrap_index_to_list(uint8_t index)
+{
+	for (int i = 0; i < 8; i++) {
+		if (error_bootstrap_setting_value_index[i] == STRAP_INDEX_MAX) {
+			error_bootstrap_setting_value_index[i] = index;
+			break;
+		}
+	}
+}
 bool bootstrap_default_settings_init(void)
 {
 	// read cpld value and write to bootstrap_table
@@ -997,6 +1000,7 @@ bool bootstrap_default_settings_init(void)
 		uint8_t medha1_chip_strap_defauilt_setting = 0;
 		uint8_t hamsa_mfio9_strap_defauilt_setting = 0;
 		uint8_t hamsa_mfio18_strap_defauilt_setting = 0;
+		uint8_t temp_read_value = 0;
 		if (asic_board_id == ASIC_BOARD_ID_RAINBOW) {
 			if (rev_id <= REV_ID_EVT2) {
 				hamsa_ls_strap_defauilt_setting = 0x1;
@@ -1019,6 +1023,20 @@ bool bootstrap_default_settings_init(void)
 
 		if (bootstrap_table[i].index == STRAP_INDEX_HAMSA_LS_STRAP_0) {
 			bootstrap_table[i].default_setting_value = hamsa_ls_strap_defauilt_setting;
+			//check cpld value first
+			if (!plat_read_cpld(bootstrap_table[i].cpld_offsets, &temp_read_value, 1)) {
+				LOG_ERR("Can't find bootstrap default by rail index from cpld: %d",
+					i);
+				return false;
+			}
+			// if read back value is different from default value, set flag to True
+			temp_read_value = (temp_read_value >> bootstrap_table[i].bit_offset) & 0x01;
+			if (temp_read_value != hamsa_ls_strap_defauilt_setting) {
+				LOG_WRN("Read back value from cpld is different from default value for HAMSA_LS_STRAP_0, read back: %d, default: %d",
+					temp_read_value, hamsa_ls_strap_defauilt_setting);
+				pre_read_bootstrap_setting_value = 1;
+				add_error_bootstrap_index_to_list(bootstrap_table[i].index);
+			}
 			if (!set_cpld_bit(bootstrap_table[i].cpld_offsets,
 					  bootstrap_table[i].bit_offset,
 					  bootstrap_table[i].default_setting_value)) {
@@ -1030,6 +1048,20 @@ bool bootstrap_default_settings_init(void)
 		if (bootstrap_table[i].index == STRAP_INDEX_MEDHA0_CHIP_STRAP_0) {
 			bootstrap_table[i].default_setting_value =
 				medha0_chip_strap_defauilt_setting;
+			//check cpld value first
+			if (!plat_read_cpld(bootstrap_table[i].cpld_offsets, &temp_read_value, 1)) {
+				LOG_ERR("Can't find bootstrap default by rail index from cpld: %d",
+					i);
+				return false;
+			}
+			// if read back value is different from default value, set flag to True
+			temp_read_value = (temp_read_value >> bootstrap_table[i].bit_offset) & 0x01;
+			if (temp_read_value != medha0_chip_strap_defauilt_setting) {
+				LOG_WRN("Read back value from cpld is different from default value for MEDHA0_CHIP_STRAP_0, read back: %d, default: %d",
+					temp_read_value, medha0_chip_strap_defauilt_setting);
+				pre_read_bootstrap_setting_value = 1;
+				add_error_bootstrap_index_to_list(bootstrap_table[i].index);
+			}
 			if (!set_cpld_bit(bootstrap_table[i].cpld_offsets,
 					  bootstrap_table[i].bit_offset,
 					  bootstrap_table[i].default_setting_value)) {
@@ -1040,6 +1072,20 @@ bool bootstrap_default_settings_init(void)
 		if (bootstrap_table[i].index == STRAP_INDEX_MEDHA1_CHIP_STRAP_0) {
 			bootstrap_table[i].default_setting_value =
 				medha1_chip_strap_defauilt_setting;
+			//check cpld value first
+			if (!plat_read_cpld(bootstrap_table[i].cpld_offsets, &temp_read_value, 1)) {
+				LOG_ERR("Can't find bootstrap default by rail index from cpld: %d",
+					i);
+				return false;
+			}
+			// if read back value is different from default value, set flag to True
+			temp_read_value = (temp_read_value >> bootstrap_table[i].bit_offset) & 0x01;
+			if (temp_read_value != medha1_chip_strap_defauilt_setting) {
+				LOG_WRN("Read back value from cpld is different from default value for MEDHA1_CHIP_STRAP_0, read back: %d, default: %d",
+					temp_read_value, medha1_chip_strap_defauilt_setting);
+				pre_read_bootstrap_setting_value = 1;
+				add_error_bootstrap_index_to_list(bootstrap_table[i].index);
+			}
 			if (!set_cpld_bit(bootstrap_table[i].cpld_offsets,
 					  bootstrap_table[i].bit_offset,
 					  bootstrap_table[i].default_setting_value)) {
@@ -1051,6 +1097,20 @@ bool bootstrap_default_settings_init(void)
 		if (bootstrap_table[i].index == STRAP_INDEX_HAMSA_MFIO9) {
 			bootstrap_table[i].default_setting_value =
 				hamsa_mfio9_strap_defauilt_setting;
+			//check cpld value first
+			if (!plat_read_cpld(bootstrap_table[i].cpld_offsets, &temp_read_value, 1)) {
+				LOG_ERR("Can't find bootstrap default by rail index from cpld: %d",
+					i);
+				return false;
+			}
+			// if read back value is different from default value, set flag to True
+			temp_read_value = (temp_read_value >> bootstrap_table[i].bit_offset) & 0x01;
+			if (temp_read_value != hamsa_mfio9_strap_defauilt_setting) {
+				LOG_WRN("Read back value from cpld is different from default value for HAMSA_MFIO9, read back: %d, default: %d",
+					temp_read_value, hamsa_mfio9_strap_defauilt_setting);
+				pre_read_bootstrap_setting_value = 1;
+				add_error_bootstrap_index_to_list(bootstrap_table[i].index);
+			}
 			if (!set_cpld_bit(bootstrap_table[i].cpld_offsets,
 					  bootstrap_table[i].bit_offset,
 					  bootstrap_table[i].default_setting_value)) {
@@ -1062,6 +1122,20 @@ bool bootstrap_default_settings_init(void)
 		if (bootstrap_table[i].index == STRAP_INDEX_HAMSA_MFIO18) {
 			bootstrap_table[i].default_setting_value =
 				hamsa_mfio18_strap_defauilt_setting;
+			//check cpld value first
+			if (!plat_read_cpld(bootstrap_table[i].cpld_offsets, &temp_read_value, 1)) {
+				LOG_ERR("Can't find bootstrap default by rail index from cpld: %d",
+					i);
+				return false;
+			}
+			// if read back value is different from default value, set flag to True
+			temp_read_value = (temp_read_value >> bootstrap_table[i].bit_offset) & 0x01;
+			if (temp_read_value != hamsa_mfio18_strap_defauilt_setting) {
+				LOG_WRN("Read back value from cpld is different from default value for HAMSA_MFIO18, read back: %d, default: %d",
+					temp_read_value, hamsa_mfio18_strap_defauilt_setting);
+				pre_read_bootstrap_setting_value = 1;
+				add_error_bootstrap_index_to_list(bootstrap_table[i].index);
+			}
 			if (!set_cpld_bit(bootstrap_table[i].cpld_offsets,
 					  bootstrap_table[i].bit_offset,
 					  bootstrap_table[i].default_setting_value)) {
@@ -1145,7 +1219,7 @@ bool get_bootstrap_change_drive_level(int rail, int *drive_level)
 	}
 
 	*drive_level = bootstrap_item.change_setting_value;
-	LOG_DBG("rail %d, drive_level = %x", rail, *drive_level);
+	// LOG_DBG("rail %d, drive_level = %x", rail, *drive_level);
 	return true;
 }
 bool strap_enum_get(uint8_t *name, uint8_t *num)
@@ -1209,8 +1283,6 @@ bool set_bootstrap_table_and_user_settings(uint8_t rail, uint8_t *change_setting
 				}
 			}
 
-			LOG_DBG("set [%2d]%s: %02x", rail, bootstrap_table[i].strap_name,
-				*change_setting_value);
 			/*
 				save perm parameter to bootstrap_user_settings
 				bit 8: not perm(ff); perm(1)
@@ -1314,6 +1386,28 @@ bool bootstrap_user_settings_init(void)
 				return false;
 			}
 
+			// Read back origin value before write,
+			// if different, set flag to True and save index to list
+			uint8_t read_back_value = 0;
+			uint8_t data = 0;
+			if (!plat_read_cpld(bootstrap_table[i].cpld_offsets, &data, 1)) {
+				LOG_ERR("Can't read back bootstrap value from cpld for index: %d",
+					i);
+				continue;
+			}
+			uint8_t mask = GENMASK(bootstrap_table[i].bit_offset +
+						       bootstrap_table[i].bit_count - 1,
+					       bootstrap_table[i].bit_offset);
+			read_back_value = (data & mask) >> bootstrap_table[i].bit_offset;
+			uint8_t tmp_change_setting_value =
+				(change_setting_value >> bootstrap_table[i].bit_offset) & 0x01;
+			// Check if read-back value is different from written value
+			if (read_back_value != tmp_change_setting_value) {
+				LOG_WRN("Read back value from cpld is different from change_setting_value for index %d, read back: %d, change_setting_value(bit): %d",
+					i, read_back_value, tmp_change_setting_value);
+				pre_read_bootstrap_setting_value = 1;
+				add_error_bootstrap_index_to_list(bootstrap_table[i].index);
+			}
 			// write cpld or io-exp
 			if (!set_bootstrap_val_to_device(i, change_setting_value))
 				LOG_ERR("Can't set bootstrap[%2d]=%02x by user settings", i,
@@ -1377,7 +1471,6 @@ bool plat_set_vr_reg(uint8_t rail, uint8_t reg, uint8_t *data, uint8_t len)
 
 	if ((cfg->pre_sensor_read_hook)) {
 		if ((cfg->pre_sensor_read_hook)(cfg, cfg->pre_sensor_read_args) == false) {
-			LOG_DBG("0x%02x read vr reg 0x%02x pre hook fail!", sensor_id, reg);
 			return false;
 		}
 	};
@@ -1809,4 +1902,14 @@ uint8_t get_emc1413_cache_status(uint8_t idx)
 		return 0;
 	}
 	return cache_status[idx];
+}
+
+bool get_pre_read_bootstrap_setting_value()
+{
+	return pre_read_bootstrap_setting_value;
+}
+
+uint8_t get_error_bootstrap_index_list(uint8_t index)
+{
+	return error_bootstrap_setting_value_index[index];
 }

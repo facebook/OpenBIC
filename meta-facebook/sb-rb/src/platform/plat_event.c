@@ -26,6 +26,7 @@
 #include <plat_cpld.h>
 #include "pldm_oem.h"
 #include "plat_led.h"
+#include "plat_i2c.h"
 
 LOG_MODULE_REGISTER(plat_event);
 
@@ -33,6 +34,7 @@ void get_vr_vout_handler(struct k_work *work);
 K_WORK_DEFINE(vr_vout_work, get_vr_vout_handler);
 
 static plat_asic_error_event asic_error_event;
+static bool temp_polling_flag = false;
 
 const vr_fault_info vr_fault_table[] = {
 	// { iris_event_source, cpld_reg_offset, cpld_reg_bit }
@@ -170,6 +172,7 @@ void process_mtia_vr_power_fault_sel(cpld_info *cpld_info, uint8_t *current_cpld
 					sel_msg.event_data_2, sel_msg.event_data_3);
 			}
 		} else {
+			temp_polling_flag = get_plat_sensor_polling_enable_flag();
 			set_plat_sensor_polling_enable_flag(false);
 			// wait 10ms for vr monitor stop
 			k_msleep(10);
@@ -200,7 +203,7 @@ void process_mtia_vr_power_fault_sel(cpld_info *cpld_info, uint8_t *current_cpld
 				sel_msg[sel_msg_idx].event_data_3 = (uint8_t)(vr_status & 0xFF);
 				sel_msg_idx += 1;
 			}
-			set_plat_sensor_polling_enable_flag(true);
+			set_plat_sensor_polling_enable_flag(temp_polling_flag);
 			// Send SEL to BMC
 			for (int k = 0; k < sel_msg_idx; k++) {
 				if (PLDM_SUCCESS != send_event_log_to_bmc(sel_msg[k])) {
@@ -276,4 +279,24 @@ void plat_asic_error_error_log(bool is_assert, plat_asic_error_event event)
 plat_asic_error_event *plat_get_asic_error_event()
 {
 	return &asic_error_event;
+}
+
+#define ASIC_I2C_BUS I2C_BUS12
+#define ASIC_I2C_ADDR 0x32
+#define I2C_MAX_RETRY 3
+int read_asic_reg(uint8_t reg, uint8_t *data, uint8_t len)
+{
+	I2C_MSG i2c_msg = {
+		.bus = ASIC_I2C_BUS,
+		.target_addr = ASIC_I2C_ADDR,
+	};
+	i2c_msg.tx_len = 1;
+	i2c_msg.rx_len = len;
+	i2c_msg.data[0] = reg;
+	if (i2c_master_read(&i2c_msg, I2C_MAX_RETRY)) {
+		LOG_ERR("Can't get data from ASIC, reg: 0x%02x", reg);
+		return -1;
+	}
+	memcpy(data, i2c_msg.data, len);
+	return 0;
 }

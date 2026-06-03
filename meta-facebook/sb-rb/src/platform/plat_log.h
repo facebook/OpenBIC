@@ -40,6 +40,31 @@
 #define TEMP_IC_OVER_FAULT_REG 0x2A
 #define VR_SMBALRT_EVENT_LOG_REG 0x26
 
+#define HAMSA_MFIO22 6 //bit-6
+#define MEDHA0_MFIO24 3 //bit-3
+#define MEDHA1_MFIO24 1 //bit-1
+#define HAMSA_MFIO23 5 //bit-5
+#define MEDHA0_MFIO31 2 //bit-2
+#define MEDHA1_MFIO31 0 //bit-0
+
+#define HAMSA_MFIO22_ERROR_CODE 0x86A8
+#define MEDHA0_MFIO24_ERROR_CODE 0x83A8
+#define MEDHA1_MFIO24_ERROR_CODE 0x81A8
+
+#define CLK_100MHZ_ERR_IDX 0x1
+#define CLK_312_5MHZ_ERR_IDX 0x2
+#define CLK_BUF0_100M_LOSB_PLD 0x3
+#define CLK_BUF1_100M_LOSB_PLD 0x4
+#define CLK_BUF2_100M_LOSB_PLD 0x5
+#define CLK_312_5MHZ_REINIT_ERR_IDX 0x6
+
+#define CLK_100MHZ_ERR_CODE 0x8a01
+#define CLK_312_5MHZ_ERR_CODE 0x8a02
+#define CLK_BUF0_100M_LOSB_PLD_ERR_CODE 0x8a03
+#define CLK_BUF1_100M_LOSB_PLD_ERR_CODE 0x8a04
+#define CLK_BUF2_100M_LOSB_PLD_ERR_CODE 0x8a05
+#define CLK_312_5MHZ_REINIT_ERR_CODE 0x8a06
+
 enum VR_ERR_LOG_DEVICE_INDEX_E {
 	//pwr fault reg 1
 	PWRGD_OWL_E_TRVDD0P9_R_FAULT = 1,
@@ -108,15 +133,27 @@ typedef struct __attribute__((packed)) _plat_err_log_mapping {
 } plat_err_log_mapping;
 
 enum LOG_ERROR_TRIGGER_CAUSE {
-	CPLD_UNEXPECTED_VAL_TRIGGER_CAUSE = 0b100,
 	POWER_ON_SEQUENCE_TRIGGER_CAUSE = 0b001,
 	AC_ON_TRIGGER_CAUSE = 0b010,
 	DC_ON_TRIGGER_CAUSE = 0b011,
+	CPLD_UNEXPECTED_VAL_TRIGGER_CAUSE = 0b100,
 	TEMPERATURE_TRIGGER_CAUSE = 0b101,
 	ASIC_THERMTRIP_TRIGGER_CAUSE = 0b110,
 	ASIC_ERROR_TRIGGER_CAUSE = 0b111,
 	MAX_TRIGGER_CAUSE = 0b1000, //trigger cause maxium 3 bit
 };
 
+enum LOG_ERROR_TRIGGER_CAUSE_EXTEND {
+	// start from 0x8800 ~ 0x9E00
+	BOOTSTRAP_EVENT_CAUSE = (CPLD_UNEXPECTED_VAL_TRIGGER_CAUSE << 13) | BIT(11), // 0x8800
+	ASIC_TEMP_EVENT_CAUSE = 0x8900, // 0x8900
+	CLOCK_APLL_UNLOCK_EVENT_CAUSE = 0x8A00, // 0x8A00
+};
+
 bool check_temp_status_bit(uint8_t bit_num);
+void packaged_bmc_log(uint8_t event_type, uint8_t event_data_1, uint8_t event_data_2,
+		      uint8_t event_data_3);
+uint8_t clk_100mhz_get_lock_status();
+uint8_t clk_312_5mhz_get_lock_status();
+void check_312_5MHz_init_status();
 #endif

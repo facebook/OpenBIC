@@ -278,8 +278,7 @@ bool initialize_sensor_reading(telemetry_info *telemetry_info, uint8_t *buffer_s
 	sensor_data->register_layout_version = REGISTER_LAYOUT_VERSION;
 	sensor_data->sensor_base_index = table_index * SENSOR_READING_PDR_INDEX_MAX;
 	sensor_data->max_sbi_off = (num_idx > 0) ? num_idx - 1 : 0;
-	LOG_DBG("sensor_base_index: %d, max_sbi_off: %d", sensor_data->sensor_base_index,
-		sensor_data->max_sbi_off);
+
 	for (int i = 0; i < num_idx; i++) {
 		sensor_data->sensor_entries[i].sensor_index_offset =
 			i; // sensor_index_offset range: 0~49
@@ -680,8 +679,8 @@ void set_vr_pwr_alert_data(uint8_t controller_id, uint8_t alert_level, uint8_t d
 		break;
 	}
 
-	LOG_DBG("controller_id %d, alert_level %d, write_data_lsb %d, write_data_msb %d",
-		controller_id, alert_level, write_data_lsb, write_data_msb);
+	// LOG_DBG("controller_id %d, alert_level %d, write_data_lsb %d, write_data_msb %d",
+	// controller_id, alert_level, write_data_lsb, write_data_msb);
 	LOG_HEXDUMP_DBG(vr_alert_all, sizeof(vr_alert_all), "vr_alert_all");
 };
 
@@ -741,7 +740,7 @@ static bool command_reply_data_handle(void *arg)
 			if (struct_size > sizeof(data->target_rd_msg.msg)) {
 				struct_size = sizeof(data->target_rd_msg.msg);
 			}
-			LOG_DBG("Received reg offset(write 1 data): 0x%02x", reg_offset);
+
 			switch (reg_offset) {
 			case SENSOR_INIT_DATA_0_REG:
 			case SENSOR_INIT_DATA_1_REG: {
@@ -945,7 +944,6 @@ static bool command_reply_data_handle(void *arg)
 				data->target_rd_msg.msg[1] = tray;
 				data->target_rd_msg.msg_length = 2;
 
-				LOG_DBG("TRAY_INFO_REG: slot=0x%02x, tray=0x%02x", slot, tray);
 				LOG_HEXDUMP_DBG(data->target_rd_msg.msg,
 						data->target_rd_msg.msg_length, "tray info");
 			} break;
@@ -956,8 +954,6 @@ static bool command_reply_data_handle(void *arg)
 				break;
 			}
 		} else if (data->wr_buffer_idx == 2) {
-			LOG_DBG("Received reg offset(write 2 data): 0x%02x",
-				data->target_wr_msg.msg[0]);
 			uint8_t reg_offset = data->target_wr_msg.msg[0];
 			switch (reg_offset) {
 			case WRITE_STRAP_PIN_VALUE_REG: {
@@ -986,7 +982,7 @@ static bool command_reply_data_handle(void *arg)
 			data->target_rd_msg.msg[0] = 0xFF;
 		}
 	}
-	LOG_DBG("Reply data length: 0x%02x", data->target_rd_msg.msg_length);
+
 	return false;
 }
 
@@ -1022,9 +1018,6 @@ bool set_bootstrap_element(uint8_t bootstrap_pin, uint8_t user_setting_level)
 		LOG_ERR("Can't find bootstrap_item by bootstrap_pin index: 0x%02x", bootstrap_pin);
 		return false;
 	}
-	// LOG_DBG("set bootstrap_table[%2x]=%x, cpld_offsets 0x%02x change_setting_value 0x%02x",
-	// 	bootstrap_pin, drive_index_level, bootstrap_item.cpld_offsets,
-	// 	change_setting_value);
 	if (!set_bootstrap_val_to_device(bootstrap_pin, change_setting_value))
 		LOG_ERR("Can't write bootstrap[%2d]=%02x", bootstrap_pin, change_setting_value);
 
@@ -1106,7 +1099,6 @@ void set_control_voltage_handler(struct k_work *work_item)
 		CONTAINER_OF(work_item, plat_control_voltage, work);
 	uint8_t rail = sensor_data->rail;
 	uint16_t millivolt = sensor_data->set_value;
-	LOG_DBG("Setting rail %x to %d mV", rail, millivolt);
 
 	plat_set_vout_command(rail, &millivolt, false);
 }
@@ -1187,7 +1179,6 @@ void plat_master_write_thread_handler()
 				if (rlen != 3) {
 					LOG_WRN("WRITE_STRAP_PIN_VALUE_REG Invalid length for offset(write): 0x%02x",
 						reg_offset);
-					LOG_DBG("Received data length: 0x%02x", rlen);
 					break;
 				}
 				bootstrap_pin = rdata[1];
@@ -1356,7 +1347,7 @@ void plat_master_write_thread_handler()
 					break;
 				}
 				sensor_data->set_value = rdata[9]; // need to check
-				LOG_DBG("set sensor_polling:%x", sensor_data->set_value);
+				// LOG_DBG("set sensor_polling:%x", sensor_data->set_value);
 				// transfer rdata[9] type to bool
 				sensor_data->set_value = sensor_data->set_value ? true : false;
 				k_work_init(&sensor_data->work, set_sensor_polling_handler);

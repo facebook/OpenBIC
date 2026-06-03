@@ -36,7 +36,6 @@
 #include "pldm_monitor.h"
 #include "sensor.h"
 #include "pldm_sensor.h"
-#include "plat_hamsa_avdd_pcie.h"
 
 LOG_MODULE_REGISTER(plat_user_setting);
 
@@ -495,7 +494,7 @@ bool plat_clear_temp_status(uint8_t rail)
 		}
 		break;
 	case sensor_dev_tmp75: {
-		LOG_DBG("TMP75 temp_status cannot be cleared; its behavior depends on the temp_threshold settings.");
+		// LOG_DBG("TMP75 temp_status cannot be cleared; its behavior depends on the temp_threshold settings.");
 	} break;
 	case sensor_dev_emc1413: {
 		if (!emc1413_clear_temp_status(cfg)) {
@@ -895,25 +894,7 @@ static int delay_module_pg_user_settings_init(void)
 
 	return 0;
 }
-static int hamsa_avdd_pcie_user_settings_init(void)
-{
-	uint16_t setting_value = 0;
 
-	if (get_user_settings_hamsa_avdd_pcie_from_eeprom(&setting_value, sizeof(setting_value)) ==
-	    false) {
-		LOG_ERR("get hamsa avdd pcie user settings failed");
-		return -1;
-	}
-
-	if (setting_value != 0xffff) {
-		if (!set_hamsa_avdd_pcie(&setting_value, false)) {
-			LOG_ERR("set hamsa avdd pcie failed");
-			return -1;
-		}
-	}
-
-	return 0;
-}
 bool get_user_settings_delay_pcie_perst_from_eeprom(void *user_settings, uint8_t data_length)
 {
 	CHECK_NULL_ARG_WITH_RETURN(user_settings, false);
@@ -982,30 +963,7 @@ bool set_user_settings_delay_module_pg_to_eeprom(void *user_settings, uint8_t da
 
 	return true;
 }
-bool get_user_settings_hamsa_avdd_pcie_from_eeprom(void *user_settings, uint8_t data_length)
-{
-	CHECK_NULL_ARG_WITH_RETURN(user_settings, false);
 
-	if (!plat_eeprom_read(HAMSA_AVDD_PCIE_VOUT_USER_SETTINGS_OFFSET, user_settings,
-			      data_length)) {
-		LOG_ERR("Failed to read hamsa_avdd_pcie from eeprom");
-		return false;
-	}
-	return true;
-}
-bool set_user_settings_hamsa_avdd_pcie_to_eeprom(void *user_settings, uint8_t data_length)
-{
-	CHECK_NULL_ARG_WITH_RETURN(user_settings, false);
-
-	if (!plat_eeprom_write(HAMSA_AVDD_PCIE_VOUT_USER_SETTINGS_OFFSET, user_settings,
-			       data_length)) {
-		LOG_ERR("hamsa_avdd_pcie Failed to write eeprom");
-		return false;
-	}
-	k_msleep(EEPROM_MAX_WRITE_TIME);
-
-	return true;
-}
 bool perm_config_clear(void)
 {
 	/* clear all temp_threshold perm parameters */
@@ -1055,15 +1013,6 @@ bool perm_config_clear(void)
 	uint8_t setting_value_for_throttle = 0xFF;
 	if (!set_user_settings_throttle_to_eeprom(&setting_value_for_throttle,
 						  sizeof(setting_value_for_throttle))) {
-		LOG_ERR("The perm_config clear failed");
-		return false;
-	}
-
-	/* clear hamsa_avdd_pcie perm parameter */
-	uint16_t setting_value_for_hamsa_avdd_pcie = 0xFFFF;
-	if (!set_user_settings_hamsa_avdd_pcie_to_eeprom(
-		    &setting_value_for_hamsa_avdd_pcie,
-		    sizeof(setting_value_for_hamsa_avdd_pcie))) {
 		LOG_ERR("The perm_config clear failed");
 		return false;
 	}
@@ -1277,9 +1226,6 @@ bool post_ubc_read(sensor_cfg *cfg, void *args, int *reading)
 		if (tmp_reading < 0) {
 			tmp_reading = 0;
 			*reading = 0;
-			LOG_DBG("Original sensor reading: integer = %d, fraction = %f", integer,
-				fraction);
-			LOG_DBG("Negative sensor reading detected. Set reading to 0x%x", *reading);
 		}
 
 		int decoded_reading =
@@ -1329,7 +1275,6 @@ bool post_vr_read(sensor_cfg *cfg, void *args, int *const reading)
 
 	/* mutex unlock */
 	if (pre_proc_args->mutex) {
-		LOG_DBG("%x u %p", cfg->num, pre_proc_args->mutex);
 		if (k_mutex_unlock(pre_proc_args->mutex)) {
 			LOG_ERR("0x%02x post_vr_read, mutex unlock fail", cfg->num);
 			return false;
@@ -1345,10 +1290,7 @@ bool post_vr_read(sensor_cfg *cfg, void *args, int *const reading)
 	int32_t sensor_value = tmp_reading.integer * 1000 + tmp_reading.fraction;
 
 	if (sensor_value < 0) {
-		LOG_DBG("Original sensor reading: integer = %d, fraction = %d (combined value * 1000: %d)",
-			tmp_reading.integer, tmp_reading.fraction, sensor_value);
 		*reading = 0;
-		LOG_DBG("Negative sensor reading detected. Set reading to 0x%x", *reading);
 	}
 	post_sensor_reading_hook_func(cfg->num);
 
@@ -1373,9 +1315,6 @@ bool post_vr_read(sensor_cfg *cfg, void *args, int *const reading)
 		if (tmp_reading_value < 0) {
 			tmp_reading_value = 0;
 			*reading = 0;
-			LOG_DBG("Original sensor reading: integer = %d, fraction = %f", integer,
-				fraction);
-			LOG_DBG("Negative sensor reading detected. Set reading to 0x%x", *reading);
 		}
 
 		int decoded_reading =
@@ -1458,9 +1397,6 @@ bool get_average_power(uint8_t rail, uint32_t *milliwatt)
 
 	*milliwatt = ((uint16_t)fraction_part << 16) | (uint16_t)integer_part;
 
-	LOG_DBG("real_power = %f, integer_part = %d, fraction_part = %d, milliwatt = 0x%x",
-		real_power, integer_part, fraction_part, *milliwatt);
-
 	return true;
 }
 
@@ -1517,5 +1453,4 @@ void user_settings_init(void)
 	delay_asic_rst_user_settings_init();
 	delay_module_pg_user_settings_init();
 	delay_pcie_perst_user_settings_init();
-	hamsa_avdd_pcie_user_settings_init();
 }

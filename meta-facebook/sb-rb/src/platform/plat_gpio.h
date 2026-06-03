@@ -37,9 +37,9 @@ void gpio_int_default();
 	gpio_name_to_num(FM_PLD_UBC_EN_R)
 #define name_gpio1	\
 	gpio_name_to_num(Reserve_GPIO10) \
-	gpio_name_to_num(ASIC_TYPE_ID1) \
+	gpio_name_to_num(Reserve_GPIO11) \
 	gpio_name_to_num(Reserve_GPIO12) \
-	gpio_name_to_num(ASIC_TYPE_ID0) \
+	gpio_name_to_num(Reserve_GPIO13) \
 	gpio_name_to_num(Reserve_GPIO14) \
 	gpio_name_to_num(Reserve_GPIO15) \
 	gpio_name_to_num(Reserve_GPIO16) \
@@ -127,9 +127,9 @@ void gpio_int_default();
 	gpio_name_to_num(Reserve_GPIOA7)
 #define name_gpioB	\
 	gpio_name_to_num(RSVD_GPIO_1) \
-	gpio_name_to_num(Reserve_GPIOB1) \
+	gpio_name_to_num(ASIC_TYPE_ID1) \
 	gpio_name_to_num(Reserve_GPIOB2) \
-	gpio_name_to_num(Reserve_GPIOB3) \
+	gpio_name_to_num(ASIC_TYPE_ID0) \
 	gpio_name_to_num(Reserve_GPIOB4) \
 	gpio_name_to_num(Reserve_GPIOB5) \
 	gpio_name_to_num(Reserve_GPIOB6) \
