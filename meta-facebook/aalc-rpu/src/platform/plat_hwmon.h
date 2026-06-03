@@ -71,4 +71,4 @@ bool set_pump_uptime_secs(uint8_t pump_1_set, uint8_t pump_2_set, uint8_t pump_3
 bool get_pump_last_switch_time(uint8_t pump_num, uint32_t *return_uptime);
 bool get_pump_current_boot_unrunning_time(uint8_t pump_num, uint32_t *return_uptime);
 bool modbus_clear_pump_running_time_function(pump_reset_struct *data, uint8_t bit_val);
-bool set_pump_low_level_event_period(uint8_t event_idx, uint16_t time);
+bool set_pump_low_level_event_duration(uint8_t event_idx, uint32_t time);
