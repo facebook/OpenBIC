@@ -13576,12 +13576,6 @@ void quick_sensor_poll_handler(void *arug0, void *arug1, void *arug2)
 			continue;
 		}
 
-		if (!get_ioe_init_flag()) {
-			LOG_INF("U200051 IO expander need init");
-			init_U200051_IO();
-			set_ioe_init_flag(1);
-		}
-
 		k_msleep(quick_sensor_poll_interval_ms);
 		// read mux U200051 IO_6, if change means leak detected set io_7 to 1
 		ret = get_pca6554apw_ioe_value(U200051_IO_I2C_BUS, U200051_IO_ADDR, INPUT_PORT, &leak_2_value);

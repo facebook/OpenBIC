@@ -192,6 +192,9 @@ typedef struct vr_vout_range_user_settings_struct {
 	uint16_t change_vout_max[VR_RAIL_E_MAX];
 	uint16_t change_vout_min[VR_RAIL_E_MAX];
 } vr_vout_range_user_settings_struct;
+typedef struct vr_vout_user_settings {
+	uint16_t vout[VR_RAIL_E_MAX];
+} vr_vout_user_settings;
 
 typedef struct vr_mapping_status {
 	uint8_t index;
@@ -245,6 +248,7 @@ bool vr_rail_enum_get(uint8_t *name, uint8_t *num);
 bool vr_status_enum_get(uint8_t *name, uint8_t *num);
 bool plat_get_vr_status(uint8_t rail, uint8_t vr_status_rail, uint16_t *vr_status);
 bool plat_clear_vr_status(uint8_t rail);
+bool plat_set_vout_command(uint8_t rail, uint16_t *millivolt, bool is_perm);
 bool plat_get_vout_command(uint8_t rail, uint16_t *millivolt);
 bool post_common_sensor_read(sensor_cfg *cfg, void *args, int *const reading);
 bool vr_vout_range_user_settings_init(void);
@@ -274,4 +278,5 @@ bool set_ioexp_val_to_bootstrap_table(void);
 bool set_bootstrap_val_to_device(uint8_t strap, uint8_t val);
 uint8_t get_strap_index_max();
 uint8_t get_emc1413_cache_status(uint8_t idx);
+bool voltage_command_setting_get(uint8_t rail, uint16_t *vout);
 #endif

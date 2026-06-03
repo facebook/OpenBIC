@@ -350,23 +350,6 @@ ioe_power_good_status ioe_pwrgd_status_table[] = {
 	{ U200052_IO_I2C_BUS, U200052_IO_ADDR, 5, "PWRGD_P3V3_OSFP_P6" },
 };
 
-typedef struct ioe_pwr_on {
-	uint8_t bus;
-	uint8_t addr;
-	uint8_t bit_loc;
-	uint8_t *ioe_enable_name;
-
-} ioe_pwr_on;
-
-ioe_pwr_on ioe_pwr_on_table[] = {
-	{ U200051_IO_I2C_BUS, U200051_IO_ADDR, 0, "FM_P3V3_OSFP_P1_EN" },
-	{ U200051_IO_I2C_BUS, U200051_IO_ADDR, 1, "FM_P3V3_OSFP_P2_EN" },
-	{ U200051_IO_I2C_BUS, U200051_IO_ADDR, 2, "FM_P3V3_OSFP_P3_EN" },
-	{ U200051_IO_I2C_BUS, U200051_IO_ADDR, 3, "FM_P3V3_OSFP_P4_EN" },
-	{ U200051_IO_I2C_BUS, U200051_IO_ADDR, 4, "FM_P3V3_OSFP_P5_EN" },
-	{ U200051_IO_I2C_BUS, U200051_IO_ADDR, 5, "FM_P3V3_OSFP_P6_EN" },
-};
-
 bool check_p3v3_p5v_pwrgd(void)
 {
 	// read p3v3_pwrgf and p5v_pwrgf
@@ -385,41 +368,6 @@ bool check_p3v3_p5v_pwrgd(void)
 	return false;
 }
 
-void power_on_p3v3_osfp()
-{
-	uint8_t write_data = 0;
-	uint8_t check_value = 0;
-	k_msleep(1000);
-	for (int i = 0; i < sizeof(ioe_pwr_on_table) / sizeof(ioe_pwr_on_table[0]); i++) {
-		// set
-		write_data |= BIT(ioe_pwr_on_table[i].bit_loc);
-		//print write data
-		LOG_DBG("%s : %20d", ioe_pwr_on_table[i].ioe_enable_name, write_data);
-		set_pca6554apw_ioe_value(ioe_pwr_on_table[i].bus, ioe_pwr_on_table[i].addr,
-					 OUTPUT_PORT, write_data);
-
-		k_msleep(100);
-		//check set value
-		get_pca6554apw_ioe_value(ioe_pwr_on_table[i].bus, ioe_pwr_on_table[i].addr,
-					 OUTPUT_PORT, &check_value);
-		uint8_t temp_value = (check_value >> i) & 0x01;
-		LOG_DBG("check_value : %d", check_value);
-		if (!temp_value)
-			LOG_INF("%s : %20s", ioe_pwr_on_table[i].ioe_enable_name, "fail");
-	}
-}
-void power_off_p3v3_osfp(const struct shell *shell)
-{
-	set_pca6554apw_ioe_value(ioe_pwr_on_table[0].bus, ioe_pwr_on_table[0].addr, OUTPUT_PORT,
-				 0x0);
-	// check is power off
-	uint8_t check_value = 0;
-	get_pca6554apw_ioe_value(ioe_pwr_on_table[0].bus, ioe_pwr_on_table[0].addr, OUTPUT_PORT,
-				 &check_value);
-	if (check_value) {
-		shell_warn(shell, "%s ", "ioeU200052 power off fail");
-	}
-}
 void pwer_gd_get_status(const struct shell *shell)
 {
 	uint8_t check_value = 0;
@@ -435,46 +383,6 @@ void pwer_gd_get_status(const struct shell *shell)
 	     i++) {
 		uint8_t tmp_value = (check_value >> i) & 0x01;
 		shell_print(shell, "%s : %d", ioe_pwrgd_status_table[i].ioe_pwrgd_name, tmp_value);
-	}
-}
-void steps_on_p3v3_osfp(const struct shell *shell)
-{
-	uint8_t reg = 0;
-	uint8_t pwrgd_status = 0;
-	uint8_t check_value = 0;
-	for (int i = 0; i < sizeof(ioe_pwr_on_table) / sizeof(ioe_pwr_on_table[0]); i++) {
-		reg |= BIT(ioe_pwr_on_table[i].bit_loc);
-
-		set_pca6554apw_ioe_value(ioe_pwr_on_table[i].bus, ioe_pwr_on_table[i].addr,
-					 OUTPUT_PORT, reg);
-
-		k_msleep(100);
-		//check set value
-		get_pca6554apw_ioe_value(ioe_pwr_on_table[i].bus, ioe_pwr_on_table[i].addr,
-					 OUTPUT_PORT, &check_value);
-		// only get the last bit
-		uint8_t temp_value = (check_value >> i) & 0x01;
-
-		if (temp_value) {
-			shell_print(shell, "%s %s %20s", "set", ioe_pwr_on_table[i].ioe_enable_name,
-				    "success");
-		} else {
-			shell_print(shell, "%s %s %20s", "set", ioe_pwr_on_table[i].ioe_enable_name,
-				    "fail");
-		}
-		//check pwrgd status
-		get_pca6554apw_ioe_value(ioe_pwrgd_status_table[i].bus,
-					 ioe_pwrgd_status_table[i].addr, INPUT_PORT, &pwrgd_status);
-		pwrgd_status = (pwrgd_status >> ioe_pwrgd_status_table[i].bit_loc) & 0x01;
-		//print name and value and status
-		if (pwrgd_status) {
-			shell_print(shell, "%s : %d %20s", ioe_pwrgd_status_table[i].ioe_pwrgd_name,
-				    pwrgd_status, "success");
-		} else {
-			shell_print(shell, "%s : %d %20s", ioe_pwrgd_status_table[i].ioe_pwrgd_name,
-				    pwrgd_status, "fail");
-		}
-		k_msleep(100);
 	}
 }
 
@@ -560,7 +468,7 @@ void cmd_arke_power_on(const struct shell *shell, size_t argc, char **argv)
 	if (!arke_power_control(1))
 		shell_warn(shell, "arke power on set cpld fail!");
 	// wait 1s
-	k_msleep(1000);
+	k_msleep(1500);
 	if (gpio_get(RST_ARKE_PWR_ON_PLD_R1_N) == GPIO_HIGH) {
 		shell_print(shell, "arke power on success!");
 		set_pwr_steps_on_flag(0);
@@ -575,7 +483,7 @@ void cmd_arke_power_off(const struct shell *shell, size_t argc, char **argv)
 	if (!arke_power_control(0))
 		shell_warn(shell, "arke power off set cpld fail!");
 	// wait 1s
-	k_msleep(1000);
+	k_msleep(1500);
 	if (gpio_get(FM_PLD_UBC_EN_R) == GPIO_LOW) {
 		shell_print(shell, "arke power off success!");
 	} else {
@@ -748,15 +656,6 @@ void cmd_arke_steps_on(const struct shell *shell, size_t argc, char **argv)
 		}
 	}
 
-	if (strcmp(steps_on[power_steps].name, "FM_P1V80_EN") == 0) {
-		// wait for evb
-		//if board id is evb, run steps_on_p3v3_osfp
-		// if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
-		// 	steps_on_p3v3_osfp(shell);
-		// 	power_steps += 1;
-		// 	return;
-		// }
-	}
 	power_steps += 1;
 }
 

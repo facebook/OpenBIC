@@ -127,9 +127,9 @@ void gpio_int_default();
 	gpio_name_to_num(Reserve_GPIOA7)
 #define name_gpioB	\
 	gpio_name_to_num(RSVD_GPIO_1) \
-	gpio_name_to_num(Reserve_GPIOB1) \
-	gpio_name_to_num(NUWA0_CHIP_STRAP1_MMC) \
 	gpio_name_to_num(FM_OWL_E_JTAG_MUX_SEL_01) \
+	gpio_name_to_num(NUWA0_CHIP_STRAP1_MMC) \
+	gpio_name_to_num(Reserve_GPIOB3) \
 	gpio_name_to_num(Reserve_GPIOB4) \
 	gpio_name_to_num(Reserve_GPIOB5) \
 	gpio_name_to_num(NUWA0_CHIP_STRAP0_MMC) \

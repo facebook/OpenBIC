@@ -27,36 +27,165 @@
 #include <zephyr.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <logging/log.h>
+#include "libutil.h"
 #include "pldm_sensor.h"
+#include "plat_version.h"
+#include "plat_i2c.h"
+#include "plat_class.h"
+#include "plat_cpld.h"
+#include "plat_hook.h"
+#include "plat_fru.h"
+#include "plat_pldm_sensor.h"
 #include "plat_i2c_target.h"
+#include "plat_power_capping.h"
+#include "plat_adc.h"
 
+LOG_MODULE_REGISTER(plat_i2c_target);
+
+/* telemetry */
+#define MAX_TARGET_TABLE_NUM 12
+#define DATA_TABLE_LENGTH_1 1
+#define DATA_TABLE_LENGTH_2 2
 #define DATA_TABLE_LENGTH_4 4
-
-plat_sensor_reading *sensor_reading_table[DATA_TABLE_LENGTH_4] = { NULL };
-
-/* I2C target init-enable table */
-const bool I2C_TARGET_ENABLE_TABLE[MAX_TARGET_NUM] = {
-	TARGET_DISABLE, TARGET_DISABLE, TARGET_DISABLE, TARGET_DISABLE,
-	TARGET_DISABLE, TARGET_ENABLE,	TARGET_ENABLE, TARGET_DISABLE,
-	TARGET_DISABLE, TARGET_DISABLE, TARGET_DISABLE, TARGET_DISABLE,
-};
-
-// static bool command_reply_data_handle(void *arg)
-// {
-// 	/*TODO: put board telemetry here*/
-
-// 	return false;
-// }
-
-/* I2C target init-config table */
-const struct _i2c_target_config I2C_TARGET_CONFIG_TABLE[MAX_TARGET_NUM] = {
-	{ 0xFF, 0xA }, { 0xFF, 0xA }, { 0xFF, 0xA },
-	{ 0xFF, 0xA }, { 0xFF, 0xA }, { 0x42, 0xA },
-	{ 0x40, 0xA }, { 0xFF, 0xA }, { 0xFF, 0xA },
-	{ 0xFF, 0xA }, { 0xFF, 0xA }, { 0xFF, 0xA },
-};
+#define DATA_TABLE_LENGTH_7 7
+#define DATA_TABLE_LENGTH_13 13
+#define DEVICE_TYPE 0x01
+#define REGISTER_LAYOUT_VERSION 0x01
 #define SENSOR_READING_PDR_INDEX_MAX 50
+#define SENSOR_INIT_PDR_INDEX_MAX 248
+#define PLAT_MASTER_WRITE_STACK_SIZE 1024
+#define AEGIS_CARRIER_BOARD_ID 0x0000
+#define CPLD_VERSION_GET_REG 0x32
+#define CPLD_VERSION_GET_REG_LEN 4
+#define STRAP_SET_TYPE 0x44 // 01000100
+#define VR_PWR_BUF_SIZE 38
+#define I2C_TARGET_BUS_ASIC I2C_BUS7 // asic HAMSA
+#define I2C_TARGET_BUS_ASIC_NUWA0 I2C_BUS4 // asic medha0
+#define I2C_TARGET_BUS_ASIC_NUWA1 I2C_BUS5 // asic medha1
 
+plat_sensor_init_data *sensor_init_data_table[DATA_TABLE_LENGTH_2] = { NULL };
+plat_sensor_reading *sensor_reading_table[DATA_TABLE_LENGTH_4] = { NULL };
+plat_inventory_ids *inventory_ids_table[DATA_TABLE_LENGTH_1] = { NULL };
+plat_strap_capability *strap_capability_table[DATA_TABLE_LENGTH_1] = { NULL };
+plat_fru_data *fru_board_data_table[DATA_TABLE_LENGTH_13] = { NULL };
+plat_fru_data *fru_product_data_table[DATA_TABLE_LENGTH_7] = { NULL };
+plat_i2c_bridge_command_status *i2c_bridge_command_status_table[DATA_TABLE_LENGTH_1] = { NULL };
+plat_i2c_bridge_command_response_data
+	*i2c_bridge_command_response_data_table[DATA_TABLE_LENGTH_1] = { NULL };
+
+/* master_write_thread */
+K_THREAD_STACK_DEFINE(plat_master_write_stack, PLAT_MASTER_WRITE_STACK_SIZE);
+struct k_thread plat_master_write_thread;
+k_tid_t plat_master_write_tid;
+
+void set_bootstrap_element_handler();
+K_WORK_DEFINE(set_bootstrap_element_work, set_bootstrap_element_handler);
+static uint8_t bootstrap_pin;
+static uint8_t user_setting_level;
+
+static const asic_i2c_bus_map target_bus_list[] = {
+	{ HAMSA_I2C_BUS_IDX, I2C_TARGET_BUS_ASIC },
+	{ NUWA0_I2C_BUS_IDX, I2C_TARGET_BUS_ASIC_NUWA0 },
+	{ NUWA1_I2C_BUS_IDX, I2C_TARGET_BUS_ASIC_NUWA1 },
+};
+
+void *allocate_table(void **buffer, size_t buffer_size)
+{
+	if (*buffer) {
+		free(*buffer);
+		*buffer = NULL;
+	}
+
+	*buffer = malloc(buffer_size);
+	if (!*buffer) {
+		LOG_ERR("Memory allocation failed!");
+		return NULL;
+	}
+	return *buffer;
+}
+
+bool get_fru_info_element(telemetry_info *telemetry_info, char **fru_element,
+			  uint8_t *fru_element_size)
+{
+	CHECK_NULL_ARG_WITH_RETURN(telemetry_info, false);
+
+	FRU_INFO *plat_fru_info = get_fru_info();
+	if (!plat_fru_info)
+		return false;
+
+	switch (telemetry_info->telemetry_offset) {
+	case FRU_BOARD_PART_NUMBER_REG:
+		*fru_element = plat_fru_info->board.board_part_number;
+		break;
+	case FRU_BOARD_SERIAL_NUMBER_REG:
+		*fru_element = plat_fru_info->board.board_serial;
+		break;
+	case FRU_BOARD_PRODUCT_NAME_REG:
+		*fru_element = plat_fru_info->board.board_product;
+		break;
+	case FRU_BOARD_CUSTOM_DATA_1_REG:
+		*fru_element = plat_fru_info->board.board_custom_data[0];
+		break;
+	case FRU_BOARD_CUSTOM_DATA_2_REG:
+		*fru_element = plat_fru_info->board.board_custom_data[1];
+		break;
+	case FRU_BOARD_CUSTOM_DATA_3_REG:
+		*fru_element = plat_fru_info->board.board_custom_data[2];
+		break;
+	case FRU_BOARD_CUSTOM_DATA_4_REG:
+		*fru_element = plat_fru_info->board.board_custom_data[3];
+		break;
+	case FRU_BOARD_CUSTOM_DATA_5_REG:
+		*fru_element = plat_fru_info->board.board_custom_data[4];
+		break;
+	case FRU_BOARD_CUSTOM_DATA_6_REG:
+		*fru_element = plat_fru_info->board.board_custom_data[5];
+		break;
+	case FRU_BOARD_CUSTOM_DATA_7_REG:
+		*fru_element = plat_fru_info->board.board_custom_data[6];
+		break;
+	case FRU_BOARD_CUSTOM_DATA_8_REG:
+		*fru_element = plat_fru_info->board.board_custom_data[7];
+		break;
+	case FRU_BOARD_CUSTOM_DATA_9_REG:
+		*fru_element = plat_fru_info->board.board_custom_data[8];
+		break;
+	case FRU_BOARD_CUSTOM_DATA_10_REG:
+		*fru_element = plat_fru_info->board.board_custom_data[9];
+		break;
+	case FRU_PRODUCT_NAME_REG:
+		*fru_element = plat_fru_info->product.product_name;
+		break;
+	case FRU_PRODUCT_PART_NUMBER_REG:
+		*fru_element = plat_fru_info->product.product_part_number;
+		break;
+	case FRU_PRODUCT_PART_VERSION_REG:
+		*fru_element = plat_fru_info->product.product_version;
+		break;
+	case FRU_PRODUCT_SERIAL_NUMBER_REG:
+		*fru_element = plat_fru_info->product.product_serial;
+		break;
+	case FRU_PRODUCT_ASSET_TAG_REG:
+		*fru_element = plat_fru_info->product.product_asset_tag;
+		break;
+	case FRU_PRODUCT_CUSTOM_DATA_1_REG:
+		*fru_element = plat_fru_info->product.product_custom_data[0];
+		break;
+	case FRU_PRODUCT_CUSTOM_DATA_2_REG:
+		*fru_element = plat_fru_info->product.product_custom_data[1];
+		break;
+	default:
+		LOG_ERR("Unknown reg offset: 0x%02x", telemetry_info->telemetry_offset);
+		break;
+	}
+	if (*fru_element) {
+		*fru_element_size = (uint8_t)strlen(*fru_element);
+	} else {
+		*fru_element_size = 0;
+	}
+	return true;
+}
 
 void update_sensor_reading_by_sensor_number(uint8_t sensor_number)
 {
@@ -86,3 +215,1133 @@ int get_cached_sensor_reading_by_sensor_number(uint8_t sensor_number)
 	return sensor_data->sensor_entries[sensor_index].sensor_value;
 }
 
+// telemetry
+bool initialize_sensor_data(telemetry_info *telemetry_info, uint8_t *buffer_size)
+{
+	CHECK_NULL_ARG_WITH_RETURN(telemetry_info, false);
+	int table_index = telemetry_info->telemetry_offset - SENSOR_INIT_DATA_0_REG;
+
+	if (table_index >= DATA_TABLE_LENGTH_2) {
+		LOG_ERR("Invalid table index: %d", table_index);
+		return false;
+	}
+
+	// Calculate num_idx
+	int num_idx = (SENSOR_NUM_NUMBERS - 1) - (SENSOR_INIT_PDR_INDEX_MAX * table_index);
+	num_idx = (num_idx > 0) ?
+			  ((num_idx > SENSOR_INIT_PDR_INDEX_MAX) ? SENSOR_INIT_PDR_INDEX_MAX :
+								   num_idx) :
+			  0;
+
+	// Calculate the memory size
+	size_t table_size = sizeof(plat_sensor_init_data) + num_idx * sizeof(uint8_t);
+	plat_sensor_init_data *sensor_data =
+		allocate_table((void **)&sensor_init_data_table[table_index], table_size);
+
+	if (!sensor_data) {
+		LOG_ERR("sensor_data allocation failed!");
+		return false;
+	}
+
+	sensor_data->device_type = DEVICE_TYPE;
+	sensor_data->register_layout_version = REGISTER_LAYOUT_VERSION;
+	sensor_data->num_idx = num_idx;
+	sensor_data->reserved_1 = 0xFF;
+	sensor_data->sbi = table_index * SENSOR_INIT_PDR_INDEX_MAX;
+	sensor_data->max_pdr_idx = (table_index == 0x00) ? SENSOR_NUM_NUMBERS - 2 : 0xFFFF;
+	memset(sensor_data->sensor_r_len, 4, num_idx * sizeof(uint8_t));
+
+	*buffer_size = (uint8_t)table_size;
+	return true;
+}
+
+bool initialize_sensor_reading(telemetry_info *telemetry_info, uint8_t *buffer_size)
+{
+	CHECK_NULL_ARG_WITH_RETURN(telemetry_info, false);
+
+	int table_index = telemetry_info->telemetry_offset - SENSOR_READING_0_REG;
+	if (table_index < 0 || table_index >= DATA_TABLE_LENGTH_4)
+		return false;
+
+	int num_idx = (SENSOR_NUM_NUMBERS - 1) - (SENSOR_READING_PDR_INDEX_MAX * table_index);
+	num_idx = (num_idx > 0) ?
+			  ((num_idx > SENSOR_READING_PDR_INDEX_MAX) ? SENSOR_READING_PDR_INDEX_MAX :
+								      num_idx) :
+			  0;
+
+	size_t table_size = sizeof(plat_sensor_reading) + num_idx * sizeof(sensor_entry);
+	plat_sensor_reading *sensor_data =
+		allocate_table((void **)&sensor_reading_table[table_index], table_size);
+	if (!sensor_data)
+		return false;
+
+	sensor_data->device_type = DEVICE_TYPE;
+	sensor_data->register_layout_version = REGISTER_LAYOUT_VERSION;
+	sensor_data->sensor_base_index = table_index * SENSOR_READING_PDR_INDEX_MAX;
+	sensor_data->max_sbi_off = (num_idx > 0) ? num_idx - 1 : 0;
+	LOG_DBG("sensor_base_index: %d, max_sbi_off: %d", sensor_data->sensor_base_index,
+		sensor_data->max_sbi_off);
+	for (int i = 0; i < num_idx; i++) {
+		sensor_data->sensor_entries[i].sensor_index_offset =
+			i; // sensor_index_offset range: 0~49
+		sensor_data->sensor_entries[i].sensor_value = 0x00000000;
+	}
+
+	*buffer_size = (uint8_t)table_size;
+	LOG_HEXDUMP_DBG(sensor_data, table_size, "sensor_data");
+	return true;
+}
+
+bool initialize_fru_board_data(telemetry_info *telemetry_info, uint8_t *buffer_size)
+{
+	CHECK_NULL_ARG_WITH_RETURN(telemetry_info, false);
+
+	int table_index = telemetry_info->telemetry_offset - FRU_BOARD_PART_NUMBER_REG;
+	if (table_index < 0 || table_index >= DATA_TABLE_LENGTH_13)
+		return false;
+
+	char *fru_string = NULL;
+	uint8_t fru_length = 0;
+	if (!get_fru_info_element(telemetry_info, &fru_string, &fru_length)) {
+		LOG_ERR("Failed to retrieve FRU Element");
+	}
+
+	size_t table_size = sizeof(plat_fru_data) + fru_length;
+	plat_fru_data *sensor_data =
+		allocate_table((void **)&fru_board_data_table[table_index], table_size);
+	if (!sensor_data)
+		return false;
+
+	sensor_data->data_length = fru_length;
+	memcpy(sensor_data->fru_data, fru_string, fru_length);
+
+	*buffer_size = (uint8_t)table_size;
+	return true;
+}
+
+bool initialize_fru_product_data(telemetry_info *telemetry_info, uint8_t *buffer_size)
+{
+	CHECK_NULL_ARG_WITH_RETURN(telemetry_info, false);
+
+	int table_index = telemetry_info->telemetry_offset - FRU_PRODUCT_NAME_REG;
+	if (table_index < 0 || table_index >= DATA_TABLE_LENGTH_7)
+		return false;
+
+	char *fru_string = NULL;
+	uint8_t fru_length = 0;
+	if (!get_fru_info_element(telemetry_info, &fru_string, &fru_length)) {
+		LOG_ERR("Failed to retrieve FRU Element");
+	}
+
+	size_t table_size = sizeof(plat_fru_data) + fru_length;
+	plat_fru_data *sensor_data =
+		allocate_table((void **)&fru_product_data_table[table_index], table_size);
+	if (!sensor_data)
+		return false;
+
+	sensor_data->data_length = fru_length;
+	memcpy(sensor_data->fru_data, fru_string, fru_length);
+
+	*buffer_size = (uint8_t)table_size;
+	return true;
+}
+
+bool initialize_inventory_ids(telemetry_info *telemetry_info, uint8_t *buffer_size)
+{
+	CHECK_NULL_ARG_WITH_RETURN(telemetry_info, false);
+
+	int table_index = telemetry_info->telemetry_offset - INVENTORY_IDS_REG;
+	if (table_index < 0 || table_index >= DATA_TABLE_LENGTH_1)
+		return false;
+
+	size_t table_size = sizeof(plat_inventory_ids);
+	plat_inventory_ids *sensor_data =
+		allocate_table((void **)&inventory_ids_table[table_index], table_size);
+	if (!sensor_data)
+		return false;
+
+	uint8_t data[4] = { 0 };
+	uint32_t bic_version = 0;
+	uint32_t cpld_version = 0;
+	uint8_t board_id = get_asic_board_id();
+
+	if (!plat_read_cpld(CPLD_VERSION_GET_REG, data, CPLD_VERSION_GET_REG_LEN))
+		LOG_ERR("Failed to read cpld version from cpld");
+
+	cpld_version = (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | data[3];
+	bic_version =
+		(BIC_FW_YEAR_MSB << 24) | (BIC_FW_YEAR_LSB << 16) | (BIC_FW_WEEK << 8) | BIC_FW_VER;
+
+	sensor_data->carrier_board_id = board_id;
+	sensor_data->bic_fw_version = bic_version;
+	sensor_data->cpld_fw_version = cpld_version;
+
+	*buffer_size = (uint8_t)table_size;
+	return true;
+}
+
+bool initialize_strap_capability(telemetry_info *telemetry_info, uint8_t *buffer_size)
+{
+	CHECK_NULL_ARG_WITH_RETURN(telemetry_info, false);
+
+	int table_index = telemetry_info->telemetry_offset - STRAP_CAPABILTITY_REG;
+	if (table_index < 0 || table_index >= DATA_TABLE_LENGTH_1)
+		return false;
+
+	int num_idx = get_strap_index_max();
+
+	size_t table_size = sizeof(plat_strap_capability) + num_idx * sizeof(strap_entry);
+	plat_strap_capability *sensor_data =
+		allocate_table((void **)&strap_capability_table[table_index], table_size);
+	if (!sensor_data)
+		return false;
+
+	sensor_data->strap_data_length = get_strap_index_max() * 3; // strap_entry data length
+	for (int i = 0; i < get_strap_index_max(); i++) {
+		sensor_data->strap_set_format[i].strap_set_index = i;
+		sensor_data->strap_set_format[i].strap_set_type = STRAP_SET_TYPE;
+		int drive_level = 0;
+		if (!get_bootstrap_change_drive_level(i, &drive_level)) {
+			LOG_ERR("Can't get_bootstrap_change_drive_level by index: %x", i);
+			continue;
+		}
+		if (drive_level < 0) {
+			LOG_ERR("Invalid drive_level: %x", drive_level);
+			continue;
+		}
+		sensor_data->strap_set_format[i].strap_set_value = drive_level;
+	}
+
+	*buffer_size = (uint8_t)table_size;
+	return true;
+}
+
+void update_strap_capability_table()
+{
+	if (!strap_capability_table[0])
+		return;
+
+	plat_strap_capability *sensor_data = strap_capability_table[0];
+
+	for (int i = 0; i < get_strap_index_max(); i++) {
+		int drive_level = 0;
+		if (!get_bootstrap_change_drive_level(i, &drive_level)) {
+			LOG_ERR("Can't get_bootstrap_change_drive_level by index: %x", i);
+			continue;
+		}
+		if (drive_level < 0) {
+			LOG_ERR("Invalid drive_level: %x", drive_level);
+			continue;
+		}
+		sensor_data->strap_set_format[i].strap_set_value = drive_level;
+	}
+}
+
+void plat_pldm_sensor_poll_post()
+{
+	update_strap_capability_table();
+}
+
+telemetry_info telemetry_info_table[] = {
+	{ SENSOR_INIT_DATA_0_REG, 0x00, .telemetry_table_init = initialize_sensor_data },
+	{ SENSOR_INIT_DATA_1_REG, 0x00, .telemetry_table_init = initialize_sensor_data },
+	{ SENSOR_READING_0_REG, 0x00, .telemetry_table_init = initialize_sensor_reading },
+	{ SENSOR_READING_1_REG, 0x00, .telemetry_table_init = initialize_sensor_reading },
+	{ SENSOR_READING_2_REG, 0x00, .telemetry_table_init = initialize_sensor_reading },
+	{ SENSOR_READING_3_REG, 0x00, .telemetry_table_init = initialize_sensor_reading },
+	{ INVENTORY_IDS_REG, 0x00, .telemetry_table_init = initialize_inventory_ids },
+	{ STRAP_CAPABILTITY_REG, 0x00, .telemetry_table_init = initialize_strap_capability },
+	{ WRITE_STRAP_PIN_VALUE_REG },
+	{ I2C_BRIDGE_COMMAND_REG },
+	{ I2C_BRIDGE_COMMAND_STATUS_REG },
+	{ I2C_BRIDGE_COMMAND_RESPONSE_REG },
+	{ FRU_BOARD_PART_NUMBER_REG, 0x00, .telemetry_table_init = initialize_fru_board_data },
+	{ FRU_BOARD_SERIAL_NUMBER_REG, 0x00, .telemetry_table_init = initialize_fru_board_data },
+	{ FRU_BOARD_PRODUCT_NAME_REG, 0x00, .telemetry_table_init = initialize_fru_board_data },
+	{ FRU_BOARD_CUSTOM_DATA_1_REG, 0x00, .telemetry_table_init = initialize_fru_board_data },
+	{ FRU_BOARD_CUSTOM_DATA_2_REG, 0x00, .telemetry_table_init = initialize_fru_board_data },
+	{ FRU_BOARD_CUSTOM_DATA_3_REG, 0x00, .telemetry_table_init = initialize_fru_board_data },
+	{ FRU_BOARD_CUSTOM_DATA_4_REG, 0x00, .telemetry_table_init = initialize_fru_board_data },
+	{ FRU_BOARD_CUSTOM_DATA_5_REG, 0x00, .telemetry_table_init = initialize_fru_board_data },
+	{ FRU_BOARD_CUSTOM_DATA_6_REG, 0x00, .telemetry_table_init = initialize_fru_board_data },
+	{ FRU_BOARD_CUSTOM_DATA_7_REG, 0x00, .telemetry_table_init = initialize_fru_board_data },
+	{ FRU_BOARD_CUSTOM_DATA_8_REG, 0x00, .telemetry_table_init = initialize_fru_board_data },
+	{ FRU_BOARD_CUSTOM_DATA_9_REG, 0x00, .telemetry_table_init = initialize_fru_board_data },
+	{ FRU_BOARD_CUSTOM_DATA_10_REG, 0x00, .telemetry_table_init = initialize_fru_board_data },
+	{ FRU_PRODUCT_NAME_REG, 0x00, .telemetry_table_init = initialize_fru_product_data },
+	{ FRU_PRODUCT_PART_NUMBER_REG, 0x00, .telemetry_table_init = initialize_fru_product_data },
+	{ FRU_PRODUCT_PART_VERSION_REG, 0x00, .telemetry_table_init = initialize_fru_product_data },
+	{ FRU_PRODUCT_SERIAL_NUMBER_REG, 0x00,
+	  .telemetry_table_init = initialize_fru_product_data },
+	{ FRU_PRODUCT_ASSET_TAG_REG, 0x00, .telemetry_table_init = initialize_fru_product_data },
+	{ FRU_PRODUCT_CUSTOM_DATA_1_REG, 0x00,
+	  .telemetry_table_init = initialize_fru_product_data },
+	{ FRU_PRODUCT_CUSTOM_DATA_2_REG, 0x00,
+	  .telemetry_table_init = initialize_fru_product_data },
+	{ VR_POWER_READING_REG },
+};
+
+voltage_rail_mapping_sensor voltage_rail_mapping_table[] = {
+	{ CONTROL_VOL_VR_ASIC_P0V75_VDDPHY_HBM0246_REG, VR_RAIL_E_ASIC_P0V75_VDDPHY_HBM0246 },
+	{ CONTROL_VOL_VR_ASIC_P0V75_VDDPHY_HBM1357_REG, VR_RAIL_E_ASIC_P0V75_VDDPHY_HBM1357 },
+	{ CONTROL_VOL_VR_ASIC_P1V05_VDDC_HBM0246_REG, VR_RAIL_E_ASIC_P1V05_VDDC_HBM0246 },
+	{ CONTROL_VOL_VR_ASIC_P1V05_VDDC_HBM1357_REG, VR_RAIL_E_ASIC_P1V05_VDDC_HBM1357 },
+	{ CONTROL_VOL_VR_ASIC_P0V4_VDDQL_HBM0246_REG, VR_RAIL_E_ASIC_P0V4_VDDQL_HBM0246 },
+	{ CONTROL_VOL_VR_ASIC_P0V4_VDDQL_HBM1357_REG, VR_RAIL_E_ASIC_P0V4_VDDQL_HBM1357 },
+	{ CONTROL_VOL_VR_ASIC_P1V8_VPP_HBM0246_REG, VR_RAIL_E_ASIC_P1V8_VPP_HBM0246 },
+	{ CONTROL_VOL_VR_ASIC_P1V8_VPP_HBM1357_REG, VR_RAIL_E_ASIC_P1V8_VPP_HBM1357 },
+	{ CONTROL_VOL_VR_ASIC_P0V75_NUWA0_VDD_REG, VR_RAIL_E_ASIC_P0V75_NUWA0_VDD },
+	{ CONTROL_VOL_VR_ASIC_P0V75_NUWA1_VDD_REG, VR_RAIL_E_ASIC_P0V75_NUWA1_VDD },
+};
+
+uint8_t get_vr_rail_by_control_vol_reg(uint8_t control_vol_reg)
+{
+	for (int i = 0; i < ARRAY_SIZE(voltage_rail_mapping_table); i++) {
+		if (voltage_rail_mapping_table[i].control_vol_reg == control_vol_reg) {
+			return voltage_rail_mapping_table[i].vr_rail_e;
+		}
+	}
+	return VR_RAIL_E_MAX;
+}
+
+uint8_t vr_pwr_sensor_table[] = {
+	SENSOR_NUM_ASIC_P0V75_NUWA0_VDD_PWR_W,
+	SENSOR_NUM_ASIC_P0V75_NUWA1_VDD_PWR_W,
+	SENSOR_NUM_ASIC_P0V9_OWL_E_TRVDD_PWR_W,
+	SENSOR_NUM_ASIC_P0V75_OWL_E_TRVDD_PWR_W,
+	SENSOR_NUM_ASIC_P0V75_MAX_M_VDD_PWR_W,
+	SENSOR_NUM_ASIC_P0V75_VDDPHY_HBM1357_PWR_W,
+	SENSOR_NUM_ASIC_P0V75_OWL_E_VDD_PWR_W,
+	SENSOR_NUM_ASIC_P0V4_VDDQL_HBM1357_PWR_W,
+	SENSOR_NUM_ASIC_P1V05_VDDC_HBM1357_PWR_W,
+	SENSOR_NUM_ASIC_P1V8_VPP_HBM1357_PWR_W,
+	SENSOR_NUM_ASIC_P0V75_MAX_N_VDD_PWR_W,
+	SENSOR_NUM_ASIC_P0V8_HAMSA_AVDD_PCIE_PWR_W,
+	SENSOR_NUM_ASIC_P1V2_HAMSA_VDDHRXTX_PCIE_PWR_W,
+	SENSOR_NUM_ASIC_P0V85_HAMSA_VDD_PWR_W,
+	SENSOR_NUM_ASIC_P1V05_VDDC_HBM0246_PWR_W,
+	SENSOR_NUM_ASIC_P1V8_VPP_HBM0246_PWR_W,
+	SENSOR_NUM_ASIC_P0V4_VDDQL_HBM0246_PWR_W,
+	SENSOR_NUM_ASIC_P0V75_VDDPHY_HBM0246_PWR_W,
+	SENSOR_NUM_ASIC_P0V75_OWL_W_VDD_PWR_W,
+	SENSOR_NUM_ASIC_P0V75_MAX_S_VDD_PWR_W,
+	SENSOR_NUM_ASIC_P0V9_OWL_W_TRVDD_PWR_W,
+	SENSOR_NUM_ASIC_P0V75_OWL_W_TRVDD_PWR_W,
+	SENSOR_NUM_P3V3_OSFP_PWR_W,
+};
+
+void vr_power_reading(uint8_t *buffer, size_t buf_size)
+{
+	/*
+	Response Data
+	[0:1] - x = All VR power except NUWA0_VDD and NUWA1_VDD (Unit: W)
+	[2:3] - Chiplet0 power = NUWA0_VDD + 0.5*x (Unit: W)
+	[4:5] - Chiplet1 power = NUWA1_VDD + 0.5*x (Unit: W)
+	[6:7] - P0V75_NUWA0_VDD (Unit: W)
+	[8:9] - P0V75_NUWA1_VDD (Unit: W)
+	[10:11] - P1V05_VDDC_HBM0246 (Unit: W)
+	[12:13] - P0V75_VDDPHY_HBM0246 (Unit: W)
+	[14:15] - P1V05_VDDC_HBM1357 (Unit: W)
+	[16:17] - P0V75_VDDPHY_HBM1357 (Unit: W)
+	[18:19] - P0V75_MAX_N_VDD (Unit: W)
+	[20:21] - P0V75_MAX_S_VDD (Unit: W)
+	[22:23] - P0V4_VDDQL_HBM0246 (Unit: W)
+	[24:25] - P0V4_VDDQL_HBM1357 (Unit: W)
+	[26:27] - P1V8_VPP_HBM0246 (Unit: W)
+	[28:29] - P1V8_VPP_HBM1357 (Unit: W)
+	[30:31] - P0V75_MAX_M_VDD (Unit: W)
+	[32:33] - P0V75_OWL_E_VDD (Unit: W)
+	[34:35] - P0V75_OWL_W_VDD (Unit: W)
+	[36:37] - PDB1_P52V_ASIC_SENSE_PWR (Unit: W) (Need BMC support)
+	each data is 2 bytes
+	*/
+	float x = 0;
+	float chiplet0 = 0;
+	float chiplet1 = 0;
+	float medha0 = 0;
+	float medha1 = 0;
+
+	for (size_t i = 0; i < ARRAY_SIZE(vr_pwr_sensor_table); i++) {
+		if (get_asic_board_id() != ASIC_BOARD_ID_EVB &&
+		    vr_pwr_sensor_table[i] == SENSOR_NUM_P3V3_OSFP_PWR_W) {
+			continue;
+		}
+
+		uint16_t val = 0;
+		int milivolt = 0;
+		milivolt = get_cached_sensor_reading_by_sensor_number(vr_pwr_sensor_table[i]);
+		val = (milivolt + 500) / 1000;
+
+		switch (vr_pwr_sensor_table[i]) {
+		case SENSOR_NUM_ASIC_P0V75_NUWA0_VDD_PWR_W: {
+			if (get_power_capping_source() == CAPPING_SOURCE_ADC) {
+				/* ADC instant power in W */
+				float pwr_w = get_adc_nuwa_inst_pwr_w(ADC_EL_IDX_NUWA0);
+				uint16_t adc_w = (uint16_t)(pwr_w + 0.5f);
+				memcpy(&buffer[6], &adc_w, 2);
+				medha0 = (int)(pwr_w * 1000.0f + 0.5f);
+			} else {
+				memcpy(&buffer[6], &val, 2);
+				medha0 = milivolt;
+			}
+			break;
+		}
+		case SENSOR_NUM_ASIC_P0V75_NUWA1_VDD_PWR_W: {
+			if (get_power_capping_source() == CAPPING_SOURCE_ADC) {
+				float pwr_w = get_adc_nuwa_inst_pwr_w(ADC_EL_IDX_NUWA1);
+
+				uint16_t adc_w = (uint16_t)(pwr_w + 0.5f);
+				memcpy(&buffer[8], &adc_w, 2);
+
+				medha1 = (int)(pwr_w * 1000.0f + 0.5f);
+			} else {
+				memcpy(&buffer[8], &val, 2);
+				medha1 = milivolt;
+			}
+			break;
+		}
+		case SENSOR_NUM_ASIC_P1V05_VDDC_HBM0246_PWR_W:
+			memcpy(&buffer[10], &val, 2);
+			break;
+		case SENSOR_NUM_ASIC_P0V75_VDDPHY_HBM0246_PWR_W:
+			memcpy(&buffer[12], &val, 2);
+			break;
+		case SENSOR_NUM_ASIC_P1V05_VDDC_HBM1357_PWR_W:
+			memcpy(&buffer[14], &val, 2);
+			break;
+		case SENSOR_NUM_ASIC_P0V75_VDDPHY_HBM1357_PWR_W:
+			memcpy(&buffer[16], &val, 2);
+			break;
+		case SENSOR_NUM_ASIC_P0V75_MAX_N_VDD_PWR_W:
+			memcpy(&buffer[18], &val, 2);
+			break;
+		case SENSOR_NUM_ASIC_P0V75_MAX_S_VDD_PWR_W:
+			memcpy(&buffer[20], &val, 2);
+			break;
+		case SENSOR_NUM_ASIC_P0V4_VDDQL_HBM0246_PWR_W:
+			memcpy(&buffer[22], &val, 2);
+			break;
+		case SENSOR_NUM_ASIC_P0V4_VDDQL_HBM1357_PWR_W:
+			memcpy(&buffer[24], &val, 2);
+			break;
+		case SENSOR_NUM_ASIC_P1V8_VPP_HBM0246_PWR_W:
+			memcpy(&buffer[26], &val, 2);
+			break;
+		case SENSOR_NUM_ASIC_P1V8_VPP_HBM1357_PWR_W:
+			memcpy(&buffer[28], &val, 2);
+			break;
+		case SENSOR_NUM_ASIC_P0V75_MAX_M_VDD_PWR_W:
+			memcpy(&buffer[30], &val, 2);
+			break;
+		case SENSOR_NUM_ASIC_P0V75_OWL_E_VDD_PWR_W:
+			memcpy(&buffer[32], &val, 2);
+			break;
+		case SENSOR_NUM_ASIC_P0V75_OWL_W_VDD_PWR_W:
+			memcpy(&buffer[34], &val, 2);
+			break;
+		default:
+			// do nothing
+			break;
+		}
+
+		if (vr_pwr_sensor_table[i] != SENSOR_NUM_ASIC_P0V75_NUWA0_VDD_PWR_W &&
+		    vr_pwr_sensor_table[i] != SENSOR_NUM_ASIC_P0V75_NUWA1_VDD_PWR_W) {
+			x += milivolt;
+		}
+	}
+	int reading;
+	get_cpld_polling_power_info(&reading);
+	uint16_t val = (uint16_t)reading;
+	memcpy(&buffer[36], &val, 2);
+
+	chiplet0 = ((medha0 + 0.5 * x) + 500) / 1000;
+	chiplet1 = ((medha1 + 0.5 * x) + 500) / 1000;
+	uint16_t val_x = (uint16_t)((x + 500) / 1000);
+	uint16_t val_c0 = (uint16_t)chiplet0;
+	uint16_t val_c1 = (uint16_t)chiplet1;
+	memcpy(&buffer[0], &val_x, 2);
+	memcpy(&buffer[2], &val_c0, 2);
+	memcpy(&buffer[4], &val_c1, 2);
+
+	LOG_HEXDUMP_DBG(buffer, buf_size, "VR power sensor data buffer");
+}
+
+bool set_bootstrap_element(uint8_t bootstrap_pin, uint8_t user_setting_level)
+{
+	uint8_t change_setting_value;
+	uint8_t drive_index_level = user_setting_level;
+	bootstrap_mapping_register bootstrap_item;
+	if (!set_bootstrap_table_and_user_settings(bootstrap_pin, &change_setting_value,
+						   drive_index_level, false, false)) {
+		LOG_ERR("set bootstrap_table[%02x]:%d failed", bootstrap_pin, drive_index_level);
+		return false;
+	}
+	if (!find_bootstrap_by_rail(bootstrap_pin, &bootstrap_item)) {
+		LOG_ERR("Can't find bootstrap_item by bootstrap_pin index: 0x%02x", bootstrap_pin);
+		return false;
+	}
+	// LOG_DBG("set bootstrap_table[%2x]=%x, cpld_offsets 0x%02x change_setting_value 0x%02x",
+	// 	bootstrap_pin, drive_index_level, bootstrap_item.cpld_offsets,
+	// 	change_setting_value);
+	if (!set_bootstrap_val_to_device(bootstrap_pin, change_setting_value))
+		LOG_ERR("Can't write bootstrap[%2d]=%02x", bootstrap_pin, change_setting_value);
+
+	return true;
+}
+
+void set_bootstrap_element_handler()
+{
+	if (bootstrap_pin >= get_strap_index_max()) {
+		LOG_ERR("bootstrap_pin[%02x] is out of range", bootstrap_pin);
+		return;
+	}
+	if (!set_bootstrap_element(bootstrap_pin, user_setting_level)) {
+		LOG_ERR("set_bootstrap_element fail");
+		return;
+	}
+}
+
+void set_sensor_polling_handler(struct k_work *work_item)
+{
+	const plat_control_sensor_polling *sensor_data =
+		CONTAINER_OF(work_item, plat_control_sensor_polling, work);
+
+	int value = sensor_data->set_value;
+	if (!(value == 0 || value == 1)) {
+		LOG_ERR("set sensor_polling:%x is out of range", value);
+		return;
+	}
+	set_plat_sensor_polling_enable_flag(value);
+}
+
+void i2c_bridge_command_handler(struct k_work *work_item)
+{
+	const plat_i2c_bridge_command_config *sensor_data_config =
+		CONTAINER_OF(work_item, plat_i2c_bridge_command_config, work);
+
+	int response_data_len = sensor_data_config->read_len;
+
+	size_t table_size_41 = sizeof(plat_i2c_bridge_command_status);
+	plat_i2c_bridge_command_status *sensor_data_status =
+		allocate_table((void **)&i2c_bridge_command_status_table[0], table_size_41);
+	if (!sensor_data_status)
+		return;
+
+	size_t table_size_42 =
+		sizeof(plat_i2c_bridge_command_response_data) + response_data_len * sizeof(uint8_t);
+	plat_i2c_bridge_command_response_data *sensor_data_response =
+		allocate_table((void **)&i2c_bridge_command_response_data_table[0], table_size_42);
+	if (!sensor_data_response)
+		return;
+
+	sensor_data_status->data_status = I2C_BRIDGE_COMMAND_IN_PROCESS;
+	sensor_data_response->data_length = 0x00;
+
+	I2C_MSG i2c_msg = { 0 };
+	uint8_t retry = 5;
+	i2c_msg.bus = sensor_data_config->bus;
+	i2c_msg.target_addr = sensor_data_config->addr;
+	i2c_msg.tx_len = sensor_data_config->write_len;
+	i2c_msg.rx_len = sensor_data_config->read_len;
+	memcpy(&i2c_msg.data, sensor_data_config->data, sensor_data_config->write_len);
+	if (response_data_len == 0) {
+		if (i2c_master_write(&i2c_msg, retry)) {
+			LOG_ERR("Failed to write reg, bus: %d, addr: 0x%x, tx_len: 0x%x",
+				i2c_msg.bus, i2c_msg.target_addr, i2c_msg.tx_len);
+			sensor_data_status->data_status = I2C_BRIDGE_COMMAND_FAILURE;
+			return;
+		}
+		sensor_data_status->data_status = I2C_BRIDGE_COMMAND_SUCCESS;
+		sensor_data_response->data_length = response_data_len;
+	} else {
+		if (i2c_master_read(&i2c_msg, retry)) {
+			LOG_ERR("Failed to read reg, bus: %d, addr: 0x%x, tx_len: 0x%x",
+				i2c_msg.bus, i2c_msg.target_addr, i2c_msg.tx_len);
+			sensor_data_status->data_status = I2C_BRIDGE_COMMAND_FAILURE;
+			return;
+		}
+		sensor_data_status->data_status = I2C_BRIDGE_COMMAND_SUCCESS;
+		sensor_data_response->data_length = response_data_len;
+		memcpy(sensor_data_response->response_data, i2c_msg.data, response_data_len);
+	}
+}
+
+void set_control_voltage_handler(struct k_work *work_item)
+{
+	const plat_control_voltage *sensor_data =
+		CONTAINER_OF(work_item, plat_control_voltage, work);
+	uint8_t rail = sensor_data->rail;
+	uint16_t millivolt = sensor_data->set_value;
+	LOG_DBG("Setting rail %x to %d mV", rail, millivolt);
+
+	plat_set_vout_command(rail, &millivolt, false);
+}
+
+void set_power_capping_threshold_time_handler(struct k_work *work_item)
+{
+	const plat_power_capping_threshold_time_t *sensor_data =
+		CONTAINER_OF(work_item, plat_power_capping_threshold_time_t, work);
+	const uint8_t *in_data = sensor_data->in_data;
+	uint8_t lv = sensor_data->lv;
+	uint16_t value = 0;
+
+	if (lv == CAPPING_LV_IDX_LV1) {
+		if ((in_data[2] != in_data[6]) || (in_data[3] != in_data[7])) {
+			LOG_WRN("Time window should be the same for lv1");
+		}
+	}
+
+	value = in_data[0] | (in_data[1] << 8);
+	set_power_capping_threshold(CAPPING_VR_IDX_NUWA0, lv, value);
+	value = in_data[2] | (in_data[3] << 8);
+	set_power_capping_time_w(CAPPING_VR_IDX_NUWA0, lv, value);
+
+	value = in_data[4] | (in_data[5] << 8);
+	set_power_capping_threshold(CAPPING_VR_IDX_NUWA1, lv, value);
+	value = in_data[6] | (in_data[7] << 8);
+	set_power_capping_time_w(CAPPING_VR_IDX_NUWA1, lv, value);
+}
+
+void set_power_capping_method_handler(struct k_work *work_item)
+{
+	const plat_power_capping_method_t *sensor_data =
+		CONTAINER_OF(work_item, plat_power_capping_method_t, work);
+
+	set_power_capping_method(sensor_data->set_value);
+}
+
+void set_power_capping_source_handler(struct k_work *work_item)
+{
+	const plat_power_capping_method_t *sensor_data =
+		CONTAINER_OF(work_item, plat_power_capping_method_t, work);
+
+	set_power_capping_source(sensor_data->set_value);
+}
+
+void plat_master_write_thread_handler()
+{
+	int rc = 0;
+	while (1) {
+		uint8_t rdata[MAX_I2C_TARGET_BUFF] = { 0 };
+		uint16_t rlen = 0;
+		for (int i = 0; i < ASIC_I2C_BUS_IDX_MAX; i++) {
+			rc = multi_bus_i2c_target_read(target_bus_list[i].i2c_bus, rdata,
+						       sizeof(rdata), &rlen, K_MSEC(5));
+			if (rc == I2C_TARGET_MULTI_BUS_SKIP) {
+				// skip this bus
+				continue;
+			}
+
+			if (rc) {
+				LOG_ERR("i2c_target_read fail, ret %d", rc);
+				continue;
+			}
+
+			if (rlen < 1) {
+				LOG_ERR("Received data too short");
+				continue;
+			}
+
+			uint8_t reg_offset = rdata[0];
+			switch (reg_offset) {
+			case WRITE_STRAP_PIN_VALUE_REG: {
+				if (rlen != 3) {
+					LOG_WRN("WRITE_STRAP_PIN_VALUE_REG Invalid length for offset(write): 0x%02x",
+						reg_offset);
+					LOG_DBG("Received data length: 0x%02x", rlen);
+					break;
+				}
+				bootstrap_pin = rdata[1];
+				user_setting_level = rdata[2];
+				k_work_submit(&set_bootstrap_element_work);
+			} break;
+			case I2C_BRIDGE_COMMAND_REG: {
+				if (rlen < 5) {
+					LOG_ERR("Invalid length for offset: 0x%02x", reg_offset);
+					break;
+				}
+				size_t payload_len = rlen - 4;
+				size_t struct_size =
+					sizeof(plat_i2c_bridge_command_config) + payload_len;
+				plat_i2c_bridge_command_config *sensor_data = malloc(struct_size);
+				if (!sensor_data) {
+					LOG_ERR("Memory allocation failed!");
+					break;
+				}
+				sensor_data->bus = rdata[1];
+				sensor_data->addr = rdata[2];
+				sensor_data->read_len = rdata[3];
+				sensor_data->write_len = payload_len;
+				memcpy(sensor_data->data, &rdata[4], payload_len);
+				k_work_init(&sensor_data->work, i2c_bridge_command_handler);
+				k_work_submit(&sensor_data->work);
+				LOG_HEXDUMP_DBG(rdata, rlen, "I2C_BRIDGE_COMMAND_REG");
+			} break;
+			case CONTROL_VOL_VR_ASIC_P0V75_VDDPHY_HBM0246_REG:
+			case CONTROL_VOL_VR_ASIC_P0V75_VDDPHY_HBM1357_REG:
+			case CONTROL_VOL_VR_ASIC_P1V05_VDDC_HBM0246_REG:
+			case CONTROL_VOL_VR_ASIC_P1V05_VDDC_HBM1357_REG:
+			case CONTROL_VOL_VR_ASIC_P0V4_VDDQL_HBM0246_REG:
+			case CONTROL_VOL_VR_ASIC_P0V4_VDDQL_HBM1357_REG:
+			case CONTROL_VOL_VR_ASIC_P1V8_VPP_HBM0246_REG:
+			case CONTROL_VOL_VR_ASIC_P1V8_VPP_HBM1357_REG:
+			case CONTROL_VOL_VR_ASIC_P0V75_NUWA0_VDD_REG:
+			case CONTROL_VOL_VR_ASIC_P0V75_NUWA1_VDD_REG: {
+				if (rlen != 3) {
+					LOG_ERR("Invalid length for offset(write): 0x%02x",
+						reg_offset);
+					break;
+				}
+
+				plat_control_voltage *sensor_data =
+					malloc(sizeof(plat_control_voltage));
+				if (!sensor_data) {
+					LOG_ERR("Memory allocation failed!");
+					break;
+				}
+				sensor_data->rail = get_vr_rail_by_control_vol_reg(reg_offset);
+				sensor_data->set_value = rdata[1] | (rdata[2] << 8);
+				k_work_init(&sensor_data->work, set_control_voltage_handler);
+				k_work_submit(&sensor_data->work);
+			} break;
+			case LEVEL_1_PWR_ALERT_THRESHOLD_TIME_REG:
+			case LEVEL_2_PWR_ALERT_THRESHOLD_TIME_REG:
+			case LEVEL_3_PWR_ALERT_THRESHOLD_TIME_REG: {
+				if (rlen != 9) {
+					LOG_ERR("Invalid length for offset(write): 0x%02x",
+						reg_offset);
+					break;
+				}
+
+				plat_power_capping_threshold_time_t *sensor_data =
+					malloc(sizeof(plat_power_capping_threshold_time_t));
+				if (!sensor_data) {
+					LOG_ERR("Memory allocation failed!");
+					break;
+				}
+				if (reg_offset == LEVEL_1_PWR_ALERT_THRESHOLD_TIME_REG) {
+					sensor_data->lv = CAPPING_LV_IDX_LV1;
+				} else if (reg_offset == LEVEL_2_PWR_ALERT_THRESHOLD_TIME_REG) {
+					sensor_data->lv = CAPPING_LV_IDX_LV2;
+				} else if (reg_offset == LEVEL_3_PWR_ALERT_THRESHOLD_TIME_REG) {
+					sensor_data->lv = CAPPING_LV_IDX_LV3;
+				}
+				memcpy(sensor_data->in_data, &rdata[1], 8);
+				k_work_init(&sensor_data->work,
+					    set_power_capping_threshold_time_handler);
+				k_work_submit(&sensor_data->work);
+			} break;
+			case POWER_CAPPING_METHOD_REG: {
+				if (rlen != 2) {
+					LOG_ERR("Invalid length for offset(write): 0x%02x",
+						reg_offset);
+					break;
+				}
+
+				plat_power_capping_method_t *sensor_data =
+					malloc(sizeof(plat_power_capping_method_t));
+				if (!sensor_data) {
+					LOG_ERR("Memory allocation failed!");
+					break;
+				}
+				sensor_data->set_value = rdata[1];
+
+				k_work_init(&sensor_data->work, set_power_capping_method_handler);
+				k_work_submit(&sensor_data->work);
+			} break;
+			case NUWA_POWER_SOURCE_REG: {
+				if (rlen != 2) {
+					LOG_ERR("Invalid length for offset(write): 0x%02x",
+						reg_offset);
+					break;
+				}
+
+				plat_power_capping_method_t *sensor_data =
+					malloc(sizeof(plat_power_capping_method_t));
+				if (!sensor_data) {
+					LOG_ERR("Memory allocation failed!");
+					break;
+				}
+				sensor_data->set_value = rdata[1];
+
+				k_work_init(&sensor_data->work, set_power_capping_source_handler);
+				k_work_submit(&sensor_data->work);
+			} break;
+			case POLLING_RATE_TELEMETRY_REG: {
+				if (rlen != 2) {
+					LOG_ERR("Invalid length for offset(write): 0x%02x",
+						reg_offset);
+					break;
+				}
+				uint8_t capping_source = get_power_capping_source();
+				uint8_t poll_rate_type = rdata[1];
+				uint8_t flag = 0;
+				switch (poll_rate_type) {
+				case 0:
+				case 1:
+				case 2:
+				case 3:
+				case 4:
+				case 5:
+				case 6:
+				case 7:
+					if (flag == 0)
+						plat_pldm_sensor_set_quick_vr_poll_interval(
+							poll_rate_type, capping_source);
+					break;
+				default:
+					LOG_ERR("Polling rate type should be 0-7");
+					flag = 1;
+					break;
+				}
+			} break;
+			case SET_SENSOR_POLLING_COMMAND_REG: {
+				if (rlen != 8) {
+					LOG_ERR("Invalid length for offset: 0x%02x", reg_offset);
+					LOG_ERR("length: 0x%02x", rlen);
+					break;
+				}
+				uint8_t expected_signature[] = {
+					0x4D, 0x54, 0x49, 0x41, 0x56, 0x31
+				}; // ascii to hex: "MTIAV1"
+				if (memcmp(&rdata[1], expected_signature,
+					   sizeof(expected_signature)) != 0) {
+					LOG_HEXDUMP_DBG(rdata, rlen, "rdata:");
+					LOG_ERR("Wrong command for set sensor_polling");
+					break;
+				}
+				plat_control_sensor_polling *sensor_data =
+					malloc(sizeof(plat_control_sensor_polling));
+				if (!sensor_data) {
+					LOG_ERR("Memory allocation failed!");
+					break;
+				}
+				sensor_data->set_value = rdata[9]; // need to check
+				LOG_DBG("set sensor_polling:%x", sensor_data->set_value);
+				// transfer rdata[9] type to bool
+				sensor_data->set_value = sensor_data->set_value ? true : false;
+				k_work_init(&sensor_data->work, set_sensor_polling_handler);
+				k_work_submit(&sensor_data->work);
+			} break;
+			default:
+				LOG_WRN("Unknown reg offset(write): 0x%02x", reg_offset);
+				break;
+			}
+		}
+	}
+}
+void plat_master_write_thread_init()
+{
+	plat_master_write_tid = k_thread_create(&plat_master_write_thread, plat_master_write_stack,
+						K_THREAD_STACK_SIZEOF(plat_master_write_stack),
+						plat_master_write_thread_handler, NULL, NULL, NULL,
+						CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
+	k_thread_name_set(&plat_master_write_thread, "plat_master_write_thread");
+}
+
+void plat_telemetry_table_init(void)
+{
+	uint8_t buffer_size = 0;
+	for (int i = 0; i < ARRAY_SIZE(telemetry_info_table); i++) {
+		if (telemetry_info_table[i].telemetry_table_init) {
+			bool success = telemetry_info_table[i].telemetry_table_init(
+				&telemetry_info_table[i], &buffer_size);
+			if (!success) {
+				LOG_ERR("initialize sensor data at offset 0x%02X",
+					telemetry_info_table[i].telemetry_offset);
+			}
+			telemetry_info_table[i].data_size = buffer_size;
+		}
+	}
+	LOG_INF("plat_telemetry_table_init done");
+	plat_master_write_thread_init();
+}
+
+/* I2C target init-enable table */
+const bool I2C_TARGET_ENABLE_TABLE[MAX_TARGET_NUM] = {
+	TARGET_DISABLE, TARGET_DISABLE, TARGET_DISABLE, TARGET_ENABLE,
+	TARGET_ENABLE,	TARGET_ENABLE,	TARGET_ENABLE,	TARGET_DISABLE,
+	TARGET_DISABLE, TARGET_DISABLE, TARGET_DISABLE, TARGET_DISABLE,
+};
+
+static bool command_reply_data_handle(void *arg)
+{
+	struct i2c_target_data *data = (struct i2c_target_data *)arg;
+	if (data->wr_buffer_idx >= 1) {
+		if (data->wr_buffer_idx == 1) {
+			uint8_t reg_offset = data->target_wr_msg.msg[0];
+			size_t struct_size = 0;
+			for (int i = 0; i < ARRAY_SIZE(telemetry_info_table); i++) {
+				if (telemetry_info_table[i].telemetry_offset == reg_offset) {
+					struct_size = telemetry_info_table[i].data_size;
+					break;
+				}
+			}
+			// Make sure the target buffer is not exceeded when reading
+			if (struct_size > sizeof(data->target_rd_msg.msg)) {
+				struct_size = sizeof(data->target_rd_msg.msg);
+			}
+			LOG_DBG("Received reg offset(write 1 data): 0x%02x", reg_offset);
+			switch (reg_offset) {
+			case SENSOR_INIT_DATA_0_REG:
+			case SENSOR_INIT_DATA_1_REG: {
+				data->target_rd_msg.msg_length = struct_size;
+				memcpy(data->target_rd_msg.msg,
+				       sensor_init_data_table[reg_offset - SENSOR_INIT_DATA_0_REG],
+				       struct_size);
+				LOG_HEXDUMP_DBG(data->target_rd_msg.msg,
+						data->target_rd_msg.msg_length, "sensor init data");
+			} break;
+			case SENSOR_READING_0_REG:
+			case SENSOR_READING_1_REG:
+			case SENSOR_READING_2_REG:
+			case SENSOR_READING_3_REG: {
+				data->target_rd_msg.msg_length = struct_size;
+				memcpy(data->target_rd_msg.msg,
+				       sensor_reading_table[reg_offset - SENSOR_READING_0_REG],
+				       struct_size);
+				LOG_HEXDUMP_DBG(data->target_rd_msg.msg,
+						data->target_rd_msg.msg_length, "sensor reading");
+			} break;
+			case INVENTORY_IDS_REG: {
+				data->target_rd_msg.msg_length = struct_size;
+				memcpy(data->target_rd_msg.msg,
+				       inventory_ids_table[reg_offset - INVENTORY_IDS_REG],
+				       struct_size);
+				LOG_HEXDUMP_DBG(data->target_rd_msg.msg,
+						data->target_rd_msg.msg_length, "inventory ids");
+			} break;
+			case STRAP_CAPABILTITY_REG: {
+				data->target_rd_msg.msg_length = struct_size;
+				memcpy(data->target_rd_msg.msg,
+				       strap_capability_table[reg_offset - STRAP_CAPABILTITY_REG],
+				       struct_size);
+				LOG_HEXDUMP_DBG(data->target_rd_msg.msg,
+						data->target_rd_msg.msg_length, "strap capability");
+			} break;
+			case I2C_BRIDGE_COMMAND_STATUS_REG: {
+				data->target_rd_msg.msg_length = 1;
+				data->target_rd_msg.msg[0] =
+					i2c_bridge_command_status_table[0] ?
+						i2c_bridge_command_status_table[0]->data_status :
+						I2C_BRIDGE_COMMAND_FAILURE;
+			} break;
+			case I2C_BRIDGE_COMMAND_RESPONSE_REG: {
+				if (i2c_bridge_command_response_data_table[0]) {
+					struct_size = i2c_bridge_command_response_data_table[0]
+							      ->data_length +
+						      1;
+					data->target_rd_msg.msg_length = struct_size;
+					memcpy(data->target_rd_msg.msg,
+					       i2c_bridge_command_response_data_table[0],
+					       struct_size);
+				} else {
+					data->target_rd_msg.msg_length = 1;
+					data->target_rd_msg.msg[0] = 0xFF;
+				}
+				LOG_HEXDUMP_DBG(data->target_rd_msg.msg,
+						data->target_rd_msg.msg_length,
+						"i2c bridge command response");
+			} break;
+			case FRU_BOARD_PART_NUMBER_REG:
+			case FRU_BOARD_SERIAL_NUMBER_REG:
+			case FRU_BOARD_PRODUCT_NAME_REG:
+			case FRU_BOARD_CUSTOM_DATA_1_REG:
+			case FRU_BOARD_CUSTOM_DATA_2_REG:
+			case FRU_BOARD_CUSTOM_DATA_3_REG:
+			case FRU_BOARD_CUSTOM_DATA_4_REG:
+			case FRU_BOARD_CUSTOM_DATA_5_REG:
+			case FRU_BOARD_CUSTOM_DATA_6_REG:
+			case FRU_BOARD_CUSTOM_DATA_7_REG:
+			case FRU_BOARD_CUSTOM_DATA_8_REG:
+			case FRU_BOARD_CUSTOM_DATA_9_REG:
+			case FRU_BOARD_CUSTOM_DATA_10_REG: {
+				data->target_rd_msg.msg_length = struct_size;
+				memcpy(data->target_rd_msg.msg,
+				       fru_board_data_table[reg_offset - FRU_BOARD_PART_NUMBER_REG],
+				       struct_size);
+			} break;
+			case FRU_PRODUCT_NAME_REG:
+			case FRU_PRODUCT_PART_NUMBER_REG:
+			case FRU_PRODUCT_PART_VERSION_REG:
+			case FRU_PRODUCT_SERIAL_NUMBER_REG:
+			case FRU_PRODUCT_ASSET_TAG_REG:
+			case FRU_PRODUCT_CUSTOM_DATA_1_REG:
+			case FRU_PRODUCT_CUSTOM_DATA_2_REG: {
+				data->target_rd_msg.msg_length = struct_size;
+				memcpy(data->target_rd_msg.msg,
+				       fru_product_data_table[reg_offset - FRU_PRODUCT_NAME_REG],
+				       struct_size);
+			} break;
+			case CONTROL_VOL_VR_ASIC_P0V75_VDDPHY_HBM0246_REG:
+			case CONTROL_VOL_VR_ASIC_P0V75_VDDPHY_HBM1357_REG:
+			case CONTROL_VOL_VR_ASIC_P1V05_VDDC_HBM0246_REG:
+			case CONTROL_VOL_VR_ASIC_P1V05_VDDC_HBM1357_REG:
+			case CONTROL_VOL_VR_ASIC_P0V4_VDDQL_HBM0246_REG:
+			case CONTROL_VOL_VR_ASIC_P0V4_VDDQL_HBM1357_REG:
+			case CONTROL_VOL_VR_ASIC_P1V8_VPP_HBM0246_REG:
+			case CONTROL_VOL_VR_ASIC_P1V8_VPP_HBM1357_REG:
+			case CONTROL_VOL_VR_ASIC_P0V75_NUWA0_VDD_REG:
+			case CONTROL_VOL_VR_ASIC_P0V75_NUWA1_VDD_REG: {
+				uint8_t rail = get_vr_rail_by_control_vol_reg(reg_offset);
+				uint16_t vout = 0xFFFF;
+				if (!voltage_command_setting_get(rail, &vout)) {
+					LOG_ERR("Can't voltage_command setting_get by rail: 0x%02x",
+						rail);
+				}
+				memcpy(data->target_rd_msg.msg, &vout, sizeof(vout));
+				data->target_rd_msg.msg_length = 2;
+			} break;
+			case LEVEL_1_PWR_ALERT_THRESHOLD_TIME_REG:
+			case LEVEL_2_PWR_ALERT_THRESHOLD_TIME_REG:
+			case LEVEL_3_PWR_ALERT_THRESHOLD_TIME_REG: {
+				uint8_t lv = 0;
+				uint16_t tmp_value = 0;
+				if (reg_offset == LEVEL_1_PWR_ALERT_THRESHOLD_TIME_REG) {
+					lv = CAPPING_LV_IDX_LV1;
+				} else if (reg_offset == LEVEL_2_PWR_ALERT_THRESHOLD_TIME_REG) {
+					lv = CAPPING_LV_IDX_LV2;
+				} else if (reg_offset == LEVEL_3_PWR_ALERT_THRESHOLD_TIME_REG) {
+					lv = CAPPING_LV_IDX_LV3;
+				}
+				tmp_value = get_power_capping_threshold(CAPPING_VR_IDX_NUWA0, lv);
+				data->target_rd_msg.msg[0] = tmp_value & 0xFF;
+				data->target_rd_msg.msg[1] = tmp_value >> 8;
+				tmp_value = get_power_capping_time_w(CAPPING_VR_IDX_NUWA0, lv);
+				data->target_rd_msg.msg[2] = tmp_value & 0xFF;
+				data->target_rd_msg.msg[3] = tmp_value >> 8;
+				tmp_value = get_power_capping_threshold(CAPPING_VR_IDX_NUWA1, lv);
+				data->target_rd_msg.msg[4] = tmp_value & 0xFF;
+				data->target_rd_msg.msg[5] = tmp_value >> 8;
+				tmp_value = get_power_capping_time_w(CAPPING_VR_IDX_NUWA1, lv);
+				data->target_rd_msg.msg[6] = tmp_value & 0xFF;
+				data->target_rd_msg.msg[7] = tmp_value >> 8;
+				data->target_rd_msg.msg_length = 8;
+			} break;
+			case VR_POWER_READING_REG: {
+				data->target_rd_msg.msg_length = VR_PWR_BUF_SIZE;
+				vr_power_reading(data->target_rd_msg.msg,
+						 data->target_rd_msg.msg_length);
+				LOG_HEXDUMP_DBG(data->target_rd_msg.msg,
+						data->target_rd_msg.msg_length, "vr power reading");
+			} break;
+			case NUWA_SENSOR_VALUE_REG: {
+				data->target_rd_msg.msg_length = 4;
+				uint16_t sensor_value = 0;
+
+				if (get_power_capping_source() == CAPPING_SOURCE_ADC) {
+					/* ADC instant power in W */
+					float pwr_w0 = get_adc_nuwa_inst_pwr_w(ADC_EL_IDX_NUWA0);
+					float pwr_w1 = get_adc_nuwa_inst_pwr_w(ADC_EL_IDX_NUWA1);
+
+					sensor_value = (uint16_t)(pwr_w0 + 0.5f);
+					memcpy(&data->target_rd_msg.msg[0], &sensor_value,
+					       sizeof(sensor_value));
+
+					sensor_value = (uint16_t)(pwr_w1 + 0.5f);
+					memcpy(&data->target_rd_msg.msg[2], &sensor_value,
+					       sizeof(sensor_value));
+				} else {
+					/* VR sensor cache power in W */
+					sensor_value =
+						(get_cached_sensor_reading_by_sensor_number(
+							 SENSOR_NUM_ASIC_P0V75_NUWA0_VDD_PWR_W) +
+						 500) /
+						1000;
+					memcpy(&data->target_rd_msg.msg[0], &sensor_value,
+					       sizeof(sensor_value));
+
+					sensor_value =
+						(get_cached_sensor_reading_by_sensor_number(
+							 SENSOR_NUM_ASIC_P0V75_NUWA1_VDD_PWR_W) +
+						 500) /
+						1000;
+					memcpy(&data->target_rd_msg.msg[2], &sensor_value,
+					       sizeof(sensor_value));
+				}
+			} break;
+			case POWER_CAPPING_METHOD_REG: {
+				data->target_rd_msg.msg[0] = get_power_capping_method();
+				data->target_rd_msg.msg_length = 1;
+			} break;
+			case NUWA_POWER_SOURCE_REG: {
+				data->target_rd_msg.msg[0] = get_power_capping_source();
+				data->target_rd_msg.msg_length = 1;
+			} break;
+			case POLLING_RATE_TELEMETRY_REG: {
+				uint8_t type_val = get_pwr_capping_polling_rate_type();
+				data->target_rd_msg.msg[0] = type_val;
+				data->target_rd_msg.msg_length = 1;
+			} break;
+			case TRAY_INFO_REG: {
+				/* TRAY_INFO_REG:
+				 * Byte0: MMC slot
+				 * Byte1: tray location
+				 */
+				uint8_t slot = get_mmc_slot();
+				uint8_t tray = get_tray_location();
+
+				data->target_rd_msg.msg[0] = slot;
+				data->target_rd_msg.msg[1] = tray;
+				data->target_rd_msg.msg_length = 2;
+
+				LOG_DBG("TRAY_INFO_REG: slot=0x%02x, tray=0x%02x", slot, tray);
+				LOG_HEXDUMP_DBG(data->target_rd_msg.msg,
+						data->target_rd_msg.msg_length, "tray info");
+			} break;
+			default:
+				LOG_ERR("Unknown reg offset: 0x%02x", reg_offset);
+				data->target_rd_msg.msg_length = 1;
+				data->target_rd_msg.msg[0] = 0xFF;
+				break;
+			}
+		} else if (data->wr_buffer_idx == 2) {
+			LOG_DBG("Received reg offset(write 2 data): 0x%02x",
+				data->target_wr_msg.msg[0]);
+			uint8_t reg_offset = data->target_wr_msg.msg[0];
+			switch (reg_offset) {
+			case WRITE_STRAP_PIN_VALUE_REG: {
+				int rail = data->target_wr_msg.msg[1];
+				int drive_level = -1;
+				if (!get_bootstrap_change_drive_level(rail, &drive_level)) {
+					LOG_ERR("Can't get_bootstrap_change_drive_level by rail index: %x",
+						rail);
+					data->target_rd_msg.msg[0] = 0xFF;
+				} else {
+					data->target_rd_msg.msg[0] = drive_level;
+				}
+				data->target_rd_msg.msg_length = 1;
+				LOG_HEXDUMP_DBG(data->target_rd_msg.msg,
+						data->target_rd_msg.msg_length, "strap pin value");
+			} break;
+			default:
+				LOG_ERR("Unknown reg offset: 0x%02x", reg_offset);
+				data->target_rd_msg.msg_length = 1;
+				data->target_rd_msg.msg[0] = 0xFF;
+				break;
+			}
+		} else {
+			LOG_ERR("Received data length: 0x%02x", data->wr_buffer_idx);
+			data->target_rd_msg.msg_length = 1;
+			data->target_rd_msg.msg[0] = 0xFF;
+		}
+	}
+	LOG_DBG("Reply data length: 0x%02x", data->target_rd_msg.msg_length);
+	return false;
+}
+
+/* I2C target init-config table */
+const struct _i2c_target_config I2C_TARGET_CONFIG_TABLE[MAX_TARGET_NUM] = {
+	{ 0xFF, 0xA },
+	{ 0xFF, 0xA },
+	{ 0xFF, 0xA },
+	{ 0x40, 0xA, command_reply_data_handle },
+	{ 0x40, 0xA, command_reply_data_handle },
+	{ 0x42, 0xA },
+	{ 0x40, 0xA, command_reply_data_handle },
+	{ 0xFF, 0xA },
+	{ 0xFF, 0xA },
+	{ 0xFF, 0xA },
+	{ 0xFF, 0xA },
+	{ 0xFF, 0xA },
+};

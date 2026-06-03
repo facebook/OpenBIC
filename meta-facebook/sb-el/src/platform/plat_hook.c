@@ -1117,8 +1117,69 @@ bool post_common_sensor_read(sensor_cfg *cfg, void *args, int *const reading)
 	return true;
 }
 
-// struct vr_vout_user_settings voltage_command_get = { 0 };
+struct vr_vout_user_settings voltage_command_get = { 0 };
 vr_vout_range_user_settings_struct vout_range_user_settings = { 0 };
+
+bool plat_set_vout_command(uint8_t rail, uint16_t *millivolt, bool is_perm)
+{
+	CHECK_NULL_ARG_WITH_RETURN(millivolt, false);
+
+	bool ret = false;
+	uint8_t sensor_id = vr_rail_table[rail].sensor_id;
+	sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
+	if (cfg == NULL) {
+		LOG_ERR("Failed to get sensor config for sensor 0x%x", sensor_id);
+		return false;
+	}
+
+	const vr_pre_proc_arg *pre_sensor_read_args = cfg->pre_sensor_read_args;
+	uint16_t setting_millivolt = *millivolt;
+	// get page from sensor_cfg
+	uint8_t page = pre_sensor_read_args->vr_page;
+
+	if (cfg->pre_sensor_read_hook) {
+		if (!cfg->pre_sensor_read_hook(cfg, cfg->pre_sensor_read_args)) {
+			LOG_ERR("sensor id: 0x%x pre-read fail", sensor_id);
+			goto err;
+		}
+	}
+
+	LOG_DBG("sensor num 0x%x,page 0x%x, vout 0x%x", sensor_id, page, setting_millivolt);
+	switch (cfg->type) {
+	case sensor_dev_mp2971:
+		if (!mp2971_set_vout_command(cfg, page, millivolt)) {
+			LOG_ERR("The VR MPS2971 vout setting failed");
+			goto err;
+		}
+		break;
+	case sensor_dev_mp29816a:
+		if (!mp29816a_set_vout_command(cfg, page, millivolt)) {
+			LOG_ERR("The VR MPS29816a vout setting failed");
+			goto err;
+		}
+		break;
+	case sensor_dev_raa228249:
+		if (!raa228249_set_vout_command(cfg, page, millivolt)) {
+			LOG_ERR("The VR RAA228249 vout setting failed");
+			goto err;
+		}
+		break;
+	default:
+		LOG_ERR("Unsupport VR type(%x)", cfg->type);
+		goto err;
+	}
+
+	voltage_command_get.vout[rail] = setting_millivolt;
+
+	ret = true;
+err:
+	if (cfg->post_sensor_read_hook) {
+		if (cfg->post_sensor_read_hook(cfg, cfg->post_sensor_read_args, NULL) == false) {
+			LOG_ERR("sensor id: 0x%x post-read fail", sensor_id);
+		}
+	}
+	return ret;
+}
 
 bool plat_get_vout_range(uint8_t rail, uint16_t *vout_max_millivolt, uint16_t *vout_min_millivolt)
 {
@@ -1191,6 +1252,19 @@ uint8_t get_strap_index_max()
 {
 	return (get_asic_board_id() == ASIC_BOARD_ID_EVB) ? STRAP_INDEX_MAX :
 							    STRAP_INDEX_EXCEPT_EVB_MAX;
+}
+
+bool voltage_command_setting_get(uint8_t rail, uint16_t *vout)
+{
+	CHECK_NULL_ARG_WITH_RETURN(vout, false);
+
+	if (rail >= VR_RAIL_E_MAX) {
+		LOG_ERR("invalid rail %d", rail);
+		return false;
+	}
+
+	*vout = voltage_command_get.vout[rail];
+	return true;
 }
 
 static uint8_t reverse_bits(uint8_t byte, uint8_t bit_cnt)

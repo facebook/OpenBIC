@@ -70,14 +70,16 @@ void pal_post_init()
 	plat_power_capping_init();
 	init_load_eeprom_log();
 	if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
-		// if board id >= EVB EVT1B(FAB2)
+		// Ensure U200053 is initialized before initializing U200051.
 		quick_sensor_poll_init();
 		init_U200052_IO();
 		init_U200053_IO();
 		init_U200070_IO();
+		init_U200051_IO();
 	}
 	plat_set_ac_on_log();
 	init_cpld_polling();
+	plat_telemetry_table_init();
 	ioexp_init();
 	init_thermal_polling();
 

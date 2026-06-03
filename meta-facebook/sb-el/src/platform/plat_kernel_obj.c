@@ -26,7 +26,7 @@ LOG_MODULE_REGISTER(plat_kernel);
 
 /* semaphore CPLD polling semaphore */
 K_TIMER_DEFINE(ragular_cpld_polling_sem_timer, plat_ragular_cpld_polling_sem_handler, NULL);
-static struct k_sem cpld_polling_sem;
+static struct k_sem cpld_polling_sem; // "all_vr_pm_alert_sem" in rainbow
 
 /* mutex for pwrlevel */
 static struct k_mutex pwrlevel_mutex;
@@ -72,7 +72,7 @@ void plat_check_ubc_delayed_timer_handler(struct k_timer *timer)
 void plat_update_ubc_status(void)
 {
 	// delay 1 second for power sequence
-	k_timer_start(&check_ubc_delayed_timer, K_MSEC(1000), K_NO_WAIT);
+	k_timer_start(&check_ubc_delayed_timer, K_MSEC(1500), K_NO_WAIT);
 }
 
 bool plat_get_ubc_status(void)
@@ -124,7 +124,7 @@ void pwr_sequence_event(struct k_work *work)
 void plat_handle_pwr_sequence_event(void)
 {
 	// delay 1 second for power sequence
-	k_timer_start(&pwr_sequence_event_work_timer, K_MSEC(1000), K_NO_WAIT);
+	k_timer_start(&pwr_sequence_event_work_timer, K_MSEC(1500), K_NO_WAIT);
 }
 
 /* timeout can be K_NO_WAIT, K_MSEC(x), K_SECONDS(x), or K_FOREVER */

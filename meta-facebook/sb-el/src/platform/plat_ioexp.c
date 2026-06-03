@@ -155,41 +155,62 @@ int get_pca6554apw_ioe_value(uint8_t ioe_bus, uint8_t ioe_addr, uint8_t ioe_reg,
 
 void init_U200051_IO()
 {
+	uint8_t u200053_input = 0;
+	uint8_t u200051_output = 0x80;
+	int ret = 0;
+
 	LOG_INF("init U200051 IO expander");
-	// only bit6 is input (1)
+
+	/*
+	 * U200051 bit7 default output = 1
+	 * U200051 bit0~5 depends on U200053 bit0~5:
+	 *   U200053 high -> U200051 write 0
+	 *   U200053 low  -> U200051 write 1
+	 */
+	ret = get_pca6554apw_ioe_value(U200053_IO_I2C_BUS, U200053_IO_ADDR, INPUT_PORT,
+				       &u200053_input);
+	if (ret != 0) {
+		LOG_ERR("Failed to read U200053 INPUT_PORT, use default 0x80");
+	} else {
+		u200051_output |= ((~u200053_input) & 0x3F);
+		LOG_INF("U200053 INPUT_PORT=0x%02X, init U200051 OUTPUT_PORT=0x%02X", u200053_input,
+			u200051_output);
+	}
+
+	set_pca6554apw_ioe_value(U200051_IO_I2C_BUS, U200051_IO_ADDR, OUTPUT_PORT, u200051_output);
+
+	/* only bit6 is input (1) */
 	set_pca6554apw_ioe_value(U200051_IO_I2C_BUS, U200051_IO_ADDR, CONFIG, 0x40);
-	// io5,io7 default output 1
-	set_pca6554apw_ioe_value(U200051_IO_I2C_BUS, U200051_IO_ADDR, OUTPUT_PORT, 0x80);
 }
 
 void init_U200052_IO()
 {
 	LOG_INF("init U200052 IO expander");
-	// bit0 to bit5 is input (1)
-	set_pca6554apw_ioe_value(U200052_IO_I2C_BUS, U200052_IO_ADDR, CONFIG, 0x3F);
 	// io6,io7 default output 0
 	set_pca6554apw_ioe_value(U200052_IO_I2C_BUS, U200052_IO_ADDR, OUTPUT_PORT,
 				 U200052_IO_INIT_VAL);
+	// bit6 to bit7 is output (0)
+	set_pca6554apw_ioe_value(U200052_IO_I2C_BUS, U200052_IO_ADDR, CONFIG, 0x3F);
 }
 
 void init_U200053_IO()
 {
 	LOG_INF("init U200053 IO expander");
-	// bit0 to bit5 is input (1)
-	set_pca6554apw_ioe_value(U200053_IO_I2C_BUS, U200053_IO_ADDR, CONFIG, 0xBF);
 	// io6 default output 1
 	set_pca6554apw_ioe_value(U200053_IO_I2C_BUS, U200053_IO_ADDR, OUTPUT_PORT,
 				 U200053_IO_INIT_VAL);
+	// bit6 is output (0)
+	set_pca6554apw_ioe_value(U200053_IO_I2C_BUS, U200053_IO_ADDR, CONFIG, 0xBF);
 }
 
 void init_U200070_IO()
 {
 	LOG_INF("init U200070 IO expander");
-	// bit3 to bit5 is input (1)
-	set_pca6554apw_ioe_value(U200070_IO_I2C_BUS, U200070_IO_ADDR, CONFIG, 0x38);
 	// io0,io1,io2 default output 1 io7 default output 0
 	set_pca6554apw_ioe_value(U200070_IO_I2C_BUS, U200070_IO_ADDR, OUTPUT_PORT,
 				 U200070_IO_INIT_VAL);
+	// bit3 to bit5 is input (1)
+	set_pca6554apw_ioe_value(U200070_IO_I2C_BUS, U200070_IO_ADDR, CONFIG, 0x38);
 }
 
 /* tcal6408r */
@@ -293,16 +314,19 @@ void ioexp_init(void)
 	// read from IO, save value (if output) to table
 	set_ioexp_val_to_bootstrap_table();
 
-	if (!pca6416a_init())
-		LOG_ERR("pca6416a init fail");
+	// set value from table
+	set_bootstrap_table_val_to_ioexp();
 
-	if (is_evb_ioe_accessible()) {
-		if (!tca6424a_init())
-			LOG_ERR("tca6424a init fail");
+	// if (!pca6416a_init())
+	// 	LOG_ERR("pca6416a init fail");
 
-		if (!tcal6408r_init())
-			LOG_ERR("tcal6408r init fail");
-	}
+	// if (is_evb_ioe_accessible()) {
+	// 	if (!tca6424a_init())
+	// 		LOG_ERR("tca6424a init fail");
+
+	// 	if (!tcal6408r_init())
+	// 		LOG_ERR("tcal6408r init fail");
+	// }
 
 	// set to output if TEST_STRAP enable
 	int drive_level = 0;
@@ -318,7 +342,4 @@ void ioexp_init(void)
 	if (drive_level == 1) {
 		set_nuwa1_mfio_6_8_10_output();
 	}
-
-	// set value from table
-	set_bootstrap_table_val_to_ioexp();
 }

@@ -814,7 +814,7 @@ void adc_electra_polling_handler(void *p1, void *p2, void *p3)
 			gpio_set(NUWA0_CNV, 0);
 			gpio_set(NUWA1_CNV, 0);
 			gpio_set(SPI_ADC_CS1_N, 0);
-			k_msleep(1000);
+			k_msleep(1500);
 			continue;
 		}
 
