@@ -23,6 +23,7 @@
 #include "libutil.h"
 #include "plat_i2c.h"
 #include <shell/shell.h>
+#include "plat_log.h"
 
 LOG_MODULE_REGISTER(clock_shell);
 bool clock_name_get(uint8_t index, uint8_t **name);
@@ -386,7 +387,15 @@ void cmd_get_clock_status(const struct shell *shell, size_t argc, char **argv)
 
 			handle_single_clock_status(shell, (enum CLOCK_COMPONENT)i);
 		}
-
+		shell_print(shell, "\n=== %s ===", "GEN_312_5MHz_CLK");
+		uint8_t lock_status = clk_312_5mhz_get_lock_status();
+		if (lock_status == 0xFF) {
+			shell_print(shell, "Failed to get GEN_312_5MHz_CLK APLL lock status");
+		} else if (lock_status == 0) {
+			shell_print(shell, "APLL lock status,  value = %d (unlock)", lock_status);
+		} else {
+			shell_print(shell, "APLL lock status,  value = %d (lock)", lock_status);
+		}
 		return;
 	}
 
