@@ -46,6 +46,30 @@ static uint32_t last_auto_tune_flag = 0;
 
 static uint32_t pump_low_level_next_stage = PUMP_LOW_LEVEL_STAGE_IDLE;
 static uint32_t pump_low_level_group;
+static uint32_t pump_low_level_event1_period = 1 * 24 * 60;
+static uint32_t pump_low_level_event2_period = 3 * 24 * 60;
+static uint32_t pump_low_level_event3_period = 3 * 24 * 60;
+
+bool set_pump_low_level_event_period(uint8_t event_idx, uint16_t time)
+{
+    if (!time)
+        return false;
+
+    switch (event_idx) {
+    case 1:
+        pump_low_level_event1_period = time;
+        break;
+    case 2:
+        pump_low_level_event2_period = time;
+        break;
+    case 3:
+        pump_low_level_event3_period = time;
+        break;
+    default:
+        return false;
+    }
+    return true;
+}
 
 static void pump_low_level_work_handler(struct k_work *work);
 K_WORK_DEFINE(pump_low_level_work, pump_low_level_work_handler);
@@ -64,7 +88,7 @@ static void pump_low_level_work_handler(struct k_work *work)
     case PUMP_LOW_LEVEL_STAGE_DAY1:
         // TODO: write log for stage day 1
         pump_low_level_next_stage = PUMP_LOW_LEVEL_STAGE_DAY4;
-        k_timer_start(&pump_low_level_timer, K_HOURS(24 * 3), K_NO_WAIT);
+        k_timer_start(&pump_low_level_timer, K_MINUTES(pump_low_level_event2_period), K_NO_WAIT);
         break;
 	case PUMP_LOW_LEVEL_STAGE_DAY2:
 		break;
@@ -73,7 +97,7 @@ static void pump_low_level_work_handler(struct k_work *work)
     case PUMP_LOW_LEVEL_STAGE_DAY4:
         // TODO: write log for stage day 4
         pump_low_level_next_stage = PUMP_LOW_LEVEL_STAGE_DAY7;
-        k_timer_start(&pump_low_level_timer, K_HOURS(24 * 3), K_NO_WAIT);
+        k_timer_start(&pump_low_level_timer, K_MINUTES(pump_low_level_event3_period), K_NO_WAIT);
         break;
 	case PUMP_LOW_LEVEL_STAGE_DAY5:
 		break;
@@ -513,7 +537,7 @@ static bool failure_behavior(uint8_t group)
 				if (pump_low_level_next_stage == PUMP_LOW_LEVEL_STAGE_IDLE) {
 					pump_low_level_group = group;
 					pump_low_level_next_stage = PUMP_LOW_LEVEL_STAGE_DAY1;
-					k_timer_start(&pump_low_level_timer, K_HOURS(24), K_NO_WAIT);
+					k_timer_start(&pump_low_level_timer, K_MINUTES(pump_low_level_event1_period), K_NO_WAIT);
 				}
 			} else {
 				set_pwm_group(group, 0);
