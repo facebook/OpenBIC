@@ -39,8 +39,19 @@ K_THREAD_STACK_DEFINE(dimm_cxl2_init_stack, 2048);
 struct k_thread dimm_cxl2_init_thread;
 static k_tid_t dimm_cxl2_init_tid = NULL;
 
+static bool dimm_present_check_in_progress[MAX_CXL_ID] = { false, false };
+
+bool plat_is_dimm_present_check_in_progress(uint8_t cxl_id)
+{
+	if (cxl_id >= MAX_CXL_ID)
+		return false;
+
+	return dimm_present_check_in_progress[cxl_id];
+}
+
 void dimm_cxl1_slot_info_init_handler()
 {
+	dimm_present_check_in_progress[CXL_ID_1] = true;
 	LOG_INF("DIMM slot info initialization for CXL1 started");
 
 	int retry = 0;
@@ -48,6 +59,7 @@ void dimm_cxl1_slot_info_init_handler()
 		int result = vistara_init_ddr_slot_info(CXL_ID_1);
 		if (result > 0) {
 			LOG_INF("CXL1 DIMM slot info initialized successfully");
+			dimm_present_check_in_progress[CXL_ID_1] = false;
 			return;
 		} else {
 			LOG_ERR("Failed to initialize CXL1 DIMM slot info, retry: %d", retry);
@@ -57,10 +69,12 @@ void dimm_cxl1_slot_info_init_handler()
 	}
 
 	LOG_ERR("Failed to initialize CXL1 DIMM slot info after all retries");
+	dimm_present_check_in_progress[CXL_ID_1] = false;
 }
 
 void dimm_cxl2_slot_info_init_handler()
 {
+	dimm_present_check_in_progress[CXL_ID_2] = true;
 	LOG_INF("DIMM slot info initialization for CXL2 started");
 
 	int retry = 0;
@@ -68,6 +82,7 @@ void dimm_cxl2_slot_info_init_handler()
 		int result = vistara_init_ddr_slot_info(CXL_ID_2);
 		if (result > 0) {
 			LOG_INF("CXL2 DIMM slot info initialized successfully");
+			dimm_present_check_in_progress[CXL_ID_2] = false;
 			return;
 		} else {
 			LOG_ERR("Failed to initialize CXL2 DIMM slot info, retry: %d", retry);
@@ -77,6 +92,7 @@ void dimm_cxl2_slot_info_init_handler()
 	}
 
 	LOG_ERR("Failed to initialize CXL2 DIMM slot info after all retries");
+	dimm_present_check_in_progress[CXL_ID_2] = false;
 }
 
 void create_init_ddr_slot_info_thread(uint8_t cxl_id)

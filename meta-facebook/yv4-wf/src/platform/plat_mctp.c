@@ -48,6 +48,8 @@ K_THREAD_STACK_DEFINE(set_dev_endpoint_stack, SET_DEV_ENDPOINT_STACK_SIZE);
 struct k_thread set_dev_endpoint_thread_data;
 static k_tid_t set_dev_endpoint_tid = NULL;
 
+static bool cxl_set_eid_in_progress[MAX_CXL_ID] = { false, false };
+
 static mctp_port plat_mctp_port[] = {
 	{ .conf.smbus_conf.addr = I3C_ADDR_SD_BIC,
 	  .conf.i3c_conf.bus = I3C_BUS_SD_BIC,
@@ -180,9 +182,20 @@ bool set_cxl_eid(uint8_t cxl_id)
 	return false;
 }
 
+bool plat_is_cxl_set_eid_in_progress(uint8_t cxl_id)
+{
+	if (cxl_id >= MAX_CXL_ID) {
+		return false;
+	}
+
+	return cxl_set_eid_in_progress[cxl_id];
+}
+
 static void set_dev_endpoint(void)
 {
 	bool set_eid[MAX_CXL_ID] = { false, false };
+	cxl_set_eid_in_progress[CXL_ID_1] = true;
+	cxl_set_eid_in_progress[CXL_ID_2] = true;
 	// The CXL FW is unstable and its booting up time is random now.
 	// Temporary add retry mechanism for it.
 	for (int attempt = 0; attempt < 60; attempt++) {
@@ -238,13 +251,11 @@ static void set_dev_endpoint(void)
 					case I2C_BUS_CXL1: {
 						LOG_INF("Send set EID command to CXL1");
 						set_eid[CXL_ID_1] = true;
-						create_init_ddr_slot_info_thread(CXL_ID_1);
 						break;
 					}
 					case I2C_BUS_CXL2: {
 						LOG_INF("Send set EID command to CXL2");
 						set_eid[CXL_ID_2] = true;
-						create_init_ddr_slot_info_thread(CXL_ID_2);
 						break;
 					}
 					}
@@ -259,6 +270,13 @@ static void set_dev_endpoint(void)
 		// Delay for 10 seconds before the next attempt
 		k_sleep(K_SECONDS(10));
 	}
+	k_sleep(K_SECONDS(3));
+
+	create_init_ddr_slot_info_thread(CXL_ID_1);
+	create_init_ddr_slot_info_thread(CXL_ID_2);
+
+	cxl_set_eid_in_progress[CXL_ID_1] = false;
+	cxl_set_eid_in_progress[CXL_ID_2] = false;
 }
 
 static uint8_t mctp_msg_recv(void *mctp_p, uint8_t *buf, uint32_t len, mctp_ext_params ext_params)

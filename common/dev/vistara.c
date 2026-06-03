@@ -32,7 +32,7 @@ __weak uint8_t plat_get_cxl_eid(uint8_t cxl_id)
 	return 0;
 }
 
-__weak void plat_set_dimm_cache(uint8_t *resp_buf, uint8_t cxl_id, uint8_t status)
+__weak void plat_set_dimm_cache(const uint8_t *resp_buf, uint8_t cxl_id, uint8_t status)
 {
 	return;
 }
@@ -40,6 +40,16 @@ __weak void plat_set_dimm_cache(uint8_t *resp_buf, uint8_t cxl_id, uint8_t statu
 __weak float plat_get_dimm_cache(uint8_t cxl_id, uint8_t dimm_id)
 {
 	return 0;
+}
+
+__weak bool plat_is_cxl_set_eid_in_progress(uint8_t cxl_id)
+{
+	return false;
+}
+
+__weak bool plat_is_dimm_present_check_in_progress(uint8_t cxl_id)
+{
+	return false;
 }
 
 bool vistara_read_ddr_temp(uint8_t cxl_eid, uint8_t *resp)
@@ -127,13 +137,13 @@ int vistara_init_ddr_slot_info(uint8_t cxl_id)
 		}
 
 		// 4 byte(slot count) + 16 byte(per DIMM) * 4
-		uint8_t *dimm_data = resp_buf + 4; // skip 4 byte(slot count)
+		const uint8_t *dimm_data = resp_buf + 4; // skip 4 byte(slot count)
 
 		for (int dimm_idx = 0; dimm_idx < MAX_DIMM_PER_CXL && dimm_idx < num_slots;
 		     dimm_idx++) {
 			dimm_slot_info_t *dimm_info =
 				&g_ddr_slot_cache.slot_info[cxl_id].dimm_info[dimm_idx];
-			uint8_t *current_dimm = dimm_data + (dimm_idx * 16);
+			const uint8_t *current_dimm = dimm_data + (dimm_idx * 16);
 
 			dimm_info->spd_i2c_addr = current_dimm[0];
 			dimm_info->channel_id = current_dimm[1];
@@ -236,7 +246,7 @@ uint8_t vistara_read(sensor_cfg *cfg, int *reading)
 	uint8_t dimm_id = cfg->target_addr;
 	uint8_t sensor_type = cfg->arg0;
 	uint8_t dimm_idx = dimm_id % MAX_DIMM_PER_CXL;
-	vistara_init_arg *init_arg = (vistara_init_arg *)cfg->init_args;
+	const vistara_init_arg *init_arg = (const vistara_init_arg *)cfg->init_args;
 
 	sensor_val *sval = (sensor_val *)reading;
 	float f_val = 0;
@@ -244,6 +254,19 @@ uint8_t vistara_read(sensor_cfg *cfg, int *reading)
 	switch (sensor_type) {
 	case DDR_TEMP: {
 		uint8_t resp_buf[READ_DDR_TEMP_RESP_LEN];
+
+		if (plat_is_cxl_set_eid_in_progress(cxl_id)) {
+			LOG_WRN("Skip CXL%d DIMM temp query because set EID is in progress",
+				cxl_id + 1);
+			return SENSOR_FAIL_TO_ACCESS;
+		}
+
+		if (plat_is_dimm_present_check_in_progress(cxl_id)) {
+			LOG_WRN("Skip CXL%d DIMM temp query because DIMM present check is in progress",
+				cxl_id + 1);
+			return SENSOR_FAIL_TO_ACCESS;
+		}
+
 		if (init_arg->is_cached) {
 			k_mutex_lock(&g_ddr_slot_cache.mutex[cxl_id], K_FOREVER);
 			// Get master dimm id from slot info cache
@@ -278,8 +301,11 @@ uint8_t vistara_read(sensor_cfg *cfg, int *reading)
 				return SENSOR_FAIL_TO_ACCESS;
 			} else {
 				read_ddr_temp_resp *ddr_temp =
-					(read_ddr_temp_resp *)(resp_buf + dimm_idx * 8);
-				f_val = *((float *)&ddr_temp->dimm_temp);
+					(read_ddr_temp_resp *)(resp_buf +
+							       dimm_idx *
+								       sizeof(read_ddr_temp_resp));
+
+				memcpy(&f_val, ddr_temp->dimm_temp, sizeof(float));
 				LOG_HEXDUMP_INF(ddr_temp->dimm_temp, sizeof(float), "ddr temp");
 			}
 		}
@@ -304,7 +330,7 @@ uint8_t vistara_init(sensor_cfg *cfg)
 	return SENSOR_INIT_SUCCESS;
 }
 
-static inline int validate_spd_read_params(uint8_t *out, uint8_t dimm_idx, uint16_t offset,
+static inline int validate_spd_read_params(const uint8_t *out, uint8_t dimm_idx, uint16_t offset,
 					   uint8_t length)
 {
 	if (!out || length == 0 || length > VISTARA_SPD_CHUNK_DEFAULT || dimm_idx > 3 ||

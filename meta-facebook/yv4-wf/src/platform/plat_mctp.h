@@ -66,5 +66,6 @@ mctp *find_mctp_by_bus(uint8_t bus);
 bool check_cxl_eid(uint8_t cxl_id);
 bool set_cxl_eid(uint8_t cxl_id);
 uint8_t plat_get_cxl_eid(uint8_t cxl_id);
+bool plat_is_cxl_set_eid_in_progress(uint8_t cxl_id);
 
 #endif /* _PLAT_MCTP_h */

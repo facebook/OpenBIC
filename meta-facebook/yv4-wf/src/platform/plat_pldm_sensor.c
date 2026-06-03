@@ -6761,7 +6761,7 @@ float plat_get_dimm_cache(uint8_t cxl_id, uint8_t dimm_id)
 	return result;
 }
 
-void plat_set_dimm_cache(uint8_t *resp_buf, uint8_t cxl_id, uint8_t status)
+void plat_set_dimm_cache(const uint8_t *resp_buf, uint8_t cxl_id, uint8_t status)
 {
 	if (k_mutex_lock(&cxl_dimm_mutex, K_MSEC(CXL_DIMM_MUTEX_WAITING_TIME_MS))) {
 		cxl_dimm_temp[cxl_id][DIMMA_ID] = -1;
