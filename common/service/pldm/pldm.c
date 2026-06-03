@@ -248,7 +248,7 @@ uint16_t mctp_pldm_read(void *mctp_p, pldm_msg *msg, uint8_t *rbuf, uint16_t rbu
 	}
 	SAFE_FREE(event_msgq_p);
 	SAFE_FREE(recv_arg_p);
-	LOG_WRN("Retry reach max!");
+	LOG_ERR("Retry reach max!, pldm msg max retry: %d", PLDM_MSG_MAX_RETRY);
 	return 0;
 }
 

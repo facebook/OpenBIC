@@ -76,6 +76,6 @@
 #define WORKER_STACK_SIZE 2048
 
 #define PLDM_MSG_TIMEOUT_MS 20000
-#define PLDM_MSG_MAX_RETRY 5
+#define PLDM_MSG_MAX_RETRY 20
 
 #endif
