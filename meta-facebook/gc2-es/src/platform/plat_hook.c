@@ -74,6 +74,7 @@ mp5998_plat_init_arg mp5998_plat_init_args[] = {
 		.iin_oc_fault_limit = 0x01B7, //5Bh value : 27.4375    lsb : 1/16 A
 		.iin_oc_warn_limit = 0x0195, //5Dh value : 25.3125
 		.fault_mask = 0x0008, //D4h
+		.efuse_cfg = 0x49CC, //C4h
 		.protect_en = 0x3EFF } //CAh
 };
 

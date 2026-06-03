@@ -258,6 +258,13 @@ void mp5998_plat_init()
 	data[2] = (init_args->fault_mask >> 8) & 0xFF;
 	msg = construct_i2c_message(bus, addr, 3, data, 0);
 	i2c_master_write(&msg, retry);
+
+	/* efuse_cfg */
+	data[0] = 0xC4; // 0xC4
+	data[1] = init_args->efuse_cfg & 0xFF;
+	data[2] = (init_args->efuse_cfg >> 8) & 0xFF;
+	msg = construct_i2c_message(bus, addr, 3, data, 0);
+	i2c_master_write(&msg, retry);
 }
 
 void tps25990_plat_init()
