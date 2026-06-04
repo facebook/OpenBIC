@@ -56,6 +56,15 @@ static int cmd_voltage_get_all(const struct shell *shell, size_t argc, char **ar
 			continue;
 		}
 
+		if (get_svs_flag() == 1) {
+			if(i == VR_RAIL_E_ASIC_P0V85_MEDHA0_VDD || i == VR_RAIL_E_ASIC_P0V85_MEDHA1_VDD) {
+				// if svs is enable, vout need to - vout ofset
+				uint16_t offset = 0;
+				voltage_offset_get(i, &offset);
+				vout -= offset;
+			}
+		}
+
 		shell_print(shell, "%4d|%-40s|%4d", i, rail_name, vout);
 	}
 
