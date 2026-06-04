@@ -158,6 +158,23 @@ static void cmd_svs_flag_set(const struct shell *shell, size_t argc, char **argv
 	shell_print(shell, "Current SVS flag: %d", svs_flag);
 }
 
+void cmd_get_medha_vout_offset(const struct shell *shell, size_t argc, char **argv)
+{
+	uint16_t vout_offset_value = 0;
+	if (!voltage_offset_get(VR_RAIL_E_ASIC_P0V85_MEDHA0_VDD, &vout_offset_value)) {
+		shell_error(shell, "Failed to get medha0 vout offset");
+		return;
+	}
+	shell_print(shell, "Medha0 vout offset: %d mV", vout_offset_value);
+
+	vout_offset_value = 0;
+	if (!voltage_offset_get(VR_RAIL_E_ASIC_P0V85_MEDHA1_VDD, &vout_offset_value)) {
+		shell_error(shell, "Failed to get medha1 vout offset");
+		return;
+	}
+	shell_print(shell, "Medha1 vout offset: %d mV", vout_offset_value);
+}
+
 SHELL_DYNAMIC_CMD_CREATE(voltage_rname, voltage_rname_get);
 
 /* level 2 */
@@ -169,6 +186,8 @@ SHELL_STATIC_SUBCMD_SET_CREATE(sub_voltage_get_cmds,
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_svs_cmds, SHELL_CMD(get, NULL, "get svs flag", cmd_svs_flag_get),
 			       SHELL_CMD(set, NULL, "set svs flag <0/1>", cmd_svs_flag_set),
 			       SHELL_SUBCMD_SET_END);
+SHELL_STATIC_SUBCMD_SET_CREATE(vo_ofst_cmds, SHELL_CMD(get, NULL, "get medha vout offset", cmd_get_medha_vout_offset),
+			       SHELL_SUBCMD_SET_END);
 
 /* level 1 */
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_voltage_cmds,
@@ -177,6 +196,7 @@ SHELL_STATIC_SUBCMD_SET_CREATE(sub_voltage_cmds,
 					     "set <voltage-rail> <new-voltage>|default [perm]",
 					     cmd_voltage_set, 3, 1),
 			       SHELL_CMD(svs_flag, &sub_svs_cmds, "svs flag commands", NULL),
+				   SHELL_CMD(get_medha_vout_offset, &vo_ofst_cmds, "get medha vout offset", NULL),
 			       SHELL_SUBCMD_SET_END);
 
 /* Root of command test */
