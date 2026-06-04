@@ -763,6 +763,14 @@ bool perm_config_clear(void)
 		return false;
 	}
 
+	/* clear all bootstrap perm parameters */
+	memset(bootstrap_user_settings.user_setting_value, 0xFF,
+	       sizeof(bootstrap_user_settings.user_setting_value));
+	if (!bootstrap_user_settings_set(&bootstrap_user_settings)) {
+		LOG_ERR("The perm_config clear failed");
+		return false;
+	}
+
 	return true;
 }
 

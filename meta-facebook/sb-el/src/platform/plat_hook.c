@@ -1295,10 +1295,15 @@ bool set_ioexp_val_to_bootstrap_table(void)
 			return false;
 		}
 		// set when output only
+		uint8_t old_e =
+			bootstrap_table[STRAP_INDEX_OWL_E_BOOT_SOURCE_0_7].change_setting_value;
+		uint8_t old_w =
+			bootstrap_table[STRAP_INDEX_OWL_W_BOOT_SOURCE_0_7].change_setting_value;
+
 		bootstrap_table[STRAP_INDEX_OWL_E_BOOT_SOURCE_0_7].change_setting_value =
-			(data[0] & (~direction[0]));
+			(old_e & direction[0]) | (data[0] & (~direction[0]));
 		bootstrap_table[STRAP_INDEX_OWL_W_BOOT_SOURCE_0_7].change_setting_value =
-			(data[1] & (~direction[1]));
+			(old_w & direction[1]) | (data[1] & (~direction[1]));
 	}
 
 	if (is_evb_ioe_accessible()) {
