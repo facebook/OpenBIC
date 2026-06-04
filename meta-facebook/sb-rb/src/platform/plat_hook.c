@@ -746,7 +746,7 @@ vr_vout_user_settings_struct voltage_command_get = { 0 };
 struct vr_vout_offset vr_offset_init = { 0 };
 vr_vout_user_settings_struct vr_vout_user_settings = { 0 };
 vr_vout_range_user_settings_struct vout_range_user_settings = { 0 };
-bool plat_set_vout_command(uint8_t rail, uint16_t *millivolt, bool is_default)
+bool plat_set_vout_command(uint8_t rail, uint16_t *millivolt, bool is_perm)
 {
 	CHECK_NULL_ARG_WITH_RETURN(millivolt, false);
 

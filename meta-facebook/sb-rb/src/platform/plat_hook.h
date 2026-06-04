@@ -221,7 +221,7 @@ typedef struct vr_vout_range_user_settings_struct {
 } vr_vout_range_user_settings_struct;
 typedef struct vr_vout_user_settings_struct {
 	uint16_t vout[VR_RAIL_E_MAX];
-} vr_vout_user_settings;
+} vr_vout_user_settings_struct;
 typedef struct vr_vout_offset {
 	uint16_t vout_offset[2]; // onlt medha0/1
 } vr_vout_offset;
