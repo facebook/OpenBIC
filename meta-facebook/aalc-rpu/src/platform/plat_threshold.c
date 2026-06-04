@@ -590,12 +590,14 @@ void level_sensor_do(uint32_t unused, uint32_t status)
 	if (get_threshold_status(SENSOR_NUM_BPB_RACK_LEVEL_2)) {
 		set_sticky_sensor_status(STICKY_HEX_BLADDER_ABNORMAL, 1);
 		set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_LOW_LEVEL, 1);
+		low_level_failure_enable(1);
 		error_log_event(SENSOR_NUM_BPB_RACK_LEVEL_2, IS_ABNORMAL_VAL);
 		if (get_threshold_status(SENSOR_NUM_BPB_RACK_LEVEL_1))
 			led_ctrl(LED_IDX_E_COOLANT, LED_TURN_OFF);
 		else
 			LOG_DBG("BPB_RACK_LEVEL_1 fail\n");
 	} else {
+		low_level_failure_enable(0);
 		if (get_threshold_status(SENSOR_NUM_BPB_RACK_LEVEL_1)) {
 			led_ctrl(LED_IDX_E_COOLANT, LED_START_BLINK);
 		} else {

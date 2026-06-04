@@ -45,10 +45,9 @@ static uint32_t pump3_current_boot_unrunning_time = 0;
 static uint32_t last_auto_tune_flag = 0;
 
 static uint32_t pump_low_level_next_event = PUMP_FAIL_LOW_LEVEL_EVENT_IDLE;
-static uint32_t pump_low_level_group;
-static uint32_t pump_low_level_event1_duration = 1 * 24 * 60;
-static uint32_t pump_low_level_event2_duration = 3 * 24 * 60;
-static uint32_t pump_low_level_event3_duration = 3 * 24 * 60;
+static uint32_t pump_low_level_event1_duration = 1 * 24 * 60; //low level time for 1st day
+static uint32_t pump_low_level_event2_duration = 3 * 24 * 60; //low level time for 1st to 4th day
+static uint32_t pump_low_level_event3_duration = 3 * 24 * 60; //low level time for 4th to 7th day
 
 bool set_pump_low_level_event_duration(uint8_t event_idx, uint32_t time)
 {
@@ -56,13 +55,13 @@ bool set_pump_low_level_event_duration(uint8_t event_idx, uint32_t time)
         return false;
 
     switch (event_idx) {
-    case PUMP_FAIL_LOW_LEVEL_EVENT_1:
+    case PUMP_FAIL_LOW_LEVEL_EVENT_1TO4_DAY:
         pump_low_level_event1_duration = time;
         break;
-    case PUMP_FAIL_LOW_LEVEL_EVENT_2:
+    case PUMP_FAIL_LOW_LEVEL_EVENT_4TO7_DAY:
         pump_low_level_event2_duration = time;
         break;
-    case PUMP_FAIL_LOW_LEVEL_EVENT_3:
+    case PUMP_FAIL_LOW_LEVEL_EVENT_7MORE_DAY:
         pump_low_level_event3_duration = time;
         break;
     default:
@@ -71,7 +70,36 @@ bool set_pump_low_level_event_duration(uint8_t event_idx, uint32_t time)
     return true;
 }
 
-static void pump_low_level_work_handler(struct k_work *work);
+static void pump_low_level_work_handler(struct k_work *work)
+{
+    ARG_UNUSED(work);
+
+    switch (pump_low_level_next_event) {
+    case PUMP_FAIL_LOW_LEVEL_EVENT_1ST_DAY:
+        // TODO: write log for stage day 1
+        pump_low_level_next_event = PUMP_FAIL_LOW_LEVEL_EVENT_1TO4_DAY;
+		error_log_event(SENSOR_NUM_BPB_RACK_LEVEL_2_1DAY_FAIL, IS_ABNORMAL_VAL);	
+        k_timer_start(&pump_low_level_timer, K_MINUTES(pump_low_level_event2_duration), K_NO_WAIT);
+        break;
+    case PUMP_FAIL_LOW_LEVEL_EVENT_4TH_DAY:
+        // TODO: write log for stage day 4
+        pump_low_level_next_event = PUMP_FAIL_LOW_LEVEL_EVENT_4TO7_DAY;
+		error_log_event(SENSOR_NUM_BPB_RACK_LEVEL_2_4DAY_FAIL, IS_ABNORMAL_VAL);	
+        k_timer_start(&pump_low_level_timer, K_MINUTES(pump_low_level_event3_duration), K_NO_WAIT);
+        break;
+    case PUMP_FAIL_LOW_LEVEL_EVENT_7TH_DAY:
+        set_status_flag(STATUS_FLAG_FAILURE, PUMP_FAIL_LOW_LEVEL, 1);
+        pump_low_level_next_event = PUMP_FAIL_LOW_LEVEL_EVENT_7MORE_DAY;
+		error_log_event(SENSOR_NUM_BPB_RACK_LEVEL_2_7DAY_FAIL, IS_ABNORMAL_VAL);
+		k_timer_stop(&pump_low_level_timer);		
+        break;
+    default:
+        pump_low_level_next_event = PUMP_FAIL_LOW_LEVEL_EVENT_IDLE;
+		k_timer_stop(&pump_low_level_timer);
+        break;
+    }
+}
+
 K_WORK_DEFINE(pump_low_level_work, pump_low_level_work_handler);
 
 static void pump_low_level_timer_handler(struct k_timer *timer)
@@ -80,30 +108,6 @@ static void pump_low_level_timer_handler(struct k_timer *timer)
 }
 K_TIMER_DEFINE(pump_low_level_timer, pump_low_level_timer_handler, NULL);
 
-static void pump_low_level_work_handler(struct k_work *work)
-{
-    ARG_UNUSED(work);
-
-    switch (pump_low_level_next_event) {
-    case PUMP_FAIL_LOW_LEVEL_EVENT_1:
-        // TODO: write log for stage day 1
-        pump_low_level_next_event = PUMP_FAIL_LOW_LEVEL_EVENT_2;
-        k_timer_start(&pump_low_level_timer, K_MINUTES(pump_low_level_event2_duration), K_NO_WAIT);
-        break;
-    case PUMP_FAIL_LOW_LEVEL_EVENT_2:
-        // TODO: write log for stage day 4
-        pump_low_level_next_event = PUMP_FAIL_LOW_LEVEL_EVENT_3;
-        k_timer_start(&pump_low_level_timer, K_MINUTES(pump_low_level_event3_duration), K_NO_WAIT);
-        break;
-    case PUMP_FAIL_LOW_LEVEL_EVENT_3:
-        set_pwm_group(pump_low_level_group, 0);
-        pump_low_level_next_event = PUMP_FAIL_LOW_LEVEL_EVENT_IDLE;
-        break;
-    default:
-        pump_low_level_next_event = PUMP_FAIL_LOW_LEVEL_EVENT_IDLE;
-        break;
-    }
-}
 
 static void pump1_hsc_adm1272_re_enable();
 K_WORK_DELAYABLE_DEFINE(pump1_adm1272_re_enable_handler_5sec, pump1_hsc_adm1272_re_enable);
@@ -519,21 +523,25 @@ void pump_redundant_enable(uint8_t onoff)
 	}
 }
 
+void low_level_failure_enable(uint8_t onoff)
+{
+	if (onoff) {
+		pump_low_level_next_event = PUMP_FAIL_LOW_LEVEL_EVENT_0TO1_DAY;
+		k_timer_start(&pump_low_level_timer, K_MINUTES(pump_low_level_event1_duration),
+			      K_NO_WAIT);
+	} else {
+		pump_low_level_next_event = PUMP_FAIL_LOW_LEVEL_EVENT_IDLE;
+		k_timer_stop(&pump_low_level_timer);
+	}
+}
+
 // If a failure occurs, return true
 static bool failure_behavior(uint8_t group)
 {
 	// all 0
 	for (uint8_t i = PUMP_FAIL_EMERGENCY_BUTTON; i <= PUMP_FAIL_CLOSE_PUMP; i++) {
 		if ((get_status_flag(STATUS_FLAG_FAILURE) >> i) & 0x01) {
-			if (i == PUMP_FAIL_LOW_LEVEL) {
-				if (pump_low_level_next_event == PUMP_FAIL_LOW_LEVEL_EVENT_IDLE) {
-					pump_low_level_group = group;
-					pump_low_level_next_event = PUMP_FAIL_LOW_LEVEL_EVENT_1;
-					k_timer_start(&pump_low_level_timer, K_MINUTES(pump_low_level_event1_duration), K_NO_WAIT);
-				}
-			} else {
-				set_pwm_group(group, 0);
-			}
+			set_pwm_group(group, 0);
 			return true;
 		}
 	}
