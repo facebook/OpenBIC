@@ -36,7 +36,7 @@ static bool plat_sensor_temp_polling_enable_flag = true;
 static bool plat_sensor_vr_polling_enable_flag = true;
 static uint8_t plat_sensor_one_step_power_enable_flag = 0;
 
-uint8_t pwr_capping_pollng_rate_type = 0;
+uint8_t pwr_capping_pollng_rate_type = 7;
 
 static struct pldm_sensor_thread pal_pldm_sensor_thread[MAX_SENSOR_THREAD_ID] = {
 	// thread id, thread name
