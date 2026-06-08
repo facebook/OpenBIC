@@ -4,6 +4,10 @@ on:
   schedule:
       - cron: '0 0 * * *' # Once per day at midnight
 
+
+permissions:
+  contents: read
+
 jobs:
   # This will skip the nightly if there are no new commits since the previous nightly.
   # Might as well save some electrons on the weekend.
