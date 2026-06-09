@@ -70,6 +70,28 @@ bool set_pump_low_level_event_duration(uint8_t event_idx, uint32_t time)
     return true;
 }
 
+bool get_pump_low_level_event_duration(uint8_t event_idx, uint32_t *time)
+{
+    if (!time)
+        return false;
+
+    switch (event_idx) {
+    case PUMP_FAIL_LOW_LEVEL_EVENT_0TO1_DAY:
+        *time = pump_low_level_event1_duration;
+        break;
+    case PUMP_FAIL_LOW_LEVEL_EVENT_1TO4_DAY:
+        *time = pump_low_level_event2_duration;
+        break;
+    case PUMP_FAIL_LOW_LEVEL_EVENT_4TO7_DAY:
+        *time = pump_low_level_event3_duration;
+        break;
+    default:
+        return false;
+    }
+
+    return true;
+}
+
 static void pump_low_level_timer_handler(struct k_timer *timer);
 K_TIMER_DEFINE(pump_low_level_timer, pump_low_level_timer_handler, NULL);
 static void pump_low_level_work_handler(struct k_work *work);
