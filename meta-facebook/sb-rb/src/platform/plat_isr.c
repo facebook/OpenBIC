@@ -302,6 +302,7 @@ void ISR_GPIO_RST_IRIS_PWR_ON_PLD_R1_N()
 		reset_error_log_states(err_type);
 		// re-init adc
 		set_is_adc_init(0);
+		vr_vout_offset_get_init();
 	} else {
 		plat_switch_pin_a12(true); /* LOW -> A12 = GPIO73 output low */
 		gpio_conf(SPI_ADC_CS1_N, GPIO_OUTPUT);
