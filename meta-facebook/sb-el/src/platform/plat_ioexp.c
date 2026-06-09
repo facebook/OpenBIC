@@ -95,8 +95,8 @@ void set_hamsa_mfio_6_8_10_output()
 
 bool tca6424a_init(void)
 {
-	// uint8_t data[3] = { 0xFD, 0xFF, 0xFD }; // HAMSA_MFIO19 out, OWL_EW_VQPS out
-	uint8_t data[3] = { 0x00, 0x00, 0x00 }; // all output
+	// HAMSA_MFIO19 VQPS_W_EN VQPS_E_EN out
+	uint8_t data[3] = { 0xFD, 0xFF, 0xE1 };
 	if (!tca6424a_i2c_write(TCA6424A_CONFIG_0, data, 3))
 		return false;
 
@@ -293,7 +293,7 @@ void set_nuwa1_mfio_6_8_10_output(void)
 bool tcal6408r_init(void)
 {
 	/* CONFIG: 1=input, 0=output -> set all output */
-	uint8_t cfg = 0x00;
+	uint8_t cfg = 0xFF;
 	if (!tcal6408r_i2c_write(TCAL6408R_CONFIG_0, &cfg, 1)) {
 		LOG_ERR("tcal6408r init: set CONFIG_0 fail");
 		return false;
