@@ -1493,6 +1493,11 @@ bool mp2971_set_ovp_1(sensor_cfg *cfg, uint8_t rail, uint16_t *ovp_1_mv)
 		return false;
 	}
 
+	if (*ovp_1_mv < vout_max_mv) {
+		LOG_ERR("ovp_1_mv must be >= vout_max");
+		return false;
+	}
+
 	uint16_t delta_mv = *ovp_1_mv - vout_max_mv;
 	uint8_t code = (uint8_t)((delta_mv / 50U) - 1U);
 
