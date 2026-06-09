@@ -107,6 +107,7 @@ void pal_post_init()
 		asic_thermtrip_error_log(LOG_ASSERT);
 	// check clk 312.5Mhz init
 	check_312_5MHz_init_status();
+	vr_vout_offset_get_init();
 }
 
 #define DEF_PROJ_GPIO_PRIORITY 78
