@@ -1499,6 +1499,16 @@ bool mp2971_set_ovp_1(sensor_cfg *cfg, uint8_t rail, uint16_t *ovp_1_mv)
 	}
 
 	uint16_t delta_mv = *ovp_1_mv - vout_max_mv;
+
+	if (delta_mv < 50) {
+		delta_mv = 50;
+	}
+
+	/* optional: upper bound */
+	if (delta_mv > 400) {
+		delta_mv = 400;
+	}
+
 	uint8_t code = (uint8_t)((delta_mv / 50U) - 1U);
 
 	uint8_t data[2] = { 0 };
