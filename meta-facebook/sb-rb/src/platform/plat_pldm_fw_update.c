@@ -723,7 +723,7 @@ uint8_t plat_pldm_query_device_identifiers(const uint8_t *buf, uint16_t len, uin
 	// Set the device id for sd bic
 	uint8_t deviceId[PLDM_PCI_DEVICE_ID_LENGTH] = { 0x00, 0x00 };
 
-	uint8_t slotNumber = plat_get_eid() / 10;
+	uint8_t slotNumber = get_mmc_slot() + 1;
 	uint8_t slot[PLDM_ASCII_MODEL_NUMBER_SHORT_STRING_LENGTH] = { (char)(slotNumber + '0') };
 
 	uint8_t total_size_of_iana_descriptor =
