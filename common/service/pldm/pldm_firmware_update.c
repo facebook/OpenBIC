@@ -1337,7 +1337,9 @@ static uint8_t get_status(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t i
 		goto exit;
 	}
 
+#ifndef PLDM_UPDATE_NOT_SHOW_GET_STATUS_LOG
 	LOG_INF("Get status");
+#endif
 	resp_p->completion_code = PLDM_SUCCESS;
 	resp_p->cur_state = current_state;
 	resp_p->pre_state = previous_state;

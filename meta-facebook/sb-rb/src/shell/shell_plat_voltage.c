@@ -186,6 +186,29 @@ void cmd_get_medha_vout_offset(const struct shell *shell, size_t argc, char **ar
 	shell_print(shell, "Medha1 vout offset: %d mV", vout_offset_value);
 }
 
+void cmd_svs_asic_voltage_set(const struct shell *shell, size_t argc, char **argv)
+{
+	if (argc < 2) {
+		shell_error(shell, "Usage: set svs_asic_voltage <0/1>");
+		return;
+	}
+
+	uint8_t svs_asic_voltage_flag = strtol(argv[1], NULL, 0);
+	//flag only support 0 or 1
+	if (svs_asic_voltage_flag > 1) {
+		shell_error(shell, "Only 0 or 1 is allowed.", svs_asic_voltage_flag);
+		return;
+	}
+	set_svs_asic_voltage_flag(svs_asic_voltage_flag);
+	shell_print(shell, "svs asic voltage setting(1:apply, 0:block): %d", svs_asic_voltage_flag);
+}
+
+void cmd_svs_asic_voltage_get(const struct shell *shell, size_t argc, char **argv)
+{
+	uint8_t svs_asic_voltage_flag = get_svs_asic_voltage_flag();
+	shell_print(shell, "svs asic voltage setting(1:apply, 0:block): %d", svs_asic_voltage_flag);
+}
+
 SHELL_DYNAMIC_CMD_CREATE(voltage_rname, voltage_rname_get);
 
 /* level 2 */
@@ -197,12 +220,22 @@ SHELL_STATIC_SUBCMD_SET_CREATE(sub_voltage_get_cmds,
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_svs_cmds, SHELL_CMD(get, NULL, "get svs flag", cmd_svs_flag_get),
 			       SHELL_CMD(set, NULL, "set svs flag <0/1>", cmd_svs_flag_set),
 			       SHELL_SUBCMD_SET_END);
+
+SHELL_STATIC_SUBCMD_SET_CREATE(sub_svs_asic_voltage,
+			       SHELL_CMD(set, NULL, "set svs asic voltage: apply or block",
+					 cmd_svs_asic_voltage_set),
+			       SHELL_CMD(get, NULL, "get svs asic voltage: apply or block",
+					 cmd_svs_asic_voltage_get),
+			       SHELL_SUBCMD_SET_END);
+
 /* level 1 */
 SHELL_STATIC_SUBCMD_SET_CREATE(
 	sub_voltage_cmds, SHELL_CMD(get, &sub_voltage_get_cmds, "get voltage all", NULL),
 	SHELL_CMD_ARG(set, &voltage_rname, "set <voltage-rail> <new-voltage>|default [perm]",
 		      cmd_voltage_set, 3, 1),
 	SHELL_CMD(svs_apply_offset, &sub_svs_cmds, "svs apply commands", NULL),
+	SHELL_CMD(svs_asic_voltage, &sub_svs_asic_voltage, "svs asic voltage setting commands",
+		  NULL),
 	SHELL_CMD(get_medha_vout_offset, NULL, "get medha vout offset", cmd_get_medha_vout_offset),
 	SHELL_SUBCMD_SET_END);
 
