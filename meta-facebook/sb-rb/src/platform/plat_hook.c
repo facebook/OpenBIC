@@ -1916,7 +1916,7 @@ uint8_t get_error_bootstrap_index_list(uint8_t index)
 	return error_bootstrap_setting_value_index[index];
 }
 
-static uint8_t svs_flag = 0;
+static uint8_t svs_flag = 1; // 1: enable, 0: disable
 uint8_t get_svs_flag()
 {
 	return svs_flag;
@@ -1925,6 +1925,16 @@ uint8_t get_svs_flag()
 void set_svs_flag(uint8_t flag)
 {
 	svs_flag = flag;
+}
+static uint8_t svs_asic_voltage_flag = 1; // 1: enable, 0: block
+uint8_t get_svs_asic_voltage_flag()
+{
+	return svs_asic_voltage_flag;
+}
+
+void set_svs_asic_voltage_flag(uint8_t flag)
+{
+	svs_asic_voltage_flag = flag;
 }
 bool vr_vout_default_settings_init(void)
 {
