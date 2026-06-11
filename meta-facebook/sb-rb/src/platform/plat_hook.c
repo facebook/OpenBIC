@@ -32,6 +32,7 @@
 #include "tmp431.h"
 #include "emc1413.h"
 #include "plat_util.h"
+#include "iris_smbus.h"
 
 LOG_MODULE_REGISTER(plat_hook);
 
@@ -219,6 +220,74 @@ bool post_tmp432_read(sensor_cfg *cfg, void *args, int *reading)
 	}
 
 	return post_common_sensor_read(cfg, args, reading);
+}
+
+uint8_t iris_temp_data[ASIC_MONITOR_TEMP_REG_LEN] = { 0 };
+uint8_t iris_hbm_temp_data[ASIC_MONITOR_HBM_TEMP_REG_LEN] = { 0 };
+
+bool post_iris_sensor_read(sensor_cfg *cfg, void *args, int *reading)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	ARG_UNUSED(args);
+
+	iris_priv_data_t *priv = (iris_priv_data_t *)cfg->priv_data;
+
+	if (!priv) {
+		return false;
+	}
+
+	switch (cfg->num) {
+	case SENSOR_NUM_IRIS_HAMSA_REMOTE_TEMP_C:
+		memcpy(iris_temp_data, priv->temp, ASIC_MONITOR_TEMP_REG_LEN);
+		*reading = iris_temp_data[1];
+		break;
+	case SENSOR_NUM_IRIS_HEDHA0_REMOTE_TEMP_C:
+		*reading = iris_temp_data[2];
+		break;
+	case SENSOR_NUM_IRIS_HEDHA1_REMOTE_TEMP_C:
+		*reading = iris_temp_data[3];
+		break;
+	case SENSOR_NUM_IRIS_OWLE_REMOTE_TEMP_C:
+		*reading = iris_temp_data[4];
+		break;
+	case SENSOR_NUM_IRIS_OWLW_REMOTE_TEMP_C:
+		*reading = iris_temp_data[5];
+		break;
+	case SENSOR_NUM_IRIS_HEDHA0_HBM0_REMOTE_TEMP_C:
+		memcpy(iris_hbm_temp_data, priv->hbm_temp, ASIC_MONITOR_HBM_TEMP_REG_LEN);
+		*reading = iris_hbm_temp_data[1];
+		break;
+	case SENSOR_NUM_IRIS_HEDHA0_HBM1_REMOTE_TEMP_C:
+		*reading = iris_hbm_temp_data[2];
+		break;
+	case SENSOR_NUM_IRIS_HEDHA0_HBM2_REMOTE_TEMP_C:
+		*reading = iris_hbm_temp_data[3];
+		break;
+	case SENSOR_NUM_IRIS_HEDHA0_HBM3_REMOTE_TEMP_C:
+		*reading = iris_hbm_temp_data[4];
+		break;
+	case SENSOR_NUM_IRIS_HEDHA1_HBM0_REMOTE_TEMP_C:
+		*reading = iris_hbm_temp_data[5];
+		break;
+	case SENSOR_NUM_IRIS_HEDHA1_HBM1_REMOTE_TEMP_C:
+		*reading = iris_hbm_temp_data[6];
+		break;
+	case SENSOR_NUM_IRIS_HEDHA1_HBM2_REMOTE_TEMP_C:
+		*reading = iris_hbm_temp_data[7];
+		break;
+	case SENSOR_NUM_IRIS_HEDHA1_HBM3_REMOTE_TEMP_C:
+		*reading = iris_hbm_temp_data[8];
+		break;
+	default:
+		*reading = 0;
+		return false;
+	}
+
+	if (*reading < 0 || *reading > 150) {
+		cfg->cache_status = PLDM_SENSOR_UNAVAILABLE;
+		return false;
+	}
+	return true;
 }
 
 bool is_mb_dc_on()

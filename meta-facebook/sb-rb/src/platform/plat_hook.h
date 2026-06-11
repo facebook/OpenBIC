@@ -310,4 +310,5 @@ bool vr_vout_default_settings_init(void);
 bool plat_get_get_vout_offset(uint8_t rail, uint16_t *vout_offset);
 bool vr_vout_offset_get_init(void);
 bool voltage_offset_get(uint8_t rail, uint16_t *vout_offset);
+bool post_iris_sensor_read(sensor_cfg *cfg, void *args, int *const reading);
 #endif

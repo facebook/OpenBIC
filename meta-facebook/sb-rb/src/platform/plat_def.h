@@ -38,6 +38,7 @@
 #define ENABLE_BMR316
 #define ENABLE_LX6301
 #define ENABLE_MCTP_I3C
+#define ENABLE_IRIS_SMBUS
 
 #define DISABLE_AST_ADC
 #define DISABLE_NVME
