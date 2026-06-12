@@ -69,7 +69,9 @@ I2C_MSG construct_i2c_message(uint8_t bus_id, uint8_t address, uint8_t tx_len, u
 	i2c_msg.bus = bus_id;
 	i2c_msg.target_addr = address;
 	i2c_msg.tx_len = tx_len;
-	memcpy(i2c_msg.data, data, tx_len);
+	if ((tx_len != 0) && (data != NULL)) {
+		memcpy(i2c_msg.data, data, tx_len);
+	}
 	i2c_msg.rx_len = rx_len;
 	return i2c_msg;
 }
@@ -169,7 +171,8 @@ int uint8_t_to_dec_ascii_pointer(uint8_t val, uint8_t *result, uint8_t len)
 	uint8_t divisor = 100;
 
 	while ((divisor > 0) && (idx < len)) {
-		if ((val / divisor) == 0 && (idx == 0)) {
+		// always write the ones digit so that val = 0 outputs "0"
+		if ((val / divisor) == 0 && (idx == 0) && (divisor != 1)) {
 		} else {
 			digit = val / divisor;
 			result[idx] = 0x30 + digit;
