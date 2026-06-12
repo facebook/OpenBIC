@@ -74,10 +74,10 @@ const cpld_bit_name_table_t cpld_bit_name_table[] = {
 		  "P1V5_E_RVDD",
 		  "P0V9_OWL_W_PVDD",
 		  "P0V9_OWL_E_PVDD",
-		  "PLL_VDDA15_HBM5_HBM7",
-		  "PLL_VDDA15_HBM1_HBM3",
-		  "PLL_VDDA15_HBM4_HBM6",
-		  "PLL_VDDA15_HBM0_HBM2",
+		  "P1V2_PLL_VDDA_SOC",
+		  "P1V2_PLL_VDDA_OWL",
+		  "VDDQ_HBM1_HBM3_HBM5_HBM7",
+		  "VDDQ_HBM0_HBM2_HBM4_HBM6",
 	  } },
 	{ VR_POWER_FAULT_5_REG,
 	  "VR Power Fault   (1:Power Fault, 0=Normal)",
@@ -241,18 +241,18 @@ void cmd_log_dump(const struct shell *shell, size_t argc, char **argv)
 			shell_print(shell, "\tlow  byte: 0x%02x", log.error_data[0]);
 			shell_print(shell, "\thigh byte: 0x%02x", log.error_data[1]);
 			break;
-			case POWER_ON_SEQUENCE_TRIGGER_CAUSE:
-				shell_print(shell, "\tPOWER_ON_SEQUENCE_FAILURE");
-				err_data_len = 1;
-				uint8_t *name = NULL;
-				plat_get_power_seq_pwrgd_event_fail_name(log.error_data[0], &name);
-				shell_print(shell, "RAIL: %s", name);
-				shell_print(
-					shell,
-					"PWRGD REG(start from 0xBE): 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x",
-					log.error_data[1], log.error_data[2], log.error_data[3],
-					log.error_data[4], log.error_data[5], log.error_data[6]);
-				break;
+		case POWER_ON_SEQUENCE_TRIGGER_CAUSE:
+			shell_print(shell, "\tPOWER_ON_SEQUENCE_FAILURE");
+			err_data_len = 1;
+			uint8_t *name = NULL;
+			plat_get_power_seq_pwrgd_event_fail_name(log.error_data[0], &name);
+			shell_print(shell, "RAIL: %s", name);
+			shell_print(
+				shell,
+				"PWRGD REG(start from 0xBE): 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x",
+				log.error_data[1], log.error_data[2], log.error_data[3],
+				log.error_data[4], log.error_data[5], log.error_data[6]);
+			break;
 		case AC_ON_TRIGGER_CAUSE:
 			shell_print(shell, "\tAC_ON");
 			err_data_len = 1;
