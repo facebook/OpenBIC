@@ -1,0 +1,12 @@
+<map id="ISR_HSC_THROTTLE" name="ISR_HSC_THROTTLE">
+<area shape="rect" id="node1" title=" " alt="" coords="5,107,160,134"/>
+<area shape="rect" id="node2" href="$ipmi_8c.html#a40681786f36bd1836cdb473b7050dda1" title=" " alt="" coords="209,5,359,47"/>
+<area shape="rect" id="node4" href="$power__status_8c.html#a98cb4971828f0459069e22033aefc3bd" title=" " alt="" coords="215,71,353,112"/>
+<area shape="rect" id="node5" href="$hal__gpio_8c.html#af700ee50de3d113e223c2b011c41f966" title=" " alt="" coords="249,137,319,163"/>
+<area shape="rect" id="node6" href="$gt-cc_2src_2platform_2plat__mctp_8c.html#a998a1c1d667b48c6de3aef50f5dc86aa" title=" " alt="" coords="208,187,360,214"/>
+<area shape="rect" id="node3" href="$ipmb_8h.html#a260c07ba372e6648a635b20dbb790fa9" title=" " alt="" coords="439,13,521,39"/>
+<area shape="rect" id="node7" href="$at-cb_2src_2platform_2plat__mctp_8c.html#aa91b2fdee8959aa54116d3b9b3b6c031" title=" " alt="" coords="408,137,552,163"/>
+<area shape="rect" id="node8" href="$pldm_8c.html#a90114495fe7507fbfbdcd388f02911aa" title=" " alt="" coords="421,187,539,214"/>
+<area shape="rect" id="node10" href="$pldm__oem_8c.html#acdcd72cd46e1f10b7be19781bb1b9866" title=" " alt="" coords="445,238,515,265"/>
+<area shape="rect" id="node9" href="$pldm_8c.html#a41d615349cd666a0f5372f4f4f0c9507" title=" " alt="" coords="600,187,763,214"/>
+</map>

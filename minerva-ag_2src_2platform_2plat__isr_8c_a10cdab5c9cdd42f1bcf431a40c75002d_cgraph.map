@@ -1,0 +1,8 @@
+<map id="check_clk_buffer_handler" name="check_clk_buffer_handler">
+<area shape="rect" id="node1" title=" " alt="" coords="5,31,175,57"/>
+<area shape="rect" id="node2" href="$minerva-ag_2src_2platform_2plat__isr_8c.html#ad8887b1d0c4bbc7a6f1c25870a6d9051" title=" " alt="" coords="225,5,323,32"/>
+<area shape="rect" id="node5" href="$minerva-ag_2src_2platform_2plat__isr_8c.html#a99dfe1bff0c2df0fa9632a165a6fcd3f" title=" " alt="" coords="223,56,325,83"/>
+<area shape="rect" id="node3" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="375,5,493,32"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="543,31,685,57"/>
+<area shape="rect" id="node6" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="373,56,495,83"/>
+</map>

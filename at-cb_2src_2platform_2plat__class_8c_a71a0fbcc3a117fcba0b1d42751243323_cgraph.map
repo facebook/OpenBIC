@@ -1,0 +1,9 @@
+<map id="check_accl_device_presence_status_via_ioexp" name="check_accl_device_presence_status_via_ioexp">
+<area shape="rect" id="node1" title=" " alt="" coords="5,74,199,115"/>
+<area shape="rect" id="node2" href="$at-cb_2src_2platform_2plat__class_8c.html#a46acfadd7a662b366e10fcab5186f827" title=" " alt="" coords="247,5,421,32"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="639,31,757,57"/>
+<area shape="rect" id="node6" href="$at-cb_2src_2platform_2plat__class_8c.html#aa0344d722f0b13452fef2a5fb95acfac" title=" " alt="" coords="257,107,411,133"/>
+<area shape="rect" id="node7" href="$at-cb_2src_2platform_2plat__class_8c.html#a0fb65fc4a218d3bf8c1c139709d6f84f" title=" " alt="" coords="271,157,397,184"/>
+<area shape="rect" id="node3" href="$at-cb_2src_2platform_2plat__class_8c.html#a6a54497033563f8d0666943817d1e92a" title=" " alt="" coords="469,5,591,32"/>
+<area shape="rect" id="node5" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="805,31,948,57"/>
+</map>

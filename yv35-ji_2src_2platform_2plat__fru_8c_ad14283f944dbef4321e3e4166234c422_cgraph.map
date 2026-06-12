@@ -1,0 +1,10 @@
+<map id="handle_rtc_clr_flag" name="handle_rtc_clr_flag">
+<area shape="rect" id="node1" title=" " alt="" coords="5,107,136,133"/>
+<area shape="rect" id="node2" href="$eeprom_8c.html#af84d506534770494cca55b2db24730ba" title=" " alt="" coords="201,5,298,32"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="549,56,671,83"/>
+<area shape="rect" id="node6" href="$at-cb_2src_2platform_2plat__class_8c.html#a177b22525ca1657da5ced816317de219" title=" " alt="" coords="184,107,315,133"/>
+<area shape="rect" id="node7" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="373,132,491,159"/>
+<area shape="rect" id="node8" href="$util__sys_8c.html#a46aa596c5f4cb15da3bdfd24d96d886a" title=" " alt="" coords="209,208,290,235"/>
+<area shape="rect" id="node3" href="$eeprom_8c.html#ac470cc411f066d8f6bc2c1d7a74c8a5a" title=" " alt="" coords="363,5,501,32"/>
+<area shape="rect" id="node5" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="719,93,861,120"/>
+</map>

@@ -1,0 +1,6 @@
+<map id="pal_set_sys_status" name="pal_set_sys_status">
+<area shape="rect" id="node1" title=" " alt="" coords="5,31,140,57"/>
+<area shape="rect" id="node2" href="$util__sys_8c.html#aca86a097f05abd7ef54232449f0e7121" title=" " alt="" coords="188,31,317,57"/>
+<area shape="rect" id="node3" href="$sensor_8c.html#aa833d5d8408e30693b88d6b16beacbcf" title=" " alt="" coords="365,5,524,32"/>
+<area shape="rect" id="node4" href="$hal__gpio_8c.html#ab1b576cbfd9eddaaf57a5aa5fc383dd1" title=" " alt="" coords="409,56,480,83"/>
+</map>

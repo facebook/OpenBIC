@@ -1,0 +1,13 @@
+<map id="get_pump_uptime_secs" name="get_pump_uptime_secs">
+<area shape="rect" id="node1" title=" " alt="" coords="5,97,165,123"/>
+<area shape="rect" id="node2" href="$aalc-rpu_2src_2platform_2plat__hwmon_8c.html#a383c559582b12459e14627a93ee451fb" title=" " alt="" coords="226,5,385,47"/>
+<area shape="rect" id="node3" href="$aalc-rpu_2src_2platform_2plat__hwmon_8c.html#a7c54d9ef5d2afc2507cc4f8d5376dc9f" title=" " alt="" coords="213,71,397,98"/>
+<area shape="rect" id="node4" href="$plat__status_8c.html#aa601af4f53236dc9df9b4db1735f94de" title=" " alt="" coords="250,122,361,149"/>
+<area shape="rect" id="node5" href="$aalc-rpu_2src_2platform_2plat__hwmon_8c.html#ac279fa96c7717bdd5a4183de66cdd4a6" title=" " alt="" coords="222,173,389,215"/>
+<area shape="rect" id="node6" href="$aalc-rpu_2src_2platform_2plat__fru_8c.html#a84caf23c50d29935801d48317ea8ace8" title=" " alt="" coords="445,181,571,207"/>
+<area shape="rect" id="node7" href="$eeprom_8c.html#af84d506534770494cca55b2db24730ba" title=" " alt="" coords="619,155,716,182"/>
+<area shape="rect" id="node11" href="$fru_8c.html#a4694b8ef2f5e4e98917fc28fe989a2d9" title=" " alt="" coords="619,206,715,233"/>
+<area shape="rect" id="node8" href="$eeprom_8c.html#ac470cc411f066d8f6bc2c1d7a74c8a5a" title=" " alt="" coords="764,155,903,182"/>
+<area shape="rect" id="node9" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="951,155,1072,182"/>
+<area shape="rect" id="node10" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="1120,155,1263,182"/>
+</map>

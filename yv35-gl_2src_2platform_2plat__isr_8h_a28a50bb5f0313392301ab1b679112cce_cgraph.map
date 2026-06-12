@@ -1,0 +1,11 @@
+<map id="ISR_CPUVR_HOT" name="ISR_CPUVR_HOT">
+<area shape="rect" id="node1" title=" " alt="" coords="5,71,137,98"/>
+<area shape="rect" id="node2" href="$ipmi_8c.html#a40681786f36bd1836cdb473b7050dda1" title=" " alt="" coords="187,5,336,47"/>
+<area shape="rect" id="node4" href="$hal__gpio_8c.html#af700ee50de3d113e223c2b011c41f966" title=" " alt="" coords="226,71,297,98"/>
+<area shape="rect" id="node5" href="$gt-cc_2src_2platform_2plat__mctp_8c.html#a998a1c1d667b48c6de3aef50f5dc86aa" title=" " alt="" coords="185,122,337,149"/>
+<area shape="rect" id="node3" href="$ipmb_8h.html#a260c07ba372e6648a635b20dbb790fa9" title=" " alt="" coords="416,13,499,39"/>
+<area shape="rect" id="node6" href="$at-cb_2src_2platform_2plat__mctp_8c.html#aa91b2fdee8959aa54116d3b9b3b6c031" title=" " alt="" coords="385,71,529,98"/>
+<area shape="rect" id="node7" href="$pldm_8c.html#a90114495fe7507fbfbdcd388f02911aa" title=" " alt="" coords="398,122,517,149"/>
+<area shape="rect" id="node9" href="$pldm__oem_8c.html#acdcd72cd46e1f10b7be19781bb1b9866" title=" " alt="" coords="422,173,493,199"/>
+<area shape="rect" id="node8" href="$pldm_8c.html#a41d615349cd666a0f5372f4f4f0c9507" title=" " alt="" coords="577,122,740,149"/>
+</map>

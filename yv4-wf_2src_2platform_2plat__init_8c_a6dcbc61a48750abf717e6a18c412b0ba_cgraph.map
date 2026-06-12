@@ -1,0 +1,17 @@
+<map id="pal_pre_init" name="pal_pre_init">
+<area shape="rect" id="node1" title=" " alt="" coords="5,157,93,184"/>
+<area shape="rect" id="node2" href="$yv4-wf_2src_2platform_2plat__init_8c.html#ab980e24ce79a2f61ff4842e7f97cfe39" title=" " alt="" coords="141,5,296,32"/>
+<area shape="rect" id="node3" href="$sb-rb_2src_2platform_2plat__pldm__sensor_8c.html#a49fcac8a9cff9b16dbba2845722cf9ec" title=" " alt="" coords="385,237,487,264"/>
+<area shape="rect" id="node6" href="$hal__i2c__target_8c.html#a0735e316a62a2116e6c3311aa8e9e9f8" title=" " alt="" coords="156,56,281,83"/>
+<area shape="rect" id="node8" href="$util__worker_8c.html#ab5b7ddc1793db860d999343b3e6ce3b1" title=" " alt="" coords="162,157,275,184"/>
+<area shape="rect" id="node9" href="$gc2-es_2src_2platform_2plat__isr_8c.html#a5c95d0f43d0948187a06bd09fec0c0c4" title=" " alt="" coords="153,107,284,133"/>
+<area shape="rect" id="node14" href="$hal__gpio_8c.html#a1db4534c169d95721a020915d2e5fccf" title=" " alt="" coords="185,259,252,285"/>
+<area shape="rect" id="node15" href="$yv4-wf_2src_2platform_2plat__power__seq_8c.html#a7118174afd8452fc1b05f07b28f5a3e6" title=" " alt="" coords="153,309,284,336"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="773,201,892,228"/>
+<area shape="rect" id="node5" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="940,201,1083,228"/>
+<area shape="rect" id="node7" href="$hal__i2c__target_8c.html#a2f708033f90c1afa66581d9ca8a965fb" title=" " alt="" coords="363,41,509,68"/>
+<area shape="rect" id="node10" href="$yv3-vf_2src_2platform_2plat__util_8c.html#abc94f67ed170b0ae5f7e4965130e2166" title=" " alt="" coords="599,84,702,111"/>
+<area shape="rect" id="node12" href="$gc2-es_2src_2platform_2plat__isr_8c.html#ad525e209595564639ec2d5b67e439b8d" title=" " alt="" coords="344,143,528,169"/>
+<area shape="rect" id="node11" href="$yv3-vf_2src_2platform_2plat__util_8c.html#a7200b2472d3ef5cb78c82b2a0e3fe39b" title=" " alt="" coords="799,84,866,111"/>
+<area shape="rect" id="node13" href="$gc2-es_2src_2platform_2plat__class_8c.html#ad1ddde0c55bc5751d67e6e03fb18bfec" title=" " alt="" coords="576,135,725,177"/>
+</map>

@@ -1,0 +1,19 @@
+<map id="quick_sensor_poll_handler" name="quick_sensor_poll_handler">
+<area shape="rect" id="node1" title=" " alt="" coords="5,312,180,339"/>
+<area shape="rect" id="node2" href="$sb-el_2src_2platform_2plat__class_8c.html#a9d3145ec260256885f5ad7ae0fee1381" title=" " alt="" coords="244,5,371,32"/>
+<area shape="rect" id="node3" href="$sb-el_2src_2platform_2plat__class_8c.html#ac75907698060d09869954dde878eb3cd" title=" " alt="" coords="247,56,368,83"/>
+<area shape="rect" id="node4" href="$sb-el_2src_2platform_2plat__pldm__fw__update_8c.html#a279c7830bbea455c89a8c99976e34fab" title=" " alt="" coords="233,107,382,149"/>
+<area shape="rect" id="node7" href="$sb-el_2src_2platform_2plat__pldm__sensor_8c.html#acd197a948181bb9d89cb3ea96372ad71" title=" " alt="" coords="250,173,365,200"/>
+<area shape="rect" id="node8" href="$sb-rb_2src_2platform_2plat__pldm__sensor_8c.html#a49fcac8a9cff9b16dbba2845722cf9ec" title=" " alt="" coords="256,224,359,251"/>
+<area shape="rect" id="node9" href="$minerva-ag_2src_2platform_2plat__pldm__sensor_8c.html#af612fa91659722bb5ba98e3752572ced" title=" " alt="" coords="228,275,387,317"/>
+<area shape="rect" id="node10" href="$hal__gpio_8c.html#ab1b576cbfd9eddaaf57a5aa5fc383dd1" title=" " alt="" coords="272,341,343,368"/>
+<area shape="rect" id="node11" href="$sb-rb_2src_2platform_2plat__pldm__sensor_8c.html#a0a5c98fa5451dc469d965945dc18c8de" title=" " alt="" coords="248,392,367,419"/>
+<area shape="rect" id="node12" href="$sb-rb_2src_2platform_2plat__pldm__sensor_8c.html#ae0fbebc21f0dc9cf652ac2d6692c7610" title=" " alt="" coords="443,392,545,419"/>
+<area shape="rect" id="node14" href="$gt-cc_2src_2platform_2plat__hook_8c.html#abda0c3d7a63cc6f68d1ed88e1d36729d" title=" " alt="" coords="258,493,357,520"/>
+<area shape="rect" id="node16" href="$sb-el_2src_2platform_2plat__pldm__fw__update_8c.html#a0928d708bd3a8cb7dd580fbb234751f4" title=" " alt="" coords="228,544,387,571"/>
+<area shape="rect" id="node17" href="$sb-el_2src_2platform_2plat__pldm__sensor_8c.html#a0b65ad20539cb9d44b608d133211d18d" title=" " alt="" coords="250,595,365,621"/>
+<area shape="rect" id="node5" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="435,224,553,251"/>
+<area shape="rect" id="node6" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="771,337,913,364"/>
+<area shape="rect" id="node13" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="601,363,723,389"/>
+<area shape="rect" id="node15" href="$hal__gpio_8c.html#af700ee50de3d113e223c2b011c41f966" title=" " alt="" coords="459,493,529,520"/>
+</map>

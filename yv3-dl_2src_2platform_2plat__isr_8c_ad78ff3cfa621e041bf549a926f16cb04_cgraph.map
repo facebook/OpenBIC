@@ -1,0 +1,7 @@
+<map id="ISR_HSC_THROTTLE" name="ISR_HSC_THROTTLE">
+<area shape="rect" id="node1" title=" " alt="" coords="5,78,160,105"/>
+<area shape="rect" id="node2" href="$ipmi_8c.html#a40681786f36bd1836cdb473b7050dda1" title=" " alt="" coords="208,5,357,47"/>
+<area shape="rect" id="node4" href="$power__status_8c.html#a98cb4971828f0459069e22033aefc3bd" title=" " alt="" coords="214,71,351,112"/>
+<area shape="rect" id="node5" href="$hal__gpio_8c.html#af700ee50de3d113e223c2b011c41f966" title=" " alt="" coords="247,137,318,163"/>
+<area shape="rect" id="node3" href="$ipmb_8h.html#a260c07ba372e6648a635b20dbb790fa9" title=" " alt="" coords="405,13,488,39"/>
+</map>

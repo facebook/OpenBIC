@@ -1,0 +1,8 @@
+<map id="read_total_dimm_power" name="read_total_dimm_power">
+<area shape="rect" id="node1" title=" " alt="" coords="5,42,165,69"/>
+<area shape="rect" id="node2" href="$intel__peci_8c.html#af07f04f5782cab8ad5a4fcb50e48fdf2" title=" " alt="" coords="220,5,355,47"/>
+<area shape="rect" id="node3" href="$intel__peci_8c.html#a7bdf6d9911d4aed6bab46270ac4a79f1" title=" " alt="" coords="213,71,361,98"/>
+<area shape="rect" id="node4" href="$hal__peci_8c.html#a6ffff8eba702bfb4fd26a8b057d32915" title=" " alt="" coords="409,71,488,98"/>
+<area shape="rect" id="node5" href="$hal__peci_8c.html#a8e95a227994066af673414f44c4a1f61" title=" " alt="" coords="536,71,643,98"/>
+<area shape="rect" id="node6" href="$hal__peci_8c.html#a83241209febf9da926be7e30afd9cc46" title=" " alt="" coords="691,71,839,98"/>
+</map>

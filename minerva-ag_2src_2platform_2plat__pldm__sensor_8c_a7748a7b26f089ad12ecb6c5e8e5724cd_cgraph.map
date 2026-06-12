@@ -1,0 +1,6 @@
+<map id="sensor_polling_cmd" name="sensor_polling_cmd">
+<area shape="rect" id="node1" title=" " alt="" coords="5,56,143,83"/>
+<area shape="rect" id="node2" href="$pldm__oem_8c.html#a4405274c1b6cf4005789ebe24fbae367" title=" " alt="" coords="226,5,314,32"/>
+<area shape="rect" id="node3" href="$pldm__oem_8c.html#acdcd72cd46e1f10b7be19781bb1b9866" title=" " alt="" coords="235,56,305,83"/>
+<area shape="rect" id="node4" href="$minerva-ag_2src_2platform_2plat__pldm__sensor_8c.html#a9229c6224b9029726a4240164e574765" title=" " alt="" coords="191,107,349,149"/>
+</map>
