@@ -83,5 +83,5 @@
 // firmware block write
 #define FW_DATA_WRITE 138
 
-int iris_smbus_fast_boot(uint8_t *image_buff, uint32_t img_dest_addr, uint32_t img_size);
+int ARKE_smbus_fast_boot(uint8_t *image_buff, uint32_t img_dest_addr, uint32_t img_size);
 #endif
