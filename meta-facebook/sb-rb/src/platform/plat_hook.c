@@ -2096,12 +2096,6 @@ bool voltage_offset_get(uint8_t rail, uint16_t *vout_offset)
 }
 bool plat_ubc_otw_otp_init(void)
 {
-	uint8_t rev = get_board_rev_id();
-	if (rev != REV_ID_EVT2) {
-		LOG_INF("ubc otw/otp init: skip (board_rev=%u, need=%u)", rev, REV_ID_EVT2);
-		return true;
-	}
-
 	uint8_t ubc_module = get_ubc_module();
 
 	switch (ubc_module) {
@@ -2112,49 +2106,75 @@ bool plat_ubc_otw_otp_init(void)
 			SENSOR_NUM_UBC2_P12V_TEMP_C,
 		};
 
-
 		for (int i = 0; i < ARRAY_SIZE(sensor_ids); i++) {
 			uint8_t id = sensor_ids[i];
 			sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(id);
 			if (!cfg) {
-				LOG_ERR("UBC otp init: sensor cfg not found (sensor_id=0x%02X)", id);
+				LOG_ERR("UBC otp init: sensor cfg not found (sensor_id=0x%02X)",
+					id);
 				continue;
 			}
 
 			uint8_t bus = cfg->port;
 			uint8_t addr = cfg->target_addr;
 
-			uint8_t write_data[2] = { 0 };
+			uint8_t read_data[2] = { 0 };
+			const uint8_t otw_expect[2] = { 0x76, 0x00 };
+			const uint8_t otp_expect[2] = { 0x7D, 0x00 };
+			bool need_set_otw = false;
+			bool need_set_otp = false;
 
-			/* remove protection: reg 0x10 = 0x00 */
-			write_data[0] = 0x00;
+			if (!plat_i2c_read(bus, addr, 0x51, read_data, 2)) {
+				LOG_ERR("UBC(id=0x%02X bus=%u addr=0x%02X): read 0x51 failed", id,
+					bus, addr);
+				continue;
+			}
+			need_set_otw =
+				(read_data[0] != otw_expect[0]) || (read_data[1] != otw_expect[1]);
 
-			if (!plat_i2c_write(bus, addr, 0x10, &write_data[0], 1)) {
-				LOG_ERR("UBC(id=0x%02X bus=%u addr=0x%02X): write 0x10 failed",
+			if (!plat_i2c_read(bus, addr, 0x4F, read_data, 2)) {
+				LOG_ERR("UBC(id=0x%02X bus=%u addr=0x%02X): read 0x4F failed", id,
+					bus, addr);
+				continue;
+			}
+			need_set_otp =
+				(read_data[0] != otp_expect[0]) || (read_data[1] != otp_expect[1]);
+
+			if (!need_set_otw && !need_set_otp) {
+				LOG_INF("UBC(id=0x%02X bus=%u addr=0x%02X): OTW/OTP already matched, skip",
 					id, bus, addr);
 				continue;
 			}
 
-			/* set OWL/OTW: reg 0x51 = 0x76 0x00 */
-			write_data[0] = 0x76;
-			write_data[1] = 0x00;
-
-			if (!plat_i2c_write(bus, addr, 0x51, write_data, 2)) {
-				LOG_ERR("UBC(id=0x%02X bus=%u addr=0x%02X): write 0x51 failed",
-					id, bus, addr);
+			/* remove protection before programming OTP/OTW registers */
+			uint8_t unlock = 0x00;
+			if (!plat_i2c_write(bus, addr, 0x10, &unlock, 1)) {
+				LOG_ERR("UBC(id=0x%02X bus=%u addr=0x%02X): write 0x10 failed", id,
+					bus, addr);
 				continue;
 			}
 
-			/* set OFL/OTP: reg 0x4F = 0x7D 0x00 */
-			write_data[0] = 0x7D;
-			write_data[1] = 0x00;
-
-			if (!plat_i2c_write(bus, addr, 0x4F, write_data, 2)) {
-				LOG_ERR("UBC(id=0x%02X bus=%u addr=0x%02X): write 0x4F failed",
-					id, bus, addr);
-				continue;
+			if (need_set_otw) {
+				uint8_t write_data[2] = { otw_expect[0], otw_expect[1] };
+				if (!plat_i2c_write(bus, addr, 0x51, write_data, 2)) {
+					LOG_ERR("UBC(id=0x%02X bus=%u addr=0x%02X): write 0x51 failed",
+						id, bus, addr);
+					continue;
+				}
 			}
 
+			if (need_set_otp) {
+				uint8_t write_data[2] = { otp_expect[0], otp_expect[1] };
+				if (!plat_i2c_write(bus, addr, 0x4F, write_data, 2)) {
+					LOG_ERR("UBC(id=0x%02X bus=%u addr=0x%02X): write 0x4F failed",
+						id, bus, addr);
+					continue;
+				}
+			}
+
+			LOG_INF("UBC(id=0x%02X bus=%u addr=0x%02X): OTW%s OTP%s", id, bus, addr,
+				need_set_otw ? " updated" : " kept",
+				need_set_otp ? " updated" : " kept");
 		}
 		break;
 	}
