@@ -133,7 +133,8 @@ static int cmd_perm_config_get(const struct shell *shell, size_t argc, char **ar
 		if (((get_asic_board_id() != ASIC_BOARD_ID_EVB)) &&
 		    (i == VR_RAIL_E_P3V3_OSFP_VOLT_V))
 			continue; // skip osfp p3v3 on BD
-		if (vr_vout_user_settings.vout[i] != 0xffff) {
+		if (vr_vout_user_settings.vout[i] != 0xffff &&
+		    vr_vout_user_settings.vout[i] != 0x00) {
 			uint16_t vout = vr_vout_user_settings.vout[i];
 			uint8_t *rail_name = NULL;
 			if (!vr_rail_name_get((uint8_t)i, &rail_name)) {

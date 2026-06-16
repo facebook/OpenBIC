@@ -26,6 +26,7 @@
 #include "plat_pldm_sensor.h"
 #include "plat_class.h"
 #include "shell_iris_power.h"
+#include "plat_hook.h"
 // iris power command
 
 #define enable 0x01
@@ -566,6 +567,23 @@ static bool iris_power_control(uint8_t onoff)
 	uint8_t tmp = onoff ? 0x80 : 0x00;
 	return plat_write_cpld(CPLD_OFFSET_MMC_PWR_EN, &tmp);
 }
+
+static bool set_all_vout_command()
+{
+	for (int i = 0; i < VR_RAIL_E_MAX; i++) {
+		if (vr_vout_user_settings.vout[i] != 0xffff) {
+			/* write vout */
+			uint16_t millivolt = vr_vout_user_settings.vout[i];
+			if (!plat_set_vout_command(i, &millivolt, false)) {
+				LOG_ERR("Set vout[%d]=%x by user settings failed", i, millivolt);
+				return false;
+			}
+			LOG_INF("set [%x]%s: %dmV", i, vr_rail_table[i].sensor_name, millivolt);
+		}
+	}
+	return true;
+}
+
 void cmd_iris_power_on(const struct shell *shell, size_t argc, char **argv)
 {
 	if (!iris_power_control(1))
@@ -576,6 +594,8 @@ void cmd_iris_power_on(const struct shell *shell, size_t argc, char **argv)
 		shell_print(shell, "iris power on success!");
 		set_pwr_steps_on_flag(0);
 		set_plat_sensor_one_step_enable_flag(false);
+		if (!set_all_vout_command())
+			shell_warn(shell, "set all vout command fail!");
 	} else {
 		shell_warn(shell, "iris power on fail!");
 	}
@@ -607,6 +627,8 @@ void cmd_iris_power_cycle(const struct shell *shell, size_t argc, char **argv)
 		shell_warn(shell, "iris power cycle(on) fail!");
 	set_pwr_steps_on_flag(0);
 	set_plat_sensor_one_step_enable_flag(false);
+	if (!set_all_vout_command())
+		shell_warn(shell, "set all vout command fail!");
 }
 
 void cmd_iris_steps_on(const struct shell *shell, size_t argc, char **argv)
