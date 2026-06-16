@@ -824,7 +824,7 @@ float get_resolution(sensor_cfg *cfg)
 			iout_reso = 2;
 		} else if (iout_reso_set == 1) {
 			iout_reso = 1;
-		} else if (iout_reso_set == 2) {
+		} else if (iout_reso_set == 2 || iout_reso_set == 3) {
 			iout_reso = 0.5;
 		} else {
 			LOG_WRN("iout_reso_set not supported: 0x%x", iout_reso_set);
@@ -834,7 +834,7 @@ float get_resolution(sensor_cfg *cfg)
 			iin_reso = 0.5;
 		} else if (iin_reso_set == 1) {
 			iin_reso = 0.25;
-		} else if (iin_reso_set == 2) {
+		} else if (iin_reso_set == 2 || iin_reso_set == 3) {
 			iin_reso = 0.125;
 		} else {
 			LOG_WRN("iin_reso_set not supported: 0x%x", iin_reso_set);
@@ -844,7 +844,7 @@ float get_resolution(sensor_cfg *cfg)
 			pout_reso = 2;
 		} else if (pout_reso_set == 1) {
 			pout_reso = 1;
-		} else if (pout_reso_set == 2) {
+		} else if (pout_reso_set == 2 || pout_reso_set == 3) {
 			pout_reso = 0.5;
 		} else {
 			LOG_WRN("pout_reso_set not supported: 0x%x", pout_reso_set);
