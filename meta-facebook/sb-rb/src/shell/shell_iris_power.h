@@ -29,4 +29,5 @@ bool check_p3v3_p5v_pwrgd(void);
 void power_on_p3v3_osfp();
 void pwer_gd_get_status(const struct shell *shell);
 void clear_clock_status(const struct shell *shell, uint8_t clock_index);
+bool set_all_vout_command();
 #endif

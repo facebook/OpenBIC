@@ -568,7 +568,7 @@ static bool iris_power_control(uint8_t onoff)
 	return plat_write_cpld(CPLD_OFFSET_MMC_PWR_EN, &tmp);
 }
 
-static bool set_all_vout_command()
+bool set_all_vout_command()
 {
 	for (int i = 0; i < VR_RAIL_E_MAX; i++) {
 		if (vr_vout_user_settings.vout[i] != 0xffff) {

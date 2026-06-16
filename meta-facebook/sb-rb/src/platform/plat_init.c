@@ -38,6 +38,7 @@
 #include "plat_vr_test_mode.h"
 #include "plat_power_capping.h"
 #include "plat_isr.h"
+#include "shell_iris_power.h"
 
 LOG_MODULE_REGISTER(plat_init);
 
@@ -108,6 +109,11 @@ void pal_post_init()
 	// check clk 312.5Mhz init
 	check_312_5MHz_init_status();
 	vr_vout_offset_get_init();
+	if (is_mb_dc_on() == true) {
+		//set perm vout command when DC on
+		if (!set_all_vout_command())
+			LOG_ERR("set all vout command fail!");
+	}
 }
 
 #define DEF_PROJ_GPIO_PRIORITY 78
