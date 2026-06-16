@@ -219,7 +219,7 @@ typedef struct vr_vout_range_user_settings_struct {
 	uint16_t change_vout_max[VR_RAIL_E_MAX];
 	uint16_t change_vout_min[VR_RAIL_E_MAX];
 } vr_vout_range_user_settings_struct;
-typedef struct vr_vout_user_settings {
+typedef struct vr_vout_user_settings_struct {
 	uint16_t vout[VR_RAIL_E_MAX];
 } vr_vout_user_settings;
 typedef struct vr_vout_offset {
@@ -245,7 +245,7 @@ typedef struct bootstrap_user_settings_struct {
 #define OVP2_ACTION_UNKNOWN 0xFF
 
 extern bootstrap_user_settings_struct bootstrap_user_settings;
-extern vr_vout_user_settings user_settings;
+extern vr_vout_user_settings_struct vr_vout_user_settings;
 extern vr_vout_range_user_settings_struct vout_range_user_settings;
 extern vr_mapping_sensor vr_rail_table[];
 extern bootstrap_mapping_register bootstrap_table[];
@@ -267,7 +267,6 @@ bool vr_rail_voltage_peak_get(uint8_t *name, int *peak_value);
 bool vr_rail_voltage_peak_clear(uint8_t rail_index);
 bool plat_set_vout_range_min(uint8_t rail, uint16_t *millivolt);
 bool plat_set_vout_range_max(uint8_t rail, uint16_t *millivolt);
-bool vr_vout_user_settings_get(void *user_settings);
 void user_settings_init(void);
 bool vr_vout_range_user_settings_init(void);
 bool temp_threshold_user_settings_get(void *temp_threshold_user_settings);

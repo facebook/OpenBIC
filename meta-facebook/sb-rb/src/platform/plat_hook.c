@@ -742,8 +742,9 @@ err:
 	return ret;
 }
 
-struct vr_vout_user_settings voltage_command_get = { 0 };
+vr_vout_user_settings_struct voltage_command_get = { 0 };
 struct vr_vout_offset vr_offset_init = { 0 };
+vr_vout_user_settings_struct vr_vout_user_settings = { 0 };
 vr_vout_range_user_settings_struct vout_range_user_settings = { 0 };
 bool plat_set_vout_command(uint8_t rail, uint16_t *millivolt, bool is_default)
 {
@@ -791,6 +792,15 @@ bool plat_set_vout_command(uint8_t rail, uint16_t *millivolt, bool is_default)
 	default:
 		LOG_ERR("Unsupport VR type(%x)", cfg->type);
 		goto err;
+	}
+
+	if (is_perm) {
+		vr_vout_user_settings.vout[rail] = setting_millivolt;
+		if (!set_user_settings_vr_vout_to_eeprom(&vr_vout_user_settings,
+							 sizeof(vr_vout_user_settings))) {
+			LOG_ERR("set user settings vr vout to eeprom failed");
+			goto err;
+		}
 	}
 
 	voltage_command_get.vout[rail] = setting_millivolt;

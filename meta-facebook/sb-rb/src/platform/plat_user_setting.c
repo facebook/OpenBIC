@@ -894,6 +894,28 @@ static int delay_module_pg_user_settings_init(void)
 
 	return 0;
 }
+static int vr_vout_user_settings_init(void)
+{
+	if (get_user_settings_vr_vout_from_eeprom(&vr_vout_user_settings,
+						  sizeof(vr_vout_user_settings)) == false) {
+		LOG_ERR("get vr vout user settings failed");
+		return -1;
+	}
+
+	for (int i = 0; i < VR_RAIL_E_MAX; i++) {
+		if (vr_vout_user_settings.vout[i] != 0xffff) {
+			/* write vout */
+			uint16_t millivolt = vr_vout_user_settings.vout[i];
+			if (!plat_set_vout_command(i, &millivolt, false)) {
+				LOG_ERR("Set vout[%d]=%x by user settings failed", i, millivolt);
+				return -1;
+			}
+			LOG_INF("set [%x]%s: %dmV", i, vr_rail_table[i].sensor_name, millivolt);
+		}
+	}
+
+	return 0;
+}
 
 bool get_user_settings_delay_pcie_perst_from_eeprom(void *user_settings, uint8_t data_length)
 {
@@ -963,7 +985,29 @@ bool set_user_settings_delay_module_pg_to_eeprom(void *user_settings, uint8_t da
 
 	return true;
 }
+bool get_user_settings_vr_vout_from_eeprom(void *user_settings, uint8_t data_length)
+{
+	CHECK_NULL_ARG_WITH_RETURN(user_settings, false);
 
+	if (!plat_eeprom_read(VR_VOUT_USER_SETTINGS_OFFSET, user_settings, data_length)) {
+		LOG_ERR("Failed to read vout from eeprom");
+		return false;
+	}
+	return true;
+}
+
+bool set_user_settings_vr_vout_to_eeprom(void *user_settings, uint8_t data_length)
+{
+	CHECK_NULL_ARG_WITH_RETURN(user_settings, false);
+
+	if (!plat_eeprom_write(VR_VOUT_USER_SETTINGS_OFFSET, user_settings, data_length)) {
+		LOG_ERR("hamsa_avdd_pcie Failed to write eeprom");
+		return false;
+	}
+	k_msleep(EEPROM_MAX_WRITE_TIME);
+
+	return true;
+}
 bool perm_config_clear(void)
 {
 	/* clear all temp_threshold perm parameters */
@@ -1013,6 +1057,15 @@ bool perm_config_clear(void)
 	uint8_t setting_value_for_throttle = 0xFF;
 	if (!set_user_settings_throttle_to_eeprom(&setting_value_for_throttle,
 						  sizeof(setting_value_for_throttle))) {
+		LOG_ERR("The perm_config clear failed");
+		return false;
+	}
+
+	/* clear vr vout perm parameter */
+	uint8_t setting_value_for_vr_vout[4] = { 0 };
+	memset(setting_value_for_vr_vout, 0xFF, sizeof(setting_value_for_vr_vout));
+	if (!set_user_settings_vr_vout_to_eeprom(&setting_value_for_vr_vout,
+						 sizeof(setting_value_for_vr_vout))) {
 		LOG_ERR("The perm_config clear failed");
 		return false;
 	}
@@ -1454,4 +1507,5 @@ void user_settings_init(void)
 	delay_asic_rst_user_settings_init();
 	delay_module_pg_user_settings_init();
 	delay_pcie_perst_user_settings_init();
+	vr_vout_user_settings_init();
 }

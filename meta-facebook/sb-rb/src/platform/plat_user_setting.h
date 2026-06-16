@@ -152,6 +152,8 @@ bool get_user_settings_delay_module_pg_from_eeprom(void *user_settings, uint8_t 
 bool get_user_settings_thermaltrip_from_eeprom(void *thermaltrip_user_settings,
 					       uint8_t data_length);
 bool get_user_settings_throttle_from_eeprom(void *user_settings, uint8_t data_length);
+bool set_user_settings_vr_vout_to_eeprom(void *user_settings, uint8_t data_length);
+bool get_user_settings_vr_vout_from_eeprom(void *user_settings, uint8_t data_length);
 bool perm_config_clear();
 bool get_average_power(uint8_t rail, uint32_t *milliwatt);
 bool post_vr_read(sensor_cfg *cfg, void *args, int *const reading);

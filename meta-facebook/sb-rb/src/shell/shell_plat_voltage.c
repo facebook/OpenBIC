@@ -64,10 +64,7 @@ static int cmd_voltage_get_all(const struct shell *shell, size_t argc, char **ar
 
 static int cmd_voltage_set(const struct shell *shell, size_t argc, char **argv)
 {
-	if (!get_vr_test_mode_flag()) {
-		shell_warn(shell, "This command is only for VR test mode");
-		return -1;
-	}
+	bool is_perm = false;
 
 	/* is_ubc_enabled_delayed_enabled() is to wait for all VR to be enabled  */
 	/* (gpio_get(FM_PLD_UBC_EN_R) == GPIO_HIGH) is to shut down polling immediately when UBC is disabled */
@@ -77,8 +74,17 @@ static int cmd_voltage_set(const struct shell *shell, size_t argc, char **argv)
 	}
 
 	if (argc >= 4) {
-		shell_error(shell, "voltage set <voltage-rail> <new-voltage>");
-		return -1;
+		if (!get_vr_test_mode_flag()) {
+			if (!strcmp(argv[3], "perm")) {
+				is_perm = true;
+			} else {
+				shell_error(shell, "The last argument must be <perm>");
+				return -1;
+			}
+		} else {
+			shell_error(shell, "voltage set <voltage-rail> <new-voltage>");
+			return -1;
+		}
 	}
 
 	/* covert rail string to enum */
@@ -110,7 +116,7 @@ static int cmd_voltage_set(const struct shell *shell, size_t argc, char **argv)
 		return 0;
 	}
 
-	if (!plat_set_vout_command(rail, &millivolt, false)) {
+	if (!plat_set_vout_command(rail, &millivolt, is_perm)) {
 		shell_error(shell, "Can't set vout by rail index: %d", rail);
 		return -1;
 	}
