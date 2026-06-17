@@ -177,7 +177,6 @@ float get_adc_medha_inst_pwr_w(uint8_t medha_idx)
 		}
 		break;
 	default:
-		LOG_WRN("ADC pwr: unsupported adc_type=%d", adc_type);
 		return 0.0f;
 	}
 
