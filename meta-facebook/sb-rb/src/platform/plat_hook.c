@@ -2040,6 +2040,7 @@ bool plat_get_get_vout_offset(uint8_t rail, uint16_t *vout_offset)
 	bool ret = false;
 	uint8_t sensor_id = vr_rail_table[rail].sensor_id;
 	sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
+	vr_pre_proc_arg *pre_proc_args = (vr_pre_proc_arg *)cfg->pre_sensor_read_args;
 	if (cfg == NULL) {
 		LOG_ERR("Failed to get sensor config for sensor 0x%x", sensor_id);
 		return false;
@@ -2056,6 +2057,12 @@ bool plat_get_get_vout_offset(uint8_t rail, uint16_t *vout_offset)
 	case sensor_dev_mp29816a:
 		if (!mp29816a_get_vout_offset(cfg, vout_offset)) {
 			LOG_ERR("The VR MPS29816a vout setting failed");
+			goto err;
+		}
+		break;
+	case sensor_dev_mp2971:
+		if (!mp2971_get_vout_offset(cfg, pre_proc_args->vr_page, vout_offset)) {
+			LOG_ERR("The VR MPS2971 vout setting failed");
 			goto err;
 		}
 		break;
@@ -2081,11 +2088,12 @@ err:
 }
 bool vr_vout_offset_get_init(void)
 {
-	for (int i = 0; i < VR_RAIL_E_ASIC_P0V9_OWL_E_TRVDD; i++) {
+	for (int i = 0; i < VR_RAIL_E_P3V3_OSFP_VOLT_V; i++) {
 		uint16_t vout_offset = 0;
 		if (!plat_get_get_vout_offset(i, &vout_offset)) {
 			LOG_ERR("Can't find vout default by rail index: %d", i);
-			return false;
+			vr_offset_init.vout_offset[i] = 0;
+			continue;
 		}
 		vr_offset_init.vout_offset[i] = vout_offset;
 		LOG_INF("init rail %d, vout_offset = 0x%04x", i, vout_offset);
@@ -2096,7 +2104,7 @@ bool voltage_offset_get(uint8_t rail, uint16_t *vout_offset)
 {
 	CHECK_NULL_ARG_WITH_RETURN(vout_offset, false);
 
-	if (rail >= VR_RAIL_E_ASIC_P0V9_OWL_E_TRVDD) {
+	if (rail >= VR_RAIL_E_P3V3_OSFP_VOLT_V) {
 		LOG_ERR("invalid rail %d", rail);
 		return false;
 	}
@@ -2133,6 +2141,8 @@ bool plat_ubc_otw_otp_init(void)
 			const uint8_t otp_expect[2] = { 0x7D, 0x00 };
 			bool need_set_otw = false;
 			bool need_set_otp = false;
+			bool otw_write_ok = true;
+			bool otp_write_ok = true;
 
 			if (!plat_i2c_read(bus, addr, 0x51, read_data, 2)) {
 				LOG_ERR("UBC(id=0x%02X bus=%u addr=0x%02X): read 0x51 failed", id,
@@ -2169,7 +2179,7 @@ bool plat_ubc_otw_otp_init(void)
 				if (!plat_i2c_write(bus, addr, 0x51, write_data, 2)) {
 					LOG_ERR("UBC(id=0x%02X bus=%u addr=0x%02X): write 0x51 failed",
 						id, bus, addr);
-					continue;
+					otw_write_ok = false;
 				}
 			}
 
@@ -2178,8 +2188,20 @@ bool plat_ubc_otw_otp_init(void)
 				if (!plat_i2c_write(bus, addr, 0x4F, write_data, 2)) {
 					LOG_ERR("UBC(id=0x%02X bus=%u addr=0x%02X): write 0x4F failed",
 						id, bus, addr);
-					continue;
+					otp_write_ok = false;
 				}
+			}
+
+			if (!otw_write_ok || !otp_write_ok) {
+				LOG_WRN("UBC(id=0x%02X bus=%u addr=0x%02X): OTW%s OTP%s", id, bus,
+					addr,
+					need_set_otw ?
+						(otw_write_ok ? " updated" : " update failed") :
+						" kept",
+					need_set_otp ?
+						(otp_write_ok ? " updated" : " update failed") :
+						" kept");
+				continue;
 			}
 
 			LOG_INF("UBC(id=0x%02X bus=%u addr=0x%02X): OTW%s OTP%s", id, bus, addr,

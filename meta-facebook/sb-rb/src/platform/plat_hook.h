@@ -223,7 +223,7 @@ typedef struct vr_vout_user_settings_struct {
 	uint16_t vout[VR_RAIL_E_MAX];
 } vr_vout_user_settings_struct;
 typedef struct vr_vout_offset {
-	uint16_t vout_offset[2]; // onlt medha0/1
+	uint16_t vout_offset[VR_RAIL_E_MAX]; // Support all VR rails
 } vr_vout_offset;
 typedef struct bootstrap_mapping_register {
 	uint8_t index;

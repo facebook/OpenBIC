@@ -90,6 +90,18 @@ static int cmd_voltage_set(const struct shell *shell, size_t argc, char **argv)
 	}
 
 	uint16_t millivolt = strtol(argv[2], NULL, 0);
+
+	/* Apply SVS offset if enabled */
+	uint8_t svs_flag = get_svs_flag();
+	if (svs_flag) {
+		uint16_t vout_offset = 0;
+		if (voltage_offset_get(rail, &vout_offset)) {
+			millivolt += vout_offset;
+		} else {
+			shell_warn(shell, "SVS enabled but failed to get voltage offset");
+		}
+	}
+
 	uint16_t vout_max_millivolt = vout_range_user_settings.change_vout_max[rail];
 	uint16_t vout_min_millivolt = vout_range_user_settings.change_vout_min[rail];
 	if (millivolt < vout_min_millivolt || millivolt > vout_max_millivolt) {
@@ -163,18 +175,26 @@ static void cmd_svs_flag_set(const struct shell *shell, size_t argc, char **argv
 void cmd_get_medha_vout_offset(const struct shell *shell, size_t argc, char **argv)
 {
 	uint16_t vout_offset_value = 0;
-	if (!voltage_offset_get(VR_RAIL_E_ASIC_P0V85_MEDHA0_VDD, &vout_offset_value)) {
-		shell_error(shell, "Failed to get medha0 vout offset");
-		return;
-	}
-	shell_print(shell, "Medha0 vout offset: %d mV", vout_offset_value);
+	uint8_t *rail_name = NULL;
 
-	vout_offset_value = 0;
-	if (!voltage_offset_get(VR_RAIL_E_ASIC_P0V85_MEDHA1_VDD, &vout_offset_value)) {
-		shell_error(shell, "Failed to get medha1 vout offset");
-		return;
+	shell_print(shell, "  id|rail_name                               |vout_offset(mV)");
+
+	/* Print all rail vout offsets from VR_RAIL_E_ASIC_P0V85_MEDHA0_VDD to VR_RAIL_E_ASIC_P0V75_OWL_W_TRVDD */
+	for (int i = VR_RAIL_E_ASIC_P0V85_MEDHA0_VDD; i <= VR_RAIL_E_ASIC_P0V75_OWL_W_TRVDD; i++) {
+		vout_offset_value = 0;
+		if (!voltage_offset_get((uint8_t)i, &vout_offset_value)) {
+			shell_warn(shell, "Failed to get vout offset for rail index: %d", i);
+			continue;
+		}
+
+		rail_name = NULL;
+		if (!vr_rail_name_get((uint8_t)i, &rail_name)) {
+			shell_warn(shell, "Failed to get rail name for index: %d", i);
+			continue;
+		}
+
+		shell_print(shell, "%4d|%-40s|%4d", i, rail_name, vout_offset_value);
 	}
-	shell_print(shell, "Medha1 vout offset: %d mV", vout_offset_value);
 }
 
 void cmd_svs_asic_voltage_set(const struct shell *shell, size_t argc, char **argv)
