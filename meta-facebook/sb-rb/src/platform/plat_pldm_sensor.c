@@ -11512,6 +11512,9 @@ void change_sensor_cfg(uint8_t asic_board_id, uint8_t vr_module, uint8_t ubc_mod
 	else if (ubc_module == UBC_MODULE_DELTA)
 		change_sensor_cfg_from_thread(UBC_SENSOR_THREAD_ID, sensor_dev_u50su4p180pmdafc,
 					      SENSOR_CFG_NO_CHANGE, NULL, ubc1_change_flag);
+	else if (ubc_module == UBC_MODULE_RDS)
+		change_sensor_cfg_from_thread(UBC_SENSOR_THREAD_ID, sensor_dev_rsm3514e,
+					      SENSOR_CFG_NO_CHANGE, NULL, ubc1_change_flag);
 }
 
 bool is_dc_access(uint8_t sensor_num)
@@ -11571,6 +11574,8 @@ uint8_t get_plat_sensor_one_step_enable_flag()
 
 bool is_ubc_access(uint8_t sensor_num)
 {
+	if (get_ubc_module() == UBC_MODULE_UNKNOWN)
+		return false;
 	if (get_plat_sensor_one_step_enable_flag() == ONE_STEP_POWER_MAGIC_NUMBER) {
 		return (get_plat_sensor_ubc_polling_enable_flag() &&
 			get_plat_sensor_polling_enable_flag() && is_update_state_idle());
@@ -11595,6 +11600,8 @@ bool is_iris_smbus_access(uint8_t sensor_num)
 
 bool is_vr_access(uint8_t sensor_num)
 {
+	if (get_vr_module() == VR_MODULE_UNKNOWN)
+		return false;
 	if (get_plat_sensor_one_step_enable_flag() == ONE_STEP_POWER_MAGIC_NUMBER) {
 		return (get_plat_sensor_vr_polling_enable_flag() &&
 			get_plat_sensor_polling_enable_flag() && is_update_state_idle());

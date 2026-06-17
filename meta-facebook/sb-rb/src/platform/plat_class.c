@@ -92,7 +92,15 @@ void init_vr_vendor_module(void)
 			vr_vendor_module = LUXSHURE_UBC_AND_RNS_VR;
 		}
 		break;
-
+	case UBC_MODULE_RDS:
+		if (vr_module == VR_MODULE_RNS) {
+			vr_vendor_module = RDS_UBC_AND_RNS_VR;
+		} else {
+			vr_vendor_module = RB_UBC_RESERVED;
+			ubc_module = UBC_MODULE_UNKNOWN;
+			vr_module = VR_MODULE_UNKNOWN;
+		}
+		break;
 	default:
 		vr_vendor_module = VENDOR_TYPE_UNKNOWN;
 		break;
@@ -157,7 +165,7 @@ void init_plat_config()
 	// rev id only support 0, 1, 2 bit
 	board_rev_id = board_rev_id & 0x07;
 	vr_module = (module & 0x01);
-	ubc_module = (module >> 1) & 0x03;
+	ubc_module = (module >> 1) & 0x07;
 	uint8_t board_id = 0;
 	plat_read_cpld(CPLD_OFFSET_ASIC_BOARD_ID, &board_id, 1);
 	asic_board_id = board_id & 0x03;
@@ -255,11 +263,14 @@ void pal_show_board_types(const struct shell *shell)
 		    (vr_vendor_module == MPS_UBC_AND_RNS_VR)	  ? "MPS_UBC_AND_RNS_VR" :
 		    (vr_vendor_module == LUXSHURE_UBC_AND_MPS_VR) ? "LUXSHURE_UBC_AND_MPS_VR" :
 		    (vr_vendor_module == LUXSHURE_UBC_AND_RNS_VR) ? "LUXSHURE_UBC_AND_RNS_VR" :
+			(vr_vendor_module == RDS_UBC_AND_RNS_VR) ? "RDS_UBC_AND_RNS_VR" :
 								    "not supported");
+
 	shell_print(shell, "* UBC_TYPE:      (0x%02X)%s", ubc_module,
 		    (ubc_module == UBC_MODULE_DELTA)	? "UBC_DELTA_S54SS4P1A2" :
 		    (ubc_module == UBC_MODULE_MPS)	? "UBC_MPS_MPC12109" :
 		    (ubc_module == UBC_MODULE_LUXSHARE) ? "UBC_LUXSHURE_LX6310" :
+			(ubc_module == UBC_MODULE_RDS)  ? "UBC_RDS_RSM3514E" :
 							  "not supported");
 
 	shell_print(shell, "* VR_TYPE:       (0x%02X)%s", vr_module,
