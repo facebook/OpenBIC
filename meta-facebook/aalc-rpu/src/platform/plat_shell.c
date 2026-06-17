@@ -423,50 +423,54 @@ static void cmd_pump_redundant_switch_day_set(const struct shell *shell, size_t 
 	shell_warn(shell, "set pump redundant to %d %s", time, (type ? "minute" : "day"));
 }
 
-static void cmd_pump_low_level_events_duration_set(const struct shell *shell, size_t argc, char **argv)
+static void cmd_pump_low_level_events_duration_set(const struct shell *shell, size_t argc,
+						   char **argv)
 {
-    if (argc != 3) {
-        shell_warn(shell, "test pump_low_level set [event(1-3)] [time(min)]");
-        return;
-    }
+	if (argc != 3) {
+		shell_warn(shell, "test pump_low_level set [event(1-3)] [time(min)]");
+		return;
+	}
 
-    uint8_t event_idx = strtoul(argv[1], NULL, 10);
-    uint32_t time = strtoul(argv[2], NULL, 10);
+	uint8_t event_idx = strtoul(argv[1], NULL, 10);
+	uint32_t time = strtoul(argv[2], NULL, 10);
 
-    if (!set_pump_low_level_event_duration(event_idx, time)) {
-        shell_warn(shell, "invalid value, event must be 1-3 and time must be > 0 and <= 10080 (7 days)");
-        return;
-    }
+	if (!set_pump_low_level_event_duration(event_idx, time)) {
+		shell_warn(
+			shell,
+			"invalid value, event must be 1-3 and time must be > 0 and <= 10080 (7 days)");
+		return;
+	}
 
-    shell_warn(shell, "set pump low level event%d to %d minute", event_idx, time);
+	shell_warn(shell, "set pump low level event%d to %d minute", event_idx, time);
 }
 
 static void cmd_pump_low_level_events_duration_get(const struct shell *shell, size_t argc,
-                                                    char **argv)
+						   char **argv)
 {
-    uint32_t time = 0;
+	uint32_t time = 0;
 
-    if (argc == 1) {
-        for (uint8_t event_idx = PUMP_FAIL_LOW_LEVEL_EVENT_0TO1_DAY;
-             event_idx <= PUMP_FAIL_LOW_LEVEL_EVENT_4TO7_DAY; event_idx++) {
-            if (get_pump_low_level_event_duration(event_idx, &time))
-                shell_warn(shell, "pump low level event%d duration: %d minute", event_idx, time);
-        }
-        return;
-    }
+	if (argc == 1) {
+		for (uint8_t event_idx = PUMP_FAIL_LOW_LEVEL_EVENT_0TO1_DAY;
+		     event_idx <= PUMP_FAIL_LOW_LEVEL_EVENT_4TO7_DAY; event_idx++) {
+			if (get_pump_low_level_event_duration(event_idx, &time))
+				shell_warn(shell, "pump low level event%d duration: %d minute",
+					   event_idx, time);
+		}
+		return;
+	}
 
-    if (argc != 2) {
-        shell_warn(shell, "test pump_low_level get [event(1-3)]");
-        return;
-    }
+	if (argc != 2) {
+		shell_warn(shell, "test pump_low_level get [event(1-3)]");
+		return;
+	}
 
-    uint8_t event_idx = strtoul(argv[1], NULL, 10);
-    if (!get_pump_low_level_event_duration(event_idx, &time)) {
-        shell_warn(shell, "invalid value, event must be 1-3");
-        return;
-    }
+	uint8_t event_idx = strtoul(argv[1], NULL, 10);
+	if (!get_pump_low_level_event_duration(event_idx, &time)) {
+		shell_warn(shell, "invalid value, event must be 1-3");
+		return;
+	}
 
-    shell_warn(shell, "pump low level event%d duration: %d minute", event_idx, time);
+	shell_warn(shell, "pump low level event%d duration: %d minute", event_idx, time);
 }
 
 // modbus
@@ -631,10 +635,15 @@ SHELL_STATIC_SUBCMD_SET_CREATE(sub_pump_redundant_cmd,
 					 cmd_pump_redundant_switch_day_set),
 			       SHELL_SUBCMD_SET_END);
 
-SHELL_STATIC_SUBCMD_SET_CREATE(sub_pump_low_level_cmd,
-                               SHELL_CMD(set, NULL, "Set the timer duration(in minutes) for pump low level failure events.", cmd_pump_low_level_events_duration_set),
-                               SHELL_CMD(get, NULL, "Get the timer duration(in minutes) for pump low level failure events.", cmd_pump_low_level_events_duration_get),
-                               SHELL_SUBCMD_SET_END);
+SHELL_STATIC_SUBCMD_SET_CREATE(
+	sub_pump_low_level_cmd,
+	SHELL_CMD(set, NULL,
+		  "Set the timer duration(in minutes) for pump low level failure events.",
+		  cmd_pump_low_level_events_duration_set),
+	SHELL_CMD(get, NULL,
+		  "Get the timer duration(in minutes) for pump low level failure events.",
+		  cmd_pump_low_level_events_duration_get),
+	SHELL_SUBCMD_SET_END);
 
 // modbus
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_modbus_cmd,
