@@ -51,9 +51,6 @@ static uint32_t pump_low_level_event3_duration = 3 * 24 * 60; //low level time f
 
 bool set_pump_low_level_event_duration(uint8_t event_idx, uint32_t time)
 {
-	if (time <= 0 || time > 7 * 24 * 60) // set max duration to 1 week
-		return false;
-
 	switch (event_idx) {
 	case PUMP_FAIL_LOW_LEVEL_EVENT_0TO1_DAY:
 		pump_low_level_event1_duration = time;
