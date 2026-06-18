@@ -147,7 +147,7 @@ float get_adc_medha_inst_pwr_w(uint8_t medha_idx)
 	uint16_t raw = 0;
 	float v = 0.0f;
 	float vref = 0.0f;
-	uint8_t adc_type = get_adc_type();
+	// uint8_t adc_type = get_adc_type();
 
 	switch (get_adc_type()) {
 	case TIC_ADS7066:
