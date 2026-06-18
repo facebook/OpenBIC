@@ -302,7 +302,7 @@ bool get_pre_read_bootstrap_setting_value();
 void add_error_bootstrap_index_to_list(uint8_t index);
 uint8_t get_error_bootstrap_index_list(uint8_t index);
 uint8_t get_svs_flag();
-void set_svs_flag(uint8_t flag);
+bool set_svs_flag(uint8_t flag, bool is_perm);
 uint8_t get_svs_asic_voltage_flag();
 void set_svs_asic_voltage_flag(uint8_t flag);
 bool vr_vout_default_settings_init(void);

@@ -156,8 +156,19 @@ static void cmd_svs_flag_get(const struct shell *shell, size_t argc, char **argv
 
 static void cmd_svs_flag_set(const struct shell *shell, size_t argc, char **argv)
 {
+	bool is_perm = false;
+
+	if (argc >= 3) {
+		if (!strcmp(argv[2], "perm")) {
+			is_perm = true;
+		} else {
+			shell_error(shell, "The last argument must be <perm>");
+			return;
+		}
+	}
+
 	if (argc < 2) {
-		shell_error(shell, "Usage: set voltage offset <0/1>");
+		shell_error(shell, "Usage: set voltage offset <0/1> [perm]");
 		return;
 	}
 
@@ -168,8 +179,12 @@ static void cmd_svs_flag_set(const struct shell *shell, size_t argc, char **argv
 			    svs_flag);
 		return;
 	}
-	set_svs_flag(svs_flag);
-	shell_print(shell, "voltage offset(1:enable, 0:disable): %d", svs_flag);
+	if (!set_svs_flag(svs_flag, is_perm)) {
+		shell_error(shell, "Can't set voltage offset=%d", svs_flag);
+		return;
+	}
+	shell_print(shell, "voltage offset(1:enable, 0:disable): %d, %svolatile\n", svs_flag,
+		    (argc == 3) ? "non-" : "");
 }
 
 void cmd_get_medha_vout_offset(const struct shell *shell, size_t argc, char **argv)
@@ -229,7 +244,8 @@ SHELL_STATIC_SUBCMD_SET_CREATE(sub_voltage_get_cmds,
 			       SHELL_SUBCMD_SET_END);
 
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_svs_cmds, SHELL_CMD(get, NULL, "get svs flag", cmd_svs_flag_get),
-			       SHELL_CMD(set, NULL, "set svs flag <0/1>", cmd_svs_flag_set),
+			       SHELL_CMD_ARG(set, NULL, "set svs flag <0/1> [perm]",
+					     cmd_svs_flag_set, 2, 1),
 			       SHELL_SUBCMD_SET_END);
 
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_svs_asic_voltage,

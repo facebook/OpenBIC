@@ -58,6 +58,52 @@ void pwr_level_mutex_init(void)
 	return;
 }
 
+bool set_user_settings_svs_flag_to_eeprom(void *user_settings, uint8_t data_length)
+{
+	CHECK_NULL_ARG_WITH_RETURN(user_settings, false);
+
+	if (!plat_eeprom_write(SVS_FLAG_USER_SETTINGS_OFFSET, user_settings, data_length)) {
+		LOG_ERR("Failed to write svs_flag to eeprom");
+		return false;
+	}
+
+	k_msleep(EEPROM_MAX_WRITE_TIME);
+
+	return true;
+}
+bool get_user_settings_svs_flag_from_eeprom(void *svs_flag_user_settings, uint8_t data_length)
+{
+	CHECK_NULL_ARG_WITH_RETURN(svs_flag_user_settings, false);
+
+	if (!plat_eeprom_read(SVS_FLAG_USER_SETTINGS_OFFSET, svs_flag_user_settings, data_length)) {
+		LOG_ERR("Failed to write svs_flag to eeprom");
+		return false;
+	}
+
+	k_msleep(EEPROM_MAX_WRITE_TIME);
+
+	return true;
+}
+svs_flag_user_settings_struct svs_flag_user_settings = { 0xFF };
+
+static bool svs_flag_user_settings_init(void)
+{
+	uint8_t setting_data = 0xFF;
+	if (!get_user_settings_svs_flag_from_eeprom(&setting_data, sizeof(setting_data))) {
+		LOG_ERR("get svs_flag user settings fail");
+		return false;
+	}
+
+	if (setting_data != 0xFF) {
+		if (!set_svs_flag(setting_data, false)) {
+			LOG_ERR("Can't set svs_flag=%d by user settings", setting_data);
+			return false;
+		}
+	}
+
+	return true;
+}
+
 bool set_user_settings_thermaltrip_to_eeprom(void *thermaltrip_user_settings, uint8_t data_length)
 {
 	CHECK_NULL_ARG_WITH_RETURN(thermaltrip_user_settings, false);
@@ -1057,6 +1103,14 @@ bool perm_config_clear(void)
 		return false;
 	}
 
+	/* clear svs_flag perm parameter */
+	uint8_t setting_value_for_svs_flag = 0xFF;
+	if (!set_user_settings_svs_flag_to_eeprom(&setting_value_for_svs_flag,
+						  sizeof(setting_value_for_svs_flag))) {
+		LOG_ERR("The perm_config clear failed");
+		return false;
+	}
+
 	return true;
 }
 ubc_vr_power_mapping_sensor ubc_vr_power_table[] = {
@@ -1495,4 +1549,5 @@ void user_settings_init(void)
 	delay_module_pg_user_settings_init();
 	delay_pcie_perst_user_settings_init();
 	vr_vout_user_settings_init();
+	svs_flag_user_settings_init();
 }

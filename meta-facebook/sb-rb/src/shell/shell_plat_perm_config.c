@@ -146,6 +146,19 @@ static int cmd_perm_config_get(const struct shell *shell, size_t argc, char **ar
 		}
 	}
 
+	uint8_t setting_data_for_svs_flag = 0xFF;
+	if (!get_user_settings_svs_flag_from_eeprom(&setting_data_for_svs_flag,
+						    sizeof(setting_data_for_svs_flag))) {
+		LOG_ERR("get svs_flag user settings failed");
+	} else {
+		if (setting_data_for_svs_flag != 0xFF) {
+			shell_print(shell,
+				    "svs_apply_offset                                       val=%s",
+				    (setting_data_for_svs_flag ? "enable" : "disable"));
+			config_count++;
+		}
+	}
+
 	if (!config_count) {
 		shell_print(shell, "no perm parameter exist");
 	}

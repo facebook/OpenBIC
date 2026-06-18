@@ -2001,9 +2001,20 @@ uint8_t get_svs_flag()
 	return svs_flag;
 }
 
-void set_svs_flag(uint8_t flag)
+bool set_svs_flag(uint8_t flag, bool is_perm)
 {
 	svs_flag = flag;
+
+	if (is_perm) {
+		svs_flag_user_settings.svs_flag_user_setting_value = (svs_flag ? 0x01 : 0x00);
+
+		if (!set_user_settings_svs_flag_to_eeprom(&svs_flag_user_settings,
+							  sizeof(svs_flag_user_settings))) {
+			LOG_ERR("Failed to write svs_flag to eeprom error");
+			return false;
+		}
+	}
+	return true;
 }
 static uint8_t svs_asic_voltage_flag = 1; // 1: enable, 0: block
 uint8_t get_svs_asic_voltage_flag()

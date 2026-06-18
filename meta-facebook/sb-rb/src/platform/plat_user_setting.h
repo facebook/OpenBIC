@@ -31,6 +31,7 @@
 #define THROTTLE_USER_SETTINGS_OFFSET 0x8600
 #define DELAY_ASIC_RST_USER_SETTINGS_OFFSET 0x8700
 #define DELAY_MODULE_PG_USER_SETTINGS_OFFSET 0x8800
+#define SVS_FLAG_USER_SETTINGS_OFFSET 0x8900
 
 #define CPLD_THROTTLE_SWITCH_ADDR 0x25
 #define CPLD_THERMALTRIP_SWITCH_ADDR 0x3A
@@ -120,11 +121,16 @@ typedef struct thermaltrip_user_settings_struct {
 	uint8_t thermaltrip_user_setting_value;
 } thermaltrip_user_settings_struct;
 
+typedef struct svs_flag_user_settings_struct {
+	uint8_t svs_flag_user_setting_value;
+} svs_flag_user_settings_struct;
+
 typedef struct temp_threshold_user_settings_struct {
 	uint32_t temperature_reg_val[PLAT_TEMP_INDEX_THRESHOLD_TYPE_MAX];
 } temp_threshold_user_settings_struct;
 
 extern temp_threshold_user_settings_struct temp_threshold_user_settings;
+extern svs_flag_user_settings_struct svs_flag_user_settings;
 
 bool set_thermaltrip_user_settings(bool thermaltrip_enable, bool is_perm);
 bool get_temp_sensor_rail_name(uint8_t rail, uint8_t **name);
@@ -154,6 +160,7 @@ bool get_user_settings_thermaltrip_from_eeprom(void *thermaltrip_user_settings,
 bool get_user_settings_throttle_from_eeprom(void *user_settings, uint8_t data_length);
 bool set_user_settings_vr_vout_to_eeprom(void *user_settings, uint8_t data_length);
 bool get_user_settings_vr_vout_from_eeprom(void *user_settings, uint8_t data_length);
+bool get_user_settings_svs_flag_from_eeprom(void *thermaltrip_user_settings, uint8_t data_length);
 bool perm_config_clear();
 bool get_average_power(uint8_t rail, uint32_t *milliwatt);
 bool post_vr_read(sensor_cfg *cfg, void *args, int *const reading);
@@ -164,6 +171,7 @@ bool set_user_settings_delay_pcie_perst_to_eeprom(void *user_settings, uint8_t d
 						  uint8_t user_settings_offset);
 bool set_user_settings_delay_asic_rst_to_eeprom(void *user_settings, uint8_t data_length);
 bool set_user_settings_delay_module_pg_to_eeprom(void *user_settings, uint8_t data_length);
+bool set_user_settings_svs_flag_to_eeprom(void *user_settings, uint8_t data_length);
 void set_clock_u87_u88_lphcsl_amp_ctrl_to_1v();
 bool vr_vout_user_settings_init(void);
 #endif
