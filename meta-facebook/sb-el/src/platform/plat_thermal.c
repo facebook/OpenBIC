@@ -37,7 +37,7 @@ k_tid_t thermal_tid;
 bool handler_flag = true;
 
 const char *temperature_name_table[] = {
-	"ASIC_NUWA0_SENSOR0", "ASIC_NUWA0_SENSOR1", "ASIC_OWL_W",	"ASIC_OWL_E",
+	"ASIC_NUWA0_SENSOR0", "ASIC_NUWA0_SENSOR1", "ASIC_OWL_W",     "ASIC_OWL_E",
 	"ASIC_NUWA1_SENSOR0", "ASIC_NUWA1_SENSOR1", "ASIC_HAMSA_CRM", "ASIC_HAMSA_LS",
 };
 

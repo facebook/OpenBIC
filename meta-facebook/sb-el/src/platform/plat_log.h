@@ -28,7 +28,6 @@
 #define LOG_ASSERT 1
 #define LOG_DEASSERT 0
 
-
 enum VR_ERR_LOG_DEVICE_INDEX_E {
 	//pwr fault reg 1
 	PWRGD_OWL_E_TRVDD0P9_R_FAULT = 1,
