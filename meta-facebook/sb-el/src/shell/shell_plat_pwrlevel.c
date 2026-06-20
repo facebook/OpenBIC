@@ -118,4 +118,4 @@ SHELL_STATIC_SUBCMD_SET_CREATE(sub_pwrlevel_cmds,
 			       SHELL_SUBCMD_SET_END);
 
 /* Root of command uart-pwrevent */
-SHELL_CMD_REGISTER(pwrlevel1, &sub_pwrlevel_cmds, "pwrlevel1 commands for IRIS", NULL);
+SHELL_CMD_REGISTER(pwrlevel1, &sub_pwrlevel_cmds, "pwrlevel1 commands for ARKE", NULL);

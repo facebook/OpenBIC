@@ -64,7 +64,6 @@ typedef struct vr_smbus_alrt_sensor_map {
 	uint8_t vr_rail_2_page_1;
 } vr_smbus_alrt_sensor_map;
 
-
 vr_smbus_alrt_sensor_map vr_smbus_alrt_sensor_map_table[] = {
 	{ 0 },
 	{ 1, VR_RAIL_E_ASIC_P0V75_MAX_N_VDD, VR_RAIL_E_ASIC_P0V8_HAMSA_AVDD_PCIE,
@@ -103,8 +102,8 @@ vr_device_match_sensor_num vr_error_fault_table[] = {
 	{ PWRGD_P4V2_R_FAULT, 0 }, // TODO
 	{ PWRGD_P0V75_AVDD_HCSL_R_FAULT, 0 }, // TODO
 	//pwr fault reg 2
-	{ PWRGD_MEDHA1_VDD_FAULT, SENSOR_NUM_ASIC_P0V75_NUWA1_VDD_TEMP_C },
-	{ PWRGD_MEDHA0_VDD_FAULT, SENSOR_NUM_ASIC_P0V75_NUWA0_VDD_TEMP_C },
+	{ PWRGD_NUWA1_VDD_FAULT, SENSOR_NUM_ASIC_P0V75_NUWA1_VDD_TEMP_C },
+	{ PWRGD_NUWA0_VDD_FAULT, SENSOR_NUM_ASIC_P0V75_NUWA0_VDD_TEMP_C },
 	{ PWRGD_OWL_E_VDD_R_FAULT, SENSOR_NUM_ASIC_P0V75_OWL_E_VDD_TEMP_C },
 	{ PWRGD_OWL_W_VDD_R_FAULT, SENSOR_NUM_ASIC_P0V75_OWL_W_VDD_TEMP_C },
 	{ PWRGD_HAMSA_VDD_R_FAULT, SENSOR_NUM_ASIC_P0V85_HAMSA_VDD_TEMP_C },
@@ -168,8 +167,8 @@ vr_error_callback_info vr_error_callback_info_table[] = {
 		  PWRGD_HAMSA_VDD_R_FAULT, // bit3
 		  PWRGD_OWL_W_VDD_R_FAULT, // bit4
 		  PWRGD_OWL_E_VDD_R_FAULT, // bit5
-		  PWRGD_MEDHA0_VDD_FAULT, // bit6
-		  PWRGD_MEDHA1_VDD_FAULT // bit7
+		  PWRGD_NUWA0_VDD_FAULT, // bit6
+		  PWRGD_NUWA1_VDD_FAULT // bit7
 	  } },
 	{ VR_POWER_FAULT_3_REG,
 	  {
@@ -316,76 +315,76 @@ bool get_error_data(uint16_t error_code, uint8_t *data)
 	uint8_t trigger_case = (error_code >> 13) & 0x07;
 
 	switch (trigger_case) {
-		case TEMPERATURE_TRIGGER_CAUSE: {
-			uint8_t temperature_sensor_num = error_code & 0xFF;
-			LOG_WRN("trigger_case: 0x%x, temperature_sensor_num: 0x%x", trigger_case,
-				temperature_sensor_num);
-			sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(temperature_sensor_num);
-			data[0] = get_thermal_status_val_for_log(temperature_sensor_num);
-			if (data[0] & TEMP_STATUS_OPEN) {
-				if (cfg->type == sensor_dev_tmp431) {
-					if (!tmp432_get_temp_open_status(cfg, &data[1])) {
-						LOG_ERR("Failed to get tmp432 0x%02x temperature open status",
-							temperature_sensor_num);
-						return false;
-					}
-				} else if (cfg->type == sensor_dev_emc1413) {
-					if (!emc1413_get_temp_open_status(cfg, &data[1])) {
-						LOG_ERR("Failed to get emc14130x%02x temperature open status",
-							temperature_sensor_num);
-						return false;
-					}
-				} else {
-					LOG_ERR("Unsupported sensor type 0x%x for sensor num 0x%02x",
-						cfg->type, temperature_sensor_num);
+	case TEMPERATURE_TRIGGER_CAUSE: {
+		uint8_t temperature_sensor_num = error_code & 0xFF;
+		LOG_WRN("trigger_case: 0x%x, temperature_sensor_num: 0x%x", trigger_case,
+			temperature_sensor_num);
+		sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(temperature_sensor_num);
+		data[0] = get_thermal_status_val_for_log(temperature_sensor_num);
+		if (data[0] & TEMP_STATUS_OPEN) {
+			if (cfg->type == sensor_dev_tmp431) {
+				if (!tmp432_get_temp_open_status(cfg, &data[1])) {
+					LOG_ERR("Failed to get tmp432 0x%02x temperature open status",
+						temperature_sensor_num);
+					return false;
+				}
+			} else if (cfg->type == sensor_dev_emc1413) {
+				if (!emc1413_get_temp_open_status(cfg, &data[1])) {
+					LOG_ERR("Failed to get emc14130x%02x temperature open status",
+						temperature_sensor_num);
 					return false;
 				}
 			} else {
-				data[1] = get_thermal_limit_status_val_for_log(temperature_sensor_num);
-			}
-			// save sensor num to data and keep raw data
-			data[2] = temperature_sensor_num;
-			LOG_INF("Temperature status: 0x%x, sensor num: 0x%x", data[0], data[1]);
-			return true;
-		}
-		case ASIC_THERMTRIP_TRIGGER_CAUSE: {
-			uint8_t cpld_data[3];
-			if (!plat_read_cpld(HBM_CATTRIP_LOG_REG, cpld_data, 3)) {
-				LOG_ERR("Failed to get cpld data");
+				LOG_ERR("Unsupported sensor type 0x%x for sensor num 0x%02x",
+					cfg->type, temperature_sensor_num);
 				return false;
 			}
-			// cpld reg 0x27
-			data[0] = cpld_data[0];
-			// cpld reg 0x29
-			data[1] = cpld_data[2];
-			return true;
+		} else {
+			data[1] = get_thermal_limit_status_val_for_log(temperature_sensor_num);
 		}
-		case POWER_ON_SEQUENCE_TRIGGER_CAUSE: {
-			data[0] = plat_get_power_seq_fail_id();
-			uint8_t data_num = 1;
-			for (uint8_t i = PWRGD_EVENT_LATCH_1_REG; i <= PWRGD_EVENT_LATCH_6_REG; i++) {
-				if (!plat_read_cpld(i, &data[data_num], 1)) {
-					LOG_ERR("Fail read cpld reg 0x%x", i);
-					return false;
-				}
-				data_num++;
+		// save sensor num to data and keep raw data
+		data[2] = temperature_sensor_num;
+		LOG_INF("Temperature status: 0x%x, sensor num: 0x%x", data[0], data[1]);
+		return true;
+	}
+	case ASIC_THERMTRIP_TRIGGER_CAUSE: {
+		uint8_t cpld_data[3];
+		if (!plat_read_cpld(HBM_CATTRIP_LOG_REG, cpld_data, 3)) {
+			LOG_ERR("Failed to get cpld data");
+			return false;
+		}
+		// cpld reg 0x27
+		data[0] = cpld_data[0];
+		// cpld reg 0x29
+		data[1] = cpld_data[2];
+		return true;
+	}
+	case POWER_ON_SEQUENCE_TRIGGER_CAUSE: {
+		data[0] = plat_get_power_seq_fail_id();
+		uint8_t data_num = 1;
+		for (uint8_t i = PWRGD_EVENT_LATCH_1_REG; i <= PWRGD_EVENT_LATCH_6_REG; i++) {
+			if (!plat_read_cpld(i, &data[data_num], 1)) {
+				LOG_ERR("Fail read cpld reg 0x%x", i);
+				return false;
 			}
-			return true;
+			data_num++;
 		}
-		case ASIC_ERROR_TRIGGER_CAUSE: {
-			plat_asic_error_event *asic_event = plat_get_asic_error_event();
-			CHECK_NULL_ARG_WITH_RETURN(asic_event, false);
-			data[0] = asic_event->event_id_0;
-			data[1] = asic_event->event_id_1;
-			data[2] = asic_event->chip_id;
-			data[3] = asic_event->module_id;
-			return true;
-		}
-		case AC_ON_TRIGGER_CAUSE:
-		case DC_ON_TRIGGER_CAUSE: {
-			data[0] = gpio_get(RST_ARKE_PWR_ON_PLD_R1_N);
-			return true;
-		}
+		return true;
+	}
+	case ASIC_ERROR_TRIGGER_CAUSE: {
+		plat_asic_error_event *asic_event = plat_get_asic_error_event();
+		CHECK_NULL_ARG_WITH_RETURN(asic_event, false);
+		data[0] = asic_event->event_id_0;
+		data[1] = asic_event->event_id_1;
+		data[2] = asic_event->chip_id;
+		data[3] = asic_event->module_id;
+		return true;
+	}
+	case AC_ON_TRIGGER_CAUSE:
+	case DC_ON_TRIGGER_CAUSE: {
+		data[0] = gpio_get(RST_ARKE_PWR_ON_PLD_R1_N);
+		return true;
+	}
 	}
 	// Extract CPLD offset and bit position from the error code
 	uint8_t cpld_offset = error_code & 0xFF;

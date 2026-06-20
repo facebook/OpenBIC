@@ -74,8 +74,6 @@ bool set_cpld_bit(uint8_t cpld_offset, uint8_t bit, uint8_t value)
 		return false;
 	}
 
-	LOG_DBG("original_value = 0x%x, check_value = 0x%x", original_value, check_value);
-
 	if (check_value != original_value) {
 		LOG_ERR("offset = 0x%x, bit = %d, value = %d, set_cpld_bit fail", cpld_offset, bit,
 			value);
@@ -113,7 +111,7 @@ cpld_info cpld_info_table[] = {
 	{ VR_POWER_FAULT_4_REG, 			0x00, 0x00, true, 0x00, true, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
 	{ VR_POWER_FAULT_5_REG, 			0x00, 0x00, true, 0x00, true, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
 	{ VR_SMBUS_ALERT_EVENT_LOG_REG, 	0xFF, 0xFF, true, 0x00, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
-	{ LEAK_DETECT_REG, 					0xFF, 0xFF, true, 0x00, false, 0x00, .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_BITS_6 },
+	{ LEAK_DETECT_REG, 					0xDF, 0xDF, true, 0x00, false, 0x00, .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_BITS_6 },
 	{ HBM_CATTRIP_REG, 					0xFF, 0xFF, true, 0x00, true, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_BITS_78 },
 	{ SYSTEM_ALERT_FAULT_REG, 			0xFF, 0xFF, true, 0x00, false, 0x00, .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_BITS_8 },
 	{ ASIC_TEMP_OVER_REG, 				0xFF, 0xFF, true, 0x00, true, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_BITS_8 },
@@ -163,9 +161,6 @@ bool vr_error_callback(cpld_info *cpld_info, uint8_t *current_cpld_value)
 	if (!status_changed_bit)
 		return true; // No new faults, return early
 
-	LOG_DBG("CPLD register 0x%02X has status changed 0x%02X", cpld_info->cpld_offset,
-		status_changed_bit);
-
 	// Iterate through each bit in status_changed_bit to handle the corresponding VR
 	for (uint8_t bit = 0; bit < 8; bit++) {
 		if (!(status_changed_bit & BIT(bit)))
@@ -177,18 +172,13 @@ bool vr_error_callback(cpld_info *cpld_info, uint8_t *current_cpld_value)
 
 		uint8_t bit_val = (*current_cpld_value & BIT(bit)) >> bit;
 		uint8_t expected_bit_val = (expected_val & BIT(bit)) >> bit;
-		LOG_DBG("cpld offset 0x%02X, bit %d, bit_val %d, expected_bit_val %d",
-			cpld_info->cpld_offset, bit, bit_val, expected_bit_val);
 
 		if (bit_val != expected_bit_val) {
 			LOG_ERR("Generated error code: 0x%04X (bit %d, CPLD offset 0x%02X)",
 				error_code, bit, cpld_info->cpld_offset);
-
 			// Perform additional operations if needed
-			LOG_DBG("ASSERT");
 			error_log_event(error_code, LOG_ASSERT);
 		} else {
-			LOG_DBG("DEASSERT");
 			error_log_event(error_code, LOG_DEASSERT);
 		}
 	}
@@ -224,14 +214,8 @@ void plat_poll_cpld_info_table(void){
 
 		// Read from CPLD
 		if (!plat_read_cpld(cpld_info_table[i].cpld_offset, &data, 1)) {
-			LOG_DBG("Failed to read CPLD register 0x%02X",
-				cpld_info_table[i].cpld_offset);
 			continue;
 		}
-
-		LOG_DBG("Polling CPLD 0x%02X raw=0x%02X, expected=0x%02X, mask=0x%02X",
-			cpld_info_table[i].cpld_offset, data, expected_val,
-			cpld_info_table[i].bit_check_mask);
 
 		if (!cpld_info_table[i].is_fault_log)
 			continue;
@@ -309,28 +293,24 @@ static void plat_sync_asic_reset_status_to_ioexp(void)
 		return;
 	}
 
-	LOG_DBG("ASIC reset status changed: 0x%02X -> 0x%02X",
-		prev_asic_rst, asic_rst);
 	prev_asic_rst = asic_rst;
 
 	uint8_t hamsa_pwron = (asic_rst >> 5) & 0x1;   /* HAMSA_POWER_ON_RESET_PLD_L */
-	uint8_t medha0_pwron = (asic_rst >> 4) & 0x1;  /* MEDHA0_POWER_ON_RESET_PLD_L */
-	uint8_t medha1_pwron = (asic_rst >> 3) & 0x1;  /* MEDHA1_POWER_ON_RESET_PLD_L */
+	uint8_t nuwa0_pwron = (asic_rst >> 4) & 0x1;  /* NUWA0_POWER_ON_RESET_PLD_L */
+	uint8_t nuwa1_pwron = (asic_rst >> 3) & 0x1;  /* NUWA1_POWER_ON_RESET_PLD_L */
 	uint8_t hamsa_sys_rst = (asic_rst >> 2) & 0x1; /* HAMSA_SYS_RST_PLD_L */
-	uint8_t medha0_sys_rst = (asic_rst >> 1) & 0x1;/* MEDHA0_SYS_RST_PLD_L */
-	uint8_t medha1_sys_rst = (asic_rst >> 0) & 0x1;/* MEDHA1_SYS_RST_PLD_L */
+	uint8_t nuwa0_sys_rst = (asic_rst >> 1) & 0x1;/* NUWA0_SYS_RST_PLD_L */
+	uint8_t nuwa1_sys_rst = (asic_rst >> 0) & 0x1;/* NUWA1_SYS_RST_PLD_L */
 
 	/* U200070: io0~2 <- bit5~3 */
 	uint8_t new_070 = U200070_IO_INIT_VAL;
 	new_070 &= ~(BIT(0) | BIT(1) | BIT(2));
 	new_070 |= (hamsa_pwron << 0);
-	new_070 |= (medha0_pwron << 1);
-	new_070 |= (medha1_pwron << 2);
+	new_070 |= (nuwa0_pwron << 1);
+	new_070 |= (nuwa1_pwron << 2);
 
 	set_pca6554apw_ioe_value(U200070_IO_I2C_BUS, U200070_IO_ADDR,
 				 OUTPUT_PORT, new_070);
-	LOG_DBG("Update U200070 OUTPUT_PORT: 0x%02X -> 0x%02X",
-		U200070_IO_INIT_VAL, new_070);
 
 	/* U200053: bit2 -> io6 */
 	uint8_t new_053 = U200053_IO_INIT_VAL;
@@ -339,19 +319,15 @@ static void plat_sync_asic_reset_status_to_ioexp(void)
 
 	set_pca6554apw_ioe_value(U200053_IO_I2C_BUS, U200053_IO_ADDR,
 				 OUTPUT_PORT, new_053);
-	LOG_DBG("Update U200053 OUTPUT_PORT: 0x%02X -> 0x%02X",
-		U200053_IO_INIT_VAL, new_053);
 
 	/* U200052: bit1/bit0 -> io6/io7 */
 	uint8_t new_052 = U200052_IO_INIT_VAL;
 	new_052 &= ~(BIT(6) | BIT(7));
-	new_052 |= (medha0_sys_rst << 6);
-	new_052 |= (medha1_sys_rst << 7);
+	new_052 |= (nuwa0_sys_rst << 6);
+	new_052 |= (nuwa1_sys_rst << 7);
 
 	set_pca6554apw_ioe_value(U200052_IO_I2C_BUS, U200052_IO_ADDR,
 				 OUTPUT_PORT, new_052);
-	LOG_DBG("Update U200052 OUTPUT_PORT: 0x%02X -> 0x%02X",
-		U200052_IO_INIT_VAL, new_052);
 }
 
 static void plat_sync_osfp_p3v3_enable_by_pwrgd(void)
@@ -434,7 +410,6 @@ void check_cpld_handler()
 		LOG_ERR("Failed to read cpld version from cpld");
 	}
 	version = (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | data[3];
-	LOG_DBG("The cpld version: %08x", version);
 
 	k_work_schedule(&check_cpld_work, K_MSEC(5000));
 }

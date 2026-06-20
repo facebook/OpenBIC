@@ -25,7 +25,8 @@
 void cmd_set_sensor_threshold(const struct shell *shell, size_t argc, char **argv)
 {
 	if (argc != 4) {
-		shell_warn(shell, "Help: set <sensor ID> <UCT/LCT> <value>");
+		shell_warn(shell, "Help: set <sensor ID> <UCT/LCT> <value in micro-units>");
+		shell_warn(shell, "Example: sensor_threshold set 0x78 UCT 80000000  // 80");
 		return;
 	}
 

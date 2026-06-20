@@ -61,8 +61,8 @@ LOG_MODULE_REGISTER(plat_i2c_target);
 #define STRAP_SET_TYPE 0x44 // 01000100
 #define VR_PWR_BUF_SIZE 38
 #define I2C_TARGET_BUS_ASIC I2C_BUS7 // asic HAMSA
-#define I2C_TARGET_BUS_ASIC_NUWA0 I2C_BUS4 // asic medha0
-#define I2C_TARGET_BUS_ASIC_NUWA1 I2C_BUS5 // asic medha1
+#define I2C_TARGET_BUS_ASIC_NUWA0 I2C_BUS4 // asic nuwa0
+#define I2C_TARGET_BUS_ASIC_NUWA1 I2C_BUS5 // asic nuwa1
 
 plat_sensor_init_data *sensor_init_data_table[DATA_TABLE_LENGTH_2] = { NULL };
 plat_sensor_reading *sensor_reading_table[DATA_TABLE_LENGTH_4] = { NULL };
@@ -558,8 +558,8 @@ void vr_power_reading(uint8_t *buffer, size_t buf_size)
 	float x = 0;
 	float chiplet0 = 0;
 	float chiplet1 = 0;
-	float medha0 = 0;
-	float medha1 = 0;
+	float nuwa0 = 0;
+	float nuwa1 = 0;
 
 	for (size_t i = 0; i < ARRAY_SIZE(vr_pwr_sensor_table); i++) {
 		if (get_asic_board_id() != ASIC_BOARD_ID_EVB &&
@@ -579,10 +579,10 @@ void vr_power_reading(uint8_t *buffer, size_t buf_size)
 				float pwr_w = get_adc_nuwa_inst_pwr_w(ADC_EL_IDX_NUWA0);
 				uint16_t adc_w = (uint16_t)(pwr_w + 0.5f);
 				memcpy(&buffer[6], &adc_w, 2);
-				medha0 = (int)(pwr_w * 1000.0f + 0.5f);
+				nuwa0 = (int)(pwr_w * 1000.0f + 0.5f);
 			} else {
 				memcpy(&buffer[6], &val, 2);
-				medha0 = milivolt;
+				nuwa0 = milivolt;
 			}
 			break;
 		}
@@ -593,10 +593,10 @@ void vr_power_reading(uint8_t *buffer, size_t buf_size)
 				uint16_t adc_w = (uint16_t)(pwr_w + 0.5f);
 				memcpy(&buffer[8], &adc_w, 2);
 
-				medha1 = (int)(pwr_w * 1000.0f + 0.5f);
+				nuwa1 = (int)(pwr_w * 1000.0f + 0.5f);
 			} else {
 				memcpy(&buffer[8], &val, 2);
-				medha1 = milivolt;
+				nuwa1 = milivolt;
 			}
 			break;
 		}
@@ -654,8 +654,8 @@ void vr_power_reading(uint8_t *buffer, size_t buf_size)
 	uint16_t val = (uint16_t)reading;
 	memcpy(&buffer[36], &val, 2);
 
-	chiplet0 = ((medha0 + 0.5 * x) + 500) / 1000;
-	chiplet1 = ((medha1 + 0.5 * x) + 500) / 1000;
+	chiplet0 = ((nuwa0 + 0.5 * x) + 500) / 1000;
+	chiplet1 = ((nuwa1 + 0.5 * x) + 500) / 1000;
 	uint16_t val_x = (uint16_t)((x + 500) / 1000);
 	uint16_t val_c0 = (uint16_t)chiplet0;
 	uint16_t val_c1 = (uint16_t)chiplet1;

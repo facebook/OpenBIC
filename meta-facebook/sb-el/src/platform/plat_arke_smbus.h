@@ -57,8 +57,8 @@
 #define FW_DL_SLV_PROG BIT(1)
 #define FW_SB_EXIT_CMD BIT(0)
 
-// #define MEDHA0_I2C_ADDR 0x33
-// #define MEDHA1_I2C_ADDR 0x34
+// #define NUWA0_I2C_ADDR 0x33
+// #define NUWA1_I2C_ADDR 0x34
 // #define OWLW_I2C_ADDR 0x6E
 // #define OWLE_I2C_ADDR 0x6E
 
@@ -83,5 +83,5 @@
 // firmware block write
 #define FW_DATA_WRITE 138
 
-int iris_smbus_fast_boot(uint8_t *image_buff, uint32_t img_dest_addr, uint32_t img_size);
+int ARKE_smbus_fast_boot(uint8_t *image_buff, uint32_t img_dest_addr, uint32_t img_size);
 #endif

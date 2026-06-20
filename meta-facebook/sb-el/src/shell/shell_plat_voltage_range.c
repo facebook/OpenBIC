@@ -35,6 +35,9 @@ static int cmd_voltage_range_get(const struct shell *shell, size_t argc, char **
 		if (!strcmp(argv[1], "all")) {
 			/* print all range */
 			for (int i = 0; i < VR_RAIL_E_MAX; i++) {
+				if ((get_asic_board_id() != ASIC_BOARD_ID_EVB) &&
+				    (i == VR_RAIL_E_P3V3_OSFP_VOLT_V))
+					continue;
 
 				uint8_t *rail_name = NULL;
 				if (!vr_rail_name_get((uint8_t)i, &rail_name)) {
@@ -67,6 +70,10 @@ static int cmd_voltage_range_get(const struct shell *shell, size_t argc, char **
 		return -1;
 	}
 
+	if ((get_asic_board_id() != ASIC_BOARD_ID_EVB) && (rail == VR_RAIL_E_P3V3_OSFP_VOLT_V)) {
+		shell_print(shell, "There is no osfp p3v3");
+		return 0;
+	}
 	uint16_t vout_max_millivolt = vout_range_user_settings.change_vout_max[rail];
 	uint16_t vout_min_millivolt = vout_range_user_settings.change_vout_min[rail];
 	if (!strcmp(argv[2], "min")) {
@@ -90,8 +97,13 @@ static void vr_rname_get_for_get_voltrage(size_t idx, struct shell_static_entry 
 	uint8_t *name = NULL;
 	vr_rail_name_get((uint8_t)idx, &name);
 
-	if (idx == VR_RAIL_E_MAX)
-		name = (uint8_t *)"all";
+	if ((get_asic_board_id() == ASIC_BOARD_ID_EVB)) {
+		if (idx == VR_RAIL_E_MAX)
+			name = (uint8_t *)"all";
+	} else {
+		if (idx == VR_RAIL_E_P3V3_OSFP_VOLT_V)
+			name = (uint8_t *)"all";
+	}
 
 	entry->syntax = (name) ? (const char *)name : NULL;
 	entry->handler = NULL;

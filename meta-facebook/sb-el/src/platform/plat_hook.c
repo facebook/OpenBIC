@@ -208,7 +208,7 @@ ubc_vr_power_mapping_sensor ubc_vr_power_table[] = {
 	  { 0 } },
 	{ UBC_VR_RAIL_E_ASIC_P0V9_VDDQ_HBM0246,
 	  SENSOR_NUM_ASIC_P0V9_VDDQ_HBM0246_PWR_W,
-	  "VR_ASIC_ASIC_P0V9_VDDQ_HBM0246_PWR_W",
+	  "VR_ASIC_P0V9_VDDQ_HBM0246_PWR_W",
 	  { 0 } },
 	{ UBC_VR_RAIL_E_ASIC_P1V2_HAMSA_VDDHRXTX_PCIE,
 	  SENSOR_NUM_ASIC_P1V2_HAMSA_VDDHRXTX_PCIE_PWR_W,
@@ -282,8 +282,8 @@ bootstrap_mapping_register bootstrap_table[] = {
 	  0x0, true },
 	{ STRAP_INDEX_NUWA0_CRM_STRAP_1, STRAP_TYPE_CPLD, NUWA0_STRAP, "NUWA0_CRM_STRAP_1", 2, 1, 0x0,
 	  0x0, true },
-	{ STRAP_INDEX_NUWA0_CHIP_STRAP_0, STRAP_TYPE_CPLD, NUWA0_STRAP, "NUWA0_CHIP_STRAP_0", 1, 1, 0x01,
-	  0x01, true },
+	{ STRAP_INDEX_NUWA0_CHIP_STRAP_0, STRAP_TYPE_CPLD, NUWA0_STRAP, "NUWA0_CHIP_STRAP_0", 1, 1, 0x0,
+	  0x0, true },
 	{ STRAP_INDEX_NUWA0_CHIP_STRAP_1, STRAP_TYPE_CPLD, NUWA0_STRAP, "NUWA0_CHIP_STRAP_1", 0, 1, 0x0,
 	  0x0, true },
 	{ STRAP_INDEX_NUWA0_CORE_TAP_CTRL_PLD_L, STRAP_TYPE_CPLD, NUWA0_CONTROL_IO,
@@ -300,8 +300,8 @@ bootstrap_mapping_register bootstrap_table[] = {
 	  0x0, true },
 	{ STRAP_INDEX_NUWA1_CRM_STRAP_1, STRAP_TYPE_CPLD, NUWA1_STRAP, "NUWA1_CRM_STRAP_1", 2, 1, 0x0,
 	  0x0, true },
-	{ STRAP_INDEX_NUWA1_CHIP_STRAP_0, STRAP_TYPE_CPLD, NUWA1_STRAP, "NUWA1_CHIP_STRAP_0", 1, 1, 0x01,
-	  0x01, true },
+	{ STRAP_INDEX_NUWA1_CHIP_STRAP_0, STRAP_TYPE_CPLD, NUWA1_STRAP, "NUWA1_CHIP_STRAP_0", 1, 1, 0x0,
+	  0x0, true },
 	{ STRAP_INDEX_NUWA1_CHIP_STRAP_1, STRAP_TYPE_CPLD, NUWA1_STRAP, "NUWA1_CHIP_STRAP_1", 0, 1, 0x0,
 	  0x0, true },
 	{ STRAP_INDEX_NUWA1_CORE_TAP_CTRL_PLD_L, STRAP_TYPE_CPLD, NUWA1_CONTROL_IO,
@@ -608,12 +608,12 @@ bool post_tmp_read(sensor_cfg *cfg, void *args, int *reading)
 	} else if (cfg->type == sensor_dev_emc1413) {
 		switch (cfg->num) {
 		/*
-		SENSOR_NUM_ASIC_MEDHA0_SENSOR0_TEMP_C
-		SENSOR_NUM_ASIC_MEDHA0_SENSOR1_TEMP_C
+		SENSOR_NUM_ASIC_NUWA0_SENSOR0_TEMP_C
+		SENSOR_NUM_ASIC_NUWA0_SENSOR1_TEMP_C
 		SENSOR_NUM_ASIC_OWL_W_TEMP_C
 		SENSOR_NUM_ASIC_OWL_E_TEMP_C
-		SENSOR_NUM_ASIC_MEDHA1_SENSOR0_TEMP_C
-		SENSOR_NUM_ASIC_MEDHA1_SENSOR1_TEMP_C
+		SENSOR_NUM_ASIC_NUWA1_SENSOR0_TEMP_C
+		SENSOR_NUM_ASIC_NUWA1_SENSOR1_TEMP_C
 		SENSOR_NUM_ASIC_HAMSA_CRM_TEMP_C
 		SENSOR_NUM_ASIC_HAMSA_LS_TEMP_C
 		*/
@@ -1295,10 +1295,15 @@ bool set_ioexp_val_to_bootstrap_table(void)
 			return false;
 		}
 		// set when output only
+		uint8_t old_e =
+			bootstrap_table[STRAP_INDEX_OWL_E_BOOT_SOURCE_0_7].change_setting_value;
+		uint8_t old_w =
+			bootstrap_table[STRAP_INDEX_OWL_W_BOOT_SOURCE_0_7].change_setting_value;
+
 		bootstrap_table[STRAP_INDEX_OWL_E_BOOT_SOURCE_0_7].change_setting_value =
-			(data[0] & (~direction[0]));
+			(old_e & direction[0]) | (data[0] & (~direction[0]));
 		bootstrap_table[STRAP_INDEX_OWL_W_BOOT_SOURCE_0_7].change_setting_value =
-			(data[1] & (~direction[1]));
+			(old_w & direction[1]) | (data[1] & (~direction[1]));
 	}
 
 	if (is_evb_ioe_accessible()) {

@@ -83,3 +83,9 @@ void plat_pldm_load_state_effecter_table(void)
 	memcpy(state_effecter_table, plat_state_effecter_table, sizeof(plat_state_effecter_table));
 	return;
 }
+
+uint8_t plat_pldm_get_tid()
+{
+	// Set TID as EID
+	return plat_get_eid();
+}

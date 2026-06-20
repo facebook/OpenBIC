@@ -190,4 +190,4 @@ SHELL_STATIC_SUBCMD_SET_CREATE(sub_voltage_peak_cmds,
 			       SHELL_SUBCMD_SET_END);
 
 /* Root of command voltage-peak */
-SHELL_CMD_REGISTER(voltage_peak, &sub_voltage_peak_cmds, "Voltage Peak commands for RB", NULL);
+SHELL_CMD_REGISTER(voltage_peak, &sub_voltage_peak_cmds, "Voltage Peak commands for EL", NULL);

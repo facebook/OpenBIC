@@ -9857,7 +9857,7 @@ pldm_sensor_info plat_pldm_sensor_ubc_table[] = {
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
-			.post_sensor_read_hook = post_common_sensor_read,
+			.post_sensor_read_hook = post_ubc_read,
 		},
 	},
 	{
@@ -10202,7 +10202,7 @@ pldm_sensor_info plat_pldm_sensor_ubc_table[] = {
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
-			.post_sensor_read_hook = post_common_sensor_read,
+			.post_sensor_read_hook = post_ubc_read,
 		},
 	},
 	{
@@ -13448,14 +13448,14 @@ power_capping_time_setting pwr_capping_setting_table[] = {
 void plat_pldm_sensor_set_quick_vr_poll_interval(uint8_t type, uint8_t capping_source)
 {
 	/*
-	0 default = MEDHA0/1_VDD power every 10ms
-	1 = MEDHA0/1_VDD power every 5ms
-	2 = MEDHA0/1_VDD power every 2ms
-	3 = MEDHA0/1_VDD power every 1ms
-	4 = MEDHA0/1_VDD power every 2ms, VDDQC0246/VDDQC1357 every 10ms
-	5 = MEDHA0/1_VDD power every 5ms, VDDQC0246/VDDQC1357 every 10ms
-	6 = MEDHA0/1_VDD power every 5ms, VDDQC0246/VDDQC1357 every 5ms
-	7 = MEDHA0/1_VDD power every 2ms, VDDQC0246/VDDQC1357 every 10ms, OWL_E_VDD/OWL_W_VDD/HAMSA_VDD every 100ms
+	0 default = NUWA0/1_VDD power every 10ms
+	1 = NUWA0/1_VDD power every 5ms
+	2 = NUWA0/1_VDD power every 2ms
+	3 = NUWA0/1_VDD power every 1ms
+	4 = NUWA0/1_VDD power every 2ms, VDDQC0246/VDDQC1357 every 10ms
+	5 = NUWA0/1_VDD power every 5ms, VDDQC0246/VDDQC1357 every 10ms
+	6 = NUWA0/1_VDD power every 5ms, VDDQC0246/VDDQC1357 every 5ms
+	7 = NUWA0/1_VDD power every 2ms, VDDQC0246/VDDQC1357 every 10ms, OWL_E_VDD/OWL_W_VDD/HAMSA_VDD every 100ms
 	*/
 	pldm_sensor_info *vr_table = plat_pldm_sensor_load(QUICK_VR_SENSOR_THREAD_ID);
 	int count = plat_pldm_sensor_get_sensor_count(QUICK_VR_SENSOR_THREAD_ID);
