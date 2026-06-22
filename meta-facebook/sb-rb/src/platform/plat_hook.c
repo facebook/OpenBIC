@@ -241,41 +241,41 @@ bool post_iris_sensor_read(sensor_cfg *cfg, void *args, int *reading)
 		memcpy(iris_temp_data, priv->temp, ASIC_MONITOR_TEMP_REG_LEN);
 		*reading = iris_temp_data[1];
 		break;
-	case SENSOR_NUM_IRIS_HEDHA0_REMOTE_TEMP_C:
+	case SENSOR_NUM_IRIS_MEDHA0_REMOTE_TEMP_C:
 		*reading = iris_temp_data[2];
 		break;
-	case SENSOR_NUM_IRIS_HEDHA1_REMOTE_TEMP_C:
+	case SENSOR_NUM_IRIS_MEDHA1_REMOTE_TEMP_C:
 		*reading = iris_temp_data[3];
 		break;
-	case SENSOR_NUM_IRIS_OWLE_REMOTE_TEMP_C:
+	case SENSOR_NUM_IRIS_OWL_E_REMOTE_TEMP_C:
 		*reading = iris_temp_data[4];
 		break;
-	case SENSOR_NUM_IRIS_OWLW_REMOTE_TEMP_C:
+	case SENSOR_NUM_IRIS_OWL_W_REMOTE_TEMP_C:
 		*reading = iris_temp_data[5];
 		break;
-	case SENSOR_NUM_IRIS_HEDHA0_HBM0_REMOTE_TEMP_C:
+	case SENSOR_NUM_IRIS_MEDHA0_HBM0_REMOTE_TEMP_C:
 		memcpy(iris_hbm_temp_data, priv->hbm_temp, ASIC_MONITOR_HBM_TEMP_REG_LEN);
 		*reading = iris_hbm_temp_data[1];
 		break;
-	case SENSOR_NUM_IRIS_HEDHA0_HBM1_REMOTE_TEMP_C:
+	case SENSOR_NUM_IRIS_MEDHA0_HBM1_REMOTE_TEMP_C:
 		*reading = iris_hbm_temp_data[2];
 		break;
-	case SENSOR_NUM_IRIS_HEDHA0_HBM2_REMOTE_TEMP_C:
+	case SENSOR_NUM_IRIS_MEDHA0_HBM2_REMOTE_TEMP_C:
 		*reading = iris_hbm_temp_data[3];
 		break;
-	case SENSOR_NUM_IRIS_HEDHA0_HBM3_REMOTE_TEMP_C:
+	case SENSOR_NUM_IRIS_MEDHA0_HBM3_REMOTE_TEMP_C:
 		*reading = iris_hbm_temp_data[4];
 		break;
-	case SENSOR_NUM_IRIS_HEDHA1_HBM0_REMOTE_TEMP_C:
+	case SENSOR_NUM_IRIS_MEDHA1_HBM0_REMOTE_TEMP_C:
 		*reading = iris_hbm_temp_data[5];
 		break;
-	case SENSOR_NUM_IRIS_HEDHA1_HBM1_REMOTE_TEMP_C:
+	case SENSOR_NUM_IRIS_MEDHA1_HBM1_REMOTE_TEMP_C:
 		*reading = iris_hbm_temp_data[6];
 		break;
-	case SENSOR_NUM_IRIS_HEDHA1_HBM2_REMOTE_TEMP_C:
+	case SENSOR_NUM_IRIS_MEDHA1_HBM2_REMOTE_TEMP_C:
 		*reading = iris_hbm_temp_data[7];
 		break;
-	case SENSOR_NUM_IRIS_HEDHA1_HBM3_REMOTE_TEMP_C:
+	case SENSOR_NUM_IRIS_MEDHA1_HBM3_REMOTE_TEMP_C:
 		*reading = iris_hbm_temp_data[8];
 		break;
 	default:

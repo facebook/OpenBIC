@@ -103,8 +103,8 @@ void max_asic_temp_history_cmd(const struct shell *shell)
 	1	hamsa_remote_temp
 	2	cip0_remote_temp
 	3	cip1_remote_temp
-	4	owle_remote_temp
-	5	owlw_remote_temp
+	4	owl_e_remote_temp
+	5	owl_w_remote_temp
 	6	max_asic_temp
 	7:8	reserved
 	9	pec
@@ -122,9 +122,9 @@ void max_asic_temp_history_cmd(const struct shell *shell)
 		    temp_data[2]);
 	shell_print(shell, "  %-20s raw: 0x%02X -> %d degC", "cip1_remote_temp", temp_data[3],
 		    temp_data[3]);
-	shell_print(shell, "  %-20s raw: 0x%02X -> %d degC", "owle_remote_temp", temp_data[4],
+	shell_print(shell, "  %-20s raw: 0x%02X -> %d degC", "owl_e_remote_temp", temp_data[4],
 		    temp_data[4]);
-	shell_print(shell, "  %-20s raw: 0x%02X -> %d degC", "owlw_remote_temp", temp_data[5],
+	shell_print(shell, "  %-20s raw: 0x%02X -> %d degC", "owl_w_remote_temp", temp_data[5],
 		    temp_data[5]);
 	shell_print(shell, "  %-20s raw: 0x%02X -> %d degC", "max_asic_temp", temp_data[6],
 		    temp_data[6]);

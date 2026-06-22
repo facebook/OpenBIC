@@ -1026,9 +1026,9 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
-			SENSOR_NUM_IRIS_HEDHA0_REMOTE_TEMP_C, //uint16_t sensor_id;
+			SENSOR_NUM_IRIS_MEDHA0_REMOTE_TEMP_C, //uint16_t sensor_id;
 			0x0000, //uint16_t entity_type; //Need to check
-			SENSOR_NUM_IRIS_HEDHA0_REMOTE_TEMP_C, //uint16_t entity_instance_number;
+			SENSOR_NUM_IRIS_MEDHA0_REMOTE_TEMP_C, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
 			0x00, //uint8_t sensor_init; //Need to check
 			0x01, //uint8_t sensor_auxiliary_names_pdr;
@@ -1069,7 +1069,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 		},
 		.update_time = 0,
 		{
-			.num = SENSOR_NUM_IRIS_HEDHA0_REMOTE_TEMP_C,
+			.num = SENSOR_NUM_IRIS_MEDHA0_REMOTE_TEMP_C,
 			.type = sensor_dev_iris_smbus,
 			.port = I2C_BUS12,
 			.target_addr = ASIC_ADDR,
@@ -1095,9 +1095,9 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
-			SENSOR_NUM_IRIS_HEDHA1_REMOTE_TEMP_C, //uint16_t sensor_id;
+			SENSOR_NUM_IRIS_MEDHA1_REMOTE_TEMP_C, //uint16_t sensor_id;
 			0x0000, //uint16_t entity_type; //Need to check
-			SENSOR_NUM_IRIS_HEDHA1_REMOTE_TEMP_C, //uint16_t entity_instance_number;
+			SENSOR_NUM_IRIS_MEDHA1_REMOTE_TEMP_C, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
 			0x00, //uint8_t sensor_init; //Need to check
 			0x01, //uint8_t sensor_auxiliary_names_pdr;
@@ -1138,7 +1138,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 		},
 		.update_time = 0,
 		{
-			.num = SENSOR_NUM_IRIS_HEDHA1_REMOTE_TEMP_C,
+			.num = SENSOR_NUM_IRIS_MEDHA1_REMOTE_TEMP_C,
 			.type = sensor_dev_iris_smbus,
 			.port = I2C_BUS12,
 			.target_addr = ASIC_ADDR,
@@ -1164,9 +1164,9 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
-			SENSOR_NUM_IRIS_OWLE_REMOTE_TEMP_C, //uint16_t sensor_id;
+			SENSOR_NUM_IRIS_OWL_E_REMOTE_TEMP_C, //uint16_t sensor_id;
 			0x0000, //uint16_t entity_type; //Need to check
-			SENSOR_NUM_IRIS_OWLE_REMOTE_TEMP_C, //uint16_t entity_instance_number;
+			SENSOR_NUM_IRIS_OWL_E_REMOTE_TEMP_C, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
 			0x00, //uint8_t sensor_init; //Need to check
 			0x01, //uint8_t sensor_auxiliary_names_pdr;
@@ -1207,7 +1207,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 		},
 		.update_time = 0,
 		{
-			.num = SENSOR_NUM_IRIS_OWLE_REMOTE_TEMP_C,
+			.num = SENSOR_NUM_IRIS_OWL_E_REMOTE_TEMP_C,
 			.type = sensor_dev_iris_smbus,
 			.port = I2C_BUS12,
 			.target_addr = ASIC_ADDR,
@@ -1233,9 +1233,9 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
-			SENSOR_NUM_IRIS_OWLW_REMOTE_TEMP_C, //uint16_t sensor_id;
+			SENSOR_NUM_IRIS_OWL_W_REMOTE_TEMP_C, //uint16_t sensor_id;
 			0x0000, //uint16_t entity_type; //Need to check
-			SENSOR_NUM_IRIS_OWLW_REMOTE_TEMP_C, //uint16_t entity_instance_number;
+			SENSOR_NUM_IRIS_OWL_W_REMOTE_TEMP_C, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
 			0x00, //uint8_t sensor_init; //Need to check
 			0x01, //uint8_t sensor_auxiliary_names_pdr;
@@ -1276,7 +1276,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 		},
 		.update_time = 0,
 		{
-			.num = SENSOR_NUM_IRIS_OWLW_REMOTE_TEMP_C,
+			.num = SENSOR_NUM_IRIS_OWL_W_REMOTE_TEMP_C,
 			.type = sensor_dev_iris_smbus,
 			.port = I2C_BUS12,
 			.target_addr = ASIC_ADDR,
@@ -1302,9 +1302,9 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
-			SENSOR_NUM_IRIS_HEDHA0_HBM0_REMOTE_TEMP_C, //uint16_t sensor_id;
+			SENSOR_NUM_IRIS_MEDHA0_HBM0_REMOTE_TEMP_C, //uint16_t sensor_id;
 			0x0000, //uint16_t entity_type; //Need to check
-			SENSOR_NUM_IRIS_HEDHA0_HBM0_REMOTE_TEMP_C, //uint16_t entity_instance_number;
+			SENSOR_NUM_IRIS_MEDHA0_HBM0_REMOTE_TEMP_C, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
 			0x00, //uint8_t sensor_init; //Need to check
 			0x01, //uint8_t sensor_auxiliary_names_pdr;
@@ -1345,7 +1345,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 		},
 		.update_time = 0,
 		{
-			.num = SENSOR_NUM_IRIS_HEDHA0_HBM0_REMOTE_TEMP_C,
+			.num = SENSOR_NUM_IRIS_MEDHA0_HBM0_REMOTE_TEMP_C,
 			.type = sensor_dev_iris_smbus,
 			.port = I2C_BUS12,
 			.target_addr = ASIC_ADDR,
@@ -1371,9 +1371,9 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
-			SENSOR_NUM_IRIS_HEDHA0_HBM1_REMOTE_TEMP_C, //uint16_t sensor_id;
+			SENSOR_NUM_IRIS_MEDHA0_HBM1_REMOTE_TEMP_C, //uint16_t sensor_id;
 			0x0000, //uint16_t entity_type; //Need to check
-			SENSOR_NUM_IRIS_HEDHA0_HBM1_REMOTE_TEMP_C, //uint16_t entity_instance_number;
+			SENSOR_NUM_IRIS_MEDHA0_HBM1_REMOTE_TEMP_C, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
 			0x00, //uint8_t sensor_init; //Need to check
 			0x01, //uint8_t sensor_auxiliary_names_pdr;
@@ -1414,7 +1414,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 		},
 		.update_time = 0,
 		{
-			.num = SENSOR_NUM_IRIS_HEDHA0_HBM1_REMOTE_TEMP_C,
+			.num = SENSOR_NUM_IRIS_MEDHA0_HBM1_REMOTE_TEMP_C,
 			.type = sensor_dev_iris_smbus,
 			.port = I2C_BUS12,
 			.target_addr = ASIC_ADDR,
@@ -1440,9 +1440,9 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
-			SENSOR_NUM_IRIS_HEDHA0_HBM2_REMOTE_TEMP_C, //uint16_t sensor_id;
+			SENSOR_NUM_IRIS_MEDHA0_HBM2_REMOTE_TEMP_C, //uint16_t sensor_id;
 			0x0000, //uint16_t entity_type; //Need to check
-			SENSOR_NUM_IRIS_HEDHA0_HBM2_REMOTE_TEMP_C, //uint16_t entity_instance_number;
+			SENSOR_NUM_IRIS_MEDHA0_HBM2_REMOTE_TEMP_C, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
 			0x00, //uint8_t sensor_init; //Need to check
 			0x01, //uint8_t sensor_auxiliary_names_pdr;
@@ -1483,7 +1483,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 		},
 		.update_time = 0,
 		{
-			.num = SENSOR_NUM_IRIS_HEDHA0_HBM2_REMOTE_TEMP_C,
+			.num = SENSOR_NUM_IRIS_MEDHA0_HBM2_REMOTE_TEMP_C,
 			.type = sensor_dev_iris_smbus,
 			.port = I2C_BUS12,
 			.target_addr = ASIC_ADDR,
@@ -1509,9 +1509,9 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
-			SENSOR_NUM_IRIS_HEDHA0_HBM3_REMOTE_TEMP_C, //uint16_t sensor_id;
+			SENSOR_NUM_IRIS_MEDHA0_HBM3_REMOTE_TEMP_C, //uint16_t sensor_id;
 			0x0000, //uint16_t entity_type; //Need to check
-			SENSOR_NUM_IRIS_HEDHA0_HBM3_REMOTE_TEMP_C, //uint16_t entity_instance_number;
+			SENSOR_NUM_IRIS_MEDHA0_HBM3_REMOTE_TEMP_C, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
 			0x00, //uint8_t sensor_init; //Need to check
 			0x01, //uint8_t sensor_auxiliary_names_pdr;
@@ -1552,7 +1552,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 		},
 		.update_time = 0,
 		{
-			.num = SENSOR_NUM_IRIS_HEDHA0_HBM3_REMOTE_TEMP_C,
+			.num = SENSOR_NUM_IRIS_MEDHA0_HBM3_REMOTE_TEMP_C,
 			.type = sensor_dev_iris_smbus,
 			.port = I2C_BUS12,
 			.target_addr = ASIC_ADDR,
@@ -1578,9 +1578,9 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
-			SENSOR_NUM_IRIS_HEDHA1_HBM0_REMOTE_TEMP_C, //uint16_t sensor_id;
+			SENSOR_NUM_IRIS_MEDHA1_HBM0_REMOTE_TEMP_C, //uint16_t sensor_id;
 			0x0000, //uint16_t entity_type; //Need to check
-			SENSOR_NUM_IRIS_HEDHA1_HBM0_REMOTE_TEMP_C, //uint16_t entity_instance_number;
+			SENSOR_NUM_IRIS_MEDHA1_HBM0_REMOTE_TEMP_C, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
 			0x00, //uint8_t sensor_init; //Need to check
 			0x01, //uint8_t sensor_auxiliary_names_pdr;
@@ -1621,7 +1621,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 		},
 		.update_time = 0,
 		{
-			.num = SENSOR_NUM_IRIS_HEDHA1_HBM0_REMOTE_TEMP_C,
+			.num = SENSOR_NUM_IRIS_MEDHA1_HBM0_REMOTE_TEMP_C,
 			.type = sensor_dev_iris_smbus,
 			.port = I2C_BUS12,
 			.target_addr = ASIC_ADDR,
@@ -1647,9 +1647,9 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
-			SENSOR_NUM_IRIS_HEDHA1_HBM1_REMOTE_TEMP_C, //uint16_t sensor_id;
+			SENSOR_NUM_IRIS_MEDHA1_HBM1_REMOTE_TEMP_C, //uint16_t sensor_id;
 			0x0000, //uint16_t entity_type; //Need to check
-			SENSOR_NUM_IRIS_HEDHA1_HBM1_REMOTE_TEMP_C, //uint16_t entity_instance_number;
+			SENSOR_NUM_IRIS_MEDHA1_HBM1_REMOTE_TEMP_C, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
 			0x00, //uint8_t sensor_init; //Need to check
 			0x01, //uint8_t sensor_auxiliary_names_pdr;
@@ -1690,7 +1690,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 		},
 		.update_time = 0,
 		{
-			.num = SENSOR_NUM_IRIS_HEDHA1_HBM1_REMOTE_TEMP_C,
+			.num = SENSOR_NUM_IRIS_MEDHA1_HBM1_REMOTE_TEMP_C,
 			.type = sensor_dev_iris_smbus,
 			.port = I2C_BUS12,
 			.target_addr = ASIC_ADDR,
@@ -1716,9 +1716,9 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
-			SENSOR_NUM_IRIS_HEDHA1_HBM2_REMOTE_TEMP_C, //uint16_t sensor_id;
+			SENSOR_NUM_IRIS_MEDHA1_HBM2_REMOTE_TEMP_C, //uint16_t sensor_id;
 			0x0000, //uint16_t entity_type; //Need to check
-			SENSOR_NUM_IRIS_HEDHA1_HBM2_REMOTE_TEMP_C, //uint16_t entity_instance_number;
+			SENSOR_NUM_IRIS_MEDHA1_HBM2_REMOTE_TEMP_C, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
 			0x00, //uint8_t sensor_init; //Need to check
 			0x01, //uint8_t sensor_auxiliary_names_pdr;
@@ -1759,7 +1759,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 		},
 		.update_time = 0,
 		{
-			.num = SENSOR_NUM_IRIS_HEDHA1_HBM2_REMOTE_TEMP_C,
+			.num = SENSOR_NUM_IRIS_MEDHA1_HBM2_REMOTE_TEMP_C,
 			.type = sensor_dev_iris_smbus,
 			.port = I2C_BUS12,
 			.target_addr = ASIC_ADDR,
@@ -1785,9 +1785,9 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 
 			/***numeric sensor format***/
 			0x0000, //uint16_t PLDM_terminus_handle;
-			SENSOR_NUM_IRIS_HEDHA1_HBM3_REMOTE_TEMP_C, //uint16_t sensor_id;
+			SENSOR_NUM_IRIS_MEDHA1_HBM3_REMOTE_TEMP_C, //uint16_t sensor_id;
 			0x0000, //uint16_t entity_type; //Need to check
-			SENSOR_NUM_IRIS_HEDHA1_HBM3_REMOTE_TEMP_C, //uint16_t entity_instance_number;
+			SENSOR_NUM_IRIS_MEDHA1_HBM3_REMOTE_TEMP_C, //uint16_t entity_instance_number;
 			0x0000, //uint16_t container_id;
 			0x00, //uint8_t sensor_init; //Need to check
 			0x01, //uint8_t sensor_auxiliary_names_pdr;
@@ -1828,7 +1828,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 		},
 		.update_time = 0,
 		{
-			.num = SENSOR_NUM_IRIS_HEDHA1_HBM3_REMOTE_TEMP_C,
+			.num = SENSOR_NUM_IRIS_MEDHA1_HBM3_REMOTE_TEMP_C,
 			.type = sensor_dev_iris_smbus,
 			.port = I2C_BUS12,
 			.target_addr = ASIC_ADDR,
@@ -10837,11 +10837,11 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = SENSOR_NUM_IRIS_HEDHA0_REMOTE_TEMP_C,
+		.sensor_id = SENSOR_NUM_IRIS_MEDHA0_REMOTE_TEMP_C,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"IRIS_HEDHA0_REMOTE_TEMP_C",
+		.sensorName = u"IRIS_MEDHA0_REMOTE_TEMP_C",
 	},
 	{
 		{
@@ -10852,11 +10852,11 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = SENSOR_NUM_IRIS_HEDHA1_REMOTE_TEMP_C,
+		.sensor_id = SENSOR_NUM_IRIS_MEDHA1_REMOTE_TEMP_C,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"IRIS_HEDHA1_REMOTE_TEMP_C",
+		.sensorName = u"IRIS_MEDHA1_REMOTE_TEMP_C",
 	},
 	{
 		{
@@ -10867,11 +10867,11 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = SENSOR_NUM_IRIS_OWLE_REMOTE_TEMP_C,
+		.sensor_id = SENSOR_NUM_IRIS_OWL_E_REMOTE_TEMP_C,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"IRIS_OWLE_REMOTE_TEMP_C",
+		.sensorName = u"IRIS_OWL_E_REMOTE_TEMP_C",
 	},
 	{
 		{
@@ -10882,11 +10882,11 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = SENSOR_NUM_IRIS_OWLW_REMOTE_TEMP_C,
+		.sensor_id = SENSOR_NUM_IRIS_OWL_W_REMOTE_TEMP_C,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"IRIS_OWLW_REMOTE_TEMP_C",
+		.sensorName = u"IRIS_OWL_W_REMOTE_TEMP_C",
 	},
 	{
 		{
@@ -10897,11 +10897,11 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = SENSOR_NUM_IRIS_HEDHA0_HBM0_REMOTE_TEMP_C,
+		.sensor_id = SENSOR_NUM_IRIS_MEDHA0_HBM0_REMOTE_TEMP_C,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"IRIS_HEDHA0_HBM0_REMOTE_TEMP_C",
+		.sensorName = u"IRIS_MEDHA0_HBM0_REMOTE_TEMP_C",
 	},
 	{
 		{
@@ -10912,11 +10912,11 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = SENSOR_NUM_IRIS_HEDHA0_HBM1_REMOTE_TEMP_C,
+		.sensor_id = SENSOR_NUM_IRIS_MEDHA0_HBM1_REMOTE_TEMP_C,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"IRIS_HEDHA0_HBM1_REMOTE_TEMP_C",
+		.sensorName = u"IRIS_MEDHA0_HBM1_REMOTE_TEMP_C",
 	},
 	{
 		{
@@ -10927,11 +10927,11 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = SENSOR_NUM_IRIS_HEDHA0_HBM2_REMOTE_TEMP_C,
+		.sensor_id = SENSOR_NUM_IRIS_MEDHA0_HBM2_REMOTE_TEMP_C,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"IRIS_HEDHA0_HBM2_REMOTE_TEMP_C",
+		.sensorName = u"IRIS_MEDHA0_HBM2_REMOTE_TEMP_C",
 	},
 	{
 		{
@@ -10942,11 +10942,11 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = SENSOR_NUM_IRIS_HEDHA0_HBM3_REMOTE_TEMP_C,
+		.sensor_id = SENSOR_NUM_IRIS_MEDHA0_HBM3_REMOTE_TEMP_C,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"IRIS_HEDHA0_HBM3_REMOTE_TEMP_C",
+		.sensorName = u"IRIS_MEDHA0_HBM3_REMOTE_TEMP_C",
 	},
 	{
 		{
@@ -10957,11 +10957,11 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = SENSOR_NUM_IRIS_HEDHA1_HBM0_REMOTE_TEMP_C,
+		.sensor_id = SENSOR_NUM_IRIS_MEDHA1_HBM0_REMOTE_TEMP_C,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"IRIS_HEDHA1_HBM0_REMOTE_TEMP_C",
+		.sensorName = u"IRIS_MEDHA1_HBM0_REMOTE_TEMP_C",
 	},
 	{
 		{
@@ -10972,11 +10972,11 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = SENSOR_NUM_IRIS_HEDHA1_HBM1_REMOTE_TEMP_C,
+		.sensor_id = SENSOR_NUM_IRIS_MEDHA1_HBM1_REMOTE_TEMP_C,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"IRIS_HEDHA1_HBM1_REMOTE_TEMP_C",
+		.sensorName = u"IRIS_MEDHA1_HBM1_REMOTE_TEMP_C",
 	},
 	{
 		{
@@ -10987,11 +10987,11 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = SENSOR_NUM_IRIS_HEDHA1_HBM2_REMOTE_TEMP_C,
+		.sensor_id = SENSOR_NUM_IRIS_MEDHA1_HBM2_REMOTE_TEMP_C,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"IRIS_HEDHA1_HBM2_REMOTE_TEMP_C",
+		.sensorName = u"IRIS_MEDHA1_HBM2_REMOTE_TEMP_C",
 	},
 	{
 		{
@@ -11002,11 +11002,11 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 			.data_length = 0x0000,
 		},
 		.terminus_handle = 0x0000,
-		.sensor_id = SENSOR_NUM_IRIS_HEDHA1_HBM3_REMOTE_TEMP_C,
+		.sensor_id = SENSOR_NUM_IRIS_MEDHA1_HBM3_REMOTE_TEMP_C,
 		.sensor_count = 0x1,
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
-		.sensorName = u"IRIS_HEDHA1_HBM3_REMOTE_TEMP_C",
+		.sensorName = u"IRIS_MEDHA1_HBM3_REMOTE_TEMP_C",
 	},
 };
 
