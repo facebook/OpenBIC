@@ -41,11 +41,11 @@ typedef struct {
 	uint8_t language;
 	char board_mfg_date[32];
 	char board_mfg[32];
-	char board_product[64];
+	char board_product[48];
 	char board_serial[32];
 	char board_part_number[32];
 	char board_fru_id[32];
-	char board_custom_data[BOARD_CUSTOM_DATA_MAX][32];
+	char board_custom_data[BOARD_CUSTOM_DATA_MAX][48];
 } BoardInfo;
 
 typedef struct {
