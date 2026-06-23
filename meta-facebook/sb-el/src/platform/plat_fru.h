@@ -41,7 +41,7 @@ typedef struct {
 	uint8_t language;
 	char board_mfg_date[32];
 	char board_mfg[32];
-	char board_product[32];
+	char board_product[64];
 	char board_serial[32];
 	char board_part_number[32];
 	char board_fru_id[32];
