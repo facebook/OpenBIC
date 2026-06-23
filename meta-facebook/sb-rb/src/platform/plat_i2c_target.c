@@ -1277,11 +1277,28 @@ void plat_master_write_thread_handler()
 				sensor_data->rail = get_vr_rail_by_control_vol_reg(reg_offset);
 				sensor_data->set_value = rdata[1] | (rdata[2] << 8);
 				// check set_value in range 750mv~850mv, if out of range, print error and end
-				if (sensor_data->set_value < 750 || sensor_data->set_value > 850) {
-					LOG_ERR("Set voltage out of range: %d mV(750~850)",
-						sensor_data->set_value);
-					free(sensor_data);
-					break;
+				if (reg_offset == CONTROL_VOL_VR_ASIC_P0V85_MEDHA0_VDD_REG ||
+				    reg_offset == CONTROL_VOL_VR_ASIC_P0V85_MEDHA1_VDD_REG) {
+					if (sensor_data->set_value < 750 ||
+					    sensor_data->set_value > 850) {
+						LOG_ERR("Set voltage out of range: %d mV(750~850)",
+							sensor_data->set_value);
+						free(sensor_data);
+						break;
+					}
+				} else {
+					uint16_t vout_max_millivolt =
+						vout_range_user_settings.change_vout_max[rail];
+					uint16_t vout_min_millivolt =
+						vout_range_user_settings.change_vout_min[rail];
+					if (sensor_data->set_value < vout_min_millivolt ||
+					    sensor_data->set_value > vout_max_millivolt) {
+						LOG_ERR("Set voltage out of range: %d mV(%d~%d)",
+							sensor_data->set_value, vout_min_millivolt,
+							vout_max_millivolt);
+						free(sensor_data);
+						break;
+					}
 				}
 
 				// if svs flag = enable, add vout_offset
