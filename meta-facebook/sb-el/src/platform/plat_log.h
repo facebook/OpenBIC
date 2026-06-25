@@ -85,7 +85,7 @@ void error_log_event(uint16_t error_code, bool log_status);
 uint8_t plat_log_get_num(void);
 void plat_clear_log();
 void reset_error_log_event(uint8_t err_type);
-bool check_temp_status_bit(uint8_t bit_num);
+bool check_temp_status_bit(uint8_t cpld_offset, uint8_t bit_num);
 
 typedef struct __attribute__((packed)) _plat_err_log_mapping {
 	uint16_t index;

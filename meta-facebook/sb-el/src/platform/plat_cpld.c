@@ -18,6 +18,7 @@
 #define POLLING_CPLD_STACK_SIZE 2048
 
 #define CHECK_ALL_BITS 0xFF
+#define CHECK_BITS_1 0x01
 #define CHECK_BITS_6 0x40
 #define CHECK_BITS_678 0xE0
 #define CHECK_BITS_78 0xC0
@@ -105,12 +106,13 @@ bool vr_error_callback(cpld_info *cpld_info, uint8_t *current_cpld_value);
 
 // clang-format off
 cpld_info cpld_info_table[] = {
-	{ VR_POWER_FAULT_1_REG, 			0x00, 0x00, true, 0x00, true, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
-	{ VR_POWER_FAULT_2_REG, 			0x00, 0x00, true, 0x00, true, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
-	{ VR_POWER_FAULT_3_REG, 			0x00, 0x00, true, 0x00, true, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
-	{ VR_POWER_FAULT_4_REG, 			0x00, 0x00, true, 0x00, true, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
-	{ VR_POWER_FAULT_5_REG, 			0x00, 0x00, true, 0x00, true, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
-	{ VR_SMBUS_ALERT_EVENT_LOG_REG, 	0xFF, 0xFF, true, 0x00, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
+	{ VR_POWER_FAULT_1_REG, 						0x00, 0x00, true, 0x00, true, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
+	{ VR_POWER_FAULT_2_REG, 						0x00, 0x00, true, 0x00, true, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
+	{ VR_POWER_FAULT_3_REG, 						0x00, 0x00, true, 0x00, true, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
+	{ VR_POWER_FAULT_4_REG, 						0x00, 0x00, true, 0x00, true, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
+	{ VR_POWER_FAULT_5_REG, 						0x00, 0x00, true, 0x00, true, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
+	{ VR_SMBUS_ALERT_EVENT_LOG_REG, 				0xFF, 0xFF, true, 0x00, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_ALL_BITS },
+	{ VR_VDDQ_HBM0246_SMBUS_ALERT_EVENT_LOG_REG, 	0xFF, 0xFF, true, 0x00, false, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_BITS_1 },
 	{ LEAK_DETECT_REG, 					0xDF, 0xDF, true, 0x00, false, 0x00, .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_BITS_6 },
 	{ HBM_CATTRIP_REG, 					0xFF, 0xFF, true, 0x00, true, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_BITS_78 },
 	{ SYSTEM_ALERT_FAULT_REG, 			0xFF, 0xFF, true, 0x00, false, 0x00, .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_BITS_8 },
@@ -237,29 +239,34 @@ void plat_poll_cpld_info_table(void){
 								&data);
 				set_led_flag(true);
 			}
-			if (cpld_info_table[i].cpld_offset == VR_SMBUS_ALERT_EVENT_LOG_REG) {
-				//get sensor pmbus alert status(if status_word temperature bit-2 is 1)
-				uint8_t temp_data = 0;
-				plat_read_cpld(VR_SMBUS_ALERT_EVENT_LOG_REG, &temp_data, 1);
-				// check which VR_SMBUS_ALERT_EVENT_LOG_REG bit is changed
-				LOG_INF("VR_SMBUS_ALERT_EVENT_LOG_REG: 0x%x", temp_data);
+			if ((cpld_info_table[i].cpld_offset == VR_SMBUS_ALERT_EVENT_LOG_REG) ||
+				((cpld_info_table[i].cpld_offset == VR_VDDQ_HBM0246_SMBUS_ALERT_EVENT_LOG_REG) &&
+				(cpld_info_table[i].bit_check_mask == CHECK_BITS_1))) {
+				uint8_t temp_data = data;
+
+				LOG_INF("SMBus alert reg 0x%x: 0x%x",
+					cpld_info_table[i].cpld_offset, temp_data);
+
 				for (int j = 0; j < 8; j++) {
-					if (j == 0)
-						continue; // skip bit-0
-					// if temp data is changed
-					if ((temp_data & BIT(j)) == 0)
-					{
-						LOG_WRN("SMBUS_ALERT_REG changed, bit-%d is changed", j);
-						if(!check_temp_status_bit(j))
-						{
-							// electra board uses CPLD to control VR_HOT
-							if (!plat_read_cpld(ASIC_VR_HOT_SWITCH, &data, 1)) {
+					if ((temp_data & BIT(j)) == 0) {
+						LOG_WRN("SMBUS_ALERT_REG 0x%x changed, bit-%d is changed",
+							cpld_info_table[i].cpld_offset, j);
+
+						if (!check_temp_status_bit(cpld_info_table[i].cpld_offset, j)) {
+							uint8_t vr_hot_switch = 0;
+
+							if (!plat_read_cpld(ASIC_VR_HOT_SWITCH, &vr_hot_switch, 1)) {
 								LOG_ERR("Failed to read ASIC_VR_HOT_SWITCH");
+								break;
 							}
-							data |= BIT(0);
-							if (!plat_write_cpld(ASIC_VR_HOT_SWITCH, &data)) {
+
+							vr_hot_switch |= BIT(0);
+
+							if (!plat_write_cpld(ASIC_VR_HOT_SWITCH, &vr_hot_switch)) {
 								LOG_ERR("Failed to write ASIC_VR_HOT_SWITCH");
+								break;
 							}
+
 							LOG_WRN("Temperature bit-%d is 1, write CPLD ASIC_VR_HOT_SWITCH bit-0 to 1", j);
 							set_led_flag(true);
 							break;

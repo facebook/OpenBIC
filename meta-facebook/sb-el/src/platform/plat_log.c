@@ -57,6 +57,7 @@ typedef struct _vr_ubc_device_table_ {
 } vr_ubc_device_table;
 
 typedef struct vr_smbus_alrt_sensor_map {
+	uint8_t cpld_offset;
 	uint8_t bit_number;
 	uint8_t vr_rail_1_page_0;
 	uint8_t vr_rail_1_page_1;
@@ -65,24 +66,26 @@ typedef struct vr_smbus_alrt_sensor_map {
 } vr_smbus_alrt_sensor_map;
 
 vr_smbus_alrt_sensor_map vr_smbus_alrt_sensor_map_table[] = {
-	{ 0 },
-	{ 1, VR_RAIL_E_ASIC_P0V75_MAX_N_VDD, VR_RAIL_E_ASIC_P0V8_HAMSA_AVDD_PCIE,
-	  VR_RAIL_E_ASIC_P1V2_HAMSA_VDDHRXTX_PCIE, VR_RAIL_E_ASIC_P0V85_HAMSA_VDD },
-	{ 2, VR_RAIL_E_ASIC_P1V05_VDDC_HBM0246, VR_RAIL_E_ASIC_P1V8_VPP_HBM0246,
-	  VR_RAIL_E_ASIC_P0V4_VDDQL_HBM0246, VR_RAIL_E_ASIC_P0V75_VDDPHY_HBM0246 },
-	{ 3, VR_RAIL_E_ASIC_P0V75_MAX_M_VDD, VR_RAIL_E_ASIC_P0V75_VDDPHY_HBM1357,
-	  VR_RAIL_E_ASIC_P1V05_VDDC_HBM1357, VR_RAIL_E_ASIC_P1V8_VPP_HBM1357 },
-	{
-		4,
-		VR_RAIL_E_ASIC_P0V9_OWL_W_TRVDD,
-		VR_RAIL_E_ASIC_P0V75_OWL_W_TRVDD,
-		VR_RAIL_E_ASIC_P0V75_OWL_W_VDD,
-		VR_RAIL_E_ASIC_P0V75_MAX_S_VDD,
-	},
-	{ 5, VR_RAIL_E_ASIC_P0V9_OWL_E_TRVDD, VR_RAIL_E_ASIC_P0V75_OWL_E_TRVDD,
-	  VR_RAIL_E_ASIC_P0V75_OWL_E_VDD, VR_RAIL_E_ASIC_P0V4_VDDQL_HBM1357 },
-	{ 6, VR_RAIL_E_ASIC_P0V75_NUWA1_VDD },
-	{ 7, VR_RAIL_E_ASIC_P0V75_NUWA0_VDD },
+	{ VR_SMBUS_ALERT_EVENT_LOG_REG, 0, VR_RAIL_E_ASIC_P1V05_VDDC_HBM0246,
+	  VR_RAIL_E_ASIC_P1V8_VPP_HBM0246 },
+	{ VR_SMBUS_ALERT_EVENT_LOG_REG, 1, VR_RAIL_E_ASIC_P0V75_MAX_N_VDD,
+	  VR_RAIL_E_ASIC_P0V8_HAMSA_AVDD_PCIE },
+	{ VR_SMBUS_ALERT_EVENT_LOG_REG, 2, VR_RAIL_E_ASIC_P0V75_MAX_M_VDD,
+	  VR_RAIL_E_ASIC_P0V75_VDDPHY_HBM1357, VR_RAIL_E_ASIC_P1V05_VDDC_HBM1357,
+	  VR_RAIL_E_ASIC_P1V8_VPP_HBM1357 },
+	{ VR_SMBUS_ALERT_EVENT_LOG_REG, 3, VR_RAIL_E_ASIC_P0V75_MAX_M_VDD,
+	  VR_RAIL_E_ASIC_P0V75_VDDPHY_HBM1357, VR_RAIL_E_ASIC_P1V05_VDDC_HBM1357,
+	  VR_RAIL_E_ASIC_P1V8_VPP_HBM1357 },
+	{ VR_SMBUS_ALERT_EVENT_LOG_REG, 4, VR_RAIL_E_ASIC_P0V9_OWL_W_TRVDD,
+	  VR_RAIL_E_ASIC_P0V75_OWL_W_TRVDD, VR_RAIL_E_ASIC_P0V75_OWL_W_VDD,
+	  VR_RAIL_E_ASIC_P0V75_MAX_S_VDD },
+	{ VR_SMBUS_ALERT_EVENT_LOG_REG, 5, VR_RAIL_E_ASIC_P0V9_OWL_E_TRVDD,
+	  VR_RAIL_E_ASIC_P0V75_OWL_E_TRVDD, VR_RAIL_E_ASIC_P0V75_OWL_E_VDD,
+	  VR_RAIL_E_ASIC_P0V4_VDDQL_HBM1357 },
+	{ VR_SMBUS_ALERT_EVENT_LOG_REG, 6, VR_RAIL_E_ASIC_P0V75_NUWA1_VDD },
+	{ VR_SMBUS_ALERT_EVENT_LOG_REG, 7, VR_RAIL_E_ASIC_P0V75_NUWA0_VDD },
+	{ VR_VDDQ_HBM0246_SMBUS_ALERT_EVENT_LOG_REG, 0, VR_RAIL_E_ASIC_P0V9_VDDQ_HBM1357,
+	  VR_RAIL_E_ASIC_P0V85_HAMSA_VDD },
 };
 
 typedef struct _vr_device_match_sensor_num {
@@ -612,30 +615,41 @@ void init_load_eeprom_log(void)
 	find_last_log_position();
 }
 
-bool check_temp_status_bit(uint8_t bit_num)
+bool check_temp_status_bit(uint8_t cpld_offset, uint8_t bit_num)
 {
-	const vr_smbus_alrt_sensor_map *entry = &vr_smbus_alrt_sensor_map_table[bit_num];
-	uint16_t status_word;
-	uint8_t vr_sensor_num_list[4] = {
-		entry->vr_rail_1_page_0,
-		entry->vr_rail_1_page_1,
-		entry->vr_rail_2_page_0,
-		entry->vr_rail_2_page_1,
-	};
-	for (int i = 0; i < 4; i++) {
-		if (vr_sensor_num_list[i] == 0)
-			continue; // Skip empty entries
+	for (int idx = 0; idx < ARRAY_SIZE(vr_smbus_alrt_sensor_map_table); idx++) {
+		const vr_smbus_alrt_sensor_map *entry = &vr_smbus_alrt_sensor_map_table[idx];
 
-		if (!plat_get_vr_status(vr_sensor_num_list[i], VR_STAUS_E_STATUS_WORD,
-					&status_word)) {
-			LOG_ERR("SMBus alert: Failed to get VR[%d] status word",
-				vr_sensor_num_list[i]);
+		if (entry->cpld_offset != cpld_offset || entry->bit_number != bit_num)
+			continue;
+
+		uint16_t status_word;
+		uint8_t vr_sensor_num_list[4] = {
+			entry->vr_rail_1_page_0,
+			entry->vr_rail_1_page_1,
+			entry->vr_rail_2_page_0,
+			entry->vr_rail_2_page_1,
+		};
+
+		for (int i = 0; i < 4; i++) {
+			if (vr_sensor_num_list[i] == 0)
+				continue;
+
+			if (!plat_get_vr_status(vr_sensor_num_list[i], VR_STAUS_E_STATUS_WORD,
+						&status_word)) {
+				LOG_ERR("SMBus alert: Failed to get VR[%d] status word",
+					vr_sensor_num_list[i]);
+				continue;
+			}
+
+			if ((status_word >> 2) & 0x01)
+				return false;
 		}
 
-		// check bit-2 is 1 or not
-		if ((status_word >> 2) & 0x01)
-			return false;
+		return true;
 	}
+
+	LOG_WRN("No VR SMBus alert sensor map found, offset: 0x%x, bit: %d", cpld_offset, bit_num);
 
 	return true;
 }
