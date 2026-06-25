@@ -352,7 +352,7 @@ bool get_error_data(uint16_t error_code, uint8_t *data)
 	}
 	case ASIC_THERMTRIP_TRIGGER_CAUSE: {
 		uint8_t cpld_data[3];
-		if (!plat_read_cpld(HBM_CATTRIP_LOG_REG, cpld_data, 3)) {
+		if (!plat_read_cpld(ASIC_CATTRIP_LOG_REG, cpld_data, 3)) {
 			LOG_ERR("Failed to get cpld data");
 			return false;
 		}
@@ -468,7 +468,7 @@ void error_log_event(uint16_t error_code, bool log_status)
 			} else if (log_status == LOG_DEASSERT) {
 				log_todo = true; // The error needs to be cleared
 				err_code_caches[i] = 0; // Remove the error code from the cache
-				LOG_INF("Duplicate error_code: 0x%x, log_status: %d", error_code,
+				LOG_INF("Deassert error_code: 0x%x, log_status: %d", error_code,
 					log_status);
 				return;
 			}

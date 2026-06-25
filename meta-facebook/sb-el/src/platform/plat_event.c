@@ -94,9 +94,12 @@ const vr_fault_info vr_fault_table[] = {
 	{ ARKE_PVDD1P5, VR_POWER_FAULT_5_REG, BIT(0), false },
 	// ASIC TEMP OVER
 	{ ARKE_ASIC_THERMTRIP, ASIC_TEMP_OVER_REG, BIT(7), false },
-	// HBM CATTRIP
-	{ ARKE_NUWA1_HBM_CATTRIP, HBM_CATTRIP_REG, BIT(6), false },
-	{ ARKE_NUWA0_HBM_CATTRIP, HBM_CATTRIP_REG, BIT(7), false },
+	// CATTRIP
+	{ ARKE_OWL_W_CATTRIP, ASIC_CATTRIP_REG, BIT(3), false },
+	{ ARKE_OWL_E_CATTRIP, ASIC_CATTRIP_REG, BIT(4), false },
+	{ ARKE_HAMSA_CATTRIP, ASIC_CATTRIP_REG, BIT(5), false },
+	{ ARKE_NUWA1_HBM_CATTRIP, ASIC_CATTRIP_REG, BIT(6), false },	
+	{ ARKE_NUWA0_HBM_CATTRIP, ASIC_CATTRIP_REG, BIT(7), false },
 	// VR SMBUS ALERT
 	{ ARKE_MAX_N_VDDRXTX_SMBALRT_N, VR_SMBUS_ALERT_EVENT_LOG_REG, BIT(1), false },
 	{ ARKE_VDDQC_VDDQL_0246_SMBALRT_N, VR_SMBUS_ALERT_EVENT_LOG_REG, BIT(2), false },
@@ -142,7 +145,7 @@ void process_mtia_vr_power_fault_sel(cpld_info *cpld_info, uint8_t *current_cpld
 		// Determine event type: ASSERT / DEASSERT
 		bool is_assert = (bit_val != expected_bit_val);
 
-		LOG_INF("VR[0x%02X] reg[0x%02X] bit[0x%02X] is %s ", vr->mtia_event_source,
+		LOG_INF("MTIA_event[0x%02X] CPLD_reg[0x%02X] bit[0x%02X] is %s ", vr->mtia_event_source,
 			vr->cpld_reg_offset, vr->cpld_reg_bit, is_assert ? "ASSERT" : "DEASSERT");
 
 		if (vr_fault_table[i].is_pmbus_vr == false) {
