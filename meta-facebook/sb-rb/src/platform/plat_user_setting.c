@@ -951,6 +951,28 @@ bool vr_vout_user_settings_init(void)
 	return true;
 }
 
+bool vr_voffset_mmc_user_settings_init(void)
+{
+	if (get_user_settings_vr_voffset_mmc_from_eeprom(
+		    &vr_voffset_mmc_user_settings, sizeof(vr_voffset_mmc_user_settings)) == false) {
+		LOG_ERR("get vr Voffset_mmc user settings failed");
+		return false;
+	}
+	for (int i = 0; i < VR_RAIL_E_MAX; i++) {
+		if (vr_voffset_mmc_user_settings.voffset_mmc[i].valid != 1) {
+			vr_voffset_mmc_command_get.voffset_mmc[i] = 0;
+			vr_voffset_mmc_user_settings.voffset_mmc[i].valid = 0;
+			vr_voffset_mmc_user_settings.voffset_mmc[i].value = 0;
+
+		} else {
+			vr_voffset_mmc_command_get.voffset_mmc[i] =
+				vr_voffset_mmc_user_settings.voffset_mmc[i].value;
+		}
+	}
+
+	return true;
+}
+
 bool get_user_settings_delay_pcie_perst_from_eeprom(void *user_settings, uint8_t data_length)
 {
 	CHECK_NULL_ARG_WITH_RETURN(user_settings, false);
@@ -1035,7 +1057,31 @@ bool set_user_settings_vr_vout_to_eeprom(void *user_settings, uint8_t data_lengt
 	CHECK_NULL_ARG_WITH_RETURN(user_settings, false);
 
 	if (!plat_eeprom_write(VR_VOUT_USER_SETTINGS_OFFSET, user_settings, data_length)) {
-		LOG_ERR("hamsa_avdd_pcie Failed to write eeprom");
+		LOG_ERR("vout Failed to write eeprom");
+		return false;
+	}
+	k_msleep(EEPROM_MAX_WRITE_TIME);
+
+	return true;
+}
+
+bool get_user_settings_vr_voffset_mmc_from_eeprom(void *user_settings, uint8_t data_length)
+{
+	CHECK_NULL_ARG_WITH_RETURN(user_settings, false);
+
+	if (!plat_eeprom_read(VR_VOFFSET_MMC_USER_SETTINGS_OFFSET, user_settings, data_length)) {
+		LOG_ERR("Failed to read Voffset_mmc from eeprom");
+		return false;
+	}
+	return true;
+}
+
+bool set_user_settings_vr_voffset_mmc_to_eeprom(void *user_settings, uint8_t data_length)
+{
+	CHECK_NULL_ARG_WITH_RETURN(user_settings, false);
+
+	if (!plat_eeprom_write(VR_VOFFSET_MMC_USER_SETTINGS_OFFSET, user_settings, data_length)) {
+		LOG_ERR("Voffset_mmc failed to write eeprom");
 		return false;
 	}
 	k_msleep(EEPROM_MAX_WRITE_TIME);
@@ -1107,6 +1153,17 @@ bool perm_config_clear(void)
 	uint8_t setting_value_for_svs_flag = 0xFF;
 	if (!set_user_settings_svs_flag_to_eeprom(&setting_value_for_svs_flag,
 						  sizeof(setting_value_for_svs_flag))) {
+		LOG_ERR("The perm_config clear failed");
+		return false;
+	}
+
+	/* clear vr Voffset_mmc perm parameter */
+	for (int i = 0; i < VR_RAIL_E_MAX; i++) {
+		vr_voffset_mmc_user_settings.voffset_mmc[i].valid = 0;
+		vr_voffset_mmc_user_settings.voffset_mmc[i].value = 0;
+	}
+	if (!set_user_settings_vr_voffset_mmc_to_eeprom(&vr_voffset_mmc_user_settings,
+							sizeof(vr_voffset_mmc_user_settings))) {
 		LOG_ERR("The perm_config clear failed");
 		return false;
 	}
@@ -1550,4 +1607,5 @@ void user_settings_init(void)
 	delay_pcie_perst_user_settings_init();
 	vr_vout_user_settings_init();
 	svs_flag_user_settings_init();
+	vr_voffset_mmc_user_settings_init();
 }

@@ -746,6 +746,8 @@ vr_vout_user_settings_struct voltage_command_get = { 0 };
 struct vr_vout_offset vr_offset_init = { 0 };
 vr_vout_user_settings_struct vr_vout_user_settings = { 0 };
 vr_vout_range_user_settings_struct vout_range_user_settings = { 0 };
+vr_voffset_mmc_command_get_struct vr_voffset_mmc_command_get = { 0 };
+vr_voffset_mmc_user_settings_struct vr_voffset_mmc_user_settings = { 0 };
 bool plat_set_vout_command(uint8_t rail, uint16_t *millivolt, bool is_perm)
 {
 	CHECK_NULL_ARG_WITH_RETURN(millivolt, false);
@@ -759,7 +761,17 @@ bool plat_set_vout_command(uint8_t rail, uint16_t *millivolt, bool is_perm)
 	}
 
 	const vr_pre_proc_arg *pre_sensor_read_args = cfg->pre_sensor_read_args;
-	uint16_t setting_millivolt = *millivolt;
+	int32_t temp =
+		(int32_t)(*millivolt) + (int32_t)vr_voffset_mmc_command_get.voffset_mmc[rail];
+
+	if (temp < 0)
+		temp = 0;
+	else if (temp > UINT16_MAX)
+		temp = UINT16_MAX;
+
+	uint16_t setting_millivolt = (uint16_t)temp;
+	*millivolt = setting_millivolt;
+
 	// get page from sensor_cfg
 	uint8_t page = pre_sensor_read_args->vr_page;
 
@@ -812,6 +824,38 @@ err:
 			LOG_ERR("sensor id: 0x%x post-read fail", sensor_id);
 		}
 	}
+	return ret;
+}
+
+bool plat_set_voffset_mmc_command(uint8_t rail, int16_t *millivolt, bool is_perm)
+{
+	CHECK_NULL_ARG_WITH_RETURN(millivolt, false);
+
+	bool ret = false;
+	uint8_t sensor_id = vr_rail_table[rail].sensor_id;
+	sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
+	if (cfg == NULL) {
+		LOG_ERR("Failed to get sensor config for sensor 0x%x", sensor_id);
+		return false;
+	}
+
+	int16_t setting_millivolt = *millivolt;
+
+	if (is_perm) {
+		vr_voffset_mmc_user_settings.voffset_mmc[rail].value = setting_millivolt;
+		vr_voffset_mmc_user_settings.voffset_mmc[rail].valid = 1;
+		if (!set_user_settings_vr_voffset_mmc_to_eeprom(
+			    &vr_voffset_mmc_user_settings, sizeof(vr_voffset_mmc_user_settings))) {
+			LOG_ERR("set user settings vr Voffset_mmc to eeprom failed");
+			goto err;
+		}
+	}
+
+	vr_voffset_mmc_command_get.voffset_mmc[rail] = setting_millivolt;
+
+	ret = true;
+err:
+
 	return ret;
 }
 

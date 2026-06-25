@@ -235,6 +235,86 @@ void cmd_svs_asic_voltage_get(const struct shell *shell, size_t argc, char **arg
 	shell_print(shell, "svs asic voltage setting(1:apply, 0:block): %d", svs_asic_voltage_flag);
 }
 
+static int cmd_voffset_mmc_get(const struct shell *shell, size_t argc, char **argv)
+{
+	/* is_ubc_enabled_delayed_enabled() is to wait for all VR to be enabled  */
+	/* (gpio_get(FM_PLD_UBC_EN_R) == GPIO_HIGH) is to shut down polling immediately when UBC is disabled */
+	if (!(get_is_ubc_enabled() && is_ubc_enabled_delayed_enabled())) {
+		shell_error(shell, "Can't get Voffset_mmc command because VR has no power yet.");
+		return -1;
+	}
+
+	shell_print(shell, "  id|              sensor_name               |Voffset_mmc(mV) ");
+	/* list all vr sensor value */
+	for (int i = 0; i < VR_RAIL_E_MAX; i++) {
+		if (((get_asic_board_id() != ASIC_BOARD_ID_EVB)) &&
+		    (i == VR_RAIL_E_P3V3_OSFP_VOLT_V))
+			continue; // skip osfp p3v3 on BD
+
+		uint8_t *rail_name = NULL;
+		if (!vr_rail_name_get((uint8_t)i, &rail_name)) {
+			shell_print(shell, "Can't find vr_rail_name by rail index: %d", i);
+			continue;
+		}
+
+		shell_print(shell, "%4d|%-40s|%4d", i, rail_name,
+			    vr_voffset_mmc_command_get.voffset_mmc[i]);
+	}
+
+	return 0;
+}
+
+static int cmd_voffset_mmc_set(const struct shell *shell, size_t argc, char **argv)
+{
+	bool is_perm = false;
+
+	/* is_ubc_enabled_delayed_enabled() is to wait for all VR to be enabled  */
+	/* (gpio_get(FM_PLD_UBC_EN_R) == GPIO_HIGH) is to shut down polling immediately when UBC is disabled */
+	if (!(get_is_ubc_enabled() && is_ubc_enabled_delayed_enabled())) {
+		shell_error(shell, "Can't set Voffset_mmc command because VR has no power yet.");
+		return -1;
+	}
+
+	if (argc >= 4) {
+		if (!strcmp(argv[3], "perm")) {
+			is_perm = true;
+		} else {
+			shell_error(shell, "The last argument must be <perm>");
+			return -1;
+		}
+	}
+
+	/* covert rail string to enum */
+	enum VR_RAIL_E rail;
+	if (vr_rail_enum_get(argv[1], &rail) == false) {
+		shell_error(shell, "Invalid rail name: %s", argv[1]);
+		return -1;
+	}
+
+	int16_t millivolt = strtol(argv[2], NULL, 0);
+
+	// can't set voltage for osfp p3v3
+	if (rail == VR_RAIL_E_P3V3_OSFP_VOLT_V) {
+		shell_warn(shell, "OSFP P3V3 can't set voltage");
+		return -1;
+	}
+	shell_info(shell, "Set %s(%d) to %d mV, %svolatile\n", argv[1], rail, millivolt,
+		   (argc == 4) ? "non-" : "");
+
+	/* set the vout */
+	if ((get_asic_board_id() != ASIC_BOARD_ID_EVB) && (rail == VR_RAIL_E_P3V3_OSFP_VOLT_V)) {
+		shell_print(shell, "There is no osfp p3v3");
+		return 0;
+	}
+
+	if (!plat_set_voffset_mmc_command(rail, &millivolt, is_perm)) {
+		shell_error(shell, "Can't set Voffset_mmc by rail index: %d", rail);
+		return -1;
+	}
+
+	return 0;
+}
+
 SHELL_DYNAMIC_CMD_CREATE(voltage_rname, voltage_rname_get);
 
 /* level 2 */
@@ -255,6 +335,13 @@ SHELL_STATIC_SUBCMD_SET_CREATE(sub_svs_asic_voltage,
 					 cmd_svs_asic_voltage_get),
 			       SHELL_SUBCMD_SET_END);
 
+SHELL_STATIC_SUBCMD_SET_CREATE(sub_voffset_mmc_cmds,
+			       SHELL_CMD_ARG(set, &voltage_rname,
+					     "voffset_mmc set  <voltage-rail> <new-voltage> [perm]",
+					     cmd_voffset_mmc_set, 3, 1),
+			       SHELL_CMD(get, NULL, "voffset_mmc get", cmd_voffset_mmc_get),
+			       SHELL_SUBCMD_SET_END);
+
 /* level 1 */
 SHELL_STATIC_SUBCMD_SET_CREATE(
 	sub_voltage_cmds, SHELL_CMD(get, &sub_voltage_get_cmds, "get voltage all", NULL),
@@ -264,6 +351,7 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
 	SHELL_CMD(svs_asic_voltage, &sub_svs_asic_voltage, "svs asic voltage setting commands",
 		  NULL),
 	SHELL_CMD(get_medha_vout_offset, NULL, "get medha vout offset", cmd_get_medha_vout_offset),
+	SHELL_CMD(voffset_mmc, &sub_voffset_mmc_cmds, "Voffset_mmc set/get commands", NULL),
 	SHELL_SUBCMD_SET_END);
 
 /* Root of command test */

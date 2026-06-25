@@ -159,6 +159,22 @@ static int cmd_perm_config_get(const struct shell *shell, size_t argc, char **ar
 		}
 	}
 
+	for (int i = 0; i < VR_RAIL_E_MAX; i++) {
+		if (((get_asic_board_id() != ASIC_BOARD_ID_EVB)) &&
+		    (i == VR_RAIL_E_P3V3_OSFP_VOLT_V))
+			continue; // skip osfp p3v3 on BD
+		if (vr_voffset_mmc_user_settings.voffset_mmc[i].valid == 1) {
+			int16_t voffset_mmc = vr_voffset_mmc_user_settings.voffset_mmc[i].value;
+			uint8_t *rail_name = NULL;
+			if (!vr_rail_name_get((uint8_t)i, &rail_name)) {
+				LOG_ERR("Can't find vr_rail_name by rail index: %d", i);
+				continue;
+			}
+			shell_print(shell, "[%2d]%-50s voffset_mmc=%d", i, rail_name, voffset_mmc);
+			config_count++;
+		}
+	}
+
 	if (!config_count) {
 		shell_print(shell, "no perm parameter exist");
 	}

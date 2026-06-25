@@ -225,6 +225,19 @@ typedef struct vr_vout_user_settings_struct {
 typedef struct vr_vout_offset {
 	uint16_t vout_offset[VR_RAIL_E_MAX]; // Support all VR rails
 } vr_vout_offset;
+
+typedef struct {
+	int16_t value;
+	uint8_t valid;
+} voffset_entry_t;
+
+typedef struct {
+	voffset_entry_t voffset_mmc[VR_RAIL_E_MAX];
+} vr_voffset_mmc_user_settings_struct;
+
+typedef struct vr_voffset_mmc_command_get_struct {
+	int16_t voffset_mmc[VR_RAIL_E_MAX];
+} vr_voffset_mmc_command_get_struct;
 typedef struct bootstrap_mapping_register {
 	uint8_t index;
 	uint8_t type;
@@ -244,11 +257,15 @@ typedef struct bootstrap_user_settings_struct {
 #define OVP2_ACTION_LATCH_OFF 0x01 /* 2'b01 */
 #define OVP2_ACTION_UNKNOWN 0xFF
 
+#define VOFFSET_MMC_INVALID_VALUE 0
+
 extern bootstrap_user_settings_struct bootstrap_user_settings;
 extern vr_vout_user_settings_struct vr_vout_user_settings;
 extern vr_vout_range_user_settings_struct vout_range_user_settings;
 extern vr_mapping_sensor vr_rail_table[];
 extern bootstrap_mapping_register bootstrap_table[];
+extern vr_voffset_mmc_command_get_struct vr_voffset_mmc_command_get;
+extern vr_voffset_mmc_user_settings_struct vr_voffset_mmc_user_settings;
 void set_bootstrap_table_change_setting_value(uint8_t index, uint8_t value);
 bool pre_vr_read(sensor_cfg *cfg, void *args);
 bool post_vr_read(sensor_cfg *cfg, void *args, int *const reading);
@@ -311,4 +328,5 @@ bool vr_vout_offset_get_init(void);
 bool voltage_offset_get(uint8_t rail, uint16_t *vout_offset);
 bool post_iris_sensor_read(sensor_cfg *cfg, void *args, int *const reading);
 bool plat_ubc_otw_otp_init(void);
+bool plat_set_voffset_mmc_command(uint8_t rail, int16_t *millivolt, bool is_perm);
 #endif
