@@ -900,11 +900,8 @@ bool mp29816a_get_uvp(sensor_cfg *cfg, uint16_t *uvp)
 	*/
 	int16_t uvp_offset = (uvp_offset_value * (-50)) - 50;
 	uint16_t vout_cmd = 0;
-	mp29816a_get_vout_command(cfg, 0, &vout_cmd);
-	uint16_t vout_offset = 0;
-	mp29816a_get_vout_offset(cfg, &vout_offset);
-
-	*uvp = (uint16_t)(vout_cmd + uvp_offset + vout_offset);
+	mp29816a_get_vout_command(cfg, 0, &vout_cmd);// already include vout offset
+	*uvp = (uint16_t)(vout_cmd + uvp_offset);
 	return true;
 }
 
@@ -1184,13 +1181,11 @@ bool mp29816a_get_ovp_2(sensor_cfg *cfg, uint16_t *ovp_2)
 	OVP2  = Vout command + ovp2_threshold + Vout offset
 	*/
 	uint16_t vout_cmd = 0;
-	uint16_t vout_offset = 0;
-
 	if (!mp29816a_get_vout_command(cfg, 0, &vout_cmd)) {
 		return false;
 	}
-	mp29816a_get_vout_offset(cfg, &vout_offset);
-	*ovp_2 = (uint16_t)(vout_cmd + ovp2_threshold + vout_offset);
+	//get vout command already include vout offset
+	*ovp_2 = (uint16_t)(vout_cmd + ovp2_threshold);
 
 	return true;
 }
