@@ -152,7 +152,7 @@ void process_mtia_vr_power_fault_sel(cpld_info *cpld_info, uint8_t *current_cpld
 		// Determine event type: ASSERT / DEASSERT
 		bool is_assert = (bit_val != expected_bit_val);
 
-		LOG_INF("VR[0x%02X] reg[0x%02X] bit[0x%02X] is %s ", vr->mtia_event_source,
+		LOG_INF("MTIA [0x%02X] reg[0x%02X] bit[0x%02X] is %s ", vr->mtia_event_source,
 			vr->cpld_reg_offset, vr->cpld_reg_bit, is_assert ? "ASSERT" : "DEASSERT");
 
 		if (vr_fault_table[i].is_pmbus_vr == false) {

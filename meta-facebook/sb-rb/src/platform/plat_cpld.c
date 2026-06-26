@@ -494,6 +494,7 @@ void poll_cpld_registers()
 				if (cpld_info_table[i].cpld_offset == VR_SMBUS_ALERT_EVENT_LOG_REG) {
 					//get sensor pmbus alert status(if temperature bit-2 is 1)
 					uint8_t temp_data = 0;
+					uint8_t vr_hot_switch = 0;
 					plat_read_cpld(VR_SMBUS_ALERT_EVENT_LOG_REG, &temp_data, 1);
 					// check which VR_SMBUS_ALERT_EVENT_LOG_REG bit is changed
 					LOG_INF("VR_SMBUS_ALERT_EVENT_LOG_REG: 0x%x", temp_data);
@@ -518,11 +519,11 @@ void poll_cpld_registers()
 									}
 								} else {
 									// Rainbow board uses CPLD to control VR_HOT
-									if (!plat_read_cpld(ASIC_VR_HOT_SWITCH, &data, 1)) {
+									if (!plat_read_cpld(ASIC_VR_HOT_SWITCH, &vr_hot_switch, 1)) {
 										LOG_ERR("Failed to read ASIC_VR_HOT_SWITCH");
 									}
-									data |= BIT(0);
-									if (!plat_write_cpld(ASIC_VR_HOT_SWITCH, &data)) {
+									vr_hot_switch |= BIT(0);
+									if (!plat_write_cpld(ASIC_VR_HOT_SWITCH, &vr_hot_switch)) {
 										LOG_ERR("Failed to write ASIC_VR_HOT_SWITCH");
 									}
 									LOG_WRN("Temperature bit-%d is 1, write CPLD ASIC_VR_HOT_SWITCH bit-0 to 1", j);

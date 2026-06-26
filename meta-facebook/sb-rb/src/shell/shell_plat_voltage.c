@@ -264,6 +264,112 @@ static int cmd_voffset_mmc_get(const struct shell *shell, size_t argc, char **ar
 	return 0;
 }
 
+static bool ovp_uvp_check(const struct shell *shell, const char *rail_str, enum VR_RAIL_E *rail)
+{
+	if (!(get_is_ubc_enabled() && is_ubc_enabled_delayed_enabled())) {
+		shell_error(shell, "VR no power");
+		return false;
+	}
+	if (get_vr_module() != VR_MODULE_MPS) {
+		shell_error(shell, "MPS support only");
+		return false;
+	}
+	if (!vr_rail_enum_get((uint8_t *)rail_str, (uint8_t *)rail)) {
+		shell_error(shell, "Invalid rail: %s", rail_str);
+		return false;
+	}
+	if (*rail != VR_RAIL_E_ASIC_P0V85_MEDHA0_VDD && *rail != VR_RAIL_E_ASIC_P0V85_MEDHA1_VDD) {
+		shell_error(shell, "Please input medha0/1 voltage rail");
+		return false;
+	}
+	return true;
+}
+
+static int cmd_ovp_get(const struct shell *shell, size_t argc, char **argv)
+{
+	enum VR_RAIL_E rail;
+	if (!ovp_uvp_check(shell, argv[1], &rail))
+		return -1;
+	uint16_t val = 0;
+	if (get_vr_mp29816a_reg(rail, &val, OVP_1) != 0) {
+		shell_error(shell, "OVP get fail");
+		return -1;
+	}
+	shell_print(shell, "OVP %s: %d mV", argv[1], val);
+	return 0;
+}
+
+static int cmd_ovp_set(const struct shell *shell, size_t argc, char **argv)
+{
+	enum VR_RAIL_E rail;
+	if (!ovp_uvp_check(shell, argv[1], &rail))
+		return -1;
+	uint16_t val = (uint16_t)strtol(argv[2], NULL, 0);
+	if (set_vr_mp29816a_reg(rail, &val, OVP_1) != 0) {
+		shell_error(shell, "OVP set fail");
+		return -1;
+	}
+	shell_print(shell, "OVP %s: %d mV", argv[1], val);
+	return 0;
+}
+
+static int cmd_uvp_get(const struct shell *shell, size_t argc, char **argv)
+{
+	enum VR_RAIL_E rail;
+	if (!ovp_uvp_check(shell, argv[1], &rail))
+		return -1;
+	uint16_t val = 0;
+	if (get_vr_mp29816a_reg(rail, &val, UVP) != 0) {
+		shell_error(shell, "UVP get fail");
+		return -1;
+	}
+	shell_print(shell, "UVP %s: %d mV", argv[1], val);
+	return 0;
+}
+
+static int cmd_uvp_set(const struct shell *shell, size_t argc, char **argv)
+{
+	enum VR_RAIL_E rail;
+	if (!ovp_uvp_check(shell, argv[1], &rail))
+		return -1;
+	uint16_t target = (uint16_t)strtol(argv[2], NULL, 0);
+	uint16_t vout_cmd = 0;
+	if (get_vr_mp29816a_reg(rail, &vout_cmd, VOUT_COMMAND) != 0) {
+		shell_error(shell, "UVP set fail");
+		return -1;
+	}
+	uint16_t max_uvp = vout_cmd;
+	uint16_t min_uvp = vout_cmd - 500;
+	if (target >= vout_cmd) {
+		shell_error(shell, "UVP target out of range");
+		shell_error(shell, "Valid UVP range: %d to %d mV", min_uvp, max_uvp);
+		shell_error(shell, "Supported points: %d, %d, %d, ... , %d in 50mV steps", max_uvp,
+			    max_uvp - 100, max_uvp - 150, min_uvp);
+		return -1;
+	}
+	uint16_t offset = vout_cmd - target;
+	if (offset < 100 || offset > 500) {
+		shell_error(shell, "UVP target out of range");
+		shell_error(shell, "Valid UVP range: %d to %d mV", min_uvp, max_uvp);
+		shell_error(shell, "Supported points: %d, %d, %d, ... , %d in 50mV steps", max_uvp,
+			    max_uvp - 100, max_uvp - 150, min_uvp);
+		return -1;
+	}
+	if (((offset - 100) % 50) != 0) {
+		shell_error(shell, "UVP target out of range");
+		shell_error(shell, "Valid UVP range: %d to %d mV", min_uvp, max_uvp);
+		shell_error(shell, "Supported points: %d, %d, %d, ... , %d in 50mV steps", max_uvp,
+			    max_uvp - 100, max_uvp - 150, min_uvp);
+		return -1;
+	}
+	if (set_vr_mp29816a_reg(rail, &offset, UVP_THRESHOLD) != 0) {
+		shell_error(shell, "UVP set fail");
+		return -1;
+	}
+	shell_print(shell, "UVP %s: %d mV", argv[1], target);
+	return 0;
+}
+
 static int cmd_voffset_mmc_set(const struct shell *shell, size_t argc, char **argv)
 {
 	bool is_perm = false;
@@ -317,6 +423,17 @@ static int cmd_voffset_mmc_set(const struct shell *shell, size_t argc, char **ar
 
 SHELL_DYNAMIC_CMD_CREATE(voltage_rname, voltage_rname_get);
 
+/* OVP/UVP level 2 */
+SHELL_STATIC_SUBCMD_SET_CREATE(
+	sub_ovp_cmds, SHELL_CMD_ARG(get, &voltage_rname, "get OVP <rail>", cmd_ovp_get, 2, 0),
+	SHELL_CMD_ARG(set, &voltage_rname, "set OVP <rail> <mV>", cmd_ovp_set, 3, 0),
+	SHELL_SUBCMD_SET_END);
+
+SHELL_STATIC_SUBCMD_SET_CREATE(
+	sub_uvp_cmds, SHELL_CMD_ARG(get, &voltage_rname, "get UVP <rail>", cmd_uvp_get, 2, 0),
+	SHELL_CMD_ARG(set, &voltage_rname, "set UVP <rail> <mV>", cmd_uvp_set, 3, 0),
+	SHELL_SUBCMD_SET_END);
+
 /* level 2 */
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_voltage_get_cmds,
 			       SHELL_CMD(all, NULL, "get voltage all vout command",
@@ -352,6 +469,8 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
 		  NULL),
 	SHELL_CMD(get_medha_vout_offset, NULL, "get medha vout offset", cmd_get_medha_vout_offset),
 	SHELL_CMD(voffset_mmc, &sub_voffset_mmc_cmds, "Voffset_mmc set/get commands", NULL),
+	SHELL_CMD(ovp, &sub_ovp_cmds, "OVP get/set commands (MPS medha0/1 only)", NULL),
+	SHELL_CMD(uvp, &sub_uvp_cmds, "UVP get/set commands (MPS medha0/1 only)", NULL),
 	SHELL_SUBCMD_SET_END);
 
 /* Root of command test */
