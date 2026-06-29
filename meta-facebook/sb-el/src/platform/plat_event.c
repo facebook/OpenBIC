@@ -98,12 +98,14 @@ const vr_fault_info vr_fault_table[] = {
 	{ ARKE_OWL_W_CATTRIP, ASIC_CATTRIP_REG, BIT(3), false },
 	{ ARKE_OWL_E_CATTRIP, ASIC_CATTRIP_REG, BIT(4), false },
 	{ ARKE_HAMSA_CATTRIP, ASIC_CATTRIP_REG, BIT(5), false },
-	{ ARKE_NUWA1_HBM_CATTRIP, ASIC_CATTRIP_REG, BIT(6), false },	
+	{ ARKE_NUWA1_HBM_CATTRIP, ASIC_CATTRIP_REG, BIT(6), false },
 	{ ARKE_NUWA0_HBM_CATTRIP, ASIC_CATTRIP_REG, BIT(7), false },
 	// VR SMBUS ALERT
+	{ ARKE_VDDQ_1357_SMBALRT_N, VR_VDDQ_HBM0246_SMBUS_ALERT_EVENT_LOG_REG, BIT(0), false },
+	{ ARKE_VDDQ_0246_SMBALRT_N, VR_SMBUS_ALERT_EVENT_LOG_REG, BIT(0), false },
 	{ ARKE_MAX_N_VDDRXTX_SMBALRT_N, VR_SMBUS_ALERT_EVENT_LOG_REG, BIT(1), false },
-	{ ARKE_VDDQC_VDDQL_0246_SMBALRT_N, VR_SMBUS_ALERT_EVENT_LOG_REG, BIT(2), false },
-	{ ARKE_MAX_M_VDDQC_1357_SMBALRT_N, VR_SMBUS_ALERT_EVENT_LOG_REG, BIT(3), false },
+	{ ARKE_VDDC_VDDQL_0246_SMBALRT_N, VR_SMBUS_ALERT_EVENT_LOG_REG, BIT(2), false },
+	{ ARKE_MAX_M_VDDC_1357_SMBALRT_N, VR_SMBUS_ALERT_EVENT_LOG_REG, BIT(3), false },
 	{ ARKE_OWL_W_SMBALRT_N, VR_SMBUS_ALERT_EVENT_LOG_REG, BIT(4), false },
 	{ ARKE_OWL_E_SMBALRT_N, VR_SMBUS_ALERT_EVENT_LOG_REG, BIT(5), false },
 	{ ARKE_NUWA1_VDD_ALERT_R_N, VR_SMBUS_ALERT_EVENT_LOG_REG, BIT(6), false },
@@ -145,8 +147,9 @@ void process_mtia_vr_power_fault_sel(cpld_info *cpld_info, uint8_t *current_cpld
 		// Determine event type: ASSERT / DEASSERT
 		bool is_assert = (bit_val != expected_bit_val);
 
-		LOG_INF("MTIA_event[0x%02X] CPLD_reg[0x%02X] bit[0x%02X] is %s ", vr->mtia_event_source,
-			vr->cpld_reg_offset, vr->cpld_reg_bit, is_assert ? "ASSERT" : "DEASSERT");
+		LOG_INF("MTIA_event[0x%02X] CPLD_reg[0x%02X] bit[0x%02X] is %s ",
+			vr->mtia_event_source, vr->cpld_reg_offset, vr->cpld_reg_bit,
+			is_assert ? "ASSERT" : "DEASSERT");
 
 		if (vr_fault_table[i].is_pmbus_vr == false) {
 			// non-PMBus VR
