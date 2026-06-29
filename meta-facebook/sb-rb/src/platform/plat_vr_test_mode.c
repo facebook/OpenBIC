@@ -59,8 +59,8 @@ const vr_test_mode_setting_t vr_test_mode_table[] = {
 };
 const vr_test_mode_setting_t vr_test_mode_table_default[] = {
 	// vr_rail, fast ocp: x/10(A), slow ocp: x/10(A), uvp: 1(mV), ovp: 1(mV), v max: 1(mV), lcr(mV), ucr(mV), vout_default(mV)
-	{ VR_RAIL_E_ASIC_P0V85_MEDHA0_VDD, 14300, 14300, 640, 940, 918, 653, 940, 870 },
-	{ VR_RAIL_E_ASIC_P0V85_MEDHA1_VDD, 14300, 14300, 640, 940, 918, 653, 940, 870 },
+	{ VR_RAIL_E_ASIC_P0V85_MEDHA0_VDD, 14300, 14300, 577, 940, 918, 653, 940, 870 },
+	{ VR_RAIL_E_ASIC_P0V85_MEDHA1_VDD, 14300, 14300, 577, 940, 918, 653, 940, 870 },
 	{ VR_RAIL_E_ASIC_P0V9_OWL_E_TRVDD, 170, 160, 700, 1010, 954, 846, 954, 900 },
 	{ VR_RAIL_E_ASIC_P0V75_OWL_E_TRVDD, 110, 100, 575, 910, 795, 705, 795, 750 },
 	{ VR_RAIL_E_ASIC_P0V75_MAX_M_VDD, 670, 570, 575, 910, 848, 690, 848, 785 },
@@ -160,9 +160,9 @@ const mps_vr_test_mode_setting_t vr_mps_normal_mode_table[] = {
 	uint16_t uvp;
 	*/
 	{ VR_RAIL_E_ASIC_P0V85_MEDHA0_VDD, 1424, NO_USE, 200, 653, 940, NO_USE, NO_USE, 977, 940,
-	  850, 918, 677 },
+	  850, 918, 427 },
 	{ VR_RAIL_E_ASIC_P0V85_MEDHA1_VDD, 1424, NO_USE, 200, 653, 940, NO_USE, NO_USE, 980, 940,
-	  850, 918, 680 },
+	  850, 918, 430 },
 	{ VR_RAIL_E_ASIC_P0V9_OWL_E_TRVDD, 16, 1, 200, 846, 954, NO_USE, NO_USE, 1010, 1055, 900,
 	  955, 700 },
 	{ VR_RAIL_E_ASIC_P0V75_OWL_E_TRVDD, 10, 1, 175, 705, 795, NO_USE, NO_USE, 865, 945, 755,
@@ -181,8 +181,8 @@ const mps_vr_test_mode_setting_t vr_mps_normal_mode_table[] = {
 	  1950, 1420 },
 	{ VR_RAIL_E_ASIC_P0V75_MAX_N_VDD, 57, 1, 175, 690, 848, NO_USE, NO_USE, 890, 950, 780, 850,
 	  605 },
-	{ VR_RAIL_E_ASIC_P0V8_HAMSA_AVDD_PCIE, 40, 1, 175, 780, 880, NO_USE, NO_USE, 920, 950, 810,
-	  850, 635 },
+	{ VR_RAIL_E_ASIC_P0V8_HAMSA_AVDD_PCIE, 40, 1, 175, 780, 880, NO_USE, NO_USE, 940, 950, 810,
+	  850, 655 },
 	{ VR_RAIL_E_ASIC_P1V2_HAMSA_VDDHRXTX_PCIE, 9, 1, 200, 1128, 1272, NO_USE, NO_USE, 1310,
 	  1320, 1200, 1270, 1000 },
 	{ VR_RAIL_E_ASIC_P0V85_HAMSA_VDD, 76, 1, 200, 782, 918, NO_USE, NO_USE, 945, 970, 875, 920,
@@ -193,7 +193,7 @@ const mps_vr_test_mode_setting_t vr_mps_normal_mode_table[] = {
 	  1950, 1420 },
 	{ VR_RAIL_E_ASIC_P0V4_VDDQL_HBM0246, 36, 1, 75, 380, 440, NO_USE, NO_USE, 605, 790, 405,
 	  440, 330 },
-	{ VR_RAIL_E_ASIC_P0V75_VDDPHY_HBM0246, 114, 1, 175, 705, 795, NO_USE, NO_USE, 880, 895, 770,
+	{ VR_RAIL_E_ASIC_P0V75_VDDPHY_HBM0246, 114, 1, 175, 705, 795, NO_USE, NO_USE, 870, 895, 770,
 	  795, 595 },
 	{ VR_RAIL_E_ASIC_P0V75_OWL_W_VDD, 150, 1, 175, 690, 810, NO_USE, NO_USE, 875, 910, 765, 810,
 	  590 },
