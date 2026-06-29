@@ -130,28 +130,30 @@ void init_event_work()
 
 void addsel_work_handler(struct k_work *work_item)
 {
-	struct pldm_addsel_data msg = { 0 };
 	struct k_work_delayable *dwork = k_work_delayable_from_work(work_item);
-
-	const add_sel_info *work_info = CONTAINER_OF(dwork, add_sel_info, add_sel_work);
-
-	if ((work_info->gpio_num != 0) && (work_info->event_type != 0)) {
-		msg.event_type = work_info->event_type;
-		msg.assert_type = work_info->assert_type;
-	} else {
-		// for fastprochot and sys_throttle
-		const sel_work_wrapper *wrap = CONTAINER_OF(work_item, sel_work_wrapper, work);
-		if (wrap->sel_data.event_type != 0) {
-			msg = wrap->sel_data;
-		} else {
-			LOG_ERR("Invalid work item received, skip sending SEL.");
-			return;
-		}
-	}
+	add_sel_info *work_info = CONTAINER_OF(dwork, add_sel_info, add_sel_work);
+	struct pldm_addsel_data msg = { 0 };
+	msg.event_type = work_info->event_type;
+	msg.assert_type = work_info->assert_type;
 
 	if (send_event_log_to_bmc(msg) != PLDM_SUCCESS) {
-		LOG_ERR("Failed to send SEL: event_type=0x%x, assert_type=0x%x", msg.event_type,
-			msg.assert_type);
+		LOG_ERR("Failed to send event log, event type: 0x%x, assert type: 0x%x",
+			work_info->event_type, work_info->assert_type);
+	};
+}
+
+void addsel_wrapper_work_handler(struct k_work *work_item)
+{
+	sel_work_wrapper *wrap = CONTAINER_OF(work_item, sel_work_wrapper, work);
+
+	if (wrap->sel_data.event_type == 0) {
+		LOG_ERR("Invalid wrapper SEL, skip sending SEL.");
+		return;
+	}
+
+	if (send_event_log_to_bmc(wrap->sel_data) != PLDM_SUCCESS) {
+		LOG_ERR("Failed to send SEL: event_type=0x%x, assert_type=0x%x",
+			wrap->sel_data.event_type, wrap->sel_data.assert_type);
 	}
 }
 
@@ -452,7 +454,7 @@ void ISR_MB_THROTTLE()
 			hw_event_register[2]++;
 		}
 		int ret = -1;
-		k_work_init_delayable(&wrap->work, addsel_work_handler);
+		k_work_init_delayable(&wrap->work, addsel_wrapper_work_handler);
 		ret = k_work_schedule_for_queue(&mb_throttle_work_q, &wrap->work, K_NO_WAIT);
 		if (ret != 1) {
 			LOG_ERR("Fail MB_THROTTLE Kwork failed, %d", ret);
@@ -500,7 +502,7 @@ void ISR_SYS_THROTTLE()
 			hw_event_register[4]++;
 		}
 		int ret = -1;
-		k_work_init_delayable(&wrap->work, addsel_work_handler);
+		k_work_init_delayable(&wrap->work, addsel_wrapper_work_handler);
 		ret = k_work_schedule_for_queue(&sys_throttle_work_q, &wrap->work, K_NO_WAIT);
 		if (ret != 1) {
 			LOG_ERR("Fail SYS_THROTTLE Kwork failed, %d", ret);
