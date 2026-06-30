@@ -107,7 +107,7 @@ const cpld_bit_name_table_t cpld_bit_name_table[] = {
 	  "VR SMBALRT , Status",
 	  {
 		  "RSVD",
-		  "MAX_N_VDDRXTX_SMBALRT_N",
+		  "MAX_N_SMBALRT_N",
 		  "VDDQC_VDDQL_0246_SMBALRT_N",
 		  "MAX_M_VDDQC_1357_SMBALRT_N",
 		  "OWL_W_SMBALRT_N",
