@@ -207,9 +207,11 @@ vr_error_callback_info vr_error_callback_info_table[] = {
 		  P12V_UBC_PWRGD_FAULT // bit7
 	  } }, // to_do not sure
 	{ VR_SMBUS_ALERT_EVENT_LOG_REG,
-	  { 0x00, VR_ERR_DEVICE_DONT_CARE, VR_ERR_DEVICE_DONT_CARE, VR_ERR_DEVICE_DONT_CARE,
+	  { VR_ERR_DEVICE_DONT_CARE, VR_ERR_DEVICE_DONT_CARE, VR_ERR_DEVICE_DONT_CARE,
 	    VR_ERR_DEVICE_DONT_CARE, VR_ERR_DEVICE_DONT_CARE, VR_ERR_DEVICE_DONT_CARE,
-	    VR_ERR_DEVICE_DONT_CARE } },
+	    VR_ERR_DEVICE_DONT_CARE, VR_ERR_DEVICE_DONT_CARE } },
+	{ VR_VDDQ_HBM0246_SMBUS_ALERT_EVENT_LOG_REG,
+	  { VR_ERR_DEVICE_DONT_CARE, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } },
 
 };
 
@@ -427,7 +429,8 @@ bool get_error_data(uint16_t error_code, uint8_t *data)
 		return false;
 	}
 
-	if (cpld_offset == VR_SMBUS_ALERT_EVENT_LOG_REG) {
+	if (cpld_offset == VR_SMBUS_ALERT_EVENT_LOG_REG ||
+	    cpld_offset == VR_VDDQ_HBM0246_SMBUS_ALERT_EVENT_LOG_REG) {
 		// smbalrt status some bits will include 2 different VRs(each VR has 2 pages so total 8 Bytes)
 		// Handle VR_FAULT_ASSERT errors and retrieve VR-specific data
 		if (smbus_alrt_index < ARRAY_SIZE(vr_smbus_alrt_sensor_map_table)) {

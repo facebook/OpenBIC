@@ -254,6 +254,9 @@ void plat_poll_cpld_info_table(void){
 					if (!(cpld_info_table[i].bit_check_mask & BIT(j)))
 						continue;
 
+					if (!(is_status_changed & BIT(j)))
+						continue;
+
 					if ((temp_data & BIT(j)) == 0) {
 						LOG_WRN("SMBUS_ALERT_REG 0x%x changed, bit-%d is changed",
 							cpld_info_table[i].cpld_offset, j);
