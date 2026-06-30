@@ -333,6 +333,50 @@ void cmd_log_dump(const struct shell *shell, size_t argc, char **argv)
 				shell_print(shell, "cpld offset(0x%x): 0x%02x", MFIO_FOR_RAINBOW,
 					    log.error_data[0]);
 				shell_print(shell, "asic temp data: 0x%02x", log.error_data[1]);
+			} else if (cpld_offset == VR_SMBUS_ALERT_EVENT_LOG_REG) {
+				shell_print(shell, "\t%s", reg_name);
+				shell_print(shell, "\t\t%s", bit_name);
+				bool has_valid_vr = false;
+
+				for (int j = 0; j < SMBUS_ALRT_STATUS_DATA_LEN; j++) {
+					if (log.error_data[j] != 0xFF) {
+						has_valid_vr = true;
+						break;
+					}
+				}
+
+				if (!has_valid_vr) {
+					shell_print(shell, "no vr sensor status word(0x79)");
+					err_data_len = SMBUS_ALRT_STATUS_DATA_LEN;
+					break;
+				}
+
+				for (int j = 0; j < SMBUS_ALRT_MAX_VR_NUM; j++) {
+					uint8_t idx = j * SMBUS_ALRT_ENTRY_SIZE;
+					uint8_t rail = log.error_data[idx];
+					uint8_t *rail_name;
+
+					if (rail == 0xFF)
+						continue;
+
+					if (!vr_rail_name_get(rail, &rail_name)) {
+						shell_print(
+							shell,
+							"Unknown VR rail(%u) status word(0x79):",
+							rail);
+					} else {
+						shell_print(shell,
+							    "[0x%02x] %s status word(0x79):", rail,
+							    rail_name);
+					}
+
+					shell_print(shell, "\tlow  byte: 0x%02x",
+						    log.error_data[idx + 1]);
+
+					shell_print(shell, "\thigh byte: 0x%02x",
+						    log.error_data[idx + 2]);
+				}
+				err_data_len = SMBUS_ALRT_STATUS_DATA_LEN;
 			} else {
 				shell_print(shell, "\t%s", reg_name);
 				shell_print(shell, "\t\t%s", bit_name);
