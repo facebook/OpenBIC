@@ -25,6 +25,10 @@
 #define CPLD_REGISTER_1ST_PART_NUM 72
 #define FRU_LOG_SIZE sizeof(plat_err_log_mapping)
 
+#define SMBUS_ALRT_STATUS_DATA_LEN 12
+#define SMBUS_ALRT_MAX_VR_NUM 4
+#define SMBUS_ALRT_ENTRY_SIZE 3
+
 #define LOG_ASSERT 1
 #define LOG_DEASSERT 0
 

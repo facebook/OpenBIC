@@ -245,8 +245,8 @@ void plat_poll_cpld_info_table(void){
 			if ((cpld_info_table[i].cpld_offset == VR_SMBUS_ALERT_EVENT_LOG_REG) ||
 				((cpld_info_table[i].cpld_offset == VR_VDDQ_HBM0246_SMBUS_ALERT_EVENT_LOG_REG) &&
 				(cpld_info_table[i].bit_check_mask == CHECK_BITS_1))) {
-				uint8_t temp_data = data;
-
+				uint8_t temp_data = 0;
+				plat_read_cpld(VR_SMBUS_ALERT_EVENT_LOG_REG, &temp_data, 1);
 				LOG_INF("SMBus alert reg 0x%x: 0x%x",
 					cpld_info_table[i].cpld_offset, temp_data);
 

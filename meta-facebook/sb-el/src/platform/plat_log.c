@@ -59,6 +59,7 @@ typedef struct _vr_ubc_device_table_ {
 typedef struct vr_smbus_alrt_sensor_map {
 	uint8_t cpld_offset;
 	uint8_t bit_number;
+	uint8_t vr_cnt;
 	uint8_t vr_rail_1_page_0;
 	uint8_t vr_rail_1_page_1;
 	uint8_t vr_rail_2_page_0;
@@ -66,25 +67,25 @@ typedef struct vr_smbus_alrt_sensor_map {
 } vr_smbus_alrt_sensor_map;
 
 vr_smbus_alrt_sensor_map vr_smbus_alrt_sensor_map_table[] = {
-	{ VR_SMBUS_ALERT_EVENT_LOG_REG, 0, VR_RAIL_E_ASIC_P1V05_VDDC_HBM0246,
+	{ VR_SMBUS_ALERT_EVENT_LOG_REG, 0, 2, VR_RAIL_E_ASIC_P1V05_VDDC_HBM0246,
 	  VR_RAIL_E_ASIC_P1V8_VPP_HBM0246 },
-	{ VR_SMBUS_ALERT_EVENT_LOG_REG, 1, VR_RAIL_E_ASIC_P0V75_MAX_N_VDD,
+	{ VR_SMBUS_ALERT_EVENT_LOG_REG, 1, 4, VR_RAIL_E_ASIC_P0V75_MAX_N_VDD,
 	  VR_RAIL_E_ASIC_P0V8_HAMSA_AVDD_PCIE },
-	{ VR_SMBUS_ALERT_EVENT_LOG_REG, 2, VR_RAIL_E_ASIC_P0V75_MAX_M_VDD,
+	{ VR_SMBUS_ALERT_EVENT_LOG_REG, 2, 4, VR_RAIL_E_ASIC_P0V75_MAX_M_VDD,
 	  VR_RAIL_E_ASIC_P0V75_VDDPHY_HBM1357, VR_RAIL_E_ASIC_P1V05_VDDC_HBM1357,
 	  VR_RAIL_E_ASIC_P1V8_VPP_HBM1357 },
-	{ VR_SMBUS_ALERT_EVENT_LOG_REG, 3, VR_RAIL_E_ASIC_P0V75_MAX_M_VDD,
+	{ VR_SMBUS_ALERT_EVENT_LOG_REG, 3, 4, VR_RAIL_E_ASIC_P0V75_MAX_M_VDD,
 	  VR_RAIL_E_ASIC_P0V75_VDDPHY_HBM1357, VR_RAIL_E_ASIC_P1V05_VDDC_HBM1357,
 	  VR_RAIL_E_ASIC_P1V8_VPP_HBM1357 },
-	{ VR_SMBUS_ALERT_EVENT_LOG_REG, 4, VR_RAIL_E_ASIC_P0V9_OWL_W_TRVDD,
+	{ VR_SMBUS_ALERT_EVENT_LOG_REG, 4, 4, VR_RAIL_E_ASIC_P0V9_OWL_W_TRVDD,
 	  VR_RAIL_E_ASIC_P0V75_OWL_W_TRVDD, VR_RAIL_E_ASIC_P0V75_OWL_W_VDD,
 	  VR_RAIL_E_ASIC_P0V75_MAX_S_VDD },
-	{ VR_SMBUS_ALERT_EVENT_LOG_REG, 5, VR_RAIL_E_ASIC_P0V9_OWL_E_TRVDD,
+	{ VR_SMBUS_ALERT_EVENT_LOG_REG, 5, 4, VR_RAIL_E_ASIC_P0V9_OWL_E_TRVDD,
 	  VR_RAIL_E_ASIC_P0V75_OWL_E_TRVDD, VR_RAIL_E_ASIC_P0V75_OWL_E_VDD,
 	  VR_RAIL_E_ASIC_P0V4_VDDQL_HBM1357 },
-	{ VR_SMBUS_ALERT_EVENT_LOG_REG, 6, VR_RAIL_E_ASIC_P0V75_NUWA1_VDD },
-	{ VR_SMBUS_ALERT_EVENT_LOG_REG, 7, VR_RAIL_E_ASIC_P0V75_NUWA0_VDD },
-	{ VR_VDDQ_HBM0246_SMBUS_ALERT_EVENT_LOG_REG, 0, VR_RAIL_E_ASIC_P0V9_VDDQ_HBM1357,
+	{ VR_SMBUS_ALERT_EVENT_LOG_REG, 6, 1, VR_RAIL_E_ASIC_P0V75_NUWA1_VDD },
+	{ VR_SMBUS_ALERT_EVENT_LOG_REG, 7, 1, VR_RAIL_E_ASIC_P0V75_NUWA0_VDD },
+	{ VR_VDDQ_HBM0246_SMBUS_ALERT_EVENT_LOG_REG, 0, 2, VR_RAIL_E_ASIC_P0V9_VDDQ_HBM1357,
 	  VR_RAIL_E_ASIC_P0V85_HAMSA_VDD },
 };
 
@@ -280,35 +281,44 @@ bool vr_fault_get_error_data(uint8_t sensor_id, uint8_t *data)
 
 bool get_multi_vr_status(uint8_t alrt_index, uint8_t *data)
 {
-	const vr_smbus_alrt_sensor_map *entry = &vr_smbus_alrt_sensor_map_table[alrt_index];
+	const vr_smbus_alrt_sensor_map *entry;
 	uint16_t vr_data;
-	uint8_t *ptr = data;
+	uint8_t vr_list[SMBUS_ALRT_MAX_VR_NUM];
 
-	// Collect all VR rails from this table entry
-	uint8_t vr_list[4] = {
-		entry->vr_rail_1_page_0,
-		entry->vr_rail_1_page_1,
-		entry->vr_rail_2_page_0,
-		entry->vr_rail_2_page_1,
-	};
+	CHECK_NULL_ARG_WITH_RETURN(data, false);
 
-	for (int i = 0; i < 4; i++) {
-		if (vr_list[i] == 0)
-			continue; // Skip empty entries
+	if (alrt_index >= ARRAY_SIZE(vr_smbus_alrt_sensor_map_table)) {
+		LOG_ERR("Invalid SMBus alert index %u", alrt_index);
+		return false;
+	}
 
+	// Unused bytes are filled with 0xFF.
+	memset(data, 0xFF, SMBUS_ALRT_STATUS_DATA_LEN);
+
+	entry = &vr_smbus_alrt_sensor_map_table[alrt_index];
+
+	if (entry->vr_cnt > SMBUS_ALRT_MAX_VR_NUM) {
+		LOG_ERR("Invalid vr_cnt %u at SMBus alert index %u", entry->vr_cnt, alrt_index);
+		return false;
+	}
+
+	vr_list[0] = entry->vr_rail_1_page_0;
+	vr_list[1] = entry->vr_rail_1_page_1;
+	vr_list[2] = entry->vr_rail_2_page_0;
+	vr_list[3] = entry->vr_rail_2_page_1;
+
+	for (int i = 0; i < entry->vr_cnt; i++) {
 		if (!plat_get_vr_status(vr_list[i], VR_STAUS_E_STATUS_WORD, &vr_data)) {
 			LOG_ERR("SMBus alert: Failed to get VR[%d] status word", vr_list[i]);
 			return false;
 		}
-		LOG_INF("VR[%d] status word: 0x%x", vr_list[i], vr_data);
+		LOG_INF("VR[%d] status word: 0x%04x", vr_list[i], vr_data);
 		// Write each uint16_t value into the output buffer (little-endian)
-		*ptr++ = (uint8_t)(vr_data & 0xFF);
-		*ptr++ = (uint8_t)((vr_data >> 8) & 0xFF);
-	}
 
-	// print VR data
-	for (int i = 0; i < 8; i++)
-		LOG_DBG("data[%d]: %02X ", i, data[i]);
+		data[(i * SMBUS_ALRT_ENTRY_SIZE)] = vr_list[i];
+		data[(i * SMBUS_ALRT_ENTRY_SIZE) + 1] = (uint8_t)(vr_data & 0xFF);
+		data[(i * SMBUS_ALRT_ENTRY_SIZE) + 2] = (uint8_t)((vr_data >> 8) & 0xFF);
+	}
 
 	return true;
 }
@@ -627,17 +637,14 @@ bool check_temp_status_bit(uint8_t cpld_offset, uint8_t bit_num)
 			continue;
 
 		uint16_t status_word;
-		uint8_t vr_sensor_num_list[4] = {
-			entry->vr_rail_1_page_0,
-			entry->vr_rail_1_page_1,
-			entry->vr_rail_2_page_0,
-			entry->vr_rail_2_page_1,
-		};
+		uint8_t vr_sensor_num_list[4];
+
+		vr_sensor_num_list[0] = entry->vr_rail_1_page_0;
+		vr_sensor_num_list[1] = entry->vr_rail_1_page_1;
+		vr_sensor_num_list[2] = entry->vr_rail_2_page_0;
+		vr_sensor_num_list[3] = entry->vr_rail_2_page_1;
 
 		for (int i = 0; i < 4; i++) {
-			if (vr_sensor_num_list[i] == 0)
-				continue;
-
 			if (!plat_get_vr_status(vr_sensor_num_list[i], VR_STAUS_E_STATUS_WORD,
 						&status_word)) {
 				LOG_ERR("SMBus alert: Failed to get VR[%d] status word",
