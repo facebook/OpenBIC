@@ -106,7 +106,7 @@ const cpld_bit_name_table_t cpld_bit_name_table[] = {
 	{ VR_SMBUS_ALERT_EVENT_LOG_REG,
 	  "VR SMBALRT , Status",
 	  {
-		  "RSVD",
+		  "VDDQ_0246_SMBALRT_N",
 		  "MAX_N_SMBALRT_N",
 		  "VDDQC_VDDQL_0246_SMBALRT_N",
 		  "MAX_M_VDDQC_1357_SMBALRT_N",
@@ -116,9 +116,9 @@ const cpld_bit_name_table_t cpld_bit_name_table[] = {
 		  "NUWA0_VDD_ALERT_R_N",
 	  } },
 	{ ASIC_CATTRIP_REG,
-	  "ASIC CATTRIP, Event log",
+	  "ASIC CATTRIP / VR SMBALRT, Event log",
 	  {
-		  "RSVD",
+		  "VDDQ_1357_SMBALRT_N",
 		  "RSVD",
 		  "RSVD",
 		  "OWL_W_SOC_CATTRIP_R (1-->0)",
