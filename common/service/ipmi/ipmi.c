@@ -287,32 +287,40 @@ void ipmi_cmd_handle(void *parameters, void *arvg0, void *arvg1)
 		msg_cfg.buffer.cmd, ((ipmi_msg_cfg *)parameters)->retries);
 	msg_cfg.buffer.completion_code = CC_INVALID_CMD;
 	switch (msg_cfg.buffer.netfn) {
+#ifndef DISABLE_IPMI_NETFN_CHASSIS_REQ
 	case NETFN_CHASSIS_REQ:
 		IPMI_CHASSIS_handler(&msg_cfg.buffer);
 		break;
+#endif
 	case NETFN_BRIDGE_REQ:
 		// IPMI_BRIDGE_handler();
 		break;
+#ifndef DISABLE_IPMI_NETFN_SENSOR_REQ
 	case NETFN_SENSOR_REQ:
 		IPMI_SENSOR_handler(&msg_cfg.buffer);
 		break;
+#endif
 	case NETFN_APP_REQ:
 		IPMI_APP_handler(&msg_cfg.buffer);
 		break;
 	case NETFN_FIRMWARE_REQ:
 		break;
+#ifndef DISABLE_IPMI_NETFN_STORAGE_REQ
 	case NETFN_STORAGE_REQ:
 		IPMI_Storage_handler(&msg_cfg.buffer);
 		break;
+#endif
 	case NETFN_TRANSPORT_REQ:
 		break;
 	case NETFN_DCMI_REQ:
 		break;
 	case NETFN_NM_REQ:
 		break;
+#ifndef DISABLE_IPMI_NETFN_OEM_REQ
 	case NETFN_OEM_REQ:
 		IPMI_OEM_handler(&msg_cfg.buffer);
 		break;
+#endif
 	case NETFN_OEM_1S_REQ:
 		iana = get_iana(msg_cfg.buffer.data);
 		if ((msg_cfg.buffer.data_len >= 3) && (iana != 0)) {

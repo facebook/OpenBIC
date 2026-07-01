@@ -421,6 +421,7 @@ __weak void APP_GET_WATCHDOG_TIMER(ipmi_msg *msg)
 	return;
 }
 
+#ifndef DISABLE_IPMI_APP_HANDLER
 void IPMI_APP_handler(ipmi_msg *msg)
 {
 	CHECK_NULL_ARG(msg);
@@ -474,3 +475,4 @@ void IPMI_APP_handler(ipmi_msg *msg)
 
 	return;
 }
+#endif

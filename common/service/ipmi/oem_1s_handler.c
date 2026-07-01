@@ -2503,6 +2503,7 @@ end:
 }
 #endif
 
+#ifndef DISABLE_IPMI_OEM_1S_HANDLER
 void IPMI_OEM_1S_handler(ipmi_msg *msg)
 {
 	CHECK_NULL_ARG(msg);
@@ -2846,6 +2847,7 @@ void IPMI_OEM_1S_handler(ipmi_msg *msg)
 	}
 	return;
 }
+#endif
 
 __weak void OEM_1S_RECORD_DAM_PIN_STATUS(uint8_t gpio_num, uint8_t status)
 {
