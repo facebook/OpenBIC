@@ -289,6 +289,7 @@
 uint8_t plat_get_config_size();
 void load_sensor_config(void);
 void update_nic_sensor_config_for_pollara(void);
+void update_nic_sensor_config_for_vulcano(void);
 bool is_e1s_access(uint8_t sensor_num);
 bool is_nic_access(uint8_t sensor_num);
 bool is_nic_optics_access(uint8_t sensor_num);
