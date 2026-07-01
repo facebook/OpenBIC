@@ -690,7 +690,7 @@ bool mp29816a_get_vout_command(sensor_cfg *cfg, uint8_t rail, uint16_t *millivol
 
 	float offset_v = get_vout_cal_offset(val_cal_offset, vid_step);
 	float vout_v = read_value * vid_step + offset_v;
-	*millivolt = (uint16_t)(vout_v * 1000.0f);
+	*millivolt = (uint16_t)(vout_v * 1000.0f + 0.5f);
 
 	return true;
 }
@@ -900,7 +900,7 @@ bool mp29816a_get_uvp(sensor_cfg *cfg, uint16_t *uvp)
 	*/
 	int16_t uvp_offset = (uvp_offset_value * (-50)) - 50;
 	uint16_t vout_cmd = 0;
-	mp29816a_get_vout_command(cfg, 0, &vout_cmd);// already include vout offset
+	mp29816a_get_vout_command(cfg, 0, &vout_cmd); // already include vout offset
 	*uvp = (uint16_t)(vout_cmd + uvp_offset);
 	return true;
 }
