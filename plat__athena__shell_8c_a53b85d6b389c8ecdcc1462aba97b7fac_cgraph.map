@@ -1,0 +1,6 @@
+<map id="athena_efuse_cmd" name="athena_efuse_cmd">
+<area shape="rect" id="node1" title=" " alt="" coords="5,31,137,57"/>
+<area shape="rect" id="node2" href="$plat__athena__shell_8c.html#a24a05599ba1296912a48f4a34c7366f4" title="Print efuse data with formatted output." alt="" coords="185,5,304,32"/>
+<area shape="rect" id="node4" href="$plat__athena__shell_8c.html#a4858be4ce20db9a07a3f258e04290404" title="Read efuse data from specified target." alt="" coords="185,56,304,83"/>
+<area shape="rect" id="node3" href="$plat__athena__shell_8c.html#a10021af47b54eee6d26bf0a4be12c03c" title="Print efuse field with raw hex and interpreted value." alt="" coords="352,5,468,32"/>
+</map>

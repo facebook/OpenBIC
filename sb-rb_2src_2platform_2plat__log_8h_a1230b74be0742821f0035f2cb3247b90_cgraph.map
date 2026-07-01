@@ -1,0 +1,5 @@
+<map id="clk_312_5mhz_get_lock_status" name="clk_312_5mhz_get_lock_status">
+<area shape="rect" id="node1" title=" " alt="" coords="5,5,167,47"/>
+<area shape="rect" id="node2" href="$hal__i2c_8c.html#a129beb22fde8deaaaed57af95c31eb16" title=" " alt="" coords="215,5,381,47"/>
+<area shape="rect" id="node3" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="429,13,572,39"/>
+</map>

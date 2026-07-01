@@ -1,0 +1,9 @@
+<map id="pal_extend_sensor_config" name="pal_extend_sensor_config">
+<area shape="rect" id="node1" title=" " alt="" coords="5,81,176,108"/>
+<area shape="rect" id="node2" href="$gc2-es_2src_2platform_2plat__sensor__table_8c.html#a27d80151140f2515b79d867ef7ea7446" title=" " alt="" coords="241,56,348,83"/>
+<area shape="rect" id="node6" href="$gt-cc_2src_2platform_2plat__class_8c.html#a824da554c9ce9ac4fd81c4849e3a5ec0" title=" " alt="" coords="224,107,365,133"/>
+<area shape="rect" id="node3" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="415,5,533,32"/>
+<area shape="rect" id="node5" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="413,56,535,83"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="583,31,725,57"/>
+<area shape="rect" id="node7" href="$hal__gpio_8c.html#af700ee50de3d113e223c2b011c41f966" title=" " alt="" coords="439,107,509,133"/>
+</map>

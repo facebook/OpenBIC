@@ -1,0 +1,9 @@
+<map id="set_power_capping_time_w" name="set_power_capping_time_w">
+<area shape="rect" id="node1" title=" " alt="" coords="5,31,188,57"/>
+<area shape="rect" id="node2" href="$sb-el_2src_2platform_2plat__adc_8c.html#afb4f04bb1fa84495d01589dce2fc425b" title=" " alt="" coords="236,5,389,32"/>
+<area shape="rect" id="node4" href="$sb-el_2src_2platform_2plat__cpld_8c.html#a5de87122b83dfeeda681f4f3d927038f" title=" " alt="" coords="258,56,367,83"/>
+<area shape="rect" id="node3" href="$sb-el_2src_2platform_2plat__adc_8c.html#ad7785b714d8e0e304a204c9687f1f8a1" title=" " alt="" coords="441,5,536,32"/>
+<area shape="rect" id="node5" href="$minerva-ag_2src_2platform_2plat__isr_8c.html#a99dfe1bff0c2df0fa9632a165a6fcd3f" title=" " alt="" coords="437,56,540,83"/>
+<area shape="rect" id="node6" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="588,56,709,83"/>
+<area shape="rect" id="node7" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="757,56,900,83"/>
+</map>

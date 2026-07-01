@@ -1,0 +1,24 @@
+<map id="init_platform_config" name="init_platform_config">
+<area shape="rect" id="node1" title=" " alt="" coords="5,436,140,463"/>
+<area shape="rect" id="node2" href="$gc2-es_2src_2platform_2plat__class_8c.html#afe186fac51a057492906d49592f2046c" title=" " alt="" coords="399,439,516,465"/>
+<area shape="rect" id="node3" href="$hal__gpio_8c.html#af700ee50de3d113e223c2b011c41f966" title=" " alt="" coords="234,56,305,83"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="564,419,683,445"/>
+<area shape="rect" id="node6" href="$yv35-cl_2src_2platform_2plat__class_8c.html#a1df43a4c1461c98ea263dede9a445df4" title=" " alt="" coords="228,157,311,184"/>
+<area shape="rect" id="node7" href="$hal__i3c_8c.html#a9109d576b735f5979b1ad239b3983f46" title=" " alt="" coords="413,132,501,159"/>
+<area shape="rect" id="node8" href="$at-cb_2src_2platform_2plat__gpio_8c.html#a592dd031adf613fe1356f75ad7453ac1" title=" " alt="" coords="202,259,337,285"/>
+<area shape="rect" id="node9" href="$minerva-ag_2src_2platform_2plat__class_8c.html#af97399bd8d33c7f26c0d4d079f8fc6bc" title=" " alt="" coords="211,731,328,757"/>
+<area shape="rect" id="node11" href="$minerva-ag_2src_2platform_2plat__class_8c.html#a1ec455ef466cbf73ad850fd639c7667b" title=" " alt="" coords="215,832,324,859"/>
+<area shape="rect" id="node12" href="$op2-op_2src_2platform_2plat__gpio_8c.html#ab7473c76f4af4f85a9faf231b4ad2d6e" title=" " alt="" coords="192,411,347,437"/>
+<area shape="rect" id="node13" href="$gc2-es_2src_2platform_2plat__class_8c.html#a791245501aa86cbeff06846d2934cbbc" title=" " alt="" coords="211,461,327,488"/>
+<area shape="rect" id="node14" href="$minerva-ag_2src_2platform_2plat__class_8c.html#ad4861f4f0dd1f0a11ca4da20a321dae6" title=" " alt="" coords="222,883,317,909"/>
+<area shape="rect" id="node15" href="$gt-cc_2src_2platform_2plat__class_8c.html#a53bfcd03ced1ff2e759fc154bfb89923" title=" " alt="" coords="188,360,351,387"/>
+<area shape="rect" id="node16" href="$gt-cc_2src_2platform_2plat__class_8c.html#a76c3b0b4a1fc9bdd5b66145b08a59140" title=" " alt="" coords="202,563,337,605"/>
+<area shape="rect" id="node17" href="$gt-cc_2src_2platform_2plat__class_8c.html#acc8f9240ed34981b990397af982d3521" title=" " alt="" coords="193,309,345,336"/>
+<area shape="rect" id="node18" href="$yv4-sd_2src_2platform_2plat__class_8c.html#a83c9c6bff8d192c6c273d4ff343dca2e" title=" " alt="" coords="211,5,328,32"/>
+<area shape="rect" id="node20" href="$expansion__board_8c.html#af66fedc722e9e8c84c7563940e2ef678" title=" " alt="" coords="208,781,331,808"/>
+<area shape="rect" id="node21" href="$minerva-ag_2src_2platform_2plat__class_8c.html#ae20a768911ac41ff2a16de4bf10d2381" title=" " alt="" coords="408,313,507,340"/>
+<area shape="rect" id="node22" href="$minerva-ag_2src_2platform_2plat__class_8c.html#a415791a856bc2f360c48796be04288a8" title=" " alt="" coords="202,680,337,707"/>
+<area shape="rect" id="node5" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="731,419,873,445"/>
+<area shape="rect" id="node10" href="$minerva-ag_2src_2platform_2plat__class_8c.html#ab8ed1e1192e4346f34a2396e50d9f1aa" title=" " alt="" coords="404,731,511,757"/>
+<area shape="rect" id="node19" href="$yv4-sd_2src_2platform_2plat__class_8c.html#a77fab2f8167a9eb32f8d848d1bb1ef53" title=" " alt="" coords="405,31,509,57"/>
+</map>

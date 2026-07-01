@@ -1,0 +1,7 @@
+<map id="CHASSIS_STATUS_STRUCT" name="CHASSIS_STATUS_STRUCT">
+<area shape="rect" id="node1" title=" " alt="" coords="404,111,605,138"/>
+<area shape="rect" id="node2" href="$structCHASSIS__STATUS__STRUCT_1_1CURRENT__POWER__STATE.html" title=" " alt="" coords="13,5,215,47"/>
+<area shape="rect" id="node3" href="$structCHASSIS__STATUS__STRUCT_1_1LAST__POWER__EVENT.html" title=" " alt="" coords="13,71,215,112"/>
+<area shape="rect" id="node4" href="$structCHASSIS__STATUS__STRUCT_1_1MISC.html" title=" " alt="" coords="13,136,215,177"/>
+<area shape="rect" id="node5" href="$structCHASSIS__STATUS__STRUCT_1_1CHASSIS__BUTTON__ENABLES.html" title=" " alt="" coords="5,201,223,243"/>
+</map>

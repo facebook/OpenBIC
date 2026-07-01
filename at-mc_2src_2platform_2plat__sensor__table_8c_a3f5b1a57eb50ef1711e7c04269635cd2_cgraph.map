@@ -1,0 +1,6 @@
+<map id="is_time_to_poll_card_sensor" name="is_time_to_poll_card_sensor">
+<area shape="rect" id="node1" title=" " alt="" coords="5,5,147,47"/>
+<area shape="rect" id="node2" href="$at-mc_2src_2platform_2plat__class_8c.html#aac11cdbe496402e2f1eead6b79d2ff5f" title=" " alt="" coords="195,5,340,47"/>
+<area shape="rect" id="node3" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="388,13,507,39"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="555,13,697,39"/>
+</map>
