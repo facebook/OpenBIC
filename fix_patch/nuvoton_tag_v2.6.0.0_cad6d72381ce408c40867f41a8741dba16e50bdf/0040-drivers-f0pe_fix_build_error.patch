@@ -1,0 +1,85 @@
+From 7f45b4595de20e9b505a88ddf8c9b75b8cf01cb6 Mon Sep 17 00:00:00 2001
+From: Billy <Billy.Tang@quantatw.com>
+Date: Fri, 3 Jul 2026 10:41:47 +0800
+Subject: [PATCH 5/5] drivers: f0pe_fix_build_error
+
+---
+ dts/arm/nuvoton/npcm400f.dtsi       | 6 ++++++
+ soc/arm/npcm4xx/common/soc_common.h | 5 +++++
+ 2 files changed, 11 insertions(+)
+
+diff --git a/dts/arm/nuvoton/npcm400f.dtsi b/dts/arm/nuvoton/npcm400f.dtsi
+index 15ca0451b0..a2830b1367 100644
+--- a/dts/arm/nuvoton/npcm400f.dtsi
++++ b/dts/arm/nuvoton/npcm400f.dtsi
+@@ -176,6 +176,7 @@
+ 			reg = <0x40004000 0x200
+ 			       0x4000d000 0x20>;
+ 			reg-names = "i3c", "pmc";
++			clocks = <&pcc NPCM4XX_CLOCK_BUS_APB3 NPCM4XX_PWDWN_CTL0 2>;
+ 			interrupts = <64 3>;
+ 			instance-id = <0>;
+ 			status = "disabled";
+@@ -189,6 +190,7 @@
+ 			reg = <0x40004200 0x200
+ 			       0x4000d000 0x20>;
+ 			reg-names = "i3c", "pmc";
++			clocks = <&pcc NPCM4XX_CLOCK_BUS_APB3 NPCM4XX_PWDWN_CTL8 0>;
+ 			interrupts = <65 3>;
+ 			instance-id = <1>;
+ 			status = "disabled";
+@@ -202,6 +204,7 @@
+ 			reg = <0x40004400 0x200
+ 			       0x4000d000 0x20>;
+ 			reg-names = "i3c", "pmc";
++			clocks = <&pcc NPCM4XX_CLOCK_BUS_APB3 NPCM4XX_PWDWN_CTL8 1>;
+ 			interrupts = <66 3>;
+ 			instance-id = <2>;
+ 			status = "disabled";
+@@ -215,6 +218,7 @@
+ 			reg = <0x40004600 0x200
+ 			       0x4000d000 0x20>;
+ 			reg-names = "i3c", "pmc";
++			clocks = <&pcc NPCM4XX_CLOCK_BUS_APB3 NPCM4XX_PWDWN_CTL8 2>;
+ 			interrupts = <67 3>;
+ 			instance-id = <3>;
+ 			status = "disabled";
+@@ -228,6 +232,7 @@
+ 			reg = <0x40004800 0x200
+ 			       0x4000d000 0x20>;
+ 			reg-names = "i3c", "pmc";
++			clocks = <&pcc NPCM4XX_CLOCK_BUS_APB3 NPCM4XX_PWDWN_CTL8 3>;
+ 			interrupts = <68 3>;
+ 			instance-id = <4>;
+ 			status = "disabled";
+@@ -241,6 +246,7 @@
+ 			reg = <0x40004a00 0x200
+ 			       0x4000d000 0x20>;
+ 			reg-names = "i3c", "pmc";
++			clocks = <&pcc NPCM4XX_CLOCK_BUS_APB3 NPCM4XX_PWDWN_CTL8 4>;
+ 			interrupts = <69 3>;
+ 			instance-id = <5>;
+ 			status = "disabled";
+diff --git a/soc/arm/npcm4xx/common/soc_common.h b/soc/arm/npcm4xx/common/soc_common.h
+index ff22b49aa7..b46ba315a1 100644
+--- a/soc/arm/npcm4xx/common/soc_common.h
++++ b/soc/arm/npcm4xx/common/soc_common.h
+@@ -4,6 +4,9 @@
+  * SPDX-License-Identifier: Apache-2.0
+  */
+ 
++#ifndef _NUVOTON_NPCM4XX_SOC_COMMON_H_
++#define _NUVOTON_NPCM4XX_SOC_COMMON_H_
++
+ /* one bit per 4K, total 32 * 8 * 4K = 1024K MAX */
+ #define BITMAP_ARRAY_PER_SIZE	0x20
+ #define BITMAP_LIST_SIZE	0x8
+@@ -39,3 +42,5 @@ void npcm4xx_sram_vector_table_copy(void);
+ /* use for replace/restore VTOR */
+ uintptr_t npcm4xx_vector_table_save(void);
+ void npcm4xx_vector_table_restore(uintptr_t vtor);
++
++#endif /* _NUVOTON_NPCM4XX_SOC_COMMON_H_ */
+-- 
+2.34.1
+
