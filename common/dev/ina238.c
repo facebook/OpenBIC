@@ -30,7 +30,7 @@
 #define MAX_CURRENT_LSB 0x80
 #define ADCRANGE_0_CONVERSION_FACTOR 0.000005 // 5uV/LSB
 #define ADCRANGE_1_CONVERSION_FACTOR 0.00000125 // 1.25uV/LSB
-#define VBUS_CONVERSION_FACTOR 0.000003125 // 3.125mV/LSB
+#define VBUS_CONVERSION_FACTOR 0.003125 // 3.125mV/LSB
 #define DIETEMP_CONVERSION_FACTOR 0.125 // 125 m°C/LSB
 
 LOG_MODULE_REGISTER(dev_ina238);
@@ -139,7 +139,7 @@ uint8_t ina238_read(sensor_cfg *cfg, int *reading)
 		}
 
 		pwr_val = ((msg.data[0] << 16) | msg.data[1] << 8) | msg.data[2];
-		val = 0.2 * twoscomplement_to_decimal(pwr_val) * (init_args->cur_lsb);
+		val = 0.2 * pwr_val * init_args->cur_lsb;
 
 		break;
 	default:
@@ -177,11 +177,12 @@ uint8_t ina238_init(sensor_cfg *cfg)
 	msg.tx_len = 1;
 	msg.rx_len = 2;
 	msg.data[0] = INA238_CFG_OFFSET;
-	config_val = msg.data[0] << 8 | msg.data[1];
 	if (i2c_master_read(&msg, I2C_RETRY)) {
 		LOG_ERR("Failed to read config from INA238 ");
 		return SENSOR_INIT_UNSPECIFIED_ERROR;
 	}
+
+	config_val = msg.data[0] << 8 | msg.data[1];
 
 	/* Configure the chip using default values */
 	if (init_args->adc_range) {
