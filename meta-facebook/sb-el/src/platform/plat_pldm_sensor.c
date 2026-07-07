@@ -37,6 +37,14 @@ static bool plat_sensor_vr_polling_enable_flag = true;
 static uint8_t plat_sensor_one_step_power_enable_flag = 0;
 uint8_t pwr_capping_pollng_rate_type = 0;
 
+static ina238_init_arg ina238_pwr_w_init_args = {
+	.is_init = false,
+	.r_shunt = 0.0005,
+	.adc_range = 0,
+	.alert_latch = 0,
+	.i_max = 55.0,
+};
+
 static struct pldm_sensor_thread pal_pldm_sensor_thread[MAX_SENSOR_THREAD_ID] = {
 	// thread id, thread name
 	{ TEMP_SENSOR_THREAD_ID, "TEMP_SENSOR_THREAD" },
@@ -160,7 +168,7 @@ uint8_t check_sensor_type(uint8_t sensor_num)
 	if (sensor_num <= SENSOR_NUM_UBC2_P52V_INPUT_VOLT_V)
 		return UBC_SENSOR_THREAD_ID;
 
-	if (sensor_num <= SENSOR_NUM_P3V3_OSFP_PWR_W)
+	if (sensor_num <= SENSOR_NUM_INA238_PWR_W)
 		return EVB_SENSOR_THREAD_ID;
 
 	return MAX_SENSOR_THREAD_ID;
@@ -10643,6 +10651,76 @@ pldm_sensor_info plat_pldm_sensor_evb_table[] = {
 	},
 	{
 		{
+			// SENSOR_NUM_INA238_VOLT_VBUS_A
+			/*** PDR common header***/
+			{
+				0x00000000, //uint32_t record_handle
+				0x01, //uint8_t PDR_header_version
+				PLDM_NUMERIC_SENSOR_PDR, //uint8_t PDR_type
+				0x0000, //uint16_t record_change_number
+				0x0000, //uint16_t data_length
+			},
+
+			/***numeric sensor format***/
+			0x0000, //uint16_t PLDM_terminus_handle;
+			SENSOR_NUM_INA238_VOLT_VBUS_A, //uint16_t sensor_id;
+			0x0000, //uint16_t entity_type; //Need to check
+			SENSOR_NUM_INA238_VOLT_VBUS_A, //uint16_t entity_instance_number;
+			0x0000, //uint16_t container_id;
+			0x00, //uint8_t sensor_init; //Need to check
+			0x01, //uint8_t sensor_auxiliary_names_pdr;
+			0x05, //uint8_t base_unit;  //unit
+			-3, //int8_t unit_modifier; //Need to check
+			0x00, //uint8_t rate_unit;
+			0x00, //uint8_t base_oem_unit_handle;
+			0x00, //uint8_t aux_unit;
+			0x00, //int8_t aux_unit_modifier;
+			0x00, //uint8_t auxrate_unit;
+			0x00, //uint8_t rel;
+			0x00, //uint8_t aux_oem_unit_handle;
+			0x00, //uint8_t is_linear;
+			0x4, //uint8_t sensor_data_size;
+			1, //real32_t resolution;
+			0, //real32_t offset;
+			0x0000, //uint16_t accuracy;
+			0x00, //uint8_t plus_tolerance;
+			0x00, //uint8_t minus_tolerance;
+			0x00000000, //uint32_t hysteresis;
+			0x00, //uint8_t supported_thresholds;
+			0x00, //uint8_t threshold_and_hysteresis_volatility;
+			0, //real32_t state_transition_interval;
+			UPDATE_INTERVAL_1S, //real32_t update_interval;
+			0x00000000, //uint32_t max_readable; //Need to check
+			0x00000000, //uint32_t min_readable;
+			0x04, //uint8_t range_field_format;
+			0x00, //uint8_t range_field_support; //Need to check
+			0x00000000, //uint32_t nominal_value;
+			0x00000000, //uint32_t normal_max;
+			0x00000000, //uint32_t normal_min;
+			0, //uint32_t warning_high;
+			0, //uint32_t warning_low;
+			3564, //uint32_t critical_high;
+			3036, //uint32_t critical_low;
+			0, //uint32_t fatal_high;
+			0, //uint32_t fatal_low;
+		},
+		.update_time = 0,
+		{
+			.num = SENSOR_NUM_INA238_VOLT_VBUS_A,
+			.type = sensor_dev_ina238,
+			.port = I2C_BUS10,
+			.target_addr = INA238_ADDR,
+			.offset = INA238_VBUS_OFFSET,
+			.access_checker = is_ubc_access,
+			.sample_count = SAMPLE_COUNT_DEFAULT,
+			.cache = 0,
+			.cache_status = PLDM_SENSOR_INITIALIZING,
+			.init_args = &ina238_pwr_w_init_args,
+			.post_sensor_read_hook = post_common_sensor_read,
+		},
+	},
+	{
+		{
 			// INA238_CURR_A
 			/*** PDR common header***/
 			{
@@ -10707,7 +10785,8 @@ pldm_sensor_info plat_pldm_sensor_evb_table[] = {
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
-			.post_sensor_read_hook = post_ubc_read,
+			.init_args = &ina238_pwr_w_init_args,
+			.post_sensor_read_hook = post_common_sensor_read,
 		},
 	},
 	{
@@ -10776,7 +10855,8 @@ pldm_sensor_info plat_pldm_sensor_evb_table[] = {
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
-			.post_sensor_read_hook = post_ubc_read,
+			.init_args = &ina238_pwr_w_init_args,
+			.post_sensor_read_hook = post_common_sensor_read,
 		},
 	},
 };
@@ -12974,6 +13054,21 @@ PDR_sensor_auxiliary_names plat_evb_pdr_sensor_aux_names_table[] = {
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
 		.sensorName = u"P3V3_OSFP_INPUT_VOLT_V",
+	},
+	{
+		{
+			.record_handle = 0x00000000,
+			.PDR_header_version = 0x01,
+			.PDR_type = PLDM_SENSOR_AUXILIARY_NAMES_PDR,
+			.record_change_number = 0x0000,
+			.data_length = 0x0000,
+		},
+		.terminus_handle = 0x0000,
+		.sensor_id = SENSOR_NUM_INA238_VOLT_VBUS_A,
+		.sensor_count = 0x1,
+		.nameStringCount = 0x1,
+		.nameLanguageTag = "en",
+		.sensorName = u"INA238_VOLT_VBUS_A",
 	},
 	{
 		{
