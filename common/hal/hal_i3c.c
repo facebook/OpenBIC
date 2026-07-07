@@ -22,6 +22,7 @@
 #include <zephyr.h>
 #include <logging/log.h>
 #include "libutil.h"
+#include "plat_def.h"
 
 LOG_MODULE_REGISTER(hal_i3c);
 
@@ -407,7 +408,26 @@ int i3c_set_pid(I3C_MSG *msg, uint16_t slot_pid)
 		return false;
 	}
 
+#ifdef I3C_HJ_RETRY_COUNT
+	uint8_t retry = 0;
+	do {
+		ret = i3c_slave_hj_req(target);
+		if (ret == 0)
+			break;
+
+		LOG_WRN("HJ request failed, ret: %d, retry: %d", ret, retry);
+
+		if (I3C_HJ_RETRY_COUNT != 0xFF)
+			retry++;
+
+		if ((I3C_HJ_RETRY_COUNT == 0xFF) || (retry < I3C_HJ_RETRY_COUNT)) {
+			k_msleep(I3C_HJ_RETRY_DELAY_MS);
+		}
+	} while ((I3C_HJ_RETRY_COUNT == 0xFF) || (retry < I3C_HJ_RETRY_COUNT));
+#else
 	ret = i3c_slave_hj_req(target);
+#endif
+
 	if (ret != 0) {
 		LOG_ERR("Failed to sends Hot-join request,ret: %d", ret);
 		k_mutex_unlock(&mutex_dev[msg->bus]);
