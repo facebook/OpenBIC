@@ -228,20 +228,46 @@ bool vr_error_callback(cpld_info *cpld_info, uint8_t *current_cpld_value)
 	return true;
 }
 
-void trigger_vr_hot()
+bool plat_vr_hot_mask_flag = false;
+
+void set_plat_vr_hot_mask_flag(bool value)
 {
+	plat_vr_hot_mask_flag = value;
+}
+
+bool get_plat_vr_hot_mask_flag()
+{
+	return plat_vr_hot_mask_flag;
+}
+
+bool trigger_vr_hot()
+{
+	if(get_plat_vr_hot_mask_flag() == true) {
+		LOG_INF("ASIC_VR_HOT_SWITCH is masked");
+		return false;
+	}
 	// set VR hot switch bit to 1
 	if (!set_cpld_bit(ASIC_VR_HOT_SWITCH, 0, 1)) {
 		LOG_ERR("Failed to write ASIC_VR_HOT_SWITCH");
+		return false;
 	}
+
+	return true;
 }
 
-void restore_vr_hot()
+bool restore_vr_hot()
 {
+	if(get_plat_vr_hot_mask_flag() == true) {
+		LOG_INF("ASIC_VR_HOT_SWITCH is masked");
+		return false;
+	}
 	// set VR hot switch bit to 0
 	if (!set_cpld_bit(ASIC_VR_HOT_SWITCH, 0, 0)) {
 		LOG_ERR("Failed to write ASIC_VR_HOT_SWITCH");
+		return false;
 	}
+
+	return true;
 }
 
 
@@ -295,20 +321,20 @@ bool asic_temp_error_callback(cpld_info *cpld_info, uint8_t *current_cpld_value)
 			case 6:
 				error_asic_temp_code = HAMSA_MFIO22_ERR_EVENT; // HAMSA_MFIO22
 				asic_send_data = temp_data[1];
-				trigger_vr_hot();
-				LOG_WRN("Temperature bit-%d is 1, write CPLD ASIC_VR_HOT_SWITCH bit-0 to 1", bit);
+				if(trigger_vr_hot()) 
+					LOG_WRN("Temperature bit-%d is 1, write CPLD ASIC_VR_HOT_SWITCH bit-0 to 1", bit);
 				break;
 			case 3:
 				error_asic_temp_code = MEDHA0_MFIO24_ERR_EVENT; // MEDHA0_MFIO24
 				asic_send_data = temp_data[2];
-				trigger_vr_hot();
-				LOG_WRN("Temperature bit-%d is 1, write CPLD ASIC_VR_HOT_SWITCH bit-0 to 1", bit);
+				if(trigger_vr_hot()) 
+					LOG_WRN("Temperature bit-%d is 1, write CPLD ASIC_VR_HOT_SWITCH bit-0 to 1", bit);
 				break;
 			case 1:
 				error_asic_temp_code = MEDHA1_MFIO24_ERR_EVENT; // MEDHA1_MFIO24
 				asic_send_data = temp_data[3];
-				trigger_vr_hot();
-				LOG_WRN("Temperature bit-%d is 1, write CPLD ASIC_VR_HOT_SWITCH bit-0 to 1", bit);
+				if(trigger_vr_hot()) 
+					LOG_WRN("Temperature bit-%d is 1, write CPLD ASIC_VR_HOT_SWITCH bit-0 to 1", bit);
 				break;
 			case 5:
 				error_asic_temp_code = HAMSA_MFIO23_ERR_EVENT;
@@ -341,7 +367,7 @@ bool asic_temp_error_callback(cpld_info *cpld_info, uint8_t *current_cpld_value)
 			case 1:
 				// check cpld 0xA8 bit6/3/1 all clear
 				if (!plat_read_cpld(MFIO_FOR_RAINBOW, &check_lv2_data, 1)) {
-					LOG_ERR("Failed to write ASIC_VR_HOT_SWITCH");
+					LOG_ERR("Failed to read ASIC_VR_HOT_SWITCH");
 				}
 				if ((check_lv2_data & CHECK_BITS_631) == 0)
 					restore_vr_hot();
@@ -519,6 +545,10 @@ void poll_cpld_registers()
 									}
 								} else {
 									// Rainbow board uses CPLD to control VR_HOT
+									if(get_plat_vr_hot_mask_flag()) {
+										LOG_INF("ASIC_VR_HOT_SWITCH is masked");
+										continue;
+									}
 									if (!plat_read_cpld(ASIC_VR_HOT_SWITCH, &vr_hot_switch, 1)) {
 										LOG_ERR("Failed to read ASIC_VR_HOT_SWITCH");
 									}

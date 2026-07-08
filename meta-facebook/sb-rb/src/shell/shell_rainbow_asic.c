@@ -32,12 +32,16 @@
 #define ASIC_MONITOR_TEMP_REG 0x70
 #define ASIC_VERSION_REG 0x68
 #define ASIC_SVS_CORE_VOLT_REG 0x9B
+#define ASIC_MODULE_STATUS_REG 0x60
+#define ASIC_THERMAL_THRESHOLD_REG 0x62
 //asic reg len
 #define ASIC_STATUS_REG_LEN 8
 #define ASIC_VERSION_REG_LEN 10
 #define ASIC_MONITOR_TEMP_REG_LEN 10
 #define ASIC_MONITOR_HBM_TEMP_REG_LEN 10
 #define ASIC_SVS_CORE_VOLT_REG_LEN 6
+#define ASIC_MODULE_STATUS_REG_LEN 7
+#define ASIC_THERMAL_THRESHOLD_LEN 2
 
 int asic_read_cmd(const struct shell *shell, uint8_t reg, uint8_t *data, uint8_t len)
 {
@@ -53,6 +57,27 @@ int asic_read_cmd(const struct shell *shell, uint8_t reg, uint8_t *data, uint8_t
 		return -1;
 	}
 	memcpy(data, i2c_msg.data, len);
+
+	return 0;
+}
+
+int asic_write_cmd(const struct shell *shell, uint8_t reg, uint8_t *data, uint8_t len)
+{
+	I2C_MSG i2c_msg = {
+		.bus = ASIC_I2C_BUS,
+		.target_addr = ASIC_I2C_ADDR,
+	};
+	i2c_msg.tx_len = len + 1;
+	i2c_msg.data[0] = reg;
+
+	if (len > 0)
+		memcpy(&i2c_msg.data[1], data, len);
+
+	if (i2c_master_write(&i2c_msg, I2C_MAX_RETRY)) {
+		shell_error(shell, "Can't set data to ASIC, reg: 0x%02x", reg);
+		return -1;
+	}
+
 	return 0;
 }
 void asic_boot_status_cmd(const struct shell *shell)
@@ -217,6 +242,50 @@ void asic_read_svs_core_voltage_cmd(const struct shell *shell, size_t argc, char
 	shell_print(shell, "  cip0: raw: 0x%02X%02X -> %d mV", data[2], data[1], cip0_mv);
 	shell_print(shell, "  cip1: raw: 0x%02X%02X -> %d mV", data[4], data[3], cip1_mv);
 }
+
+void asic_thermal_threshold_get_cmds(const struct shell *shell, size_t argc, char **argv)
+{
+	uint8_t module_status_data[ASIC_MODULE_STATUS_REG_LEN] = { 0 };
+	if (asic_read_cmd(shell, ASIC_MODULE_STATUS_REG, (uint8_t *)module_status_data,
+			  ASIC_MODULE_STATUS_REG_LEN) != 0) {
+		shell_warn(shell, "Can't get module status from ASIC, reg: 0x%02x",
+			   ASIC_MODULE_STATUS_REG);
+		return;
+	}
+
+	shell_print(shell,
+		    "lower_thermal_threshold: 0x%02x, upper_thermal_threshold: 0x%02x, reg: 0x%02x",
+		    module_status_data[2], module_status_data[3], ASIC_MODULE_STATUS_REG);
+}
+
+void asic_thermal_threshold_set_cmds(const struct shell *shell, size_t argc, char **argv)
+{
+	if (argc != 3) {
+		shell_error(
+			shell,
+			"Usage: rb_asic thermal_threshold set <lower_thermal_threshold> <upper_thermal_threshold>");
+		return;
+	}
+
+	uint8_t lower_threshold = strtol(argv[2], NULL, 16);
+	uint8_t upper_threshold = strtol(argv[3], NULL, 16);
+
+	uint8_t thermal_threshold_data[ASIC_THERMAL_THRESHOLD_LEN] = { 0 };
+	thermal_threshold_data[0] = lower_threshold;
+	thermal_threshold_data[1] = upper_threshold;
+
+	if (asic_write_cmd(shell, ASIC_THERMAL_THRESHOLD_REG, (uint8_t *)thermal_threshold_data,
+			   ASIC_THERMAL_THRESHOLD_LEN) != 0) {
+		shell_warn(shell, "Can't set thermal threshold to ASIC, reg: 0x%02x",
+			   ASIC_THERMAL_THRESHOLD_REG);
+		return;
+	}
+
+	shell_print(
+		shell,
+		"set lower_thermal_threshold: 0x%02x, upper_thermal_threshold: 0x%02x on reg 0x%02x success",
+		lower_threshold, upper_threshold, ASIC_THERMAL_THRESHOLD_REG);
+}
 /**
  * @brief Display help information for all Asic commands
  * @param shell Shell instance
@@ -228,13 +297,28 @@ void asic_help_cmd(const struct shell *shell, size_t argc, char **argv)
 	shell_info(shell, "Usage: Asic help");
 	shell_info(shell, "       Asic read_all");
 	shell_info(shell, "       svs_core_voltage_get");
+	shell_info(shell, "       thermal_threshold get");
+	shell_info(
+		shell,
+		"       thermal_threshold set <lower_thermal_threshold> <upper_thermal_threshold>");
 }
+
+SHELL_STATIC_SUBCMD_SET_CREATE(
+	asic_thermal_threshold_subcmds,
+	SHELL_CMD(get, NULL, "rb_asic thermal_threshold get", asic_thermal_threshold_get_cmds),
+	SHELL_CMD(
+		set, NULL,
+		"rb_asic thermal_threshold set <lower_thermal_threshold> <upper_thermal_threshold>",
+		asic_thermal_threshold_set_cmds),
+	SHELL_SUBCMD_SET_END);
 
 /* Sub-command Level 1 of  commands */
 SHELL_STATIC_SUBCMD_SET_CREATE(
 	sub_asic_cmds, SHELL_CMD(read_all, NULL, "read all Asic system data", asic_read_all_cmd),
 	SHELL_CMD(svs_core_voltage_get, NULL, "get SVS core voltage from asic",
 		  asic_read_svs_core_voltage_cmd),
+	SHELL_CMD(thermal_threshold, &asic_thermal_threshold_subcmds,
+		  "thermal_threshold get/set commands", NULL),
 	SHELL_CMD(help, NULL, "display help information for Asic commands", asic_help_cmd),
 	SHELL_SUBCMD_SET_END);
 
