@@ -23,6 +23,7 @@
 #include "plat_user_setting.h"
 #include "plat_thermal.h"
 #include "shell_plat_power_sequence.h"
+#include "plat_hook.h"
 
 typedef struct {
 	uint8_t cpld_offset;
@@ -115,8 +116,20 @@ const cpld_bit_name_table_t cpld_bit_name_table[] = {
 		  "NUWA1_VDD_ALERT_R_N",
 		  "NUWA0_VDD_ALERT_R_N",
 	  } },
+	{ VR_VDDQ_HBM1357_SMBUS_ALERT_EVENT_LOG_REG,
+	  "VR SMBALRT, Status",
+	  {
+		  "VDDQ_1357_SMBALRT_N",
+		  "RSVD",
+		  "RSVD",
+		  "RSVD",
+		  "RSVD",
+		  "RSVD",
+		  "RSVD",
+		  "RSVD",
+	  } },
 	{ ASIC_CATTRIP_REG,
-	  "ASIC CATTRIP / VR SMBALRT, Event log",
+	  "ASIC CATTRIP, Event log",
 	  {
 		  "VDDQ_1357_SMBALRT_N",
 		  "RSVD",
@@ -235,11 +248,70 @@ void cmd_log_dump(const struct shell *shell, size_t argc, char **argv)
 
 		switch (err_type) {
 		case CPLD_UNEXPECTED_VAL_TRIGGER_CAUSE:
-			shell_print(shell, "\t%s", reg_name);
-			shell_print(shell, "\t\t%s", bit_name);
-			shell_print(shell, "read vr sensor status word(0x79):");
-			shell_print(shell, "\tlow  byte: 0x%02x", log.error_data[0]);
-			shell_print(shell, "\thigh byte: 0x%02x", log.error_data[1]);
+			if (cpld_offset == VR_SMBUS_ALERT_EVENT_LOG_REG ||
+			    cpld_offset == VR_VDDQ_HBM1357_SMBUS_ALERT_EVENT_LOG_REG) {
+				shell_print(shell, "\t%s", reg_name);
+				shell_print(shell, "\t\t%s", bit_name);
+				bool has_valid_vr = false;
+
+				for (int j = 0; j < SMBUS_ALRT_STATUS_DATA_LEN; j++) {
+					if (log.error_data[j] != 0xFF) {
+						has_valid_vr = true;
+						break;
+					}
+				}
+
+				if (!has_valid_vr) {
+					shell_print(shell, "no vr sensor status word(0x79)");
+					err_data_len = SMBUS_ALRT_STATUS_DATA_LEN;
+					break;
+				}
+
+				for (int j = 0; j < SMBUS_ALRT_MAX_VR_NUM; j++) {
+					uint8_t idx = j * SMBUS_ALRT_ENTRY_SIZE;
+					uint8_t rail = log.error_data[idx];
+					uint8_t *rail_name;
+
+					if (rail == 0xFF)
+						continue;
+
+					if (!vr_rail_name_get(rail, &rail_name)) {
+						shell_print(
+							shell,
+							"Unknown VR rail(%u) status word(0x79):",
+							rail);
+					} else {
+						shell_print(shell,
+							    "[0x%02x] %s status word(0x79):", rail,
+							    rail_name);
+					}
+
+					shell_print(shell, "\tlow  byte: 0x%02x",
+						    log.error_data[idx + 1]);
+
+					shell_print(shell, "\thigh byte: 0x%02x",
+						    log.error_data[idx + 2]);
+				}
+				err_data_len = SMBUS_ALRT_STATUS_DATA_LEN;
+			} else {
+				shell_print(shell, "\t%s", reg_name);
+				shell_print(shell, "\t\t%s", bit_name);
+				shell_print(shell, "read vr sensor status word(0x79):");
+				shell_print(shell, "\tlow  byte: 0x%02x", log.error_data[0]);
+				shell_print(shell, "\thigh byte: 0x%02x", log.error_data[1]);
+				shell_print(shell, "read vr sensor status vout(0x20): 0x%02x",
+					    log.error_data[2]);
+				shell_print(shell, "read vr sensor status iout(0x21): 0x%02x",
+					    log.error_data[3]);
+				shell_print(shell, "read vr sensor status input(0x22): 0x%02x",
+					    log.error_data[4]);
+				shell_print(shell,
+					    "read vr sensor status temperature(0x24): 0x%02x",
+					    log.error_data[5]);
+				shell_print(shell, "read vr sensor status CML(0x7e): 0x%02x",
+					    log.error_data[6]);
+				err_data_len = 7;
+			}
 			break;
 		case POWER_ON_SEQUENCE_TRIGGER_CAUSE:
 			shell_print(shell, "\tPOWER_ON_SEQUENCE_FAILURE");
