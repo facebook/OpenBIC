@@ -135,7 +135,7 @@ void gpio_int_default();
 	gpio_name_to_num(NUWA0_CHIP_STRAP0_MMC) \
 	gpio_name_to_num(Reserve_GPIOB7)
 #define name_gpioC	\
-	gpio_name_to_num(Reserve_GPIOC0) \
+	gpio_name_to_num(U626_OE) \
 	gpio_name_to_num(SPI_ADC_CS1_N) \
 	gpio_name_to_num(Reserve_GPIOC2) \
 	gpio_name_to_num(Reserve_GPIOC3) \
