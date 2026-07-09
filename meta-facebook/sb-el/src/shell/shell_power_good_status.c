@@ -47,8 +47,8 @@ void show_power_good_status(const struct shell *shell, size_t argc, char **argv)
 
 			uint8_t value = (reg_data >> bit) & 0x01;
 
-			shell_print(shell, "%-20s %d", power_good_status_table_for_steps_on[i].power_rail_name,
-				    value);
+			shell_print(shell, "%-20s %d",
+				    power_good_status_table_for_steps_on[i].power_rail_name, value);
 			if (get_asic_board_id() == ASIC_BOARD_ID_EVB &&
 			    power_good_status_table_for_steps_on[i].index == PWRGD_P1V8_R) {
 				//check pwrgd PWRGD_P1V8_AUX status is on

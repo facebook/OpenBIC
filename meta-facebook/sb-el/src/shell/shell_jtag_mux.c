@@ -56,7 +56,7 @@ void set_cmd_jtag_mux(const struct shell *shell, size_t argc, char **argv)
 
 static const char *const jtag_mux_table[MUX_JTAG_MUX_MAX] = {
 	[MUX_NUWA_0] = "NUWA_0", [MUX_NUWA_1] = "NUWA_1", [MUX_OWL_E] = "OWL_E",
-	[MUX_OWL_W] = "OWL_W",	   [MUX_HAMSA] = "HAMSA",
+	[MUX_OWL_W] = "OWL_W",	 [MUX_HAMSA] = "HAMSA",
 };
 
 void jtag_mux_get_cmds(const struct shell *shell, size_t argc, char **argv)
