@@ -34,6 +34,7 @@
 #include "shell_plat_power_sequence.h"
 #include "plat_thermal.h"
 #include "pmbus.h"
+#include "plat_led.h"
 
 LOG_MODULE_REGISTER(plat_log);
 
@@ -315,10 +316,32 @@ bool vr_fault_get_error_data(uint8_t sensor_id, uint8_t *data)
 	return ret;
 }
 
+void set_vr_hot_alert(void)
+{
+	uint8_t vr_hot_switch = 0;
+
+	if (!plat_read_cpld(ASIC_VR_HOT_SWITCH, &vr_hot_switch, 1)) {
+		LOG_ERR("Failed to read ASIC_VR_HOT_SWITCH");
+		return;
+	}
+
+	vr_hot_switch |= BIT(0);
+
+	if (!plat_write_cpld(ASIC_VR_HOT_SWITCH, &vr_hot_switch)) {
+		LOG_ERR("Failed to write ASIC_VR_HOT_SWITCH");
+		return;
+	}
+
+	LOG_WRN("STATUS WORD bit-2(over-temperature) is 1, write CPLD ASIC_VR_HOT_SWITCH bit-0 to 1");
+	set_led_flag(true);
+
+	return;
+}
+
 bool get_multi_vr_status(uint8_t alrt_index, uint8_t *data)
 {
 	const vr_smbus_alrt_sensor_map *entry;
-	uint16_t vr_data;
+	uint16_t status_word;
 	uint8_t vr_list[SMBUS_ALRT_MAX_VR_NUM];
 
 	CHECK_NULL_ARG_WITH_RETURN(data, false);
@@ -344,16 +367,21 @@ bool get_multi_vr_status(uint8_t alrt_index, uint8_t *data)
 	vr_list[3] = entry->vr_rail_2_page_1;
 
 	for (int i = 0; i < entry->vr_cnt; i++) {
-		if (!plat_get_vr_status(vr_list[i], VR_STAUS_E_STATUS_WORD, &vr_data)) {
+		if (!plat_get_vr_status(vr_list[i], VR_STAUS_E_STATUS_WORD, &status_word)) {
 			LOG_ERR("SMBus alert: Failed to get VR[%d] status word", vr_list[i]);
 			return false;
 		}
-		LOG_INF("VR[%d] status word: 0x%04x", vr_list[i], vr_data);
+		LOG_INF("VR[%d] status word: 0x%04x", vr_list[i], status_word);
 		// Write each uint16_t value into the output buffer (little-endian)
 
+		/* Temperature bit from status word */
+		if ((status_word >> 2) & 0x01){
+			set_vr_hot_alert();
+		}
+
 		data[(i * SMBUS_ALRT_ENTRY_SIZE)] = vr_list[i];
-		data[(i * SMBUS_ALRT_ENTRY_SIZE) + 1] = (uint8_t)(vr_data & 0xFF);
-		data[(i * SMBUS_ALRT_ENTRY_SIZE) + 2] = (uint8_t)((vr_data >> 8) & 0xFF);
+		data[(i * SMBUS_ALRT_ENTRY_SIZE) + 1] = (uint8_t)(status_word & 0xFF);
+		data[(i * SMBUS_ALRT_ENTRY_SIZE) + 2] = (uint8_t)((status_word >> 8) & 0xFF);
 	}
 
 	return true;
@@ -666,41 +694,4 @@ void init_load_eeprom_log(void)
 
 	// Determine the next log position
 	find_last_log_position();
-}
-
-bool check_temp_status_bit(uint8_t cpld_offset, uint8_t bit_num)
-{
-	for (int idx = 0; idx < ARRAY_SIZE(vr_smbus_alrt_sensor_map_table); idx++) {
-		const vr_smbus_alrt_sensor_map *entry = &vr_smbus_alrt_sensor_map_table[idx];
-
-		if (entry->cpld_offset != cpld_offset || entry->bit_number != bit_num)
-			continue;
-
-		uint16_t status_word;
-		uint8_t vr_sensor_num_list[4];
-
-		vr_sensor_num_list[0] = entry->vr_rail_1_page_0;
-		vr_sensor_num_list[1] = entry->vr_rail_1_page_1;
-		vr_sensor_num_list[2] = entry->vr_rail_2_page_0;
-		vr_sensor_num_list[3] = entry->vr_rail_2_page_1;
-
-		for (int i = 0; i < 4; i++) {
-			if (!plat_get_vr_status(vr_sensor_num_list[i], VR_STAUS_E_STATUS_WORD,
-						&status_word)) {
-				LOG_ERR("SMBus alert: Failed to get VR[%d] status word",
-					vr_sensor_num_list[i]);
-				continue;
-			}
-
-			/* Temperature bit from status word */
-			if ((status_word >> 2) & 0x01)
-				return false;
-		}
-
-		return true;
-	}
-
-	LOG_WRN("No VR SMBus alert sensor map found, offset: 0x%x, bit: %d", cpld_offset, bit_num);
-
-	return true;
 }

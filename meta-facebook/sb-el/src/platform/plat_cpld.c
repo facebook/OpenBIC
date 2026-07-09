@@ -210,7 +210,6 @@ void plat_get_pdb1_pwr_from_bmc(void){
 void plat_poll_cpld_info_table(void){
 
 	uint8_t data = 0;
-	uint8_t vr_hot_switch = 0;
 
 	for (size_t i = 0; i < ARRAY_SIZE(cpld_info_table); i++) {
 		uint8_t expected_val = plat_get_ubc_status() ?
@@ -242,45 +241,7 @@ void plat_poll_cpld_info_table(void){
 								&data);
 				set_led_flag(true);
 			}
-			if ((cpld_info_table[i].cpld_offset == VR_SMBUS_ALERT_EVENT_LOG_REG) ||
-				((cpld_info_table[i].cpld_offset == VR_VDDQ_HBM1357_SMBUS_ALERT_EVENT_LOG_REG))) {
-				uint8_t temp_data = 0;
-				plat_read_cpld(cpld_info_table[i].cpld_offset, &temp_data, 1);
-				LOG_INF("SMBus alert reg 0x%x: 0x%x",
-					cpld_info_table[i].cpld_offset, temp_data);
-
-				for (int j = 0; j < 8; j++) {
-					if (!(cpld_info_table[i].bit_check_mask & BIT(j)))
-						continue;
-
-					if (!(is_status_changed & BIT(j)))
-						continue;
-
-					if ((temp_data & BIT(j)) == 0) {
-						LOG_WRN("SMBUS_ALERT_REG 0x%x changed, bit-%d is changed",
-							cpld_info_table[i].cpld_offset, j);
-
-						if (!check_temp_status_bit(cpld_info_table[i].cpld_offset, j)) {
-
-							if (!plat_read_cpld(ASIC_VR_HOT_SWITCH, &vr_hot_switch, 1)) {
-								LOG_ERR("Failed to read ASIC_VR_HOT_SWITCH");
-								break;
-							}
-
-							vr_hot_switch |= BIT(0);
-
-							if (!plat_write_cpld(ASIC_VR_HOT_SWITCH, &vr_hot_switch)) {
-								LOG_ERR("Failed to write ASIC_VR_HOT_SWITCH");
-								break;
-							}
-
-							LOG_WRN("Temperature bit-%d is 1, write CPLD ASIC_VR_HOT_SWITCH bit-0 to 1", j);
-							set_led_flag(true);
-							break;
-						}
-					}
-				}
-			}
+			
 			// update map
 			cpld_info_table[i].is_fault_bit_map = new_fault_map;
 			cpld_info_table[i].last_polling_value = data;
