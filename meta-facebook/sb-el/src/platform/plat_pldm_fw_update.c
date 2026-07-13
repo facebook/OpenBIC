@@ -1148,12 +1148,17 @@ static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 		return ret;
 	}
 
+	if (get_asic_board_id() != ASIC_BOARD_ID_EVB && p->comp_identifier == COMPNT_VR_3V3) {
+		// LOG_DBG("only evb support 3V3 vr version get");
+		return ret;
+	}
+
 	sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
 	CHECK_NULL_ARG_WITH_RETURN(cfg, ret);
 
 	if ((cfg->pre_sensor_read_hook)) {
 		if ((cfg->pre_sensor_read_hook)(cfg, cfg->pre_sensor_read_args) == false) {
-			LOG_DBG("%d read vr fw pre hook fail!", sensor_id);
+			LOG_ERR("%d read vr fw pre hook fail!", sensor_id);
 			return false;
 		}
 	};
@@ -1203,7 +1208,7 @@ static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 		[VR_MODULE_UNKNOWN] = NULL,
 	};
 
-	const char *remain_str_p = ", Remaining Write: ";
+	const char *remain_str_p = ", Remain: ";
 	uint8_t *buf_p = buf;
 	const uint8_t *vr_name_p = vr_name[vr_module];
 	*len = 0;
@@ -1240,12 +1245,28 @@ static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 		buf_p += 4;
 	}
 
+	// // add vr rail name
+	// add VR rail name with a space
+	const uint8_t *vr_rail_name_p = sensor_name;
+	// print VR rail name
+	const char *space_str_p = ", ";
+
+	// add ", " separator
+	memcpy(buf_p, space_str_p, strlen(space_str_p));
+	buf_p += strlen(space_str_p);
+	*len += strlen(space_str_p);
+
+	// copy rail name
+	size_t rail_name_len = strlen((const char *)vr_rail_name_p);
+	memcpy(buf_p, vr_rail_name_p, rail_name_len);
+	buf_p += rail_name_len;
+	*len += rail_name_len;
 	ret = true;
 
 err:
 	if ((cfg->post_sensor_read_hook)) {
 		if ((cfg->post_sensor_read_hook)(cfg, cfg->post_sensor_read_args, 0) == false) {
-			LOG_DBG("%d read vr fw post hook fail!", sensor_id);
+			LOG_ERR("%d read vr fw post hook fail!", sensor_id);
 			ret = false;
 		}
 	}
