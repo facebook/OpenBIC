@@ -62,18 +62,29 @@ void pal_set_sys_status()
 	set_DC_on_delayed_status();
 	init_ioe_config();
 
-	if (gpio_get(PG_CARD_OK) == POWER_ON) {
+	uint8_t blade_conf = get_blade_configuration();
+	if (blade_conf == BLADE_CONFIG_without_ASIC) {
 		if (get_board_revision() == BOARD_POC) {
 			set_P3V3_E1S_power_status(POC_PWRGD_P3V3_E1S_0_R);
 		} else {
 			set_P3V3_E1S_power_status(PWRGD_P3V3_E1S_0_R);
 		}
 		set_P12V_E1S_power_status(PWRGD_P12V_E1S_0_R);
-		create_check_cxl_ready_thread();
-	} else {
-		LOG_ERR("PG_CARD_OK not ready, skip set_sys_status");
+		set_sys_ready_pin(BIC_READY_R);
+	} else { //default: BLADE_CONFIG_with_ASIC
+		if (gpio_get(PG_CARD_OK) == POWER_ON) {
+			if (get_board_revision() == BOARD_POC) {
+				set_P3V3_E1S_power_status(POC_PWRGD_P3V3_E1S_0_R);
+			} else {
+				set_P3V3_E1S_power_status(PWRGD_P3V3_E1S_0_R);
+			}
+			set_P12V_E1S_power_status(PWRGD_P12V_E1S_0_R);
+			create_check_cxl_ready_thread();
+		} else {
+			LOG_ERR("PG_CARD_OK not ready, skip set_sys_status");
+		}
+		set_sys_ready_pin(BIC_READY_R);
 	}
-	set_sys_ready_pin(BIC_READY_R);
 }
 
 static const gpio_debounce_cfg_t debounce_cfg[] = {
@@ -138,6 +149,8 @@ void pal_pre_init()
 
 	init_vr_event_work();
 	init_plat_worker(CONFIG_MAIN_THREAD_PRIORITY + 1); // work queue for low priority jobs
+
+	plat_init_pldm_sensor_table();
 }
 
 void pal_post_init()

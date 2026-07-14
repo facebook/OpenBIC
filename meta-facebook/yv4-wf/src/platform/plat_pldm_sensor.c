@@ -40,6 +40,7 @@ void plat_pldm_sensor_change_vr_dev();
 void plat_pldm_sensor_change_adc_monitor_dev();
 void plat_pldm_sensor_change_asic_tmp_dev();
 void plat_pldm_sensor_change_ina233_dev();
+void plat_pldm_sensor_change_asic_dev();
 
 float cxl_dimm_temp[MAX_CXL_ID][MAX_DIMM_ID] = { { -1, -1, -1, -1 }, { -1, -1, -1, -1 } };
 
@@ -6354,6 +6355,99 @@ PDR_entity_auxiliary_names plat_pdr_entity_aux_names_table[] = { {
 	.nameLanguageTag = "en",
 } };
 
+uint16_t total_disable_sensors_count = 0;
+uint16_t total_disable_aux_names_count = 0;
+
+uint16_t *disable_sensors_id_table = NULL;
+
+void plat_init_pldm_sensor_table()
+{
+        // Disable/Change sensors according to different config
+        plat_pldm_sensor_change_asic_dev();
+
+        // Initialize sensors that needs to be disabled
+        plat_init_pldm_disabled_sensors();
+}
+
+void plat_pldm_disable_sensor(sensor_cfg *cfg)
+{
+        CHECK_NULL_ARG(cfg);
+
+        cfg->cache_status = PLDM_SENSOR_DISABLED;
+        total_disable_sensors_count++;
+}
+
+void plat_init_pldm_disabled_sensors()
+{
+        int count = 0;
+        uint16_t thread_id = 0;
+        uint16_t sensor_id = 0;
+        uint16_t current_sensor_count = 0;
+        pldm_sensor_info *pldm_sensor_table = NULL;
+
+        if (total_disable_sensors_count == 0) {
+                return;
+        }
+
+        disable_sensors_id_table =
+                (uint16_t *)malloc(total_disable_sensors_count * sizeof(uint16_t));
+        if (disable_sensors_id_table == NULL) {
+                total_disable_sensors_count = 0;
+                LOG_ERR("Failed to allocate disable_sensors_id_table, revise sensors count to 0");
+                return;
+        }
+
+        for (thread_id = 0; thread_id < MAX_SENSOR_THREAD_ID; ++thread_id) {
+                pldm_sensor_table = plat_pldm_sensor_load(thread_id);
+                if (pldm_sensor_table == NULL) {
+                        LOG_ERR("Failed to get pldm sensor table, thread id: 0x%x", thread_id);
+                        continue;
+                }
+
+                count = plat_pldm_sensor_get_sensor_count(thread_id);
+                if (count < 0) {
+                        LOG_ERR("Failed to get pldm sensor table count, thread id: 0x%x",
+                                thread_id);
+                        continue;
+                }
+
+                for (sensor_id = 0; sensor_id < count; ++sensor_id) {
+                        if (pldm_sensor_table[sensor_id].pldm_sensor_cfg.cache_status ==
+                            PLDM_SENSOR_DISABLED) {
+                                if (current_sensor_count >= total_disable_sensors_count) {
+                                        LOG_ERR("Record disabled sensor id exceeded table size, total size: 0x%x, current thread id: 0x%x, sensor id: 0x%x",
+                                                total_disable_sensors_count, thread_id,
+                                                pldm_sensor_table[sensor_id]
+                                                        .pdr_numeric_sensor.sensor_id);
+                                        continue;
+                                }
+				
+				uint16_t disabled_sid =
+                                        pldm_sensor_table[sensor_id].pdr_numeric_sensor.sensor_id;
+
+                                disable_sensors_id_table[current_sensor_count] = disabled_sid;
+                                current_sensor_count++;
+
+                                // NEW: check if this disabled sensor has an aux name entry
+                                for (int aux_idx = 0;
+                                     aux_idx < ARRAY_SIZE(plat_pdr_sensor_aux_names_table);
+                                     aux_idx++) {
+                                        if (plat_pdr_sensor_aux_names_table[aux_idx].sensor_id ==
+                                            disabled_sid) {
+                                                total_disable_aux_names_count++;
+                                                break;
+                                        }
+                                }
+                        }
+                }
+        }
+}
+
+uint16_t plat_get_disabled_sensor_count()
+{
+        return total_disable_sensors_count;
+}
+
 // clang-format on
 uint32_t plat_get_pdr_size(uint8_t pdr_type)
 {
@@ -6364,9 +6458,16 @@ uint32_t plat_get_pdr_size(uint8_t pdr_type)
 		for (i = 0; i < MAX_SENSOR_THREAD_ID; i++) {
 			total_size += plat_pldm_sensor_get_sensor_count(i);
 		}
+		total_size -= total_disable_sensors_count;
 		break;
 	case PLDM_SENSOR_AUXILIARY_NAMES_PDR:
 		total_size = ARRAY_SIZE(plat_pdr_sensor_aux_names_table);
+		total_size -= total_disable_aux_names_count;
+		if (total_size < 0) {
+			LOG_ERR("Aux names PDR size underflow (disabled=%d), clamping to 0",
+				total_disable_aux_names_count);
+			total_size = 0;
+		}
 		break;
 	case PLDM_ENTITY_AUXILIARY_NAMES_PDR:
 		total_size = ARRAY_SIZE(plat_pdr_entity_aux_names_table);
@@ -6484,21 +6585,72 @@ void plat_load_numeric_sensor_pdr_table(PDR_numeric_sensor *numeric_sensor_table
 {
 	int thread_id = 0, sensor_num = 0;
 	int max_sensor_num = 0, current_sensor_size = 0;
+	uint32_t total_size = plat_get_pdr_size(PLDM_NUMERIC_SENSOR_PDR);
+	pldm_sensor_info *pdr_table = NULL;
 
 	for (thread_id = 0; thread_id < MAX_SENSOR_THREAD_ID; thread_id++) {
+		pdr_table = plat_pldm_sensor_load(thread_id);
+		if (pdr_table == NULL) {
+			LOG_ERR("Failed to get pdr table, thread id: 0x%x", thread_id);
+			continue;
+		}
+
 		max_sensor_num = plat_pldm_sensor_get_sensor_count(thread_id);
+		if (max_sensor_num < 0) {
+			LOG_ERR("Failed to get sensor count, thread id: 0x%x", thread_id);
+			continue;
+		}
+
 		for (sensor_num = 0; sensor_num < max_sensor_num; sensor_num++) {
-			plat_pldm_sensor_get_pdr_numeric_sensor(
-				thread_id, sensor_num, &numeric_sensor_table[current_sensor_size]);
-			current_sensor_size++;
+			if (pdr_table[sensor_num].pldm_sensor_cfg.cache_status !=
+			    PLDM_SENSOR_DISABLED) {
+				if (current_sensor_size >= total_size) {
+					LOG_ERR("Load numeric sensor pdr exceeded table size, total size: 0x%x, current thread: 0x%x, sensor id: 0x%x",
+						total_size, thread_id,
+						pdr_table[sensor_num].pdr_numeric_sensor.sensor_id);
+					continue;
+				}
+
+				memcpy(&numeric_sensor_table[current_sensor_size],
+				       &pdr_table[sensor_num].pdr_numeric_sensor,
+				       sizeof(PDR_numeric_sensor));
+				current_sensor_size++;
+			}
 		}
 	}
 }
 
 void plat_load_aux_sensor_names_pdr_table(PDR_sensor_auxiliary_names *aux_sensor_name_table)
 {
-	memcpy(aux_sensor_name_table, &plat_pdr_sensor_aux_names_table,
-	       sizeof(plat_pdr_sensor_aux_names_table));
+	int index = 0;
+	int disable_sensor_id = 0;
+	int current_sensor_size = 0;
+	uint32_t total_size = plat_get_pdr_size(PLDM_SENSOR_AUXILIARY_NAMES_PDR);
+
+	for (index = 0; index < ARRAY_SIZE(plat_pdr_sensor_aux_names_table); ++index) {
+		for (disable_sensor_id = 0; disable_sensor_id < total_disable_sensors_count;
+		     ++disable_sensor_id) {
+			if (plat_pdr_sensor_aux_names_table[index].sensor_id ==
+			    disable_sensors_id_table[disable_sensor_id]) {
+				break;
+			}
+		}
+
+		if (disable_sensor_id >= total_disable_sensors_count) {
+			// AUX sensor name isn't a disabled sensor
+			if (current_sensor_size >= total_size) {
+				LOG_ERR("Load aux sensor names exceeded table size, current sensors size: 0x%x, sensor id: 0x%x",
+					current_sensor_size,
+					plat_pdr_sensor_aux_names_table[index].sensor_id);
+				continue;
+			}
+
+			memcpy(&aux_sensor_name_table[current_sensor_size],
+			       &plat_pdr_sensor_aux_names_table[index],
+			       sizeof(PDR_sensor_auxiliary_names));
+			current_sensor_size++;
+		}
+	}
 }
 
 uint16_t plat_pdr_entity_aux_names_table_size = 0;
@@ -6663,6 +6815,54 @@ void plat_pldm_sensor_change_asic_tmp_dev()
 					ADDR_TMP461_CXL2;
 				break;
 			}
+		}
+	}
+}
+
+void plat_pldm_sensor_change_asic_dev()
+{
+	uint8_t blade_conf = get_blade_configuration();
+
+	if (blade_conf == BLADE_CONFIG_without_ASIC) {
+		// Disable ASIC1 ADC sensors (ports ADC_PORT3 ~ ADC_PORT9)
+		for (int index = 0; index < plat_pldm_sensor_get_sensor_count(ADC_SENSOR_THREAD_ID);
+		     index++) {
+			if (plat_pldm_sensor_adc_table[index].pldm_sensor_cfg.port >= ADC_PORT3 &&
+			    plat_pldm_sensor_adc_table[index].pldm_sensor_cfg.port <= ADC_PORT9) {
+				plat_pldm_disable_sensor(
+					&plat_pldm_sensor_adc_table[index].pldm_sensor_cfg);
+			}
+		}
+
+		// Disable all ASIC2 ADC monitor sensors
+		for (int index = 0;
+		     index < plat_pldm_sensor_get_sensor_count(ADC_MONITOR_SENSOR_THREAD_ID);
+		     index++) {
+			plat_pldm_disable_sensor(
+				&plat_pldm_sensor_adc_monitor_table[index].pldm_sensor_cfg);
+		}
+
+		// Disable CXL temperature sensors
+		for (int index = 0; index < plat_pldm_sensor_get_sensor_count(TMP_SENSOR_THREAD_ID);
+		     index++) {
+			if (plat_pldm_sensor_tmp_table[index].pldm_sensor_cfg.type ==
+			    sensor_dev_tmp461) {
+				plat_pldm_disable_sensor(
+					&plat_pldm_sensor_tmp_table[index].pldm_sensor_cfg);
+			}
+		}
+
+		// Disable all VR sensors
+		for (int index = 0; index < plat_pldm_sensor_get_sensor_count(VR_SENSOR_THREAD_ID);
+		     index++) {
+			plat_pldm_disable_sensor(&plat_pldm_sensor_vr_table[index].pldm_sensor_cfg);
+		}
+
+		// Disable all DIMM sensors
+		for (int index = 0;
+		     index < plat_pldm_sensor_get_sensor_count(DIMM_SENSOR_THREAD_ID); index++) {
+			plat_pldm_disable_sensor(
+				&plat_pldm_sensor_dimm_table[index].pldm_sensor_cfg);
 		}
 	}
 }
