@@ -165,8 +165,8 @@ void plat_mctp_init(void)
 	/* init the mctp/pldm instance */
 	for (uint8_t i = 0; i < ARRAY_SIZE(smbus_port); i++) {
 		mctp_port *p = smbus_port + i;
-		LOG_DBG("smbus port %d", i);
-		LOG_DBG("bus = %x, addr = %x", p->conf.smbus_conf.bus, p->conf.smbus_conf.addr);
+		// LOG_DBG("smbus port %d", i);
+		// LOG_DBG("bus = %x, addr = %x", p->conf.smbus_conf.bus, p->conf.smbus_conf.addr);
 
 		p->mctp_inst = mctp_init();
 		if (!p->mctp_inst) {
@@ -174,7 +174,7 @@ void plat_mctp_init(void)
 			continue;
 		}
 
-		LOG_DBG("mctp_inst = %p", p->mctp_inst);
+		// LOG_DBG("mctp_inst = %p", p->mctp_inst);
 
 		/*uint8_t rc;
 		if (p->conf.i3c_conf.bus == I3C_BUS_BMC) {

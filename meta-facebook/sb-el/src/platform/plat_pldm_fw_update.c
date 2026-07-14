@@ -132,7 +132,7 @@ static uint8_t pldm_pre_mtia_flash_update(void *fw_update_param)
 	pldm_fw_update_param_t *p = (pldm_fw_update_param_t *)fw_update_param;
 	plat_set_cpld_reset_reg(RESET_CPLD_OFF);
 	uint16_t spi_node = p->comp_id;
-	LOG_DBG("MTIA flash comp id: 0x%x", p->comp_id);
+	// LOG_DBG("MTIA flash comp id: 0x%x", p->comp_id);
 	switch (spi_node) {
 	case COMPNT_HAMSA:
 		change_spi_node_to_hamsa();
@@ -239,27 +239,27 @@ static uint8_t pldm_post_mtia_flash_update(void *fw_update_param)
 	}
 	uint32_t ver_value = version_rxbuf[0] << 16 | version_rxbuf[1] << 8 | version_rxbuf[2];
 
-	LOG_DBG("version: 0x%x, crc32: 0x%x", ver_value, crc32);
+	// LOG_DBG("version: 0x%x, crc32: 0x%x", ver_value, crc32);
 	switch (p->comp_id) {
 	case COMPNT_HAMSA:
 		crc_boot0[BOOT0_HAMSA] = crc32;
 		version_boot0[BOOT0_HAMSA] = ver_value;
-		LOG_DBG("version: 0x%x, crc32: 0x%x", version_boot0[BOOT0_HAMSA],
-			crc_boot0[BOOT0_HAMSA]);
+		// LOG_DBG("version: 0x%x, crc32: 0x%x", version_boot0[BOOT0_HAMSA],
+		// crc_boot0[BOOT0_HAMSA]);
 		SAFE_FREE(version_rxbuf);
 		break;
 	case COMPNT_NUWA0:
 		crc_boot0[BOOT0_NUWA0] = crc32;
 		version_boot0[BOOT0_NUWA0] = ver_value;
-		LOG_DBG("version: 0x%x, crc32: 0x%x", version_boot0[BOOT0_NUWA0],
-			crc_boot0[BOOT0_NUWA0]);
+		// LOG_DBG("version: 0x%x, crc32: 0x%x", version_boot0[BOOT0_NUWA0],
+		// 	crc_boot0[BOOT0_NUWA0]);
 		SAFE_FREE(version_rxbuf);
 		break;
 	case COMPNT_NUWA1:
 		crc_boot0[BOOT0_NUWA1] = crc32;
 		version_boot0[BOOT0_NUWA1] = ver_value;
-		LOG_DBG("version: 0x%x, crc32: 0x%x", version_boot0[BOOT0_NUWA1],
-			crc_boot0[BOOT0_NUWA1]);
+		// LOG_DBG("version: 0x%x, crc32: 0x%x", version_boot0[BOOT0_NUWA1],
+		// 	crc_boot0[BOOT0_NUWA1]);
 		SAFE_FREE(version_rxbuf);
 		break;
 	default:
@@ -587,8 +587,8 @@ uint8_t pldm_arke_boot_update(void *fw_update_param)
 
 	CHECK_NULL_ARG_WITH_RETURN(p->data, 1);
 
-	LOG_DBG("image size: %d", fw_update_cfg.image_size);
-	LOG_DBG("data len: %d", p->data_len);
+	// LOG_DBG("image size: %d", fw_update_cfg.image_size);
+	// LOG_DBG("data len: %d", p->data_len);
 
 	uint8_t *data = p->data;
 	uint32_t len = p->data_len;
