@@ -136,22 +136,34 @@ void init_asic_type()
 		if (get_board_rev_id() <= REV_ID_DVT_FAB3) {
 			asic_type = ASIC_TYPE_QCP1;
 		} else {
-			// after FAB3: gpio ASIC_TYPE_ID1 and ASIC_TYPE_ID0: 01: qcp1, 10: qcp2
+			// after FAB3: gpio ASIC_TYPE_ID1 and ASIC_TYPE_ID0: 01: qcp1, 10: qcp2, 11: qcp3
 			if (gpio_get(ASIC_TYPE_ID1) == GPIO_LOW &&
 			    gpio_get(ASIC_TYPE_ID0) == GPIO_HIGH) {
 				asic_type = ASIC_TYPE_QCP1;
 			} else if (gpio_get(ASIC_TYPE_ID1) == GPIO_HIGH &&
 				   gpio_get(ASIC_TYPE_ID0) == GPIO_LOW) {
 				asic_type = ASIC_TYPE_QCP2;
+			} else if (gpio_get(ASIC_TYPE_ID1) == GPIO_HIGH &&
+				   gpio_get(ASIC_TYPE_ID0) == GPIO_HIGH) {
+				asic_type = ASIC_TYPE_QCP3;
 			} else {
 				asic_type = ASIC_TYPE_UNKNOWN;
 			}
 		}
 	} else {
-		if (get_board_rev_id() >= MAX_REV_ID) {
+		switch (get_board_rev_id()) {
+		case MAX_REV_ID:
 			asic_type = ASIC_TYPE_QCP2;
-		} else {
+			break;
+		case REV_ID_MP:
+			asic_type = ASIC_TYPE_QCP3;
+			break;
+		case REV_ID_EVT2:
+			asic_type = ASIC_TYPE_QCP1;
+			break;
+		default:
 			asic_type = ASIC_TYPE_UNKNOWN;
+			break;
 		}
 	}
 	return;
@@ -242,7 +254,7 @@ void pal_show_board_types(const struct shell *shell)
 			    (board_rev_id == REV_ID_DVT_FAB3)   ? "not supported" :
 			    (board_rev_id == REV_ID_DVT_FAB4)   ? "not supported" :
 			    (board_rev_id == REV_ID_PVT)	   ? "not supported" :
-				(board_rev_id == REV_ID_MP)	   ? "not supported" :
+				(board_rev_id == REV_ID_MP)	   ? "EVB_QCP3" :
 							     "EVB_QCP2");
 	} else if (asic_board_id == ASIC_BOARD_ID_RAINBOW) {
 		shell_print(shell, "* BOARD_STAGE:   (0x%02X)%s", board_rev_id,
@@ -288,7 +300,8 @@ void pal_show_board_types(const struct shell *shell)
 
 	shell_print(shell, "* ASIC_TYPE:     (0x%02X)%s", asic_type,
 		    (asic_type == ASIC_TYPE_QCP1) ? "ASIC_TYPE_QCP1" :
-		    (asic_type == ASIC_TYPE_QCP2) ? "ASIC_TYPE_QCP2" : "not supported");
+		    (asic_type == ASIC_TYPE_QCP2) ? "ASIC_TYPE_QCP2" :
+			(asic_type == ASIC_TYPE_QCP3) ? "ASIC_TYPE_QCP3" : "not supported");
 	
 	shell_print(shell, "* I2C connection for MEDHA0/1 to MMC: Enable");
 	return;
