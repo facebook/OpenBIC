@@ -19,12 +19,485 @@
 #include "plat_vr_test_mode.h"
 #include "plat_hook.h"
 #include "plat_class.h"
+#include "plat_util.h"
 
 LOG_MODULE_REGISTER(plat_vr_test_mode);
 
+struct k_thread vr_test_mode_thread;
+K_KERNEL_STACK_MEMBER(vr_test_mode_thread_stack, 512);
+k_tid_t vr_test_mode_tid;
 bool vr_test_mode_flag = false;
 
 bool get_vr_test_mode_flag(void)
 {
 	return vr_test_mode_flag;
+}
+//clang-format off
+const vr_test_mode_setting_t vr_test_mode_table[] = {
+	// vr_rail, fast ocp: x/10(A), slow ocp: x/10(A), uvp: 1(mV), ovp: 1(mV), v max: 1(mV), lcr(mV), ucr(mV), vout_default(mV)
+	{ VR_RAIL_E_ASIC_P0V75_NUWA0_VDD,          14080, 14080, 200, 940,  930,  595,  930,  0 },
+	{ VR_RAIL_E_ASIC_P0V75_NUWA1_VDD,          14300, 14300, 200, 940,  930,  595,  930,  0 },
+	{ VR_RAIL_E_ASIC_P0V9_OWL_E_TRVDD,         170,   170,   200, 1130, 1120, 630,  1120, 0 },
+	{ VR_RAIL_E_ASIC_P0V75_OWL_E_TRVDD,        110,   110,   200, 1130, 975,  525,  975,  0 },
+	{ VR_RAIL_E_ASIC_P0V75_MAX_M_VDD,          1200,  1200,  200, 1130, 975,  525,  975,  0 },
+	{ VR_RAIL_E_ASIC_P0V75_VDDPHY_HBM1357,     1500,  1500,  200, 940,  930,  525,  930,  0 },
+	{ VR_RAIL_E_ASIC_P0V75_OWL_E_VDD,          1600,  1600,  200, 940,  930,  525,  930,  0 },
+	{ VR_RAIL_E_ASIC_P0V4_VDDQL_HBM1357,       530,   530,   200, 800,  520,  280,  520,  0 },
+	{ VR_RAIL_E_ASIC_P1V05_VDDC_HBM1357,       3200,  3200,  200, 1320, 1310, 770,  1310, 0 },
+	{ VR_RAIL_E_ASIC_P1V8_VPP_HBM1357,         140,   140,   200, 1980, 1970, 1260, 1970, 0 },
+	{ VR_RAIL_E_ASIC_P0V9_VDDQ_HBM1357,        0,     0,     200, 0,    0,    0,    0,    0 },
+	{ VR_RAIL_E_ASIC_P0V85_HAMSA_VDD,          1000,  1000,  200, 1063, 1053, 595,  1053, 0 },
+	{ VR_RAIL_E_ASIC_P0V75_MAX_N_VDD,          670,   670,   200, 1130, 975,  525,  975,  0 },
+	{ VR_RAIL_E_ASIC_P0V8_HAMSA_AVDD_PCIE,     500,   500,   200, 1130, 1040, 560,  1040, 0 },
+	{ VR_RAIL_E_ASIC_P0V9_VDDQ_HBM0246,        0,     0,     200, 0,    0,    0,    0,    0 },
+	{ VR_RAIL_E_ASIC_P1V2_HAMSA_VDDHRXTX_PCIE, 100,   100,   200, 1320, 1310, 840,  1310, 0 },
+	{ VR_RAIL_E_ASIC_P1V05_VDDC_HBM0246,       3200,  3200,  200, 1320, 1310, 770,  1310, 0 },
+	{ VR_RAIL_E_ASIC_P1V8_VPP_HBM0246,         140,   140,   200, 1980, 1970, 1260, 1970, 0 },
+	{ VR_RAIL_E_ASIC_P0V4_VDDQL_HBM0246,       530,   530,   200, 800,  520,  280,  520,  0 },
+	{ VR_RAIL_E_ASIC_P0V75_VDDPHY_HBM0246,     1500,  1500,  200, 940,  930,  525,  930,  0 },
+	{ VR_RAIL_E_ASIC_P0V75_OWL_W_VDD,          1600,  1500,  200, 940,  930,  525,  930,  0 },
+	{ VR_RAIL_E_ASIC_P0V75_MAX_S_VDD,          660,   660,   200, 1130, 975,  525,  975,  0 },
+	{ VR_RAIL_E_ASIC_P0V9_OWL_W_TRVDD,         170,   170,   200, 1130, 1120, 630,  1120, 0 },
+	{ VR_RAIL_E_ASIC_P0V75_OWL_W_TRVDD,        110,   110,   200, 1130, 975,  525,  975,  0 },
+};
+const vr_test_mode_setting_t vr_test_mode_table_default[] = {
+	// vr_rail, fast ocp: x/10(A), slow ocp: x/10(A), uvp: 1(mV), ovp: 1(mV), v max: 1(mV), lcr(mV), ucr(mV), vout_default(mV)
+	{ VR_RAIL_E_ASIC_P0V75_NUWA0_VDD,          14080, 14080, 640, 940,  940,  653,  930,  0 },
+	{ VR_RAIL_E_ASIC_P0V75_NUWA1_VDD,          14300, 14300, 640, 940,  940,  653,  930,  0 },
+	{ VR_RAIL_E_ASIC_P0V9_OWL_E_TRVDD,         170,   170,   200, 1130, 1120, 630,  1120, 0 },
+	{ VR_RAIL_E_ASIC_P0V75_OWL_E_TRVDD,        110,   110,   200, 1130, 975,  525,  975,  0 },
+	{ VR_RAIL_E_ASIC_P0V75_MAX_M_VDD,          1200,  1200,  200, 1130, 975,  525,  975,  0 },
+	{ VR_RAIL_E_ASIC_P0V75_VDDPHY_HBM1357,     1500,  1500,  200, 940,  930,  525,  930,  0 },
+	{ VR_RAIL_E_ASIC_P0V75_OWL_E_VDD,          1600,  1600,  200, 940,  930,  525,  930,  0 },
+	{ VR_RAIL_E_ASIC_P0V4_VDDQL_HBM1357,       530,   530,   200, 800,  520,  280,  520,  0 },
+	{ VR_RAIL_E_ASIC_P1V05_VDDC_HBM1357,       3200,  3200,  200, 1320, 1310, 770,  1310, 0 },
+	{ VR_RAIL_E_ASIC_P1V8_VPP_HBM1357,         140,   140,   200, 1980, 1970, 1260, 1970, 0 },
+	{ VR_RAIL_E_ASIC_P0V9_VDDQ_HBM1357,        0,     0,     200, 0,    0,    0,    0,    0 },
+	{ VR_RAIL_E_ASIC_P0V85_HAMSA_VDD,          1000,  1000,  200, 1063, 1053, 595,  1053, 0 },
+	{ VR_RAIL_E_ASIC_P0V75_MAX_N_VDD,          670,   670,   200, 1130, 975,  525,  975,  0 },
+	{ VR_RAIL_E_ASIC_P0V8_HAMSA_AVDD_PCIE,     500,   500,   200, 1130, 1040, 560,  1040, 0 },
+	{ VR_RAIL_E_ASIC_P0V9_VDDQ_HBM0246,        0,     0,     200, 0,    0,    0,    0,    0 },
+	{ VR_RAIL_E_ASIC_P1V2_HAMSA_VDDHRXTX_PCIE, 100,   100,   200, 1320, 1310, 840,  1310, 0 },
+	{ VR_RAIL_E_ASIC_P1V05_VDDC_HBM0246,       3200,  3200,  200, 1320, 1310, 770,  1310, 0 },
+	{ VR_RAIL_E_ASIC_P1V8_VPP_HBM0246,         140,   140,   200, 1980, 1970, 1260, 1970, 0 },
+	{ VR_RAIL_E_ASIC_P0V4_VDDQL_HBM0246,       530,   530,   200, 800,  520,  280,  520,  0 },
+	{ VR_RAIL_E_ASIC_P0V75_VDDPHY_HBM0246,     1500,  1500,  200, 940,  930,  525,  930,  0 },
+	{ VR_RAIL_E_ASIC_P0V75_OWL_W_VDD,          1600,  1500,  200, 940,  930,  525,  930,  0 },
+	{ VR_RAIL_E_ASIC_P0V75_MAX_S_VDD,          660,   660,   200, 1130, 975,  525,  975,  0 },
+	{ VR_RAIL_E_ASIC_P0V9_OWL_W_TRVDD,         170,   170,   200, 1130, 1120, 630,  1120, 0 },
+	{ VR_RAIL_E_ASIC_P0V75_OWL_W_TRVDD,        110,   110,   200, 1130, 975,  525,  975,  0 },
+};
+const mps_vr_test_mode_setting_t vr_mps_test_mode_table[] = {
+	/*
+	uint8_t vr_rail;
+	uint16_t total_ocp;
+	uint16_t mp2971_uvp_threshold_gain;
+	uint16_t uvp_threshold;
+	uint16_t lcr;
+	uint16_t ucr;
+	uint16_t ovp2_threshold;
+	uint16_t ovp1_threshold;
+	uint16_t ovp2;
+	uint16_t ovp1;
+	uint16_t vout_default;
+	uint16_t vout_max;
+	uint16_t uvp;
+	*/
+	{ VR_RAIL_E_ASIC_P0V75_NUWA0_VDD,          1424, NO_USE, 500, 595,  930,  NO_USE, NO_USE, NO_ACTION, 940,   NO_USE, 930,  NO_USE },
+	{ VR_RAIL_E_ASIC_P0V75_NUWA1_VDD,          1424, NO_USE, 500, 595,  930,  NO_USE, NO_USE, NO_ACTION, 940,   NO_USE, 930,  NO_USE },
+	{ VR_RAIL_E_ASIC_P0V9_OWL_E_TRVDD,         17,   0,      400, 630,  1120, NO_USE, NO_USE, NO_ACTION, 1170,  NO_USE, 1120, NO_USE },
+	{ VR_RAIL_E_ASIC_P0V75_OWL_E_TRVDD,        11,   0,      400, 525,  975,  NO_USE, NO_USE, NO_ACTION, 1175,  NO_USE, 975,  NO_USE },
+	{ VR_RAIL_E_ASIC_P0V75_MAX_M_VDD,          120,  0,      400, 525,  975,  NO_USE, NO_USE, NO_ACTION, 1175,  NO_USE, 975,  NO_USE },
+	{ VR_RAIL_E_ASIC_P0V75_VDDPHY_HBM1357,     138,  0,      400, 525,  930,  NO_USE, NO_USE, NO_ACTION, 980,   NO_USE, 930,  NO_USE },
+	{ VR_RAIL_E_ASIC_P0V75_OWL_E_VDD,          159,  0,      400, 525,  930,  NO_USE, NO_USE, NO_ACTION, 980,   NO_USE, 930,  NO_USE },
+	{ VR_RAIL_E_ASIC_P0V4_VDDQL_HBM1357,       53,   0,      400, 280,  520,  NO_USE, NO_USE, NO_ACTION, 820,   NO_USE, 520,  NO_USE },
+	{ VR_RAIL_E_ASIC_P1V05_VDDC_HBM1357,       318,  0,      400, 770,  1310, NO_USE, NO_USE, NO_ACTION, 1360,  NO_USE, 1310, NO_USE },
+	{ VR_RAIL_E_ASIC_P1V8_VPP_HBM1357,         14,   0,      400, 1260, 1970, NO_USE, NO_USE, NO_ACTION, 2020,  NO_USE, 1970, NO_USE },
+	{ VR_RAIL_E_ASIC_P0V9_VDDQ_HBM1357,        67,   0,      400, 525,  975,  NO_USE, NO_USE, NO_ACTION, 1175,  NO_USE, 975,  NO_USE },
+	{ VR_RAIL_E_ASIC_P0V85_HAMSA_VDD,          100,  0,      400, 595,  1053, NO_USE, NO_USE, NO_ACTION, 1105,  NO_USE, 1055, NO_USE },
+	{ VR_RAIL_E_ASIC_P0V75_MAX_N_VDD,          67,   0,      400, 525,  975,  NO_USE, NO_USE, NO_ACTION, 1175,  NO_USE, 975,  NO_USE },
+	{ VR_RAIL_E_ASIC_P0V8_HAMSA_AVDD_PCIE,     50,   0,      400, 560,  1040, NO_USE, NO_USE, NO_ACTION, 1140,  NO_USE, 1040, NO_USE },
+	{ VR_RAIL_E_ASIC_P0V9_VDDQ_HBM0246,        67,   0,      400, 525,  975,  NO_USE, NO_USE, NO_ACTION, 1175,  NO_USE, 975,  NO_USE },
+	{ VR_RAIL_E_ASIC_P1V2_HAMSA_VDDHRXTX_PCIE, 10,   0,      400, 840,  1310, NO_USE, NO_USE, NO_ACTION, 1360,  NO_USE, 1310, NO_USE },
+	{ VR_RAIL_E_ASIC_P1V05_VDDC_HBM0246,       318,  0,      400, 770,  1310, NO_USE, NO_USE, NO_ACTION, 1360,  NO_USE, 1310, NO_USE },
+	{ VR_RAIL_E_ASIC_P1V8_VPP_HBM0246,         14,   0,      400, 1260, 1970, NO_USE, NO_USE, NO_ACTION, 2020,  NO_USE, 1970, NO_USE },
+	{ VR_RAIL_E_ASIC_P0V4_VDDQL_HBM0246,       53,   0,      400, 280,  520,  NO_USE, NO_USE, NO_ACTION, 820,   NO_USE, 520,  NO_USE },
+	{ VR_RAIL_E_ASIC_P0V75_VDDPHY_HBM0246,     138,  0,      400, 525,  930,  NO_USE, NO_USE, NO_ACTION, 980,   NO_USE, 930,  NO_USE },
+	{ VR_RAIL_E_ASIC_P0V75_OWL_W_VDD,          159,  0,      400, 525,  930,  NO_USE, NO_USE, NO_ACTION, 980,   NO_USE, 930,  NO_USE },
+	{ VR_RAIL_E_ASIC_P0V75_MAX_S_VDD,          66,   0,      400, 525,  975,  NO_USE, NO_USE, NO_ACTION, 1175,  NO_USE, 975,  NO_USE },
+	{ VR_RAIL_E_ASIC_P0V9_OWL_W_TRVDD,         17,   0,      400, 630,  1120, NO_USE, NO_USE, NO_ACTION, 1170,  NO_USE, 1120, NO_USE },
+	{ VR_RAIL_E_ASIC_P0V75_OWL_W_TRVDD,        11,   0,      400, 525,  975,  NO_USE, NO_USE, NO_ACTION, 1175,  NO_USE, 975,  NO_USE },
+};
+const mps_vr_test_mode_setting_t vr_mps_normal_mode_table[] = {
+	/*
+	uint8_t vr_rail;
+	uint16_t total_ocp;
+	uint16_t mp2971_uvp_threshold_gain;
+	uint16_t uvp_threshold;
+	uint16_t lcr;
+	uint16_t ucr;
+	uint16_t ovp2_threshold;
+	uint16_t ovp1_threshold;
+	uint16_t ovp2;
+	uint16_t ovp1;
+	uint16_t vout_default;
+	uint16_t vout_max;
+	uint16_t uvp;
+	*/
+	{ VR_RAIL_E_ASIC_P0V75_NUWA0_VDD,          1424, NO_USE, 500, 595,  930,  NO_USE, NO_USE, NO_ACTION, 940,   NO_USE, 930,  NO_USE },
+	{ VR_RAIL_E_ASIC_P0V75_NUWA1_VDD,          1424, NO_USE, 500, 595,  930,  NO_USE, NO_USE, NO_ACTION, 940,   NO_USE, 930,  NO_USE },
+	{ VR_RAIL_E_ASIC_P0V9_OWL_E_TRVDD,         17,   0,      400, 630,  1120, NO_USE, NO_USE, NO_ACTION, 1170,  NO_USE, 1120, NO_USE },
+	{ VR_RAIL_E_ASIC_P0V75_OWL_E_TRVDD,        11,   0,      400, 525,  975,  NO_USE, NO_USE, NO_ACTION, 1175,  NO_USE, 975,  NO_USE },
+	{ VR_RAIL_E_ASIC_P0V75_MAX_M_VDD,          120,  0,      400, 525,  975,  NO_USE, NO_USE, NO_ACTION, 1175,  NO_USE, 975,  NO_USE },
+	{ VR_RAIL_E_ASIC_P0V75_VDDPHY_HBM1357,     138,  0,      400, 525,  930,  NO_USE, NO_USE, NO_ACTION, 980,   NO_USE, 930,  NO_USE },
+	{ VR_RAIL_E_ASIC_P0V75_OWL_E_VDD,          159,  0,      400, 525,  930,  NO_USE, NO_USE, NO_ACTION, 980,   NO_USE, 930,  NO_USE },
+	{ VR_RAIL_E_ASIC_P0V4_VDDQL_HBM1357,       53,   0,      400, 280,  520,  NO_USE, NO_USE, NO_ACTION, 820,   NO_USE, 520,  NO_USE },
+	{ VR_RAIL_E_ASIC_P1V05_VDDC_HBM1357,       318,  0,      400, 770,  1310, NO_USE, NO_USE, NO_ACTION, 1360,  NO_USE, 1310, NO_USE },
+	{ VR_RAIL_E_ASIC_P1V8_VPP_HBM1357,         14,   0,      400, 1260, 1970, NO_USE, NO_USE, NO_ACTION, 2020,  NO_USE, 1970, NO_USE },
+	{ VR_RAIL_E_ASIC_P0V9_VDDQ_HBM1357,        67,   0,      400, 525,  975,  NO_USE, NO_USE, NO_ACTION, 1175,  NO_USE, 975,  NO_USE },
+	{ VR_RAIL_E_ASIC_P0V85_HAMSA_VDD,          100,  0,      400, 595,  1053, NO_USE, NO_USE, NO_ACTION, 1105,  NO_USE, 1055, NO_USE },
+	{ VR_RAIL_E_ASIC_P0V75_MAX_N_VDD,          67,   0,      400, 525,  975,  NO_USE, NO_USE, NO_ACTION, 1175,  NO_USE, 975,  NO_USE },
+	{ VR_RAIL_E_ASIC_P0V8_HAMSA_AVDD_PCIE,     50,   0,      400, 560,  1040, NO_USE, NO_USE, NO_ACTION, 1140,  NO_USE, 1040, NO_USE },
+	{ VR_RAIL_E_ASIC_P0V9_VDDQ_HBM0246,        67,   0,      400, 525,  975,  NO_USE, NO_USE, NO_ACTION, 1175,  NO_USE, 975,  NO_USE },
+	{ VR_RAIL_E_ASIC_P1V2_HAMSA_VDDHRXTX_PCIE, 10,   0,      400, 840,  1310, NO_USE, NO_USE, NO_ACTION, 1360,  NO_USE, 1310, NO_USE },
+	{ VR_RAIL_E_ASIC_P1V05_VDDC_HBM0246,       318,  0,      400, 770,  1310, NO_USE, NO_USE, NO_ACTION, 1360,  NO_USE, 1310, NO_USE },
+	{ VR_RAIL_E_ASIC_P1V8_VPP_HBM0246,         14,   0,      400, 1260, 1970, NO_USE, NO_USE, NO_ACTION, 2020,  NO_USE, 1970, NO_USE },
+	{ VR_RAIL_E_ASIC_P0V4_VDDQL_HBM0246,       53,   0,      400, 280,  520,  NO_USE, NO_USE, NO_ACTION, 820,   NO_USE, 520,  NO_USE },
+	{ VR_RAIL_E_ASIC_P0V75_VDDPHY_HBM0246,     138,  0,      400, 525,  930,  NO_USE, NO_USE, NO_ACTION, 980,   NO_USE, 930,  NO_USE },
+	{ VR_RAIL_E_ASIC_P0V75_OWL_W_VDD,          159,  0,      400, 525,  930,  NO_USE, NO_USE, NO_ACTION, 980,   NO_USE, 930,  NO_USE },
+	{ VR_RAIL_E_ASIC_P0V75_MAX_S_VDD,          66,   0,      400, 525,  975,  NO_USE, NO_USE, NO_ACTION, 1175,  NO_USE, 975,  NO_USE },
+	{ VR_RAIL_E_ASIC_P0V9_OWL_W_TRVDD,         17,   0,      400, 630,  1120, NO_USE, NO_USE, NO_ACTION, 1170,  NO_USE, 1120, NO_USE },
+	{ VR_RAIL_E_ASIC_P0V75_OWL_W_TRVDD,        11,   0,      400, 525,  975,  NO_USE, NO_USE, NO_ACTION, 1175,  NO_USE, 975,  NO_USE },
+};
+//clang-format on
+const uint8_t vr_test_mode_table_size = ARRAY_SIZE(vr_test_mode_table);
+const uint8_t vr_test_mode_table_dafault_size = ARRAY_SIZE(vr_test_mode_table_default);
+
+const uint8_t vr_mps_test_mode_table_size = ARRAY_SIZE(vr_mps_test_mode_table);
+const uint8_t vr_mps_normal_mode_table_size = ARRAY_SIZE(vr_mps_normal_mode_table);
+
+bool update_vr_reg(uint8_t rail, uint8_t reg, uint16_t val)
+{
+	uint8_t data[2];
+	data[0] = val & 0xFF;
+	data[1] = (val >> 8) & 0xFF;
+
+	if (!plat_set_vr_reg(rail, reg, data, 2)) {
+		LOG_ERR("fail to set vr rail %x, reg 0x%02x, val: %x", rail, reg, val);
+		return false;
+	}
+	return true;
+}
+
+bool dma_write_vr(uint8_t rail, uint16_t reg, uint8_t *data, uint8_t len)
+{
+	if (!update_vr_reg(rail, 0xC7, reg)) {
+		LOG_ERR("VR %x dma write 0x%04x to 0xC7 fail", rail, reg);
+		return false;
+	}
+
+	if (!plat_set_vr_reg(rail, 0xC5, data, len)) {
+		LOG_ERR("VR %x dma write 0xC5 fail", rail);
+		return false;
+	}
+
+	return true;
+}
+
+bool dma_read_vr(uint8_t rail, uint16_t reg, uint8_t *data, uint8_t len)
+{
+	if (!update_vr_reg(rail, 0xC7, reg)) {
+		LOG_ERR("VR %x dma write 0x%04x to 0xC7 fail", rail, reg);
+		return false;
+	}
+	uint8_t sensor_num = vr_rail_table[rail].sensor_id;
+	if (!get_raw_data_from_sensor_id(sensor_num, 0xC5, data, len)) {
+		LOG_ERR("VR %x dma write 0x%04x to 0xC5 fail", rail, reg);
+		return false;
+	}
+	return true;
+}
+
+// uvp = vout - offset uvp, uvp = vout + offset ovp,
+bool get_vr_offset_uvp_ovp(uint8_t rail, uint16_t *uvp, uint16_t *ovp)
+{
+	CHECK_NULL_ARG_WITH_RETURN(uvp, false);
+	CHECK_NULL_ARG_WITH_RETURN(ovp, false);
+
+	uint8_t data[2];
+	uint8_t sensor_num = vr_rail_table[rail].sensor_id;
+	if (!get_raw_data_from_sensor_id(sensor_num, VR_VOUT_REG, data, sizeof(data))) {
+		LOG_ERR("VR %x get Vout fail", rail);
+		return false;
+	}
+
+	uint16_t vout = (data[1] << 8) | data[0];
+	uint8_t page = get_vr_page(rail);
+
+	uint16_t reg = page ? VR_UVP_1_DMA_ADDR : VR_UVP_0_DMA_ADDR;
+	if (!dma_read_vr(rail, reg, data, 2)) {
+		LOG_ERR("VR %x get dma uvp fail", rail);
+		return false;
+	}
+	uint16_t uvp_offset = (data[1] << 8) | data[0];
+
+	reg = page ? VR_OVP_1_DMA_ADDR : VR_OVP_0_DMA_ADDR;
+	if (!dma_read_vr(rail, reg, data, 2)) {
+		LOG_ERR("VR %x get dma ovp fail", rail);
+		return false;
+	}
+	uint16_t ovp_offset = (data[1] << 8) | data[0];
+
+	*uvp = (vout > uvp_offset) ? (vout - uvp_offset) : 0;
+	*ovp = vout + ovp_offset;
+
+	return true;
+}
+
+// check if offset uvp/ovp is used.
+bool use_offset_uvp_ovp(uint8_t rail)
+{
+	switch (rail) {
+	case VR_RAIL_E_ASIC_P0V75_NUWA0_VDD:
+	case VR_RAIL_E_ASIC_P0V75_NUWA1_VDD:
+		return false;
+	default:
+		return true;
+	}
+}
+bool get_vr_fixed_uvp_ovp_enable(uint8_t rail)
+{
+	// no offset UVP/OVP setting
+	if (!use_offset_uvp_ovp(rail))
+		return true;
+
+	uint8_t data[2];
+	uint8_t sensor_num = vr_rail_table[rail].sensor_id;
+	if (!get_raw_data_from_sensor_id(sensor_num, VR_LOOPCFG_REG, data, sizeof(data))) {
+		LOG_ERR("VR %x get loopcfg fail", rail);
+		return false;
+	}
+
+	if (data[1] & BIT(6))
+		return true;
+	return false;
+}
+bool set_vr_fixed_uvp_ovp_enable(uint8_t rail, uint8_t enable)
+{
+	// no offset UVP/OVP setting
+	if (!use_offset_uvp_ovp(rail))
+		return true;
+
+	uint8_t data[2];
+	uint8_t sensor_num = vr_rail_table[rail].sensor_id;
+	if (!get_raw_data_from_sensor_id(sensor_num, VR_LOOPCFG_REG, data, sizeof(data))) {
+		LOG_ERR("VR %x get loopcfg fail", rail);
+		return false;
+	}
+
+	WRITE_BIT(data[1], 6, enable);
+	if (!plat_set_vr_reg(rail, VR_LOOPCFG_REG, data, 2)) {
+		LOG_ERR("VR %x set loopcfg fail: %x %x", rail, data[0], data[1]);
+		return false;
+	}
+
+	return true;
+}
+
+static bool set_vr_test_mode_reg(bool is_default)
+{
+	bool ret = true;
+
+	const vr_test_mode_setting_t *table =
+		is_default ? vr_test_mode_table_default : vr_test_mode_table;
+	uint8_t table_size = is_default ? ARRAY_SIZE(vr_test_mode_table_default) :
+					  ARRAY_SIZE(vr_test_mode_table);
+
+	for (uint8_t i = 0; i < table_size; i++) {
+		const vr_test_mode_setting_t *cfg = &table[i];
+
+		const struct {
+			uint8_t offset;
+			uint16_t val;
+			const char *name;
+		} regs[] = {
+			{ VR_FAST_OCP_REG, cfg->fast_ocp, "FAST OCP" },
+			{ VR_SLOW_OCP_REG, cfg->slow_ocp, "SLOW OCP" },
+			{ VR_UVP_REG, cfg->uvp, "UVP" },
+			{ VR_OVP_REG, cfg->ovp, "OVP" },
+			{ VR_VOUT_MAX_REG, cfg->vout_max, "VOUT MAX" },
+		};
+		if (is_default) {
+			// set vout default
+			uint16_t vout_default = cfg->vout_default;
+			if (!plat_set_vout_command(cfg->vr_rail, &vout_default, false)) {
+				LOG_ERR("VR rail %x set vout to default: %d failed", cfg->vr_rail,
+					cfg[i].vout_default);
+				ret = false;
+			}
+		}
+		for (size_t j = 0; j < ARRAY_SIZE(regs); j++) {
+			if (!update_vr_reg(cfg->vr_rail, regs[j].offset, regs[j].val)) {
+				ret = false;
+				LOG_ERR("VR rail %x set %s to %d failed", cfg->vr_rail,
+					regs[j].name, regs[j].val);
+			}
+		}
+
+		// vr range
+		vout_range_user_settings.change_vout_min[i] = cfg->lcr;
+		vout_range_user_settings.change_vout_max[i] = cfg->ucr;
+	}
+	return ret;
+}
+
+static bool set_mps_vr_test_mode_reg(bool is_default)
+{
+	bool ret = true;
+
+	const mps_vr_test_mode_setting_t *table =
+		is_default ? vr_mps_normal_mode_table : vr_mps_test_mode_table;
+	uint8_t table_size = is_default ? ARRAY_SIZE(vr_mps_normal_mode_table) :
+					  ARRAY_SIZE(vr_mps_test_mode_table);
+
+	for (uint8_t i = 0; i < table_size; i++) {
+		const mps_vr_test_mode_setting_t *cfg = &table[i];
+
+		const struct {
+			uint8_t function;
+			uint16_t val;
+			const char *name;
+		} regs[] = {
+			{ TOTAL_OCP, cfg->total_ocp, "TOTAL OCP" },
+			{ UVP_THRESHOLD, cfg->uvp_threshold, "UVP_THRESHOLD" },
+			{ VOUT_MAX, cfg->vout_max, "VOUT MAX" },
+			{ OVP_1, cfg->ovp1, "OVP1" },
+		};
+		if (is_default) {
+			// set vout default
+			uint16_t vout_default = cfg->vout_default;
+			if (!plat_set_vout_command(cfg->vr_rail, &vout_default, false)) {
+				LOG_ERR("VR rail %x set vout to default: %d failed", cfg->vr_rail,
+					cfg[i].vout_default);
+				ret = false;
+			}
+		}
+		uint16_t set_val = 0;
+		for (size_t j = 0; j < ARRAY_SIZE(regs); j++) {
+			set_val = regs[j].val;
+			if (i < VR_RAIL_E_ASIC_P0V9_OWL_E_TRVDD) {
+				if (set_vr_mp29816a_reg(cfg->vr_rail, &set_val, regs[j].function)) {
+					LOG_ERR("MPS29816a VR rail %x set %s to %d failed",
+						cfg->vr_rail, regs[j].name, regs[j].val);
+				}
+			} else {
+				if (set_vr_mp2971_reg(cfg->vr_rail, &set_val, regs[j].function)) {
+					LOG_ERR("MPS2971 VR rail %x set %s to %d failed",
+						cfg->vr_rail, regs[j].name, regs[j].val);
+				}
+			}
+		}
+
+		// vr range
+		vout_range_user_settings.change_vout_min[i] = cfg->lcr;
+		vout_range_user_settings.change_vout_max[i] = cfg->ucr;
+	}
+	return ret;
+}
+
+static bool check_vr_fast_ocp_match_test_mode(void)
+{
+	for (uint8_t i = 0; i < VR_RAIL_E_P3V3_OSFP_VOLT_V; i++) {
+		uint8_t data[2] = { 0 };
+		if (!get_raw_data_from_sensor_id(vr_rail_table[i].sensor_id, VR_FAST_OCP_REG, data,
+						 2))
+			return false;
+
+		uint16_t raw_val = (data[1] << 8) | data[0];
+		if (vr_test_mode_table[i].fast_ocp != raw_val)
+			return false;
+	}
+
+	return true;
+}
+
+void vr_test_mode_enable(bool onoff)
+{
+	vr_test_mode_flag = onoff;
+	uint8_t vr = get_vr_module();
+	if (vr == VR_MODULE_RNS) {
+		set_vr_test_mode_reg((onoff ? false : true));
+		// not include P3V3
+		for (uint8_t i = 0; i < VR_RAIL_E_P3V3_OSFP_VOLT_V; i++) {
+			if (!set_vr_fixed_uvp_ovp_enable(i, (onoff ? 1 : 0)))
+				LOG_ERR("set vr %d fix uvp/ovp enable fail!", i);
+		}
+	} else if (vr == VR_MODULE_MPS) {
+		// mp29816C
+		// if set to test mode, set ovp2 action to no action
+		// mp2971
+		// if set to test mode, set divider enable
+		uint16_t action = 0;
+		uint16_t div_en = 0;
+		if (vr_test_mode_flag == true) {
+			action = NO_ACTION;
+			div_en = DISABLE;
+		} else if (vr_test_mode_flag == false) {
+			action = LATCH_OFF;
+			div_en = ENABLE;
+		} else {
+			LOG_ERR("MPS test mode setting flag error! flag: %d", vr_test_mode_flag);
+			return;
+		}
+		for (uint8_t i = 0; i <= VR_RAIL_E_ASIC_P0V75_NUWA1_VDD; i++) {
+			// set ovp2 action to no action
+			if (set_vr_mp29816a_reg(i, &action, OVP_2_ACTION))
+				LOG_ERR("set vr %d ovp2 action fail!", i);
+		}
+		for (uint8_t i = VR_RAIL_E_ASIC_P0V9_OWL_E_TRVDD; i < VR_RAIL_E_P3V3_OSFP_VOLT_V;
+		     i++) {
+			// set ovp2 action to no action
+			if (set_vr_mp2971_reg(i, &action, OVP_2_ACTION))
+				LOG_ERR("set vr %d ovp2 action fail!", i);
+			// set divider enable/disable
+			if (i == VR_RAIL_E_ASIC_P1V8_VPP_HBM0246 ||
+			    i == VR_RAIL_E_ASIC_P1V8_VPP_HBM1357)
+				// divider always disable for HBM VPP rails
+				continue;
+			if (set_vr_mp2971_reg(i, &div_en, DIV_EN))
+				LOG_ERR("set vr %d divider enable/disable fail!", i);
+		}
+
+		set_mps_vr_test_mode_reg((onoff ? false : true));
+	} else {
+		LOG_ERR("VR module %d is not supported!", vr);
+	}
+}
+
+void vr_test_mode_handler(void *arg1, void *arg2, void *arg3)
+{
+	k_sleep(K_MSEC(5000)); // wait sensor thread ready
+
+	while (1) {
+		k_sleep(K_MINUTES(1));
+		if (vr_test_mode_flag)
+			LOG_INF("VR TEST MODE is running! vr test mode flag: %d",
+				vr_test_mode_flag);
+	}
+}
+
+void init_vr_test_mode_polling(void)
+{
+	if (is_mb_dc_on()) {
+		if (check_vr_fast_ocp_match_test_mode()) {
+			vr_test_mode_enable(true);
+			LOG_INF("Fast OCP value is the same, start VR TEST MODE");
+		}
+	}
+
+	vr_test_mode_tid = k_thread_create(&vr_test_mode_thread, vr_test_mode_thread_stack,
+					   K_THREAD_STACK_SIZEOF(vr_test_mode_thread_stack),
+					   vr_test_mode_handler, NULL, NULL, NULL,
+					   CONFIG_MAIN_THREAD_PRIORITY, 0, K_NO_WAIT);
+	k_thread_name_set(&vr_test_mode_thread, "vr_test_mode_mode_thread");
 }
