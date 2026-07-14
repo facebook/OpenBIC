@@ -103,7 +103,7 @@ bool raa228249_i2c_read(uint8_t bus, uint8_t addr, uint8_t reg, uint8_t *data, u
 	i2c_msg.data[0] = reg;
 
 	if (i2c_master_read(&i2c_msg, retry)) {
-		LOG_ERR("Failed to read mp29816a, bus: %d, addr: 0x%x, reg: 0x%x", bus, addr, reg);
+		LOG_ERR("Failed to read raa228249, bus: %d, addr: 0x%x, reg: 0x%x", bus, addr, reg);
 		return false;
 	}
 
@@ -127,7 +127,8 @@ bool raa228249_i2c_write(uint8_t bus, uint8_t addr, uint8_t reg, uint8_t *data, 
 		memcpy(&i2c_msg.data[1], data, len);
 
 	if (i2c_master_write(&i2c_msg, retry)) {
-		LOG_ERR("Failed to write mp29816a, bus: %d, addr: 0x%x, reg: 0x%x", bus, addr, reg);
+		LOG_ERR("Failed to write raa228249, bus: %d, addr: 0x%x, reg: 0x%x", bus, addr,
+			reg);
 		return false;
 	}
 
@@ -198,6 +199,23 @@ bool raa228249_set_vout_min(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt)
 				 sizeof(data))) {
 		return false;
 	}
+
+	return true;
+}
+
+bool raa228249_get_vout_offset(sensor_cfg *cfg, uint16_t *offset_return)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	CHECK_NULL_ARG_WITH_RETURN(offset_return, false);
+
+	uint8_t data[2] = { 0 };
+	if (!raa228249_i2c_read(cfg->port, cfg->target_addr, PMBUS_VOUT_CAL_OFFSET, data,
+				sizeof(data))) {
+		return false;
+	}
+
+	uint16_t val_cal_offset = data[0] | (data[1] << 8);
+	*offset_return = val_cal_offset;
 
 	return true;
 }
