@@ -32,6 +32,8 @@
 #define THROTTLE_USER_SETTINGS_OFFSET 0x8600
 #define DELAY_ASIC_RST_USER_SETTINGS_OFFSET 0x8700
 #define DELAY_MODULE_PG_USER_SETTINGS_OFFSET 0x8800
+#define SVS_FLAG_USER_SETTINGS_OFFSET 0x8900
+#define VR_VOFFSET_MMC_USER_SETTINGS_OFFSET 0x8A00
 
 #define CPLD_THROTTLE_SWITCH_ADDR 0x25
 #define CPLD_THERMALTRIP_SWITCH_ADDR 0x3A
@@ -97,6 +99,12 @@ typedef struct throttle_user_settings_struct {
 	uint8_t throttle_user_setting_value;
 } throttle_user_settings_struct;
 
+typedef struct svs_flag_user_settings_struct {
+	uint8_t svs_flag_user_setting_value;
+} svs_flag_user_settings_struct;
+
+extern svs_flag_user_settings_struct svs_flag_user_settings;
+
 // temp
 bool get_temp_index_threshold_type_name(uint8_t type, uint8_t **name);
 bool get_temp_threshold_type_enum(uint8_t *name, uint8_t *num);
@@ -133,6 +141,19 @@ bool set_user_settings_delay_asic_rst_to_eeprom(void *user_settings, uint8_t dat
 
 // delay module pg
 bool set_user_settings_delay_module_pg_to_eeprom(void *user_settings, uint8_t data_length);
+
+//vout
+bool vr_vout_user_settings_init(void);
+bool set_user_settings_vr_vout_to_eeprom(void *user_settings, uint8_t data_length);
+bool get_user_settings_vr_vout_from_eeprom(void *user_settings, uint8_t data_length);
+
+//svs
+bool set_user_settings_svs_flag_to_eeprom(void *user_settings, uint8_t data_length);
+bool get_user_settings_svs_flag_from_eeprom(void *thermaltrip_user_settings, uint8_t data_length);
+
+//vout offset
+bool set_user_settings_vr_voffset_mmc_to_eeprom(void *user_settings, uint8_t data_length);
+bool get_user_settings_vr_voffset_mmc_from_eeprom(void *user_settings, uint8_t data_length);
 
 // other
 void user_settings_init(void);

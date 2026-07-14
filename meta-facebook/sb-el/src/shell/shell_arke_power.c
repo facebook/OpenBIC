@@ -11,6 +11,7 @@
 #include "plat_class.h"
 #include "shell_arke_power.h"
 #include "plat_gpio.h"
+#include "plat_hook.h"
 #include "plat_util.h"
 // arke power command
 
@@ -389,6 +390,22 @@ static bool arke_power_control(uint8_t onoff)
 {
 	uint8_t tmp = onoff ? 0x80 : 0x00;
 	return plat_write_cpld(CPLD_OFFSET_MMC_PWR_EN, &tmp);
+}
+
+bool set_all_vout_command()
+{
+	for (int i = 0; i < VR_RAIL_E_MAX; i++) {
+		if (vr_vout_user_settings.vout[i] != 0xffff) {
+			/* write vout */
+			uint16_t millivolt = vr_vout_user_settings.vout[i];
+			if (!plat_set_vout_command(i, &millivolt, false)) {
+				LOG_ERR("Set vout[%d]=%x by user settings failed", i, millivolt);
+				return false;
+			}
+			LOG_INF("set [%x]%s: %dmV", i, vr_rail_table[i].sensor_name, millivolt);
+		}
+	}
+	return true;
 }
 
 void cmd_arke_power_on(const struct shell *shell, size_t argc, char **argv)

@@ -193,9 +193,30 @@ typedef struct vr_vout_range_user_settings_struct {
 	uint16_t change_vout_max[VR_RAIL_E_MAX];
 	uint16_t change_vout_min[VR_RAIL_E_MAX];
 } vr_vout_range_user_settings_struct;
-typedef struct vr_vout_user_settings {
+typedef struct vr_vout_user_settings_struct {
 	uint16_t vout[VR_RAIL_E_MAX];
-} vr_vout_user_settings;
+} vr_vout_user_settings_struct;
+extern vr_vout_user_settings_struct vr_vout_user_settings;
+
+typedef struct vr_vout_offset {
+	uint16_t vout_offset[VR_RAIL_E_MAX]; // Support all VR rails
+} vr_vout_offset;
+
+typedef struct {
+	int16_t value;
+	uint8_t valid;
+} voffset_entry_t;
+
+typedef struct {
+	voffset_entry_t voffset_mmc[VR_RAIL_E_MAX];
+} vr_voffset_mmc_user_settings_struct;
+
+typedef struct vr_voffset_mmc_command_get_struct {
+	int16_t voffset_mmc[VR_RAIL_E_MAX];
+} vr_voffset_mmc_command_get_struct;
+
+extern vr_voffset_mmc_command_get_struct vr_voffset_mmc_command_get;
+extern vr_voffset_mmc_user_settings_struct vr_voffset_mmc_user_settings;
 
 typedef struct vr_mapping_status {
 	uint8_t index;
@@ -214,6 +235,8 @@ typedef struct vr_mapping_sensor {
 	uint8_t *sensor_name;
 	int peak_value;
 } vr_mapping_sensor;
+
+extern vr_mapping_sensor vr_rail_table[];
 
 typedef struct bootstrap_mapping_register {
 	uint8_t index;
@@ -235,6 +258,27 @@ extern bootstrap_user_settings_struct bootstrap_user_settings;
 extern vr_vout_range_user_settings_struct vout_range_user_settings;
 extern mp2971_init_arg mp2971_init_args[];
 
+// vr test mode
+enum VR_MP29816_REG_E {
+	UVP_THRESHOLD = 0,
+	UVP,
+	VOUT_MAX,
+	VOUT_COMMAND,
+	VOUT_OFFSET,
+	TOTAL_OCP,
+	OVP_1,
+	OVP_2,
+	OVP_2_ACTION,
+	DIV_EN,
+	VR_MP29816_SET_REG_MAX,
+};
+
+#define OVP2_ACTION_NO_ACTION 0x00 /* 2'b00 */
+#define OVP2_ACTION_LATCH_OFF 0x01 /* 2'b01 */
+#define OVP2_ACTION_UNKNOWN 0xFF
+
+#define VOFFSET_MMC_INVALID_VALUE 0
+
 //  vr & ubc sensor
 bool pre_vr_read(sensor_cfg *cfg, void *args);
 bool post_vr_read(sensor_cfg *cfg, void *args, int *const reading);
@@ -253,10 +297,25 @@ bool plat_set_vout_command(uint8_t rail, uint16_t *millivolt, bool is_perm);
 bool plat_get_vout_command(uint8_t rail, uint16_t *millivolt);
 bool post_common_sensor_read(sensor_cfg *cfg, void *args, int *const reading);
 bool vr_vout_range_user_settings_init(void);
+bool plat_set_voffset_mmc_command(uint8_t rail, int16_t *millivolt, bool is_perm);
+bool plat_get_get_vout_offset(uint8_t rail, uint16_t *vout_offset);
+bool voltage_offset_get(uint8_t rail, uint16_t *vout_offset);
+bool vr_vout_offset_get_init(void);
 bool vr_rail_voltage_peak_get(uint8_t *name, int *peak_value);
 bool vr_rail_voltage_peak_clear(uint8_t rail_index);
 bool ubc_vr_rail_name_get(uint8_t rail, uint8_t **name);
 bool ubc_vr_rail_enum_get(uint8_t *name, uint8_t *num);
+bool plat_set_vr_reg(uint8_t rail, uint8_t reg, uint8_t *data, uint8_t len);
+int get_vr_page(uint8_t rail);
+int get_vr_mp29816a_reg(uint8_t rail, uint16_t *get_data, uint8_t get_reg);
+int set_vr_mp29816a_reg(uint8_t rail, uint16_t *set_value, uint8_t set_reg);
+int get_vr_mp2971_reg(uint8_t rail, uint16_t *get_data, uint8_t get_reg);
+int set_vr_mp2971_reg(uint8_t rail, uint16_t *set_data, uint8_t set_reg);
+uint8_t get_svs_flag();
+bool set_svs_flag(uint8_t flag, bool is_perm);
+uint8_t get_svs_asic_voltage_flag();
+void set_svs_asic_voltage_flag(uint8_t flag);
+bool vr_vout_default_settings_init(void);
 
 // pwrlevel
 bool post_ubc_read(sensor_cfg *cfg, void *args, int *reading);

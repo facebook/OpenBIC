@@ -829,6 +829,8 @@ void plat_master_write_thread_handler()
 	while (1) {
 		uint8_t rdata[MAX_I2C_TARGET_BUFF] = { 0 };
 		uint16_t rlen = 0;
+		uint16_t vout_offset_value = 0;
+		uint8_t svs_flag = get_svs_flag();
 		for (int i = 0; i < ASIC_I2C_BUS_IDX_MAX; i++) {
 			rc = multi_bus_i2c_target_read(target_bus_list[i].i2c_bus, rdata,
 						       sizeof(rdata), &rlen, K_MSEC(5));
@@ -903,8 +905,62 @@ void plat_master_write_thread_handler()
 					LOG_ERR("Memory allocation failed!");
 					break;
 				}
+				uint8_t rail = get_vr_rail_by_control_vol_reg(reg_offset);
+				if (reg_offset == CONTROL_VOL_VR_ASIC_P0V75_NUWA0_VDD_REG ||
+				    reg_offset == CONTROL_VOL_VR_ASIC_P0V75_NUWA1_VDD_REG) {
+					// check svs_asic_voltage_flag for medha0 and medha1
+					// if flag = 0, just block voltage set and end
+					uint8_t svs_asic_voltage_flag = get_svs_asic_voltage_flag();
+					if (svs_asic_voltage_flag == 0) {
+						LOG_ERR("SVS asic voltage is disabled, voltage not apply, reg_offset 0x%02x",
+							reg_offset);
+						free(sensor_data);
+						break;
+					}
+				}
+				if (svs_flag) {
+					if (reg_offset == CONTROL_VOL_VR_ASIC_P0V75_NUWA0_VDD_REG ||
+					    reg_offset == CONTROL_VOL_VR_ASIC_P0V75_NUWA1_VDD_REG) {
+						if (!voltage_offset_get(rail, &vout_offset_value)) {
+							LOG_ERR("Failed to get vout offset for reg_offset 0x%02x",
+								reg_offset);
+							free(sensor_data);
+							break;
+						}
+					}
+				}
+
 				sensor_data->rail = get_vr_rail_by_control_vol_reg(reg_offset);
 				sensor_data->set_value = rdata[1] | (rdata[2] << 8);
+				// check set_value in range 750mv~850mv, if out of range, print error and end
+				if (reg_offset == CONTROL_VOL_VR_ASIC_P0V75_NUWA0_VDD_REG ||
+				    reg_offset == CONTROL_VOL_VR_ASIC_P0V75_NUWA1_VDD_REG) {
+					if (sensor_data->set_value < 750 ||
+					    sensor_data->set_value > 850) {
+						LOG_ERR("Set voltage out of range: %d mV(750~850)",
+							sensor_data->set_value);
+						free(sensor_data);
+						break;
+					}
+				} else {
+					uint16_t vout_max_millivolt =
+						vout_range_user_settings.change_vout_max[rail];
+					uint16_t vout_min_millivolt =
+						vout_range_user_settings.change_vout_min[rail];
+					if (sensor_data->set_value < vout_min_millivolt ||
+					    sensor_data->set_value > vout_max_millivolt) {
+						LOG_ERR("Set voltage out of range: %d mV(%d~%d)",
+							sensor_data->set_value, vout_min_millivolt,
+							vout_max_millivolt);
+						free(sensor_data);
+						break;
+					}
+				}
+
+				// if svs flag = enable, add vout_offset
+				if (svs_flag) {
+					sensor_data->set_value += vout_offset_value;
+				}
 				k_work_init(&sensor_data->work, set_control_voltage_handler);
 				k_work_submit(&sensor_data->work);
 			} break;
@@ -1070,6 +1126,8 @@ const bool I2C_TARGET_ENABLE_TABLE[MAX_TARGET_NUM] = {
 static bool command_reply_data_handle(void *arg)
 {
 	struct i2c_target_data *data = (struct i2c_target_data *)arg;
+	uint8_t svs_flag = get_svs_flag();
+	uint16_t vout_offset_value = 0;
 	if (data->wr_buffer_idx >= 1) {
 		if (data->wr_buffer_idx == 1) {
 			uint8_t reg_offset = data->target_wr_msg.msg[0];
@@ -1191,6 +1249,18 @@ static bool command_reply_data_handle(void *arg)
 				if (!voltage_command_setting_get(rail, &vout)) {
 					LOG_ERR("Can't voltage_command setting_get by rail: 0x%02x",
 						rail);
+				}
+				if (svs_flag) {
+					if (reg_offset == CONTROL_VOL_VR_ASIC_P0V75_NUWA0_VDD_REG ||
+					    reg_offset == CONTROL_VOL_VR_ASIC_P0V75_NUWA1_VDD_REG) {
+						if (!voltage_offset_get(rail, &vout_offset_value)) {
+							LOG_ERR("Failed to get vout offset for reg_offset 0x%02x",
+								reg_offset);
+							break;
+						}
+						// need to minus vout offset(read back from VR)
+						vout -= vout_offset_value;
+					}
 				}
 				memcpy(data->target_rd_msg.msg, &vout, sizeof(vout));
 				data->target_rd_msg.msg_length = 2;
