@@ -557,6 +557,7 @@ void plat_power_capping_init()
 	}
 
 	set_power_capping_source(CAPPING_SOURCE_ADC);
+	set_power_capping_method(CAPPING_M_CREDIT_BASE);
 
 	k_thread_create(&power_capping_thread, power_capping_thread_stack, POWER_CAPPING_STACK_SIZE,
 			power_capping_handler, NULL, NULL, NULL, CONFIG_MAIN_THREAD_PRIORITY, 0,
