@@ -169,8 +169,8 @@ uint8_t convert_tmp_addr(uint8_t bus, uint8_t addr, uint8_t tmp_change_mode)
 		    tmp_addr_map_table[i].fab1_1nd_addr == addr) {
 			if (tmp_change_mode == FAB1_2ND_EMC1413)
 				return tmp_addr_map_table[i].fab1_2nd_addr;
-			else if (tmp_change_mode == FAB1_1ND_TMP432)
-				LOG_DBG("don't need to change TMP address");
+			// else if (tmp_change_mode == FAB1_1ND_TMP432)
+				// LOG_DBG("don't need to change TMP address");
 			else
 				LOG_ERR("tmp_change_mode: 0x%x error", tmp_change_mode);
 		}
@@ -185,8 +185,8 @@ uint8_t convert_vr_addr(uint8_t bus, uint8_t addr, uint8_t vr_change_mode)
 		    vr_addr_map_table[i].fab1_1nd_addr == addr) {
 			if (vr_change_mode == FAB1_2ND_RNS)
 				return vr_addr_map_table[i].fab1_2nd_addr;
-			else if (vr_change_mode == FAB1_1ND_MPS)
-				LOG_DBG("don't need to change VR address");
+			// else if (vr_change_mode == FAB1_1ND_MPS)
+				// LOG_DBG("don't need to change VR address");
 			else
 				LOG_ERR("vr_change_mode: 0x%x error", vr_change_mode);
 		}
@@ -13413,13 +13413,11 @@ bool get_raw_data_from_sensor_id(uint8_t sensor_id, uint8_t offset, uint8_t *val
 
 	if ((cfg->pre_sensor_read_hook)) {
 		if ((cfg->pre_sensor_read_hook)(cfg, cfg->pre_sensor_read_args) == false) {
-			LOG_DBG("%d read raw val pre hook fail!", sensor_id);
 			return false;
 		}
 	}
 
 	if (!plat_i2c_read(cfg->port, cfg->target_addr, offset, val, len)) {
-		LOG_DBG("%d read raw value fail!", sensor_id);
 		ret = false;
 		goto err;
 	}
@@ -13428,8 +13426,6 @@ err:
 	if ((cfg->post_sensor_read_hook)) {
 		if ((cfg->post_sensor_read_hook)(cfg, cfg->post_sensor_read_args, 0) == false &&
 		    cfg->cache_status != SENSOR_OPEN_CIRCUIT) {
-			LOG_DBG("%d read raw value post hook fail! %x", sensor_id,
-				cfg->cache_status);
 			return false;
 		}
 	}

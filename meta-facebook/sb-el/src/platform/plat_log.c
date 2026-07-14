@@ -220,10 +220,6 @@ void plat_log_read(uint8_t *log_data, uint8_t cmd_size, uint16_t order)
 	uint16_t eeprom_address =
 		FRU_LOG_START + zero_base_log_position * sizeof(plat_err_log_mapping);
 
-	LOG_DBG("order: %d, log_position: %d, eeprom_address: 0x%X", order,
-		(zero_base_log_position + 1),
-		eeprom_address); //remove after all log function is ready
-
 	plat_err_log_mapping log_entry;
 
 	if (!plat_eeprom_read(eeprom_address, (uint8_t *)&log_entry,
@@ -527,7 +523,7 @@ bool get_error_data(uint16_t error_code, uint8_t *data)
 	// Extract CPLD offset and bit position from the error code
 	uint8_t cpld_offset = error_code & 0xFF;
 	uint8_t bit_position = (error_code >> 8) & 0x07;
-	LOG_DBG("cpld_offset: 0x%x, bit_position: 0x%x", cpld_offset, bit_position);
+	// LOG_DBG("cpld_offset: 0x%x, bit_position: 0x%x", cpld_offset, bit_position);
 
 	// Initialize sensor number
 	uint8_t sensor_num = 0x00;
@@ -558,7 +554,6 @@ bool get_error_data(uint16_t error_code, uint8_t *data)
 
 	// If no valid sensor number is found, skip further data retrieval
 	if (sensor_num == 0x00) {
-		LOG_DBG("No valid sensor_num for error_code: 0x%x", error_code);
 		return false;
 	}
 
@@ -681,7 +676,6 @@ void reset_error_log_event(uint8_t err_type)
 		uint16_t error_code = err_code_caches[i];
 		uint8_t code_type = error_code >> ERROR_CODE_TYPE_SHIFT;
 		if (code_type == err_type) {
-			LOG_DBG("DEASSERT");
 			error_log_event(error_code, LOG_DEASSERT);
 			err_code_caches[i] = 0;
 		}
