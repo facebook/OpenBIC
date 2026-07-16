@@ -23,6 +23,7 @@
 #include "plat_user_setting.h"
 #include "plat_thermal.h"
 #include "shell_plat_power_sequence.h"
+#include "plat_hook.h"
 
 typedef struct {
 	uint8_t cpld_offset;
@@ -74,10 +75,10 @@ const cpld_bit_name_table_t cpld_bit_name_table[] = {
 		  "P1V5_E_RVDD",
 		  "P0V9_OWL_W_PVDD",
 		  "P0V9_OWL_E_PVDD",
-		  "PLL_VDDA15_HBM5_HBM7",
-		  "PLL_VDDA15_HBM1_HBM3",
-		  "PLL_VDDA15_HBM4_HBM6",
-		  "PLL_VDDA15_HBM0_HBM2",
+		  "P1V2_PLL_VDDA_SOC",
+		  "P1V2_PLL_VDDA_OWL",
+		  "VDDQ_HBM1_HBM3_HBM5_HBM7",
+		  "VDDQ_HBM0_HBM2_HBM4_HBM6",
 	  } },
 	{ VR_POWER_FAULT_5_REG,
 	  "VR Power Fault   (1:Power Fault, 0=Normal)",
@@ -106,8 +107,8 @@ const cpld_bit_name_table_t cpld_bit_name_table[] = {
 	{ VR_SMBUS_ALERT_EVENT_LOG_REG,
 	  "VR SMBALRT , Status",
 	  {
-		  "RSVD",
-		  "MAX_N_VDDRXTX_SMBALRT_N",
+		  "VDDQ_0246_SMBALRT_N",
+		  "MAX_N_SMBALRT_N",
 		  "VDDQC_VDDQL_0246_SMBALRT_N",
 		  "MAX_M_VDDQC_1357_SMBALRT_N",
 		  "OWL_W_SMBALRT_N",
@@ -115,15 +116,27 @@ const cpld_bit_name_table_t cpld_bit_name_table[] = {
 		  "NUWA1_VDD_ALERT_R_N",
 		  "NUWA0_VDD_ALERT_R_N",
 	  } },
-	{ HBM_CATTRIP_REG,
-	  "HBM CATTRIP, Event log",
+	{ VR_VDDQ_HBM1357_SMBUS_ALERT_EVENT_LOG_REG,
+	  "VR SMBALRT, Status",
 	  {
+		  "VDDQ_1357_SMBALRT_N",
 		  "RSVD",
 		  "RSVD",
 		  "RSVD",
 		  "RSVD",
 		  "RSVD",
 		  "RSVD",
+		  "RSVD",
+	  } },
+	{ ASIC_CATTRIP_REG,
+	  "ASIC CATTRIP, Event log",
+	  {
+		  "VDDQ_1357_SMBALRT_N",
+		  "RSVD",
+		  "RSVD",
+		  "OWL_W_SOC_CATTRIP_R (1-->0)",
+		  "OWL_E_SOC_CATTRIP_R (1-->0)",
+		  "HAMSA_CATTRIP_SITE_R (1-->0)",
 		  "NUWA1_HBM_CATTRIP_LS_LVC33_ALARM (1-->0)",
 		  "NUWA0_HBM_CATTRIP_LS_LVC33_ALARM (1-->0)",
 	  } },
@@ -235,24 +248,83 @@ void cmd_log_dump(const struct shell *shell, size_t argc, char **argv)
 
 		switch (err_type) {
 		case CPLD_UNEXPECTED_VAL_TRIGGER_CAUSE:
-			shell_print(shell, "\t%s", reg_name);
-			shell_print(shell, "\t\t%s", bit_name);
-			shell_print(shell, "read vr sensor status word(0x79):");
-			shell_print(shell, "\tlow  byte: 0x%02x", log.error_data[0]);
-			shell_print(shell, "\thigh byte: 0x%02x", log.error_data[1]);
+			if (cpld_offset == VR_SMBUS_ALERT_EVENT_LOG_REG ||
+			    cpld_offset == VR_VDDQ_HBM1357_SMBUS_ALERT_EVENT_LOG_REG) {
+				shell_print(shell, "\t%s", reg_name);
+				shell_print(shell, "\t\t%s", bit_name);
+				bool has_valid_vr = false;
+
+				for (int j = 0; j < SMBUS_ALRT_STATUS_DATA_LEN; j++) {
+					if (log.error_data[j] != 0xFF) {
+						has_valid_vr = true;
+						break;
+					}
+				}
+
+				if (!has_valid_vr) {
+					shell_print(shell, "no vr sensor status word(0x79)");
+					err_data_len = SMBUS_ALRT_STATUS_DATA_LEN;
+					break;
+				}
+
+				for (int j = 0; j < SMBUS_ALRT_MAX_VR_NUM; j++) {
+					uint8_t idx = j * SMBUS_ALRT_ENTRY_SIZE;
+					uint8_t rail = log.error_data[idx];
+					uint8_t *rail_name;
+
+					if (rail == 0xFF)
+						continue;
+
+					if (!vr_rail_name_get(rail, &rail_name)) {
+						shell_print(
+							shell,
+							"Unknown VR rail(%u) status word(0x79):",
+							rail);
+					} else {
+						shell_print(shell,
+							    "[0x%02x] %s status word(0x79):", rail,
+							    rail_name);
+					}
+
+					shell_print(shell, "\tlow  byte: 0x%02x",
+						    log.error_data[idx + 1]);
+
+					shell_print(shell, "\thigh byte: 0x%02x",
+						    log.error_data[idx + 2]);
+				}
+				err_data_len = SMBUS_ALRT_STATUS_DATA_LEN;
+			} else {
+				shell_print(shell, "\t%s", reg_name);
+				shell_print(shell, "\t\t%s", bit_name);
+				shell_print(shell, "read vr sensor status word(0x79):");
+				shell_print(shell, "\tlow  byte: 0x%02x", log.error_data[0]);
+				shell_print(shell, "\thigh byte: 0x%02x", log.error_data[1]);
+				shell_print(shell, "read vr sensor status vout(0x20): 0x%02x",
+					    log.error_data[2]);
+				shell_print(shell, "read vr sensor status iout(0x21): 0x%02x",
+					    log.error_data[3]);
+				shell_print(shell, "read vr sensor status input(0x22): 0x%02x",
+					    log.error_data[4]);
+				shell_print(shell,
+					    "read vr sensor status temperature(0x24): 0x%02x",
+					    log.error_data[5]);
+				shell_print(shell, "read vr sensor status CML(0x7e): 0x%02x",
+					    log.error_data[6]);
+				err_data_len = 7;
+			}
 			break;
-			case POWER_ON_SEQUENCE_TRIGGER_CAUSE:
-				shell_print(shell, "\tPOWER_ON_SEQUENCE_FAILURE");
-				err_data_len = 1;
-				uint8_t *name = NULL;
-				plat_get_power_seq_pwrgd_event_fail_name(log.error_data[0], &name);
-				shell_print(shell, "RAIL: %s", name);
-				shell_print(
-					shell,
-					"PWRGD REG(start from 0xBE): 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x",
-					log.error_data[1], log.error_data[2], log.error_data[3],
-					log.error_data[4], log.error_data[5], log.error_data[6]);
-				break;
+		case POWER_ON_SEQUENCE_TRIGGER_CAUSE:
+			shell_print(shell, "\tPOWER_ON_SEQUENCE_FAILURE");
+			err_data_len = 1;
+			uint8_t *name = NULL;
+			plat_get_power_seq_pwrgd_event_fail_name(log.error_data[0], &name);
+			shell_print(shell, "RAIL: %s", name);
+			shell_print(
+				shell,
+				"PWRGD REG(start from 0xBE): 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x",
+				log.error_data[1], log.error_data[2], log.error_data[3],
+				log.error_data[4], log.error_data[5], log.error_data[6]);
+			break;
 		case AC_ON_TRIGGER_CAUSE:
 			shell_print(shell, "\tAC_ON");
 			err_data_len = 1;

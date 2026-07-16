@@ -282,9 +282,9 @@ bootstrap_mapping_register bootstrap_table[] = {
 	  0x0, true },
 	{ STRAP_INDEX_NUWA0_CRM_STRAP_1, STRAP_TYPE_CPLD, NUWA0_STRAP, "NUWA0_CRM_STRAP_1", 2, 1, 0x0,
 	  0x0, true },
-	{ STRAP_INDEX_NUWA0_CHIP_STRAP_0, STRAP_TYPE_CPLD, NUWA0_STRAP, "NUWA0_CHIP_STRAP_0", 1, 1, 0x0,
+	{ STRAP_INDEX_NUWA0_CHIP_STRAP_0, STRAP_TYPE_GPIO, NUWA0_CHIP_STRAP0_MMC, "NUWA0_CHIP_STRAP_0", 1, 1, 0x0,
 	  0x0, true },
-	{ STRAP_INDEX_NUWA0_CHIP_STRAP_1, STRAP_TYPE_CPLD, NUWA0_STRAP, "NUWA0_CHIP_STRAP_1", 0, 1, 0x0,
+	{ STRAP_INDEX_NUWA0_CHIP_STRAP_1, STRAP_TYPE_GPIO, NUWA0_CHIP_STRAP1_MMC, "NUWA0_CHIP_STRAP_1", 0, 1, 0x0,
 	  0x0, true },
 	{ STRAP_INDEX_NUWA0_CORE_TAP_CTRL_PLD_L, STRAP_TYPE_CPLD, NUWA0_CONTROL_IO,
 	  "NUWA0_CORE_TAP_CTRL_PLD_L", 3, 1, 0x01, 0x01, false },
@@ -300,9 +300,9 @@ bootstrap_mapping_register bootstrap_table[] = {
 	  0x0, true },
 	{ STRAP_INDEX_NUWA1_CRM_STRAP_1, STRAP_TYPE_CPLD, NUWA1_STRAP, "NUWA1_CRM_STRAP_1", 2, 1, 0x0,
 	  0x0, true },
-	{ STRAP_INDEX_NUWA1_CHIP_STRAP_0, STRAP_TYPE_CPLD, NUWA1_STRAP, "NUWA1_CHIP_STRAP_0", 1, 1, 0x0,
+	{ STRAP_INDEX_NUWA1_CHIP_STRAP_0, STRAP_TYPE_GPIO, NUWA1_CHIP_STRAP0_MMC, "NUWA1_CHIP_STRAP_0", 1, 1, 0x0,
 	  0x0, true },
-	{ STRAP_INDEX_NUWA1_CHIP_STRAP_1, STRAP_TYPE_CPLD, NUWA1_STRAP, "NUWA1_CHIP_STRAP_1", 0, 1, 0x0,
+	{ STRAP_INDEX_NUWA1_CHIP_STRAP_1, STRAP_TYPE_GPIO, NUWA1_CHIP_STRAP1_MMC, "NUWA1_CHIP_STRAP_1", 0, 1, 0x0,
 	  0x0, true },
 	{ STRAP_INDEX_NUWA1_CORE_TAP_CTRL_PLD_L, STRAP_TYPE_CPLD, NUWA1_CONTROL_IO,
 	  "NUWA1_CORE_TAP_CTRL_PLD_L", 3, 1, 0x01, 0x01, false },
@@ -1337,25 +1337,45 @@ bool set_ioexp_val_to_bootstrap_table(void)
 
 bool bootstrap_default_settings_init(void)
 {
-	// read cpld value and write to bootstrap_table
-	for (int i = 0; i <= STRAP_INDEX_OWL_W_DVT_ENABLE; i++) {
+	for (int i = 0; i < ARRAY_SIZE(bootstrap_table); i++) {
 		uint8_t data = 0;
-		if (!plat_read_cpld(bootstrap_table[i].cpld_offsets, &data, 1)) {
-			LOG_ERR("Can't find bootstrap default by rail index from cpld: %d", i);
-			return false;
-		}
-		uint8_t mask =
-			GENMASK(bootstrap_table[i].bit_offset + bootstrap_table[i].bit_count - 1,
-				bootstrap_table[i].bit_offset);
-		bootstrap_table[i].change_setting_value =
-			(data & mask) >> bootstrap_table[i].bit_offset;
-		if (bootstrap_table[i].reverse)
+
+		switch (bootstrap_table[i].type) {
+		case STRAP_TYPE_CPLD:
+			if (!plat_read_cpld(bootstrap_table[i].cpld_offsets, &data, 1)) {
+				LOG_ERR("Can't find bootstrap default from CPLD, index: %d", i);
+				return false;
+			}
+
+			uint8_t mask = GENMASK(bootstrap_table[i].bit_offset +
+						       bootstrap_table[i].bit_count - 1,
+					       bootstrap_table[i].bit_offset);
+
 			bootstrap_table[i].change_setting_value =
-				reverse_bits(bootstrap_table[i].change_setting_value,
-					     bootstrap_table[i].bit_count);
+				(data & mask) >> bootstrap_table[i].bit_offset;
+
+			if (bootstrap_table[i].reverse) {
+				bootstrap_table[i].change_setting_value =
+					reverse_bits(bootstrap_table[i].change_setting_value,
+						     bootstrap_table[i].bit_count);
+			}
+			break;
+
+		case STRAP_TYPE_GPIO:
+			bootstrap_table[i].change_setting_value =
+				gpio_get(bootstrap_table[i].cpld_offsets);
+
+			if (bootstrap_table[i].reverse) {
+				bootstrap_table[i].change_setting_value =
+					reverse_bits(bootstrap_table[i].change_setting_value,
+						     bootstrap_table[i].bit_count);
+			}
+			break;
+		default:
+			break;
+		}
 	}
 
-	// read io-exp value and write to bootstrap_table
 	return set_ioexp_val_to_bootstrap_table();
 }
 
@@ -1528,66 +1548,65 @@ bool set_bootstrap_table_and_user_settings(uint8_t rail, uint8_t *change_setting
 		return false;
 
 	*change_setting_value = 0;
+
 	for (int i = 0; i < get_strap_index_max(); i++) {
-		if (bootstrap_table[i].index == rail) {
-			drive_index_level = (is_default) ?
-						    bootstrap_table[i].default_setting_value :
-						    drive_index_level;
-			if (!check_is_bootstrap_setting_value_valid(rail, drive_index_level)) {
-				LOG_ERR("hex-value :0x%x is out of range", drive_index_level);
-				return false;
-			}
-			bootstrap_table[i].change_setting_value = drive_index_level;
+		if (bootstrap_table[i].index != rail)
+			continue;
 
-			// get whole cpld register value to set
+		drive_index_level =
+			is_default ? bootstrap_table[i].default_setting_value : drive_index_level;
+
+		if (!check_is_bootstrap_setting_value_valid(rail, drive_index_level)) {
+			LOG_ERR("hex-value :0x%x is out of range", drive_index_level);
+			return false;
+		}
+
+		bootstrap_table[i].change_setting_value = drive_index_level;
+
+		if (bootstrap_table[i].type == STRAP_TYPE_GPIO) {
+			*change_setting_value = bootstrap_table[i].change_setting_value;
+		} else {
 			for (int j = 0; j < get_strap_index_max(); j++) {
-				if ((bootstrap_table[j].cpld_offsets ==
-				     bootstrap_table[i].cpld_offsets) &&
-				    (bootstrap_table[j].type == bootstrap_table[i].type)) {
-					uint8_t tmp_reverse = 0;
-					if (bootstrap_table[j].reverse)
-						tmp_reverse = reverse_bits(
-							bootstrap_table[j].change_setting_value,
-							bootstrap_table[j].bit_count);
+				if ((bootstrap_table[j].cpld_offsets !=
+				     bootstrap_table[i].cpld_offsets) ||
+				    (bootstrap_table[j].type != bootstrap_table[i].type)) {
+					continue;
+				}
 
-					for (int k = 0; k < bootstrap_table[j].bit_count; k++) {
-						if (bootstrap_table[j].reverse) {
-							if (tmp_reverse & BIT(k))
-								*change_setting_value |= BIT(
-									k + bootstrap_table[j]
-										    .bit_offset);
-						} else {
-							if (bootstrap_table[j].change_setting_value &
-							    BIT(k))
-								*change_setting_value |= BIT(
-									k + bootstrap_table[j]
-										    .bit_offset);
-						}
+				uint8_t value = bootstrap_table[j].change_setting_value;
+
+				if (bootstrap_table[j].reverse) {
+					value = reverse_bits(value, bootstrap_table[j].bit_count);
+				}
+
+				for (int k = 0; k < bootstrap_table[j].bit_count; k++) {
+					if (value & BIT(k)) {
+						*change_setting_value |=
+							BIT(k + bootstrap_table[j].bit_offset);
 					}
 				}
 			}
-
-			LOG_DBG("set [%2d]%s: %02x", rail, bootstrap_table[i].strap_name,
-				*change_setting_value);
-			/*
-				save perm parameter to bootstrap_user_settings
-				bit 8: not perm(ff); perm(1)
-				bit 0: get_bootstrap_change_drive_level -> low(0); high(1)
-				ex: 0x0101 -> set high perm; ex: 0x0100 -> set low perm
-			*/
-			if (is_perm) {
-				int drive_level = -1;
-				if (!get_bootstrap_change_drive_level(i, &drive_level)) {
-					LOG_ERR("Can't get_bootstrap_change_drive_level by rail index: %x",
-						i);
-					return false;
-				}
-				bootstrap_user_settings.user_setting_value[i] =
-					((drive_level & 0x00FF) | 0x0100);
-				bootstrap_user_settings_set(&bootstrap_user_settings);
-			}
-			return true;
 		}
+
+		LOG_DBG("set [%2d]%s: %02x", rail, bootstrap_table[i].strap_name,
+			*change_setting_value);
+
+		if (is_perm) {
+			int drive_level = -1;
+
+			if (!get_bootstrap_change_drive_level(i, &drive_level)) {
+				LOG_ERR("Can't get_bootstrap_change_drive_level by rail index: %x",
+					i);
+				return false;
+			}
+
+			bootstrap_user_settings.user_setting_value[i] =
+				((drive_level & 0x00FF) | 0x0100);
+
+			bootstrap_user_settings_set(&bootstrap_user_settings);
+		}
+
+		return true;
 	}
 
 	return false;
@@ -1628,6 +1647,10 @@ bool set_bootstrap_val_to_device(uint8_t strap, uint8_t val)
 				}
 			}
 		}
+		break;
+	case STRAP_TYPE_GPIO:
+		if (gpio_set(bootstrap_table[strap].cpld_offsets, val) < 0)
+			return false;
 		break;
 	case STRAP_TYPE_IOEXP_PCA6416A:
 		if (is_mb_dc_on()) {
@@ -1677,7 +1700,7 @@ bool bootstrap_user_settings_init(void)
 				return false;
 			}
 
-			// write cpld or io-exp
+			// write cpld or GPIO or io-exp
 			if (!set_bootstrap_val_to_device(i, change_setting_value))
 				LOG_ERR("Can't set bootstrap[%2d]=%02x by user settings", i,
 					change_setting_value);

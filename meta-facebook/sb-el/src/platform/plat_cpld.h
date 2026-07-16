@@ -16,7 +16,8 @@
 // ASIC fault registers
 #define LEAK_DETECT_REG 0x24
 #define VR_SMBUS_ALERT_EVENT_LOG_REG 0x26
-#define HBM_CATTRIP_REG 0x27
+#define VR_VDDQ_HBM1357_SMBUS_ALERT_EVENT_LOG_REG 0xC4
+#define ASIC_CATTRIP_REG 0x27
 #define SYSTEM_ALERT_FAULT_REG 0x28
 #define ASIC_TEMP_OVER_REG 0x29
 #define TEMP_IC_OVER_FAULT_REG 0x2A
@@ -59,7 +60,7 @@
 #define PWRGD_EVENT_LATCH_6_REG 0xC3
 
 // ASIC_THERMTRIP_TRIGGER_CAUSE log register
-#define HBM_CATTRIP_LOG_REG 0x27
+#define ASIC_CATTRIP_LOG_REG 0x27
 
 // CPLD bootstrap mapping and MFIO debug registers
 #define HAMSA_STRAP 0x16

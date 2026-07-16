@@ -25,6 +25,10 @@
 #define CPLD_REGISTER_1ST_PART_NUM 72
 #define FRU_LOG_SIZE sizeof(plat_err_log_mapping)
 
+#define SMBUS_ALRT_STATUS_DATA_LEN 12
+#define SMBUS_ALRT_MAX_VR_NUM 4
+#define SMBUS_ALRT_ENTRY_SIZE 3
+
 #define LOG_ASSERT 1
 #define LOG_DEASSERT 0
 
@@ -85,7 +89,7 @@ void error_log_event(uint16_t error_code, bool log_status);
 uint8_t plat_log_get_num(void);
 void plat_clear_log();
 void reset_error_log_event(uint8_t err_type);
-bool check_temp_status_bit(uint8_t bit_num);
+bool check_temp_status_bit(uint8_t cpld_offset, uint8_t bit_num);
 
 typedef struct __attribute__((packed)) _plat_err_log_mapping {
 	uint16_t index;

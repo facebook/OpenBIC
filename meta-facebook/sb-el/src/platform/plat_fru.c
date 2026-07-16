@@ -296,9 +296,9 @@ bool init_fru_info(void)
 			uint8_t type_length = fru_data[offset++];
 			if (type_length != 0xC1) {
 				int len = type_length & 0x3F;
-				decode_field(&fru_data[offset], len, buffer, sizeof(buffer));
-				strncpy(plat_fru_info->board.board_product, buffer,
-					sizeof(plat_fru_info->board.board_product));
+				decode_field(&fru_data[offset], len,
+					     plat_fru_info->board.board_product,
+					     sizeof(plat_fru_info->board.board_product));
 				offset += len;
 			}
 		}
