@@ -935,3 +935,25 @@ bool vr_access(uint8_t sensor_num)
 
 	return get_vr_monitor_status();
 }
+
+static int sensor_get_idx_by_sensor_num(uint16_t sensor_num)
+{
+	int sensor_idx = 0;
+	for (sensor_idx = 0; sensor_idx < sensor_config_count; sensor_idx++) {
+		if (sensor_num == sensor_config[sensor_idx].num)
+			return sensor_idx;
+	}
+
+	return -1;
+}
+
+uint8_t get_dimm_status(uint8_t dimm_index)
+{
+	int sensor_index =
+		sensor_get_idx_by_sensor_num(dimm_pmic_map_table[dimm_index].dimm_sensor_num);
+	if (sensor_index < 0) {
+		return SENSOR_NOT_SUPPORT;
+	}
+
+	return sensor_config[sensor_index].cache_status;
+}

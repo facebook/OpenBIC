@@ -24,6 +24,7 @@
 #include "plat_pmic.h"
 #include "util_worker.h"
 #include "plat_isr.h"
+#include "plat_dimm.h"
 
 SCU_CFG scu_cfg[] = {
 	//register    value
@@ -52,7 +53,7 @@ void pal_post_init()
 void pal_device_init()
 {
 	init_me_firmware();
-
+	init_i3c_dimm();
 	start_monitor_pmic_error_thread();
 }
 

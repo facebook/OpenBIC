@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -18,14 +18,15 @@
 #define PLAT_PMIC_H
 
 #include <stdint.h>
+#include <zephyr.h>
 
 #define MONITOR_PMIC_ERROR_STACK_SIZE 4096
 #define MONITOR_PMIC_ERROR_TIME_MS (3 * 1000) // 3s
 
 #define MAX_LEN_GET_PMIC_ERROR_INFO 6
-#define MAX_LEN_I3C_GET_PMIC_ERROR_INFO 7
+#define MAX_COUNT_PMIC_ERROR_OFFSET 7
 
-#define MAX_COUNT_DIMM 6
+#define MAX_COUNT_DIMM 4
 #define MAX_COUNT_PMIC_ERROR_TYPE 17
 
 #define I3C_MUX_TO_BIC 0x1
@@ -34,14 +35,15 @@
 #define DIMM_MUX_TO_DIMM_A4A6A7 0x1
 
 #define CL_CPLD_BMC_CHANNEL_ADDR 0x1E // 8 bits
-#define PMIC_FAULT_STATUS_OFFSET 0x0B
-#define DIMM_I3C_MUX_CONTROL_OFFSET 0x0B
+#define PMIC_FAULT_STATUS_OFFSET 0x0D
+#define DIMM_I3C_MUX_CONTROL_OFFSET 0x20
+
+#define PMIC_CLEAR_STATUS_BITS4_OFFSET 0x14
+#define PMIC_VENDOR_PASSWORD_CONTROL_OFFSET 0x39
 
 enum DIMM_ID {
-	DIMM_ID_A0 = 0,
-	DIMM_ID_A2,
+	DIMM_ID_A2 = 0,
 	DIMM_ID_A3,
-	DIMM_ID_A4,
 	DIMM_ID_A6,
 	DIMM_ID_A7,
 };
@@ -53,12 +55,12 @@ enum READ_PMIC_ERROR_PATH {
 
 void start_monitor_pmic_error_thread();
 void monitor_pmic_error_handler();
-int compare_pmic_error(uint8_t dimm_id, uint8_t *pmic_err_data, uint8_t pmic_err_data_len,
+int compare_pmic_error(uint8_t dimm_id, const uint8_t *pmic_err_data, uint8_t pmic_err_data_len,
 		       uint8_t read_path);
 int get_dimm_info(uint8_t dimm_id, uint8_t *bus, uint8_t *addr);
 void add_pmic_error_sel(uint8_t dimm_id, uint8_t error_type);
-int switch_i3c_dimm_mux(uint8_t i3c_mux_position, uint8_t dimm_mux_position);
-void read_pmic_error_via_i3c();
 int get_pmic_fault_status();
+void read_pmic_error_via_i3c();
+void clear_pmic_error();
 
 #endif
