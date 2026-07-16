@@ -410,12 +410,19 @@ int i3c_set_pid(I3C_MSG *msg, uint16_t slot_pid)
 
 #ifdef I3C_HJ_RETRY_COUNT
 	uint8_t retry = 0;
+	bool hj_done = false;
 	do {
 		ret = i3c_slave_hj_req(target);
-		if (ret == 0)
+		if (ret == -EALREADY) {
+			/* Master has assigned a dynamic address => success */
+			hj_done = true;
 			break;
+		}
 
-		LOG_WRN("HJ request failed, ret: %d, retry: %d", ret, retry);
+		if (ret == 0)
+			LOG_WRN("HJ ACKed but no dynamic address yet, retry: %d", retry);
+		else
+			LOG_WRN("HJ request failed, ret: %d, retry: %d", ret, retry);
 
 		if (I3C_HJ_RETRY_COUNT != 0xFF)
 			retry++;
@@ -424,8 +431,17 @@ int i3c_set_pid(I3C_MSG *msg, uint16_t slot_pid)
 			k_msleep(I3C_HJ_RETRY_DELAY_MS);
 		}
 	} while ((I3C_HJ_RETRY_COUNT == 0xFF) || (retry < I3C_HJ_RETRY_COUNT));
+
+	/*
+	 * Only -EALREADY confirms the master really assigned a dynamic address.
+	 * If the finite retries are exhausted while the last attempt merely got
+	 * an ACK (ret == 0) without a DA, treat it as a failure.
+	 */
+	ret = hj_done ? 0 : -ETIMEDOUT;
 #else
 	ret = i3c_slave_hj_req(target);
+	if (ret == -EALREADY)
+		ret = 0;
 #endif
 
 	if (ret != 0) {
