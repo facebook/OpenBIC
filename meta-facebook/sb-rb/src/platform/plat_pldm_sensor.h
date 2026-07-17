@@ -157,6 +157,9 @@
 
 #define ASIC_ADDR (0x64 >> 1)
 
+#define ASIC_IMON_MEDHA0_VDD_ADDR  (0x00 >> 1)
+#define ASIC_IMON_MEDHA1_VDD_ADDR  (0x00 >> 1)
+
 // sensor number
 /* Define sensors address(7 bit) */
 #define SENSOR_NUM_TOP_INLET_TEMP_C 0x01
@@ -320,7 +323,11 @@
 #define SENSOR_NUM_ASIC_MEDHA0_LOCAL_TEMP_C 0x81
 #define SENSOR_NUM_ASIC_OWL_LOCAL_TEMP_C 0x82
 
-#define SENSOR_NUM_NUMBERS 0x83
+// virtual device sensor
+#define SENSOR_NUM_ASIC_IMON_MEDHA0_VDD_CURR_A  0x83
+#define SENSOR_NUM_ASIC_IMON_MEDHA1_VDD_CURR_A  0x84
+
+#define SENSOR_NUM_NUMBERS 0x85
 
 #define TMP75_TEMP_OFFSET 0x00
 #define UPDATE_INTERVAL_1S 1
@@ -374,6 +381,7 @@ bool is_ubc_access(uint8_t sensor_num);
 bool is_temp_access(uint8_t cfg_idx);
 bool is_vr_access(uint8_t sensor_num);
 bool is_iris_smbus_access(uint8_t sensor_num);
+bool is_adc_access(uint8_t sensor_num);
 size_t char16_strlen(const char16_t *str);
 char16_t *char16_strcpy(char16_t *dest, const char16_t *src);
 char16_t *char16_strcat_char(char16_t *dest, char16_t ch);

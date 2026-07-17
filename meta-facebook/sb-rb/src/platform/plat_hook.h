@@ -327,6 +327,7 @@ bool plat_get_get_vout_offset(uint8_t rail, uint16_t *vout_offset);
 bool vr_vout_offset_get_init(void);
 bool voltage_offset_get(uint8_t rail, uint16_t *vout_offset);
 bool post_iris_sensor_read(sensor_cfg *cfg, void *args, int *const reading);
+bool post_adc_sensor_read(sensor_cfg *cfg, void *args, int *const reading);
 bool plat_ubc_otw_otp_init(void);
 bool plat_set_voffset_mmc_command(uint8_t rail, int16_t *millivolt, bool is_perm);
 #endif
