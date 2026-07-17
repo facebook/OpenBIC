@@ -180,6 +180,12 @@ uint8_t check_sensor_type(uint8_t sensor_num)
 	if (sensor_num <= SENSOR_NUM_P3V3_OSFP_PWR_W)
 		return UBC_SENSOR_THREAD_ID;
 
+	if (sensor_num <= SENSOR_NUM_IRIS_MEDHA1_HBM3_REMOTE_TEMP_C)
+		return TEMP_SENSOR_THREAD_ID;
+
+	if (sensor_num <= SENSOR_NUM_ASIC_OWL_LOCAL_TEMP_C)
+		return TEMP_SENSOR_THREAD_ID;
+
 	return MAX_SENSOR_THREAD_ID;
 }
 
@@ -1840,7 +1846,282 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 			.post_sensor_read_hook = post_iris_sensor_read,
 		},
 	},
+	{
+		{
+			// ASIC_MEDHA1_LOCAL_TEMP_C
+			/*** PDR common header***/
+			{
+				0x00000000, //uint32_t record_handle
+				0x01, //uint8_t PDR_header_version
+				PLDM_NUMERIC_SENSOR_PDR, //uint8_t PDR_type
+				0x0000, //uint16_t record_change_number
+				0x0000, //uint16_t data_length
+			},
 
+			/***numeric sensor format***/
+			0x0000, //uint16_t PLDM_terminus_handle;
+			SENSOR_NUM_ASIC_MEDHA1_LOCAL_TEMP_C, //uint16_t sensor_id;
+			0x0000, //uint16_t entity_type; //Need to check
+			SENSOR_NUM_ASIC_MEDHA1_LOCAL_TEMP_C, //uint16_t entity_instance_number;
+			0x0000, //uint16_t container_id;
+			0x00, //uint8_t sensor_init; //Need to check
+			0x01, //uint8_t sensor_auxiliary_names_pdr;
+			0x02, //uint8_t base_unit;  //unit
+			-3, //int8_t unit_modifier; //Need to check
+			0x00, //uint8_t rate_unit;
+			0x00, //uint8_t base_oem_unit_handle;
+			0x00, //uint8_t aux_unit;
+			0x00, //int8_t aux_unit_modifier;
+			0x00, //uint8_t auxrate_unit;
+			0x00, //uint8_t rel;
+			0x00, //uint8_t aux_oem_unit_handle;
+			0x00, //uint8_t is_linear;
+			0x4, //uint8_t sensor_data_size;
+			1, //real32_t resolution;
+			0, //real32_t offset;
+			0x0000, //uint16_t accuracy;
+			0x00, //uint8_t plus_tolerance;
+			0x00, //uint8_t minus_tolerance;
+			0x00000000, //uint32_t hysteresis;
+			UP_THRESHOLD_CRIT, //uint8_t supported_thresholds;
+			0x00, //uint8_t threshold_and_hysteresis_volatility;
+			0, //real32_t state_transition_interval;
+			UPDATE_INTERVAL_1S, //real32_t update_interval;
+			0x00000000, //uint32_t max_readable; //Need to check
+			0x00000000, //uint32_t min_readable;
+			0x04, //uint8_t range_field_format;
+			0x00, //uint8_t range_field_support; //Need to check
+			0x00000000, //uint32_t nominal_value;
+			0x00000000, //uint32_t normal_max;
+			0x00000000, //uint32_t normal_min;
+			0, //uint32_t warning_high;
+			0, //uint32_t warning_low;
+			95000, //uint32_t critical_high;
+			0, //uint32_t critical_low;
+			0, //uint32_t fatal_high;
+			0, //uint32_t fatal_low;
+		},
+		.update_time = 0,
+		{
+			.num = SENSOR_NUM_ASIC_MEDHA1_LOCAL_TEMP_C,
+			.type = sensor_dev_tmp431,
+			.port = I2C_BUS2,
+			.target_addr = ASIC_MEDHA1_LOCAL_ADDR,
+			.offset = TMP431_LOCAL_TEMPERATRUE,
+			.access_checker = is_temp_access,
+			.sample_count = SAMPLE_COUNT_DEFAULT,
+			.cache = 0,
+			.cache_status = PLDM_SENSOR_INITIALIZING,
+			.post_sensor_read_hook = post_tmp432_read,
+		},
+	},
+	{
+		{
+			// ASIC_HAMSA_LOCAL
+			/*** PDR common header***/
+			{
+				0x00000000, //uint32_t record_handle
+				0x01, //uint8_t PDR_header_version
+				PLDM_NUMERIC_SENSOR_PDR, //uint8_t PDR_type
+				0x0000, //uint16_t record_change_number
+				0x0000, //uint16_t data_length
+			},
+
+			/***numeric sensor format***/
+			0x0000, //uint16_t PLDM_terminus_handle;
+			SENSOR_NUM_ASIC_HAMSA_LOCAL_TEMP_C, //uint16_t sensor_id;
+			0x0000, //uint16_t entity_type; //Need to check
+			SENSOR_NUM_ASIC_HAMSA_LOCAL_TEMP_C, //uint16_t entity_instance_number;
+			0x0000, //uint16_t container_id;
+			0x00, //uint8_t sensor_init; //Need to check
+			0x01, //uint8_t sensor_auxiliary_names_pdr;
+			0x02, //uint8_t base_unit;  //unit
+			-3, //int8_t unit_modifier; //Need to check
+			0x00, //uint8_t rate_unit;
+			0x00, //uint8_t base_oem_unit_handle;
+			0x00, //uint8_t aux_unit;
+			0x00, //int8_t aux_unit_modifier;
+			0x00, //uint8_t auxrate_unit;
+			0x00, //uint8_t rel;
+			0x00, //uint8_t aux_oem_unit_handle;
+			0x00, //uint8_t is_linear;
+			0x4, //uint8_t sensor_data_size;
+			1, //real32_t resolution;
+			0, //real32_t offset;
+			0x0000, //uint16_t accuracy;
+			0x00, //uint8_t plus_tolerance;
+			0x00, //uint8_t minus_tolerance;
+			0x00000000, //uint32_t hysteresis;
+			UP_THRESHOLD_CRIT, //uint8_t supported_thresholds;
+			0x00, //uint8_t threshold_and_hysteresis_volatility;
+			0, //real32_t state_transition_interval;
+			UPDATE_INTERVAL_1S, //real32_t update_interval;
+			0x00000000, //uint32_t max_readable; //Need to check
+			0x00000000, //uint32_t min_readable;
+			0x04, //uint8_t range_field_format;
+			0x00, //uint8_t range_field_support; //Need to check
+			0x00000000, //uint32_t nominal_value;
+			0x00000000, //uint32_t normal_max;
+			0x00000000, //uint32_t normal_min;
+			0, //uint32_t warning_high;
+			0, //uint32_t warning_low;
+			95000, //uint32_t critical_high;
+			0, //uint32_t critical_low;
+			0, //uint32_t fatal_high;
+			0, //uint32_t fatal_low;
+		},
+		.update_time = 0,
+		{
+			.num = SENSOR_NUM_ASIC_HAMSA_LOCAL_TEMP_C,
+			.type = sensor_dev_tmp431,
+			.port = I2C_BUS2,
+			.target_addr = ASIC_HAMSA_LOCAL_ADDR,
+			.offset = TMP431_LOCAL_TEMPERATRUE,
+			.access_checker = is_temp_access,
+			.sample_count = SAMPLE_COUNT_DEFAULT,
+			.cache = 0,
+			.cache_status = PLDM_SENSOR_INITIALIZING,
+			.post_sensor_read_hook = post_tmp432_read,
+		},
+	},
+	{
+		{
+			// ASIC_MEDHA0_LOCAL
+			/*** PDR common header***/
+			{
+				0x00000000, //uint32_t record_handle
+				0x01, //uint8_t PDR_header_version
+				PLDM_NUMERIC_SENSOR_PDR, //uint8_t PDR_type
+				0x0000, //uint16_t record_change_number
+				0x0000, //uint16_t data_length
+			},
+
+			/***numeric sensor format***/
+			0x0000, //uint16_t PLDM_terminus_handle;
+			SENSOR_NUM_ASIC_MEDHA0_LOCAL_TEMP_C, //uint16_t sensor_id;
+			0x0000, //uint16_t entity_type; //Need to check
+			SENSOR_NUM_ASIC_MEDHA0_LOCAL_TEMP_C, //uint16_t entity_instance_number;
+			0x0000, //uint16_t container_id;
+			0x00, //uint8_t sensor_init; //Need to check
+			0x01, //uint8_t sensor_auxiliary_names_pdr;
+			0x02, //uint8_t base_unit;  //unit
+			-3, //int8_t unit_modifier; //Need to check
+			0x00, //uint8_t rate_unit;
+			0x00, //uint8_t base_oem_unit_handle;
+			0x00, //uint8_t aux_unit;
+			0x00, //int8_t aux_unit_modifier;
+			0x00, //uint8_t auxrate_unit;
+			0x00, //uint8_t rel;
+			0x00, //uint8_t aux_oem_unit_handle;
+			0x00, //uint8_t is_linear;
+			0x4, //uint8_t sensor_data_size;
+			1, //real32_t resolution;
+			0, //real32_t offset;
+			0x0000, //uint16_t accuracy;
+			0x00, //uint8_t plus_tolerance;
+			0x00, //uint8_t minus_tolerance;
+			0x00000000, //uint32_t hysteresis;
+			UP_THRESHOLD_CRIT, //uint8_t supported_thresholds;
+			0x00, //uint8_t threshold_and_hysteresis_volatility;
+			0, //real32_t state_transition_interval;
+			UPDATE_INTERVAL_1S, //real32_t update_interval;
+			0x00000000, //uint32_t max_readable; //Need to check
+			0x00000000, //uint32_t min_readable;
+			0x04, //uint8_t range_field_format;
+			0x00, //uint8_t range_field_support; //Need to check
+			0x00000000, //uint32_t nominal_value;
+			0x00000000, //uint32_t normal_max;
+			0x00000000, //uint32_t normal_min;
+			0, //uint32_t warning_high;
+			0, //uint32_t warning_low;
+			95000, //uint32_t critical_high;
+			0, //uint32_t critical_low;
+			0, //uint32_t fatal_high;
+			0, //uint32_t fatal_low;
+		},
+		.update_time = 0,
+		{
+			.num = SENSOR_NUM_ASIC_MEDHA0_LOCAL_TEMP_C,
+			.type = sensor_dev_tmp431,
+			.port = I2C_BUS3,
+			.target_addr = ASIC_MEDHA0_LOCAL_ADDR,
+			.offset = TMP431_LOCAL_TEMPERATRUE,
+			.access_checker = is_temp_access,
+			.sample_count = SAMPLE_COUNT_DEFAULT,
+			.cache = 0,
+			.cache_status = PLDM_SENSOR_INITIALIZING,
+			.post_sensor_read_hook = post_tmp432_read,
+		},
+	},
+	{
+		{
+			// ASIC_OWL_LOCAL
+			/*** PDR common header***/
+			{
+				0x00000000, //uint32_t record_handle
+				0x01, //uint8_t PDR_header_version
+				PLDM_NUMERIC_SENSOR_PDR, //uint8_t PDR_type
+				0x0000, //uint16_t record_change_number
+				0x0000, //uint16_t data_length
+			},
+
+			/***numeric sensor format***/
+			0x0000, //uint16_t PLDM_terminus_handle;
+			SENSOR_NUM_ASIC_OWL_LOCAL_TEMP_C, //uint16_t sensor_id;
+			0x0000, //uint16_t entity_type; //Need to check
+			SENSOR_NUM_ASIC_OWL_LOCAL_TEMP_C, //uint16_t entity_instance_number;
+			0x0000, //uint16_t container_id;
+			0x00, //uint8_t sensor_init; //Need to check
+			0x01, //uint8_t sensor_auxiliary_names_pdr;
+			0x02, //uint8_t base_unit;  //unit
+			-3, //int8_t unit_modifier; //Need to check
+			0x00, //uint8_t rate_unit;
+			0x00, //uint8_t base_oem_unit_handle;
+			0x00, //uint8_t aux_unit;
+			0x00, //int8_t aux_unit_modifier;
+			0x00, //uint8_t auxrate_unit;
+			0x00, //uint8_t rel;
+			0x00, //uint8_t aux_oem_unit_handle;
+			0x00, //uint8_t is_linear;
+			0x4, //uint8_t sensor_data_size;
+			1, //real32_t resolution;
+			0, //real32_t offset;
+			0x0000, //uint16_t accuracy;
+			0x00, //uint8_t plus_tolerance;
+			0x00, //uint8_t minus_tolerance;
+			0x00000000, //uint32_t hysteresis;
+			UP_THRESHOLD_CRIT, //uint8_t supported_thresholds;
+			0x00, //uint8_t threshold_and_hysteresis_volatility;
+			0, //real32_t state_transition_interval;
+			UPDATE_INTERVAL_1S, //real32_t update_interval;
+			0x00000000, //uint32_t max_readable; //Need to check
+			0x00000000, //uint32_t min_readable;
+			0x04, //uint8_t range_field_format;
+			0x00, //uint8_t range_field_support; //Need to check
+			0x00000000, //uint32_t nominal_value;
+			0x00000000, //uint32_t normal_max;
+			0x00000000, //uint32_t normal_min;
+			0, //uint32_t warning_high;
+			0, //uint32_t warning_low;
+			95000, //uint32_t critical_high;
+			0, //uint32_t critical_low;
+			0, //uint32_t fatal_high;
+			0, //uint32_t fatal_low;
+		},
+		.update_time = 0,
+		{
+			.num = SENSOR_NUM_ASIC_OWL_LOCAL_TEMP_C,
+			.type = sensor_dev_tmp431,
+			.port = I2C_BUS3,
+			.target_addr = ASIC_OWL_LOCAL_ADDR,
+			.offset = TMP431_LOCAL_TEMPERATRUE,
+			.access_checker = is_temp_access,
+			.sample_count = SAMPLE_COUNT_DEFAULT,
+			.cache = 0,
+			.cache_status = PLDM_SENSOR_INITIALIZING,
+			.post_sensor_read_hook = post_tmp432_read,
+		},
+	},
 };
 
 pldm_sensor_info plat_pldm_sensor_vr_table[] = {
@@ -11007,6 +11288,66 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.nameStringCount = 0x1,
 		.nameLanguageTag = "en",
 		.sensorName = u"IRIS_MEDHA1_HBM3_REMOTE_TEMP_C",
+	},
+	{
+		{
+			.record_handle = 0x00000000,
+			.PDR_header_version = 0x01,
+			.PDR_type = PLDM_SENSOR_AUXILIARY_NAMES_PDR,
+			.record_change_number = 0x0000,
+			.data_length = 0x0000,
+		},
+		.terminus_handle = 0x0000,
+		.sensor_id = SENSOR_NUM_ASIC_MEDHA1_LOCAL_TEMP_C,
+		.sensor_count = 0x1,
+		.nameStringCount = 0x1,
+		.nameLanguageTag = "en",
+		.sensorName = u"ASIC_MEDHA1_LOCAL_TEMP_C",
+	},
+	{
+		{
+			.record_handle = 0x00000000,
+			.PDR_header_version = 0x01,
+			.PDR_type = PLDM_SENSOR_AUXILIARY_NAMES_PDR,
+			.record_change_number = 0x0000,
+			.data_length = 0x0000,
+		},
+		.terminus_handle = 0x0000,
+		.sensor_id = SENSOR_NUM_ASIC_HAMSA_LOCAL_TEMP_C,
+		.sensor_count = 0x1,
+		.nameStringCount = 0x1,
+		.nameLanguageTag = "en",
+		.sensorName = u"ASIC_HAMSA_LOCAL_TEMP_C",
+	},
+	{
+		{
+			.record_handle = 0x00000000,
+			.PDR_header_version = 0x01,
+			.PDR_type = PLDM_SENSOR_AUXILIARY_NAMES_PDR,
+			.record_change_number = 0x0000,
+			.data_length = 0x0000,
+		},
+		.terminus_handle = 0x0000,
+		.sensor_id = SENSOR_NUM_ASIC_MEDHA0_LOCAL_TEMP_C,
+		.sensor_count = 0x1,
+		.nameStringCount = 0x1,
+		.nameLanguageTag = "en",
+		.sensorName = u"ASIC_MEDHA0_LOCAL_TEMP_C",
+	},
+	{
+		{
+			.record_handle = 0x00000000,
+			.PDR_header_version = 0x01,
+			.PDR_type = PLDM_SENSOR_AUXILIARY_NAMES_PDR,
+			.record_change_number = 0x0000,
+			.data_length = 0x0000,
+		},
+		.terminus_handle = 0x0000,
+		.sensor_id = SENSOR_NUM_ASIC_OWL_LOCAL_TEMP_C,
+		.sensor_count = 0x1,
+		.nameStringCount = 0x1,
+		.nameLanguageTag = "en",
+		.sensorName = u"ASIC_OWL_LOCAL_TEMP_C",
 	},
 };
 
