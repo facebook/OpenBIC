@@ -267,8 +267,8 @@ void asic_thermal_threshold_set_cmds(const struct shell *shell, size_t argc, cha
 		return;
 	}
 
-	uint8_t lower_threshold = strtol(argv[2], NULL, 16);
-	uint8_t upper_threshold = strtol(argv[3], NULL, 16);
+	uint8_t lower_threshold = strtol(argv[1], NULL, 16);
+	uint8_t upper_threshold = strtol(argv[2], NULL, 16);
 
 	uint8_t thermal_threshold_data[ASIC_THERMAL_THRESHOLD_LEN] = { 0 };
 	thermal_threshold_data[0] = lower_threshold;
