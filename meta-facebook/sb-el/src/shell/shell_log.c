@@ -107,7 +107,7 @@ const cpld_bit_name_table_t cpld_bit_name_table[] = {
 	{ VR_SMBUS_ALERT_EVENT_LOG_REG,
 	  "VR SMBALRT , Status",
 	  {
-		  "VDDQ_0246_SMBALRT_N",
+		  "VDDQ_01234567_SMBALRT_N",
 		  "MAX_N_SMBALRT_N",
 		  "VDDQC_VDDQL_0246_SMBALRT_N",
 		  "MAX_M_VDDQC_1357_SMBALRT_N",
@@ -115,18 +115,6 @@ const cpld_bit_name_table_t cpld_bit_name_table[] = {
 		  "OWL_E_SMBALRT_N",
 		  "NUWA1_VDD_ALERT_R_N",
 		  "NUWA0_VDD_ALERT_R_N",
-	  } },
-	{ VR_VDDQ_HBM1357_SMBUS_ALERT_EVENT_LOG_REG,
-	  "VR SMBALRT, Status",
-	  {
-		  "VDDQ_1357_SMBALRT_N",
-		  "RSVD",
-		  "RSVD",
-		  "RSVD",
-		  "RSVD",
-		  "RSVD",
-		  "RSVD",
-		  "RSVD",
 	  } },
 	{ ASIC_CATTRIP_REG,
 	  "ASIC CATTRIP, Event log",
@@ -248,8 +236,7 @@ void cmd_log_dump(const struct shell *shell, size_t argc, char **argv)
 
 		switch (err_type) {
 		case CPLD_UNEXPECTED_VAL_TRIGGER_CAUSE:
-			if (cpld_offset == VR_SMBUS_ALERT_EVENT_LOG_REG ||
-			    cpld_offset == VR_VDDQ_HBM1357_SMBUS_ALERT_EVENT_LOG_REG) {
+			if (cpld_offset == VR_SMBUS_ALERT_EVENT_LOG_REG) {
 				shell_print(shell, "\t%s", reg_name);
 				shell_print(shell, "\t\t%s", bit_name);
 				bool has_valid_vr = false;

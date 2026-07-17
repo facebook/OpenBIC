@@ -59,7 +59,6 @@ typedef struct _vr_ubc_device_table_ {
 } vr_ubc_device_table;
 
 typedef struct vr_smbus_alrt_sensor_map {
-	uint8_t cpld_offset;
 	uint8_t bit_number;
 	uint8_t vr_cnt;
 	uint8_t vr_rail_1_page_0;
@@ -69,26 +68,25 @@ typedef struct vr_smbus_alrt_sensor_map {
 } vr_smbus_alrt_sensor_map;
 
 vr_smbus_alrt_sensor_map vr_smbus_alrt_sensor_map_table[] = {
-	{ VR_SMBUS_ALERT_EVENT_LOG_REG, 0, 2, VR_RAIL_E_ASIC_P1V05_VDDC_HBM0246,
-	  VR_RAIL_E_ASIC_P1V8_VPP_HBM0246 },
-	{ VR_SMBUS_ALERT_EVENT_LOG_REG, 1, 2, VR_RAIL_E_ASIC_P0V75_MAX_N_VDD,
+	{ 0, 4, VR_RAIL_E_ASIC_P0V9_VDDQ_HBM0246,
+	  VR_RAIL_E_ASIC_P1V2_HAMSA_VDDHRXTX_PCIE, VR_RAIL_E_ASIC_P0V9_VDDQ_HBM1357,
+	  VR_RAIL_E_ASIC_P0V85_HAMSA_VDD },
+	{ 1, 2, VR_RAIL_E_ASIC_P0V75_MAX_N_VDD,
 	  VR_RAIL_E_ASIC_P0V8_HAMSA_AVDD_PCIE },
-	{ VR_SMBUS_ALERT_EVENT_LOG_REG, 2, 4, VR_RAIL_E_ASIC_P0V75_MAX_M_VDD,
+	{ 2, 4, VR_RAIL_E_ASIC_P1V05_VDDC_HBM0246,
+	  VR_RAIL_E_ASIC_P1V8_VPP_HBM0246, VR_RAIL_E_ASIC_P0V4_VDDQL_HBM0246,
+	  VR_RAIL_E_ASIC_P0V75_VDDPHY_HBM0246 },
+	{ 3, 4, VR_RAIL_E_ASIC_P0V75_MAX_M_VDD,
 	  VR_RAIL_E_ASIC_P0V75_VDDPHY_HBM1357, VR_RAIL_E_ASIC_P1V05_VDDC_HBM1357,
 	  VR_RAIL_E_ASIC_P1V8_VPP_HBM1357 },
-	{ VR_SMBUS_ALERT_EVENT_LOG_REG, 3, 4, VR_RAIL_E_ASIC_P0V75_MAX_M_VDD,
-	  VR_RAIL_E_ASIC_P0V75_VDDPHY_HBM1357, VR_RAIL_E_ASIC_P1V05_VDDC_HBM1357,
-	  VR_RAIL_E_ASIC_P1V8_VPP_HBM1357 },
-	{ VR_SMBUS_ALERT_EVENT_LOG_REG, 4, 4, VR_RAIL_E_ASIC_P0V9_OWL_W_TRVDD,
+	{ 4, 4, VR_RAIL_E_ASIC_P0V9_OWL_W_TRVDD,
 	  VR_RAIL_E_ASIC_P0V75_OWL_W_TRVDD, VR_RAIL_E_ASIC_P0V75_OWL_W_VDD,
 	  VR_RAIL_E_ASIC_P0V75_MAX_S_VDD },
-	{ VR_SMBUS_ALERT_EVENT_LOG_REG, 5, 4, VR_RAIL_E_ASIC_P0V9_OWL_E_TRVDD,
+	{ 5, 4, VR_RAIL_E_ASIC_P0V9_OWL_E_TRVDD,
 	  VR_RAIL_E_ASIC_P0V75_OWL_E_TRVDD, VR_RAIL_E_ASIC_P0V75_OWL_E_VDD,
 	  VR_RAIL_E_ASIC_P0V4_VDDQL_HBM1357 },
-	{ VR_SMBUS_ALERT_EVENT_LOG_REG, 6, 1, VR_RAIL_E_ASIC_P0V75_NUWA1_VDD },
-	{ VR_SMBUS_ALERT_EVENT_LOG_REG, 7, 1, VR_RAIL_E_ASIC_P0V75_NUWA0_VDD },
-	{ VR_VDDQ_HBM1357_SMBUS_ALERT_EVENT_LOG_REG, 0, 2, VR_RAIL_E_ASIC_P0V9_VDDQ_HBM1357,
-	  VR_RAIL_E_ASIC_P0V85_HAMSA_VDD },
+	{ 6, 1, VR_RAIL_E_ASIC_P0V75_NUWA1_VDD },
+	{ 7, 1, VR_RAIL_E_ASIC_P0V75_NUWA0_VDD },
 };
 
 typedef struct _vr_device_match_sensor_num {
@@ -213,9 +211,6 @@ vr_error_callback_info vr_error_callback_info_table[] = {
 	  { VR_ERR_DEVICE_DONT_CARE, VR_ERR_DEVICE_DONT_CARE, VR_ERR_DEVICE_DONT_CARE,
 	    VR_ERR_DEVICE_DONT_CARE, VR_ERR_DEVICE_DONT_CARE, VR_ERR_DEVICE_DONT_CARE,
 	    VR_ERR_DEVICE_DONT_CARE, VR_ERR_DEVICE_DONT_CARE } },
-	{ VR_VDDQ_HBM1357_SMBUS_ALERT_EVENT_LOG_REG,
-	  { VR_ERR_DEVICE_DONT_CARE, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } },
-
 };
 
 void plat_log_read(uint8_t *log_data, uint8_t cmd_size, uint16_t order)
@@ -504,14 +499,9 @@ bool get_error_data(uint16_t error_code, uint8_t *data)
 		return false;
 	}
 
-	if (cpld_offset == VR_SMBUS_ALERT_EVENT_LOG_REG ||
-	    cpld_offset == VR_VDDQ_HBM1357_SMBUS_ALERT_EVENT_LOG_REG) {
+	if (cpld_offset == VR_SMBUS_ALERT_EVENT_LOG_REG) {
 		// smbalrt status some bits will include 2 different VRs(each VR has 2 pages so total 8 Bytes)
 		// Handle VR_FAULT_ASSERT errors and retrieve VR-specific data
-		if (cpld_offset == VR_VDDQ_HBM1357_SMBUS_ALERT_EVENT_LOG_REG) {
-			LOG_INF("smbus_alrt_index is %d before modification", smbus_alrt_index);
-			smbus_alrt_index = 8; // VDDQ_HBM1357 smbus alrt index is 8
-		}
 		if (smbus_alrt_index < ARRAY_SIZE(vr_smbus_alrt_sensor_map_table)) {
 			if (!get_multi_vr_status(smbus_alrt_index, data)) {
 				LOG_ERR("Failed to retrieve VR error data for smbus alrt index: 0x%x",
