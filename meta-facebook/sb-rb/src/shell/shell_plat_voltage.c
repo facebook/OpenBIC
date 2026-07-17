@@ -89,6 +89,12 @@ static int cmd_voltage_set(const struct shell *shell, size_t argc, char **argv)
 		return -1;
 	}
 
+	// can't set voltage for osfp p3v3
+	if (rail == VR_RAIL_E_P3V3_OSFP_VOLT_V) {
+		shell_warn(shell, "OSFP P3V3 can't set voltage");
+		return -1;
+	}
+
 	uint16_t millivolt = strtol(argv[2], NULL, 0);
 
 	/* Apply SVS offset if enabled */
@@ -109,11 +115,7 @@ static int cmd_voltage_set(const struct shell *shell, size_t argc, char **argv)
 			    vout_min_millivolt, vout_max_millivolt);
 		return -1;
 	}
-	// can't set voltage for osfp p3v3
-	if (rail == VR_RAIL_E_P3V3_OSFP_VOLT_V) {
-		shell_warn(shell, "OSFP P3V3 can't set voltage");
-		return -1;
-	}
+
 	shell_info(shell, "Set %s(%d) to %d mV, %svolatile\n", argv[1], rail, millivolt,
 		   (argc == 4) ? "non-" : "");
 
@@ -133,12 +135,11 @@ static int cmd_voltage_set(const struct shell *shell, size_t argc, char **argv)
 
 static void voltage_rname_get(size_t idx, struct shell_static_entry *entry)
 {
-	if (((get_asic_board_id() != ASIC_BOARD_ID_EVB)) && (idx == VR_RAIL_E_P3V3_OSFP_VOLT_V))
-		idx++;
 	uint8_t *name = NULL;
-	vr_rail_name_get((uint8_t)idx, &name);
 
-	if (idx == VR_RAIL_E_P3V3_OSFP_VOLT_V) {
+	if (idx < VR_RAIL_E_P3V3_OSFP_VOLT_V) {
+		vr_rail_name_get((uint8_t)idx, &name);
+	} else if (idx == VR_RAIL_E_P3V3_OSFP_VOLT_V) {
 		return;
 	}
 

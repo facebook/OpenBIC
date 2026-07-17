@@ -18,6 +18,7 @@
 #include <stdlib.h>
 #include "sensor.h"
 #include "plat_hook.h"
+#include "plat_class.h"
 
 static int cmd_vr_status_get(const struct shell *shell, size_t argc, char **argv)
 {
@@ -28,6 +29,10 @@ static int cmd_vr_status_get(const struct shell *shell, size_t argc, char **argv
 
 	if (!strcmp(argv[1], "all")) {
 		for (int i = 0; i < VR_RAIL_E_MAX; i++) {
+			if (((get_asic_board_id() != ASIC_BOARD_ID_EVB)) &&
+			    (i == VR_RAIL_E_P3V3_OSFP_VOLT_V))
+				continue;
+
 			uint8_t *rail_name = NULL;
 			if (!vr_rail_name_get((uint8_t)i, &rail_name)) {
 				shell_error(shell, "Can't find vr_rail_name by rail index: %x", i);
@@ -141,6 +146,10 @@ static int cmd_vr_status_clear(const struct shell *shell, size_t argc, char **ar
 
 	if (!strcmp(argv[1], "all")) {
 		for (int i = 0; i < VR_RAIL_E_MAX; i++) {
+			if (((get_asic_board_id() != ASIC_BOARD_ID_EVB)) &&
+			    (i == VR_RAIL_E_P3V3_OSFP_VOLT_V))
+				continue;
+
 			uint8_t *rail_name = NULL;
 			if (!vr_rail_name_get((uint8_t)i, &rail_name)) {
 				shell_error(shell, "Can't find vr_rail_name by rail index: %x", i);
@@ -188,10 +197,19 @@ SHELL_DYNAMIC_CMD_CREATE(vr_status_rname_for_vr_status, vr_status_rname_get);
 static void voltage_rname_get(size_t idx, struct shell_static_entry *entry)
 {
 	uint8_t *name = NULL;
-	vr_rail_name_get((uint8_t)idx, &name);
-
-	if (idx == VR_RAIL_E_MAX)
-		name = (uint8_t *)"all";
+	if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
+		if (idx < VR_RAIL_E_MAX) {
+			vr_rail_name_get((uint8_t)idx, &name);
+		} else if (idx == VR_RAIL_E_MAX) {
+			name = (uint8_t *)"all";
+		}
+	} else {
+		if (idx < VR_RAIL_E_P3V3_OSFP_VOLT_V) {
+			vr_rail_name_get((uint8_t)idx, &name);
+		} else if (idx == VR_RAIL_E_P3V3_OSFP_VOLT_V) {
+			name = (uint8_t *)"all";
+		}
+	}
 
 	entry->syntax = (name) ? (const char *)name : NULL;
 	entry->handler = NULL;
@@ -202,10 +220,19 @@ static void voltage_rname_get(size_t idx, struct shell_static_entry *entry)
 static void voltage_rname_clear(size_t idx, struct shell_static_entry *entry)
 {
 	uint8_t *name = NULL;
-	vr_rail_name_get((uint8_t)idx, &name);
-
-	if (idx == VR_RAIL_E_MAX)
-		name = (uint8_t *)"all";
+	if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
+		if (idx < VR_RAIL_E_MAX) {
+			vr_rail_name_get((uint8_t)idx, &name);
+		} else if (idx == VR_RAIL_E_MAX) {
+			name = (uint8_t *)"all";
+		}
+	} else {
+		if (idx < VR_RAIL_E_P3V3_OSFP_VOLT_V) {
+			vr_rail_name_get((uint8_t)idx, &name);
+		} else if (idx == VR_RAIL_E_P3V3_OSFP_VOLT_V) {
+			name = (uint8_t *)"all";
+		}
+	}
 
 	entry->syntax = (name) ? (const char *)name : NULL;
 	entry->handler = NULL;
