@@ -270,7 +270,8 @@ void plat_clear_log()
 		k_msleep(EEPROM_MAX_WRITE_TIME);
 	}
 	log_num = 0;
-	next_index = 0;
+	next_index = 1;
+	next_log_position = 1;
 }
 
 bool vr_fault_get_error_data(uint8_t sensor_id, uint8_t *data)
@@ -676,6 +677,8 @@ void find_last_log_position()
 	}
 
 	next_log_position = (last_position % LOG_MAX_NUM) + 1;
+	if (next_log_position == LOG_MAX_NUM)
+		next_log_position = 1;
 	next_index = (max_index % LOG_MAX_INDEX) + 1;
 	LOG_INF("Next log position: %d, next index: %d", next_log_position, next_index);
 }
