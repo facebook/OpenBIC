@@ -463,7 +463,7 @@ SHELL_STATIC_SUBCMD_SET_CREATE(sub_voffset_mmc_cmds,
 /* level 1 */
 SHELL_STATIC_SUBCMD_SET_CREATE(
 	sub_voltage_cmds, SHELL_CMD(get, &sub_voltage_get_cmds, "get voltage all", NULL),
-	SHELL_CMD_ARG(set, &voltage_rname, "set <voltage-rail> <new-voltage>|default [perm]",
+	SHELL_CMD_ARG(set, &voltage_rname, "set <voltage-rail> <new-voltage> [perm]",
 		      cmd_voltage_set, 3, 1),
 	SHELL_CMD(svs_apply_offset, &sub_svs_cmds, "svs apply commands", NULL),
 	SHELL_CMD(svs_asic_voltage, &sub_svs_asic_voltage, "svs asic voltage setting commands",
