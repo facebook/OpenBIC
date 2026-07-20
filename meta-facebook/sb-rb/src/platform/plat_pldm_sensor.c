@@ -27,6 +27,9 @@
 #include "plat_power_capping.h"
 #include "plat_pldm_fw_update.h"
 #include "plat_gpio.h"
+#include "plat_cpld.h"
+#include "plat_event.h"
+#include "plat_log.h"
 #include "iris_smbus.h"
 
 LOG_MODULE_REGISTER(plat_pldm_sensor);
@@ -51,6 +54,113 @@ static struct pldm_sensor_thread pal_pldm_sensor_thread[MAX_SENSOR_THREAD_ID] = 
 extern vr_pre_proc_arg vr_pre_read_args[];
 extern mpc12109_init_arg mpc12109_init_args[];
 uint8_t ioe_init_flag = 0;
+
+#define MP2971_OT_WARNING_REG 0x7D
+#define MP2971_OT_WARNING_BIT BIT(6)
+#define CPLD_OT_WARNING_REG 0x12
+#define CPLD_OT_WARNING_BIT BIT(0)
+#define MP2971_OT_WARNING_EVENT_DATA1_BASE 0x61
+#define QUICK_SENSOR_OT_WARNING_POLL_COUNT 34
+
+typedef struct {
+	uint8_t sensor_num;
+	uint8_t ot_warning;
+} mp2971_ot_warning_status;
+
+static mp2971_ot_warning_status mp2971_ot_warning_table[MPS2971_TEMP_RAIL_NUMBERS] = { 0 };
+static uint8_t mp2971_ot_warning_table_count;
+
+static bool is_mp2971_temp_monitor_sensor(const sensor_cfg *cfg)
+{
+	if (cfg == NULL)
+		return false;
+
+	return cfg->type == sensor_dev_mp2971 && cfg->offset == PMBUS_READ_TEMPERATURE_1 &&
+	       cfg->num != SENSOR_NUM_P3V3_OSFP_TEMP_C;
+}
+
+static void init_mp2971_ot_warning_table(void)
+{
+	mp2971_ot_warning_table_count = 0;
+
+	for (uint8_t sensor_num = 1; sensor_num < SENSOR_NUM_NUMBERS; sensor_num++) {
+		sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_num);
+
+		if (!is_mp2971_temp_monitor_sensor(cfg))
+			continue;
+
+		if (mp2971_ot_warning_table_count >= MPS2971_TEMP_RAIL_NUMBERS)
+			break;
+
+		mp2971_ot_warning_table[mp2971_ot_warning_table_count].sensor_num = cfg->num;
+		mp2971_ot_warning_table[mp2971_ot_warning_table_count].ot_warning = 0;
+		mp2971_ot_warning_table_count++;
+	}
+
+	LOG_INF("mp2971 ot warning monitor sensor count: %d", mp2971_ot_warning_table_count);
+}
+
+static void set_cpld_ot_warning_high(void)
+{
+	uint8_t reg_val = 0;
+
+	if (!plat_read_cpld(CPLD_OT_WARNING_REG, &reg_val, 1)) {
+		LOG_ERR("Failed to read CPLD reg 0x%02X", CPLD_OT_WARNING_REG);
+		return;
+	}
+
+	if (reg_val & CPLD_OT_WARNING_BIT)
+		return;
+
+	reg_val |= CPLD_OT_WARNING_BIT;
+
+	if (!plat_write_cpld(CPLD_OT_WARNING_REG, &reg_val))
+		LOG_ERR("Failed to write CPLD reg 0x%02X", CPLD_OT_WARNING_REG);
+}
+
+static void update_mp2971_ot_warning_status(void)
+{
+	bool any_ot_warning = false;
+
+	for (uint8_t i = 0; i < mp2971_ot_warning_table_count; i++) {
+		uint8_t old_ot_warning = mp2971_ot_warning_table[i].ot_warning;
+		uint8_t reg_val = 0;
+		bool read_ok = get_raw_data_from_sensor_id(mp2971_ot_warning_table[i].sensor_num,
+							   MP2971_OT_WARNING_REG, &reg_val, 1);
+
+		mp2971_ot_warning_table[i].ot_warning =
+			(read_ok && (reg_val & MP2971_OT_WARNING_BIT)) ? 1 : 0;
+
+		if (!old_ot_warning && mp2971_ot_warning_table[i].ot_warning) {
+			LOG_ERR("MP2971 OT_WARNING detected on sensor 0x%02X, reg_val: 0x%02X",
+				mp2971_ot_warning_table[i].sensor_num, reg_val);
+
+			uint16_t error_code = MP2971_OT_WARNING_EVENT_CAUSE + i;
+
+			error_log_event(error_code, LOG_ASSERT);
+
+			struct pldm_addsel_data sel_msg = { 0 };
+			sel_msg.assert_type = LOG_ASSERT;
+			sel_msg.event_type = ASIC_MODULE_ERROR;
+			sel_msg.event_data_1 = MP2971_OT_WARNING_EVENT_DATA1_BASE + i;
+			sel_msg.event_data_2 = reg_val;
+			sel_msg.event_data_3 = 0;
+
+			if (PLDM_SUCCESS != send_event_log_to_bmc(sel_msg)) {
+				LOG_ERR("Failed to send MP2971 OT warning SEL: 0x%x 0x%x 0x%x",
+					sel_msg.event_data_1, sel_msg.event_data_2,
+					sel_msg.event_data_3);
+			}
+		}
+
+		if (mp2971_ot_warning_table[i].ot_warning)
+			any_ot_warning = true;
+	}
+
+	if (any_ot_warning)
+		set_cpld_ot_warning_high();
+}
+
 static bool is_quick_vr_sensor(uint8_t sensor_num)
 {
 	switch (sensor_num) {
@@ -12318,7 +12428,7 @@ void set_ioe_init_flag(uint8_t flag)
 }
 
 struct k_thread quick_sensor_poll;
-K_KERNEL_STACK_MEMBER(quick_sensor_poll_stack, 1024);
+K_KERNEL_STACK_MEMBER(quick_sensor_poll_stack, 2048);
 k_tid_t quick_sensor_tid;
 
 void init_U200051_IO()
@@ -12339,6 +12449,7 @@ void quick_sensor_poll_handler(void *arug0, void *arug1, void *arug2)
 	uint8_t leak_2_value = 0;
 	uint8_t set_io7_value = 0;
 	uint8_t log_show_flag = 0;
+	uint8_t ot_warning_poll_count = 0;
 	int count = 0;
 	uint8_t cycle_counter = 0;
 	while (1) {
@@ -12361,10 +12472,25 @@ void quick_sensor_poll_handler(void *arug0, void *arug1, void *arug2)
 		}
 		//check dc on/off and polling enable/disable
 		if (is_mb_dc_on() == false || !get_plat_sensor_polling_enable_flag()) {
+			ot_warning_poll_count = 0;
+			for (uint8_t i = 0; i < mp2971_ot_warning_table_count; i++)
+				mp2971_ot_warning_table[i].ot_warning = 0;
 			//dc is off, sleep 1 second
 			k_msleep(1000);
 			continue;
 		}
+
+		ot_warning_poll_count++;
+		if (ot_warning_poll_count >= QUICK_SENSOR_OT_WARNING_POLL_COUNT) {
+			ot_warning_poll_count = 0;
+			if (get_plat_sensor_vr_polling_enable_flag()) {
+				update_mp2971_ot_warning_status();
+			} else {
+				for (uint8_t i = 0; i < mp2971_ot_warning_table_count; i++)
+					mp2971_ot_warning_table[i].ot_warning = 0;
+			}
+		}
+
 		// if board id >= EVB EVT1B(FAB2) then do quick sensor polling, else skip
 		if (get_asic_board_id() == ASIC_BOARD_ID_EVB &&
 		    get_board_rev_id() >= REV_ID_EVT1B) {
@@ -12404,6 +12530,8 @@ void quick_sensor_poll_handler(void *arug0, void *arug1, void *arug2)
 
 void quick_sensor_poll_init()
 {
+	init_mp2971_ot_warning_table();
+
 	quick_sensor_tid = k_thread_create(&quick_sensor_poll, quick_sensor_poll_stack,
 					   K_THREAD_STACK_SIZEOF(quick_sensor_poll_stack),
 					   quick_sensor_poll_handler, NULL, NULL, NULL,

@@ -45,6 +45,7 @@ LOG_MODULE_REGISTER(plat_log);
 #define CPLD_VR_VENDOR_TYPE_REG 0x1C
 #define ERROR_CODE_TYPE_SHIFT 13
 #define SENSOR_NUMBER_DONT_CARE 0xFF
+#define MP2971_OT_WARNING_REG 0x7D
 
 static plat_err_log_mapping err_log_data[LOG_MAX_NUM];
 static uint16_t err_code_caches[200]; //extend if error code types > 200
@@ -52,6 +53,30 @@ static uint16_t next_log_position = 0; // Next position to write in the eeprom, 
 static uint16_t next_index = 0; // Next global index to use for logs, 1-based, defaut 0
 static uint8_t log_num; // Number of logs in EEPROM
 static uint8_t clk_312_5_reinit_event_data[7] = { 0 };
+
+static bool get_mp2971_ot_warning_sensor_num_by_index(uint8_t rail_index, uint8_t *sensor_num)
+{
+	CHECK_NULL_ARG_WITH_RETURN(sensor_num, false);
+
+	uint8_t matched_idx = 0;
+
+	for (uint8_t idx = 1; idx < SENSOR_NUM_NUMBERS; idx++) {
+		sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(idx);
+		if (cfg == NULL)
+			continue;
+
+		if (cfg->type == sensor_dev_mp2971 && cfg->offset == PMBUS_READ_TEMPERATURE_1 &&
+		    cfg->num != SENSOR_NUM_P3V3_OSFP_TEMP_C) {
+			if (matched_idx == rail_index) {
+				*sensor_num = cfg->num;
+				return true;
+			}
+			matched_idx++;
+		}
+	}
+
+	return false;
+}
 
 void error_log_event(uint16_t error_code, bool log_status);
 
@@ -711,6 +736,29 @@ bool get_error_data(uint16_t error_code, uint8_t *data)
 				break;
 			}
 			break;
+		case MP2971_OT_WARNING_EVENT_CAUSE: {
+			uint8_t rail_index = error_code & 0xFF;
+			uint8_t sensor_num = 0;
+			uint8_t reg_val = 0;
+
+			if (!get_mp2971_ot_warning_sensor_num_by_index(rail_index, &sensor_num)) {
+				LOG_ERR("Failed to map MP2971 OT warning rail index: 0x%02x",
+					rail_index);
+				return false;
+			}
+
+			if (!get_raw_data_from_sensor_id(sensor_num, MP2971_OT_WARNING_REG,
+							 &reg_val, 1)) {
+				LOG_ERR("Failed to read MP2971 OT warning register for sensor: 0x%02x",
+					sensor_num);
+				return false;
+			}
+
+			data[0] = reg_val;
+			data[1] = sensor_num;
+			return true;
+			break;
+		}
 		default:
 			break;
 		}

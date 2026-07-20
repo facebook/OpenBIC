@@ -187,6 +187,58 @@ const char *get_cpld_bit_name(uint8_t cpld_offset, uint8_t bit_pos)
 	return "NA";
 }
 
+static const char *get_mp2971_ot_warning_rail_name(uint8_t sensor_num)
+{
+	switch (sensor_num) {
+	case SENSOR_NUM_ASIC_P0V85_MEDHA0_VDD_TEMP_C:
+		return "ASIC_P0V85_MEDHA0_VDD";
+	case SENSOR_NUM_ASIC_P0V85_MEDHA1_VDD_TEMP_C:
+		return "ASIC_P0V85_MEDHA1_VDD";
+	case SENSOR_NUM_ASIC_P0V9_OWL_E_TRVDD_TEMP_C:
+		return "ASIC_P0V9_OWL_E_TRVDD";
+	case SENSOR_NUM_ASIC_P0V75_OWL_E_TRVDD_TEMP_C:
+		return "ASIC_P0V75_OWL_E_TRVDD";
+	case SENSOR_NUM_ASIC_P0V75_OWL_E_VDD_TEMP_C:
+		return "ASIC_P0V75_OWL_E_VDD";
+	case SENSOR_NUM_ASIC_P0V9_OWL_W_TRVDD_TEMP_C:
+		return "ASIC_P0V9_OWL_W_TRVDD";
+	case SENSOR_NUM_ASIC_P0V75_OWL_W_TRVDD_TEMP_C:
+		return "ASIC_P0V75_OWL_W_TRVDD";
+	case SENSOR_NUM_ASIC_P0V75_OWL_W_VDD_TEMP_C:
+		return "ASIC_P0V75_OWL_W_VDD";
+	case SENSOR_NUM_ASIC_P0V75_MAX_M_VDD_TEMP_C:
+		return "ASIC_P0V75_MAX_M_VDD";
+	case SENSOR_NUM_ASIC_P0V75_MAX_N_VDD_TEMP_C:
+		return "ASIC_P0V75_MAX_N_VDD";
+	case SENSOR_NUM_ASIC_P0V75_MAX_S_VDD_TEMP_C:
+		return "ASIC_P0V75_MAX_S_VDD";
+	case SENSOR_NUM_ASIC_P0V8_HAMSA_AVDD_PCIE_TEMP_C:
+		return "ASIC_P0V8_HAMSA_AVDD_PCIE";
+	case SENSOR_NUM_ASIC_P1V2_HAMSA_VDDHRXTX_PCIE_TEMP_C:
+		return "ASIC_P1V2_HAMSA_VDDHRXTX_PCIE";
+	case SENSOR_NUM_ASIC_P0V85_HAMSA_VDD_TEMP_C:
+		return "ASIC_P0V85_HAMSA_VDD";
+	case SENSOR_NUM_ASIC_P0V75_VDDPHY_HBM0246_TEMP_C:
+		return "ASIC_P0V75_VDDPHY_HBM0246";
+	case SENSOR_NUM_ASIC_P0V4_VDDQL_HBM0246_TEMP_C:
+		return "ASIC_P0V4_VDDQL_HBM0246";
+	case SENSOR_NUM_ASIC_P1V1_VDDQC_HBM0246_TEMP_C:
+		return "ASIC_P1V1_VDDQC_HBM0246";
+	case SENSOR_NUM_ASIC_P1V8_VPP_HBM0246_TEMP_C:
+		return "ASIC_P1V8_VPP_HBM0246";
+	case SENSOR_NUM_ASIC_P0V75_VDDPHY_HBM1357_TEMP_C:
+		return "ASIC_P0V75_VDDPHY_HBM1357";
+	case SENSOR_NUM_ASIC_P0V4_VDDQL_HBM1357_TEMP_C:
+		return "ASIC_P0V4_VDDQL_HBM1357";
+	case SENSOR_NUM_ASIC_P1V1_VDDQC_HBM1357_TEMP_C:
+		return "ASIC_P1V1_VDDQC_HBM1357";
+	case SENSOR_NUM_ASIC_P1V8_VPP_HBM1357_TEMP_C:
+		return "ASIC_P1V8_VPP_HBM1357";
+	default:
+		return "UNKNOWN_RAIL";
+	}
+}
+
 void cmd_set_event(const struct shell *shell, size_t argc, char **argv)
 {
 	if (argc != 3) {
@@ -300,6 +352,12 @@ void cmd_log_dump(const struct shell *shell, size_t argc, char **argv)
 				default:
 					break;
 				}
+			} else if (extend_case == MP2971_OT_WARNING_EVENT_CAUSE) {
+				const char *rail_name =
+					get_mp2971_ot_warning_rail_name(log.error_data[1]);
+				shell_print(shell, "\t%s OT_WARNING", rail_name);
+				shell_print(shell, "read status(0x7D): 0x%02x", log.error_data[0]);
+				err_data_len = 1;
 			} else if (cpld_offset == MFIO_FOR_RAINBOW) {
 				shell_print(shell, "\tASIC_REMOTE_TEMP_ERROR");
 				switch (bit_position) {
