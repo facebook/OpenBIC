@@ -181,7 +181,7 @@ float get_adc_medha_inst_pwr_w(uint8_t medha_idx)
 	}
 
 	/* current (A) */
-	float cur = adc_raw_v_to_apms(raw, vref);
+	float cur = adc_raw_v_to_apms(raw, vref, medha_idx);
 
 	/* power(W) */
 	return v * cur;
@@ -205,10 +205,41 @@ void set_adc_ucr_status(uint8_t idx, bool status)
 	adc_info[idx].ucr_status = status;
 }
 /* current (A) */
-float adc_raw_v_to_apms(uint16_t v, float vref)
+float adc_raw_v_to_apms(uint16_t v, float vref, uint8_t medha_idx)
 {
 	float temp_v = ((float)v / 0xffff) * vref;
-	return (get_vr_module() == VR_MODULE_MPS) ? 1000 * temp_v * 0.796 : 1000 * temp_v * 0.797;
+	float m = 1000 * temp_v * 0.796;
+
+	if (get_vr_module() != VR_MODULE_MPS)
+		return 1000 * temp_v * 0.797;
+
+	if (medha_idx == ADC_RB_IDX_MEDHA0) {
+		if (m < 150.0f) {
+			m = 1000 * temp_v * 0.7903f - 8.9989f;
+			if (m < 0.0f)
+				return 0.0f;
+		} else if (m < 400.0f) {
+			m = 1000 * temp_v * 0.7897f - 9.7834f;
+		} else if (m < 900.0f) {
+			m = 1000 * temp_v * 0.8009f - 16.5513f;
+		} else {
+			m = 1000 * temp_v * 0.8437f - 63.6844f;
+		}
+	} else if (medha_idx == ADC_RB_IDX_MEDHA1) {
+		if (m < 150.0f) {
+			m = 1000 * temp_v * 0.7897f - 9.0073f;
+			if (m < 0.0f)
+				return 0.0f;
+		} else if (m < 400.0f) {
+			m = 1000 * temp_v * 0.7896f - 9.7365f;
+		} else if (m < 900.0f) {
+			m = 1000 * temp_v * 0.8002f - 16.0320f;
+		} else {
+			m = 1000 * temp_v * 0.8413f - 60.4448f;
+		}
+	}
+
+	return m;
 }
 
 uint16_t float_voltage_transfer_to_uint16(float temp_voltage_value)
@@ -222,6 +253,7 @@ uint16_t float_voltage_transfer_to_uint16(float temp_voltage_value)
 	uint16_t packed = ((uint16_t)upper << 8) | lower;
 	return packed;
 }
+
 float uint16_voltage_transfer_to_float(uint16_t temp_voltage_value)
 {
 	uint8_t upper = (temp_voltage_value >> 8) & 0xFF;
@@ -268,8 +300,8 @@ static void update_adc_info(uint16_t raw_data, uint8_t base_idx, float vref)
 		adc->vr_voltage_buf[adc->buf_idx] = voltage_packed;
 		adc->vr_sum += uint16_voltage_transfer_to_float(adc->vr_voltage_buf[adc->buf_idx]);
 		// average pwr = average voltage * average current
-		adc->pwr_avg_val =
-			(adc->vr_sum / adc->avg_times) * adc_raw_v_to_apms(adc->avg_val, vref);
+		adc->pwr_avg_val = (adc->vr_sum / adc->avg_times) *
+				   adc_raw_v_to_apms(adc->avg_val, vref, base_idx);
 
 		// decrease buffer idx
 		adc->buf_idx = (adc->buf_idx + 1) % adc->avg_times;

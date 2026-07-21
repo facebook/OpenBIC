@@ -310,10 +310,12 @@ bool post_adc_sensor_read(sensor_cfg *cfg, void *args, int *reading)
 	}
 
 	if (cfg->num == SENSOR_NUM_ASIC_IMON_MEDHA0_VDD_CURR_A) {
-		val = adc_raw_v_to_apms(get_adc_averge_val(ADC_IDX_MEDHA0_2), vref);
+		val = adc_raw_v_to_apms(get_adc_averge_val(ADC_IDX_MEDHA0_2), vref,
+					ADC_RB_IDX_MEDHA0);
 	}
 	if (cfg->num == SENSOR_NUM_ASIC_IMON_MEDHA1_VDD_CURR_A) {
-		val = adc_raw_v_to_apms(get_adc_averge_val(ADC_IDX_MEDHA1_2), vref);
+		val = adc_raw_v_to_apms(get_adc_averge_val(ADC_IDX_MEDHA1_2), vref,
+					ADC_RB_IDX_MEDHA1);
 	}
 
 	sval->integer = val;
