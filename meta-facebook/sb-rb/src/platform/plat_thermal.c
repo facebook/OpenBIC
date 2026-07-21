@@ -32,7 +32,7 @@ LOG_MODULE_REGISTER(plat_thermal);
 #define TMP_HIGH_LIMIT_STATUS_REG 0x35
 
 struct k_thread check_thermal_thread;
-K_KERNEL_STACK_MEMBER(check_thermal_thread_stack, 1024);
+K_KERNEL_STACK_MEMBER(check_thermal_thread_stack, 1324);
 k_tid_t thermal_tid;
 bool handler_flag = true;
 
