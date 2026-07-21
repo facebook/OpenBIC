@@ -651,20 +651,23 @@ bool temp_threshold_default_settings_init(void)
 		if (i == ASIC_MEDHA0_SENSOR0_HIGH_LIMIT || i == ASIC_MEDHA0_SENSOR1_HIGH_LIMIT ||
 		    i == ASIC_MEDHA1_SENSOR0_HIGH_LIMIT || i == ASIC_MEDHA1_SENSOR1_HIGH_LIMIT ||
 		    i == ASIC_OWL_W_HIGH_LIMIT || i == ASIC_OWL_E_HIGH_LIMIT ||
-		    i == ASIC_HAMSA_CRM_HIGH_LIMIT || i == ASIC_HAMSA_LS_HIGH_LIMIT ||
-		    i == ASIC_MEDHA1_LOCAL_HIGH_LIMIT || i == ASIC_HAMSA_LOCAL_HIGH_LIMIT ||
-		    i == ASIC_MEDHA0_LOCAL_HIGH_LIMIT || i == ASIC_OWL_LOCAL_HIGH_LIMIT) {
+		    i == ASIC_HAMSA_CRM_HIGH_LIMIT || i == ASIC_HAMSA_LS_HIGH_LIMIT) {
 			temperature = 100000;
+		}
+		// these temp_threshold is 95 degree
+		if (i == ASIC_MEDHA1_LOCAL_HIGH_LIMIT || i == ASIC_HAMSA_LOCAL_HIGH_LIMIT ||
+		    i == ASIC_MEDHA0_LOCAL_HIGH_LIMIT || i == ASIC_OWL_LOCAL_HIGH_LIMIT) {
+			temperature = 95000;
 		}
 		// set board temp threshold low to 0 degree
 		if (i == TOP_INLET_LOW_LIMIT || i == BOT_INLET_LOW_LIMIT ||
 		    i == BOT_OUTLET_LOW_LIMIT) {
 			temperature = 75000;
 		}
-		// set board temp threshold high to 85 degree
+		// set board temp threshold high to 90 degree
 		if (i == TOP_INLET_HIGH_LIMIT || i == BOT_INLET_HIGH_LIMIT ||
 		    i == BOT_OUTLET_HIGH_LIMIT) {
-			temperature = 85000;
+			temperature = 90000;
 		}
 
 		if (!set_plat_temp_threshold(i, &temperature, false, false)) {
