@@ -145,10 +145,10 @@ const cpld_bit_name_table_t cpld_bit_name_table[] = {
 		  "RSVD",
 		  "RSVD",
 		  "RSVD",
-		  "RSVD",
-		  "RSVD",
-		  "RSVD",
-		  "RSVD",
+		  "TEMP_MON2_OVERT_N (1-->0)",
+		  "TEMP_MON3_OVERT_N (1-->0)",
+		  "TEMP_MON4_OVERT_N (1-->0)",
+		  "TEMP_MON5_OVERT_N (1-->0)",
 		  "FM_ASIC_0_THERMTRIP_N (1-->0)",
 	  } },
 	{ TEMP_IC_OVER_FAULT_REG,
@@ -435,6 +435,11 @@ void cmd_log_dump(const struct shell *shell, size_t argc, char **argv)
 						    log.error_data[idx + 2]);
 				}
 				err_data_len = SMBUS_ALRT_STATUS_DATA_LEN;
+			} else if (cpld_offset == ASIC_TEMP_OVER_LOG_REG ||
+				   cpld_offset == TEMP_IC_OVER_FAULT_REG) {
+				shell_print(shell, "\t%s", reg_name);
+				shell_print(shell, "\t\t%s", bit_name);
+				err_data_len = 1;
 			} else {
 				shell_print(shell, "\t%s", reg_name);
 				shell_print(shell, "\t\t%s", bit_name);

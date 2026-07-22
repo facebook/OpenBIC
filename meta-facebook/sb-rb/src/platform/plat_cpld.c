@@ -42,6 +42,7 @@
 #define CHECK_BITS_0 0x01
 #define CHECK_BITS_012356 0x6F
 #define CHECK_BITS_631 0x4A
+#define CHECK_BITS_45678 0xF8
 
 LOG_MODULE_REGISTER(plat_cpld);
 
@@ -107,8 +108,8 @@ cpld_info cpld_info_table[] = {
 	{ LEAK_DETECT_REG, 					0xFF, 0xFF, true, 0x00, false, 0x00, .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_BITS_6 },
 	{ HBM_CATTRIP_REG, 					0xFF, 0xFF, true, 0x00, true, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_BITS_78 },
 	{ SYSTEM_ALERT_FAULT_REG, 			0xFF, 0xFF, true, 0x00, false, 0x00, .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_BITS_8 },
-	{ ASIC_TEMP_OVER_REG, 				0xFF, 0xFF, true, 0x00, true, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_BITS_8 },
-	{ TEMP_IC_OVER_FAULT_REG, 			0xFF, 0xFF, true, 0x00, false, 0x00, .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_BITS_678 },
+	{ ASIC_TEMP_OVER_REG, 				0xFF, 0xFF, true, 0x00, true, 0x00,  .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_BITS_45678 },
+	{ TEMP_IC_OVER_FAULT_REG, 			0xFF, 0xFF, true, 0x00, true, 0x00, .status_changed_cb = vr_error_callback, .bit_check_mask = CHECK_BITS_678 },
 	{ MFIO_FOR_RAINBOW, 				0x80, 0x80, true, 0x00, true, 0x00, .status_changed_cb = asic_temp_error_callback, .bit_check_mask = CHECK_BITS_012356 },
 };
 
