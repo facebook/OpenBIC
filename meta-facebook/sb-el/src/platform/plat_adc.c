@@ -28,6 +28,7 @@
 #include "plat_i2c_target.h"
 #include "plat_pldm_sensor.h"
 #include "plat_power_capping.h"
+#include "plat_util.h"
 
 LOG_MODULE_REGISTER(plat_adc);
 
@@ -827,7 +828,7 @@ void adc_electra_polling_handler(void *p1, void *p2, void *p3)
 			gpio_set(NUWA0_CNV, 0);
 			gpio_set(NUWA1_CNV, 0);
 			gpio_set(SPI_ADC_CS1_N, 0);
-			k_msleep(1500);
+			k_msleep(DC_ON_DELAY_TIMMING);
 			continue;
 		}
 

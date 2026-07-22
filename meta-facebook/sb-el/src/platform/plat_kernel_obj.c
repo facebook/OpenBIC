@@ -18,6 +18,7 @@
 #include "plat_gpio.h"
 #include "plat_log.h"
 #include "plat_hook.h"
+#include "plat_util.h"
 // pending
 #include <shell_plat_power_sequence.h>
 #include <logging/log.h>
@@ -71,8 +72,8 @@ void plat_check_ubc_delayed_timer_handler(struct k_timer *timer)
 
 void plat_update_ubc_status(void)
 {
-	// delay 1 second for power sequence
-	k_timer_start(&check_ubc_delayed_timer, K_MSEC(1500), K_NO_WAIT);
+	// delay for power sequence
+	k_timer_start(&check_ubc_delayed_timer, K_MSEC(DC_ON_DELAY_TIMMING), K_NO_WAIT);
 }
 
 bool plat_get_ubc_status(void)
@@ -123,8 +124,8 @@ void pwr_sequence_event(struct k_work *work)
 
 void plat_handle_pwr_sequence_event(void)
 {
-	// delay 1 second for power sequence
-	k_timer_start(&pwr_sequence_event_work_timer, K_MSEC(1500), K_NO_WAIT);
+	// delay for power sequence
+	k_timer_start(&pwr_sequence_event_work_timer, K_MSEC(DC_ON_DELAY_TIMMING), K_NO_WAIT);
 }
 
 /* timeout can be K_NO_WAIT, K_MSEC(x), K_SECONDS(x), or K_FOREVER */
