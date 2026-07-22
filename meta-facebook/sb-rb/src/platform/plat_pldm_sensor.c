@@ -12473,8 +12473,6 @@ void quick_sensor_poll_handler(void *arug0, void *arug1, void *arug2)
 		//check dc on/off and polling enable/disable
 		if (is_mb_dc_on() == false || !get_plat_sensor_polling_enable_flag()) {
 			ot_warning_poll_count = 0;
-			for (uint8_t i = 0; i < mp2971_ot_warning_table_count; i++)
-				mp2971_ot_warning_table[i].ot_warning = 0;
 			//dc is off, sleep 1 second
 			k_msleep(1000);
 			continue;
@@ -12483,12 +12481,7 @@ void quick_sensor_poll_handler(void *arug0, void *arug1, void *arug2)
 		ot_warning_poll_count++;
 		if (ot_warning_poll_count >= QUICK_SENSOR_OT_WARNING_POLL_COUNT) {
 			ot_warning_poll_count = 0;
-			if (get_plat_sensor_vr_polling_enable_flag()) {
-				update_mp2971_ot_warning_status();
-			} else {
-				for (uint8_t i = 0; i < mp2971_ot_warning_table_count; i++)
-					mp2971_ot_warning_table[i].ot_warning = 0;
-			}
+			update_mp2971_ot_warning_status();
 		}
 
 		// if board id >= EVB EVT1B(FAB2) then do quick sensor polling, else skip
