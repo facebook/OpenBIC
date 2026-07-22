@@ -1142,14 +1142,14 @@ static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 		return ret;
 	}
 
-	if (!find_sensor_id_and_name_by_firmware_comp_id(p->comp_identifier, &sensor_id,
-							 sensor_name)) {
-		LOG_ERR("Can't find sensor id and name by comp id: 0x%x", p->comp_identifier);
+	if (get_asic_board_id() == ASIC_BOARD_ID_ELECTRA && p->comp_identifier == COMPNT_VR_3V3) {
+		LOG_INF("only evb support 3V3 vr version get");
 		return ret;
 	}
 
-	if (get_asic_board_id() != ASIC_BOARD_ID_EVB && p->comp_identifier == COMPNT_VR_3V3) {
-		// LOG_DBG("only evb support 3V3 vr version get");
+	if (!find_sensor_id_and_name_by_firmware_comp_id(p->comp_identifier, &sensor_id,
+							 sensor_name)) {
+		LOG_ERR("Can't find sensor id and name by comp id: 0x%x", p->comp_identifier);
 		return ret;
 	}
 
