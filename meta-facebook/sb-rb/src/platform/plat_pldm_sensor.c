@@ -121,6 +121,7 @@ static void set_cpld_ot_warning_high(void)
 static void update_mp2971_ot_warning_status(void)
 {
 	bool any_ot_warning = false;
+	bool new_ot_warning_detected = false;
 
 	for (uint8_t i = 0; i < mp2971_ot_warning_table_count; i++) {
 		uint8_t old_ot_warning = mp2971_ot_warning_table[i].ot_warning;
@@ -128,10 +129,12 @@ static void update_mp2971_ot_warning_status(void)
 		bool read_ok = get_raw_data_from_sensor_id(mp2971_ot_warning_table[i].sensor_num,
 							   MP2971_OT_WARNING_REG, &reg_val, 1);
 
-		mp2971_ot_warning_table[i].ot_warning =
-			(read_ok && (reg_val & MP2971_OT_WARNING_BIT)) ? 1 : 0;
+		if (read_ok)
+			mp2971_ot_warning_table[i].ot_warning =
+				(reg_val & MP2971_OT_WARNING_BIT) ? 1 : 0;
 
 		if (!old_ot_warning && mp2971_ot_warning_table[i].ot_warning) {
+			new_ot_warning_detected = true;
 			LOG_ERR("MP2971 OT_WARNING detected on sensor 0x%02X, reg_val: 0x%02X",
 				mp2971_ot_warning_table[i].sensor_num, reg_val);
 
@@ -157,7 +160,7 @@ static void update_mp2971_ot_warning_status(void)
 			any_ot_warning = true;
 	}
 
-	if (any_ot_warning)
+	if (any_ot_warning && new_ot_warning_detected)
 		set_cpld_ot_warning_high();
 }
 

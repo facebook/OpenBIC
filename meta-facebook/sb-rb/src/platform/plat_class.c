@@ -113,8 +113,8 @@ void init_tmp_type()
 {
 	I2C_MSG i2c_msg = { 0 };
 	uint8_t retry = 5;
-	i2c_msg.bus = I2C_BUS3;
-	i2c_msg.target_addr = ASIC_MEDHA0_SENSOR0_ADDR; //tmp sensor address
+	i2c_msg.bus = I2C_BUS2;
+	i2c_msg.target_addr = ASIC_MEDHA1_SENSOR0_ADDR; //tmp sensor address
 	i2c_msg.tx_len = 1;
 	i2c_msg.rx_len = 1;
 	i2c_msg.data[0] = 0xFE; //MFG ID REG
