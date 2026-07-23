@@ -26,6 +26,15 @@ struct adc_info adc[NUMBER_OF_ADC_CHANNEL] = {
 	{ 0x118, 0 }, { 0x118, 16 }, { 0x11C, 0 }, { 0x11C, 16 }
 };
 
+struct blade_config_mapping_table blade_config_table[] = {
+	{ 1.5, BLADE_CONFIG_VOLTAGE_RANGE, BLADE_CONFIG_with_ASIC },
+	{ 1.25, BLADE_CONFIG_VOLTAGE_RANGE, BLADE_CONFIG_UNKNOWN },
+	{ 1.0, BLADE_CONFIG_VOLTAGE_RANGE, BLADE_CONFIG_UNKNOWN },
+	{ 0.75, BLADE_CONFIG_VOLTAGE_RANGE, BLADE_CONFIG_without_ASIC },
+	{ 0.5, BLADE_CONFIG_VOLTAGE_RANGE, BLADE_CONFIG_UNKNOWN },
+	{ 0.0, BLADE_CONFIG_VOLTAGE_RANGE, BLADE_CONFIG_UNKNOWN },
+};
+
 struct board_rev_mappting_table board_rev_table[] = {
 	{ 1.25, 0.05, BOARD_POC }, // range: +-5%
 	{ 0.75, 0.05, BOARD_POC2 }, // range: +-5%
@@ -36,6 +45,20 @@ struct board_rev_mappting_table board_rev_table[] = {
 };
 
 static uint8_t board_revision = UNKNOWN;
+static uint8_t blade_configuration = BLADE_CONFIG_UNKNOWN;
+
+static uint32_t adc_get_sample_period_us(void)
+{
+	uint32_t clk_ctrl = sys_read32(AST1030_ADC_BASE_ADDR + 0x00C); // ADC00C
+	uint32_t divisor = clk_ctrl & 0xFFFF; // [15:0]
+
+	// Period(ADC clock) = PCLK_period * 2 * (divisor+1)
+	// Sample period = Period(ADC clock) * 12
+	uint64_t adc_clk_period_ns = (uint64_t)ADC_PCLK_NS * 2 * (divisor + 1);
+	uint64_t sample_period_ns = adc_clk_period_ns * 12;
+
+	return (uint32_t)(sample_period_ns / 1000) + 1; // convert to us, round up
+}
 
 bool get_adc_voltage(int channel, float *voltage)
 {
@@ -46,7 +69,7 @@ bool get_adc_voltage(int channel, float *voltage)
 		return false;
 	}
 
-	uint32_t raw_value, reg_value;
+	uint32_t reg_value;
 	long unsigned int engine_control = 0x0;
 	float reference_voltage = 0.0f;
 
@@ -68,19 +91,72 @@ bool get_adc_voltage(int channel, float *voltage)
 		return false;
 	}
 
-	// Read ADC raw value
-	reg_value = sys_read32(AST1030_ADC_BASE_ADDR + adc[channel].offset);
-	raw_value = (reg_value >> adc[channel].shift) & 0x3FF; // 10-bit(0x3FF) resolution
+	uint32_t sample_period_us = adc_get_sample_period_us();
 
-	// Real voltage = raw data * reference voltage / 2 ^ resolution(10)
-	*voltage = (raw_value * reference_voltage) / 1024;
+	// Settle: wait at least 2 full sample periods before first read
+	k_usleep(sample_period_us * 2);
+
+	uint32_t sum_raw = 0;
+
+	for (int i = 0; i < ADC_SAMPLE_COUNT; i++) {
+		reg_value = sys_read32(AST1030_ADC_BASE_ADDR + adc[channel].offset);
+		uint32_t raw_value = (reg_value >> adc[channel].shift) & 0x3FF;
+		sum_raw += raw_value;
+
+		// Wait for a genuinely new conversion before next read
+		k_usleep(sample_period_us);
+	}
+
+	float avg_raw = (float)sum_raw / ADC_SAMPLE_COUNT;
+	*voltage = (avg_raw * reference_voltage) / 1024.0f;
 
 	return true;
+}
+
+bool get_blade_config(uint8_t *blade_config)
+{
+	/* Determine blade configuration using ADC0 voltage
+	 * Since the BMC also have FRU acessibility,
+	 * avoid reading FRU to prevent unexpected behavior.
+	 */
+
+	CHECK_NULL_ARG_WITH_RETURN(blade_config, false);
+
+	float voltage = 0.0f;
+
+	if (get_adc_voltage(CHANNEL_0, &voltage) == false) {
+		LOG_ERR("Failed to get blade config");
+		*blade_config = BLADE_CONFIG_UNKNOWN;
+		return false;
+	}
+
+	*blade_config = BLADE_CONFIG_UNKNOWN;
+
+	for (int i = 0; i < ARRAY_SIZE(blade_config_table); i++) {
+		float typical_voltage = blade_config_table[i].voltage;
+		float range_val = blade_config_table[i].range_val;
+
+		if ((voltage <= typical_voltage + range_val) &&
+		    (voltage >= typical_voltage - range_val)) {
+			*blade_config = blade_config_table[i].blade_config;
+			LOG_INF("Blade config: 0x%02x, voltage: %dmV", *blade_config,
+				(int)(voltage * 1000));
+			return true;
+		}
+	}
+
+	LOG_ERR("Unknown blade config voltage: %dmV", (int)(voltage * 1000));
+	return false;
 }
 
 uint8_t get_board_revision()
 {
 	return board_revision;
+}
+
+uint8_t get_blade_configuration()
+{
+	return blade_configuration;
 }
 
 int init_platform_config()
@@ -90,6 +166,12 @@ int init_platform_config()
 	bool ret = get_adc_voltage(CHANNEL_1, &voltage);
 	if (!ret) {
 		LOG_ERR("Failed to get board revision");
+		return -1;
+	}
+
+	ret = get_blade_config(&blade_configuration);
+	if (!ret) {
+		LOG_ERR("Failed to get blade configuration");
 		return -1;
 	}
 

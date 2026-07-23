@@ -168,54 +168,30 @@ uint32_t get_uptime_secs(void)
 
 void execute_power_on_sequence()
 {
-	int ret = 0;
+	uint8_t blade_conf = get_blade_configuration();
 
-	// If CXL is on, doesn't need to power on again
-	if (gpio_get(PG_CARD_OK) == POWER_ON) {
-		LOG_INF("CXL DC status is ON");
-		return;
-	}
+	if (blade_conf == BLADE_CONFIG_without_ASIC) {
+		// If DC is on, doesn't need to power on again
+		if (gpio_get(PG_CARD_OK) == POWER_ON) {
+			LOG_INF("DC status is ON");
+			return;
+		}
 
-	// TODO: check E1S present
-	if (get_board_revision() == BOARD_POC) {
-		gpio_set(POC_EN_P3V3_E1S_0_R, POWER_ON);
-		set_P3V3_E1S_power_status(POC_PWRGD_P3V3_E1S_0_R);
-	} else {
-		gpio_set(EN_P3V3_E1S_0_R, POWER_ON);
-		set_P3V3_E1S_power_status(PWRGD_P3V3_E1S_0_R);
-	}
-	gpio_set(EN_P12V_E1S_0_R, POWER_ON);
-	set_P12V_E1S_power_status(PWRGD_P12V_E1S_0_R);
+		// TODO: check E1S present
+		if (get_board_revision() == BOARD_POC) {
+			gpio_set(POC_EN_P3V3_E1S_0_R, POWER_ON);
+			set_P3V3_E1S_power_status(POC_PWRGD_P3V3_E1S_0_R);
+		} else {
+			gpio_set(EN_P3V3_E1S_0_R, POWER_ON);
+			set_P3V3_E1S_power_status(PWRGD_P3V3_E1S_0_R);
+		}
+		gpio_set(EN_P12V_E1S_0_R, POWER_ON);
+		set_P12V_E1S_power_status(PWRGD_P12V_E1S_0_R);
 
-	ret = power_on_handler(CXL_ID_1, ASIC_POWER_ON_STAGE_1);
-	if (ret == 0) {
-		is_cxl_power_on[CXL_ID_1] = true;
-		LOG_INF("CXL 1 power on success");
-	} else {
-		is_cxl_power_on[CXL_ID_1] = false;
-		LOG_ERR("CXL 1 power on fail");
-	}
-
-	ret = power_on_handler(CXL_ID_2, ASIC_POWER_ON_STAGE_1);
-	if (ret == 0) {
-		is_cxl_power_on[CXL_ID_2] = true;
-		LOG_INF("CXL 2 power on success");
-	} else {
-		is_cxl_power_on[CXL_ID_2] = false;
-		LOG_ERR("CXL 2 power on fail");
-	}
-
-	if (is_cxl_power_on[CXL_ID_1] && is_cxl_power_on[CXL_ID_2]) {
-		is_cxl_power_on_success = true;
 		gpio_set(PG_CARD_OK, POWER_ON);
 		set_DC_status(PG_CARD_OK);
 		k_work_schedule(&set_dc_on_5s_work, K_SECONDS(DC_ON_DELAY5_SEC));
 
-		create_check_cxl_ready_thread();
-	} else {
-		LOG_INF("CXL power on failed, switch IOE mux to BIC");
-		switch_mux_to_bic(IOE_SWITCH_CXL1_VR_TO_BIC);
-		switch_mux_to_bic(IOE_SWITCH_CXL2_VR_TO_BIC);
 		uint32_t uptime = get_uptime_secs();
 		uint32_t delay_ms = VR_EVENT_DELAY_MS;
 
@@ -225,9 +201,74 @@ void execute_power_on_sequence()
 				(delay_ms / 1000U));
 		}
 
+		init_vr_event_work();
 		k_work_schedule_for_queue(&plat_work_q,
 					  &vr_event_work_items[PMBUS_VR_IOE1_INT].add_sel_work,
 					  K_MSEC(delay_ms));
+
+	} else { // default: BLADE_CONFIG_with_ASIC
+
+		int ret = 0;
+
+		// If CXL is on, doesn't need to power on again
+		if (gpio_get(PG_CARD_OK) == POWER_ON) {
+			LOG_INF("CXL DC status is ON");
+			return;
+		}
+
+		// TODO: check E1S present
+		if (get_board_revision() == BOARD_POC) {
+			gpio_set(POC_EN_P3V3_E1S_0_R, POWER_ON);
+			set_P3V3_E1S_power_status(POC_PWRGD_P3V3_E1S_0_R);
+		} else {
+			gpio_set(EN_P3V3_E1S_0_R, POWER_ON);
+			set_P3V3_E1S_power_status(PWRGD_P3V3_E1S_0_R);
+		}
+		gpio_set(EN_P12V_E1S_0_R, POWER_ON);
+		set_P12V_E1S_power_status(PWRGD_P12V_E1S_0_R);
+
+		ret = power_on_handler(CXL_ID_1, ASIC_POWER_ON_STAGE_1);
+		if (ret == 0) {
+			is_cxl_power_on[CXL_ID_1] = true;
+			LOG_INF("CXL 1 power on success");
+		} else {
+			is_cxl_power_on[CXL_ID_1] = false;
+			LOG_ERR("CXL 1 power on fail");
+		}
+
+		ret = power_on_handler(CXL_ID_2, ASIC_POWER_ON_STAGE_1);
+		if (ret == 0) {
+			is_cxl_power_on[CXL_ID_2] = true;
+			LOG_INF("CXL 2 power on success");
+		} else {
+			is_cxl_power_on[CXL_ID_2] = false;
+			LOG_ERR("CXL 2 power on fail");
+		}
+
+		if (is_cxl_power_on[CXL_ID_1] && is_cxl_power_on[CXL_ID_2]) {
+			is_cxl_power_on_success = true;
+			gpio_set(PG_CARD_OK, POWER_ON);
+			set_DC_status(PG_CARD_OK);
+			k_work_schedule(&set_dc_on_5s_work, K_SECONDS(DC_ON_DELAY5_SEC));
+
+			create_check_cxl_ready_thread();
+		} else {
+			LOG_INF("CXL power on failed, switch IOE mux to BIC");
+			switch_mux_to_bic(IOE_SWITCH_CXL1_VR_TO_BIC);
+			switch_mux_to_bic(IOE_SWITCH_CXL2_VR_TO_BIC);
+			uint32_t uptime = get_uptime_secs();
+			uint32_t delay_ms = VR_EVENT_DELAY_MS;
+
+			if (uptime < 30) { //wait longer for BIC reset
+				delay_ms = VR_EVENT_WAIT_BIC_RESET_DELAY_MS;
+				LOG_INF("pldm not ready yet, wait for %u seconds before checking VR",
+					(delay_ms / 1000U));
+			}
+
+			k_work_schedule_for_queue(
+				&plat_work_q, &vr_event_work_items[PMBUS_VR_IOE1_INT].add_sel_work,
+				K_MSEC(delay_ms));
+		}
 	}
 }
 
@@ -420,92 +461,118 @@ bool is_power_controlled(int cxl_id, int power_pin, uint8_t check_power_status, 
 
 void execute_power_off_sequence()
 {
-	int ret = 0;
+	uint8_t blade_conf = get_blade_configuration();
 
-	// If CXL is off, doesn't need to power off again
-	if (gpio_get(PG_CARD_OK) == POWER_OFF) {
-		LOG_INF("CXL DC status is OFF");
-		return;
-	}
+	if (blade_conf == BLADE_CONFIG_without_ASIC) {
+		// If DC is off, doesn't need to power off again
+		if (gpio_get(PG_CARD_OK) == POWER_OFF) {
+			LOG_INF("DC status is OFF");
+			return;
+		}
 
-	// TODO: check E1S present
-	if (get_board_revision() == BOARD_POC) {
-		gpio_set(POC_EN_P3V3_E1S_0_R, POWER_OFF);
-		set_P3V3_E1S_power_status(POC_PWRGD_P3V3_E1S_0_R);
-	} else {
-		gpio_set(EN_P3V3_E1S_0_R, POWER_OFF);
-		set_P3V3_E1S_power_status(PWRGD_P3V3_E1S_0_R);
-	}
-	gpio_set(EN_P12V_E1S_0_R, POWER_OFF);
-	set_P12V_E1S_power_status(PWRGD_P12V_E1S_0_R);
+		// TODO: check E1S present
+		if (get_board_revision() == BOARD_POC) {
+			gpio_set(POC_EN_P3V3_E1S_0_R, POWER_OFF);
+			set_P3V3_E1S_power_status(POC_PWRGD_P3V3_E1S_0_R);
+		} else {
+			gpio_set(EN_P3V3_E1S_0_R, POWER_OFF);
+			set_P3V3_E1S_power_status(PWRGD_P3V3_E1S_0_R);
+		}
+		gpio_set(EN_P12V_E1S_0_R, POWER_OFF);
+		set_P12V_E1S_power_status(PWRGD_P12V_E1S_0_R);
 
-	is_cxl_ready[CXL_ID_1] = false;
-	is_cxl_ready[CXL_ID_2] = false;
+		gpio_set(PG_CARD_OK, POWER_OFF);
+		set_DC_status(PG_CARD_OK);
 
-	gpio_set(PG_CARD_OK, POWER_OFF);
-	set_DC_status(PG_CARD_OK);
+	} else { // default: BLADE_CONFIG_with_ASIC
 
-	if (k_work_cancel_delayable(&set_dc_on_5s_work) != 0) {
-		LOG_ERR("Cancel set dc off delay work fail");
-	}
+		int ret = 0;
 
-	if (k_work_cancel_delayable(&cxl1_ready_thread) != 0) {
-		LOG_ERR("Failed to cancel cxl1_ready_thread");
-	}
+		// If CXL is off, doesn't need to power off again
+		if (gpio_get(PG_CARD_OK) == POWER_OFF) {
+			LOG_INF("CXL DC status is OFF");
+			return;
+		}
 
-	if (k_work_cancel_delayable(&cxl2_ready_thread) != 0) {
-		LOG_ERR("Failed to cancel cxl2_ready_thread");
-	}
+		// TODO: check E1S present
+		if (get_board_revision() == BOARD_POC) {
+			gpio_set(POC_EN_P3V3_E1S_0_R, POWER_OFF);
+			set_P3V3_E1S_power_status(POC_PWRGD_P3V3_E1S_0_R);
+		} else {
+			gpio_set(EN_P3V3_E1S_0_R, POWER_OFF);
+			set_P3V3_E1S_power_status(PWRGD_P3V3_E1S_0_R);
+		}
+		gpio_set(EN_P12V_E1S_0_R, POWER_OFF);
+		set_P12V_E1S_power_status(PWRGD_P12V_E1S_0_R);
 
-	if (k_work_cancel_delayable(&set_cxl1_vr_ready_work) != 0) {
-		LOG_WRN("Failed to cancel set_cxl1_vr_ready_work");
-	}
+		is_cxl_ready[CXL_ID_1] = false;
+		is_cxl_ready[CXL_ID_2] = false;
 
-	if (k_work_cancel_delayable(&set_cxl2_vr_ready_work) != 0) {
-		LOG_WRN("Failed to cancel set_cxl2_vr_ready_work");
-	}
+		gpio_set(PG_CARD_OK, POWER_OFF);
+		set_DC_status(PG_CARD_OK);
 
-	if (k_work_cancel_delayable(&cxl1_hb_monitor_work) != 0) {
-		LOG_ERR("Failed to cancel cxl1_hb_monitor_work");
-	}
+		if (k_work_cancel_delayable(&set_dc_on_5s_work) != 0) {
+			LOG_ERR("Cancel set dc off delay work fail");
+		}
 
-	cxl1_hb_state = HB_STATE_UNKNOWN;
+		if (k_work_cancel_delayable(&cxl1_ready_thread) != 0) {
+			LOG_ERR("Failed to cancel cxl1_ready_thread");
+		}
 
-	if (k_work_cancel_delayable(&cxl2_hb_monitor_work) != 0) {
-		LOG_ERR("Failed to cancel cxl2_hb_monitor_work");
-	}
+		if (k_work_cancel_delayable(&cxl2_ready_thread) != 0) {
+			LOG_ERR("Failed to cancel cxl2_ready_thread");
+		}
 
-	cxl2_hb_state = HB_STATE_UNKNOWN;
+		if (k_work_cancel_delayable(&set_cxl1_vr_ready_work) != 0) {
+			LOG_WRN("Failed to cancel set_cxl1_vr_ready_work");
+		}
 
-	set_DC_on_delayed_status_with_value(false);
+		if (k_work_cancel_delayable(&set_cxl2_vr_ready_work) != 0) {
+			LOG_WRN("Failed to cancel set_cxl2_vr_ready_work");
+		}
 
-	ret = power_off_handler(CXL_ID_1, DIMM_POWER_OFF_STAGE_1);
-	if (ret == 0) {
-		is_cxl_power_on[CXL_ID_1] = false;
-		LOG_INF("CXL 1 power off success");
-	} else {
-		is_cxl_power_on[CXL_ID_1] = true;
-		set_cxl_vr_access(CXL_ID_1, true);
-		LOG_ERR("CXL 1 power off fail");
-	}
+		if (k_work_cancel_delayable(&cxl1_hb_monitor_work) != 0) {
+			LOG_ERR("Failed to cancel cxl1_hb_monitor_work");
+		}
 
-	ret = power_off_handler(CXL_ID_2, DIMM_POWER_OFF_STAGE_1);
-	if (ret == 0) {
-		is_cxl_power_on[CXL_ID_2] = false;
-		LOG_INF("CXL 2 power off success");
-	} else {
-		is_cxl_power_on[CXL_ID_2] = true;
-		set_cxl_vr_access(CXL_ID_2, true);
-		LOG_ERR("CXL 2 power off fail");
-	}
+		cxl1_hb_state = HB_STATE_UNKNOWN;
 
-	uint8_t ioe2_output_value = 0;
+		if (k_work_cancel_delayable(&cxl2_hb_monitor_work) != 0) {
+			LOG_ERR("Failed to cancel cxl2_hb_monitor_work");
+		}
 
-	if (get_ioe_value(ADDR_IOE2, TCA9555_OUTPUT_PORT_REG_0, &ioe2_output_value) == 0) {
-		CLEARBITS(ioe2_output_value, IOE_P00,
-			  IOE_P03) // Disable P0~P3 to switch mux to CXL.
-		set_ioe_value(ADDR_IOE2, TCA9555_OUTPUT_PORT_REG_0, ioe2_output_value);
-		set_cxl_vr_access(MAX_CXL_ID, false);
+		cxl2_hb_state = HB_STATE_UNKNOWN;
+
+		set_DC_on_delayed_status_with_value(false);
+
+		ret = power_off_handler(CXL_ID_1, DIMM_POWER_OFF_STAGE_1);
+		if (ret == 0) {
+			is_cxl_power_on[CXL_ID_1] = false;
+			LOG_INF("CXL 1 power off success");
+		} else {
+			is_cxl_power_on[CXL_ID_1] = true;
+			set_cxl_vr_access(CXL_ID_1, true);
+			LOG_ERR("CXL 1 power off fail");
+		}
+
+		ret = power_off_handler(CXL_ID_2, DIMM_POWER_OFF_STAGE_1);
+		if (ret == 0) {
+			is_cxl_power_on[CXL_ID_2] = false;
+			LOG_INF("CXL 2 power off success");
+		} else {
+			is_cxl_power_on[CXL_ID_2] = true;
+			set_cxl_vr_access(CXL_ID_2, true);
+			LOG_ERR("CXL 2 power off fail");
+		}
+
+		uint8_t ioe2_output_value = 0;
+
+		if (get_ioe_value(ADDR_IOE2, TCA9555_OUTPUT_PORT_REG_0, &ioe2_output_value) == 0) {
+			CLEARBITS(ioe2_output_value, IOE_P00,
+				  IOE_P03); // Disable P0~P3 to switch mux to CXL.
+			set_ioe_value(ADDR_IOE2, TCA9555_OUTPUT_PORT_REG_0, ioe2_output_value);
+			set_cxl_vr_access(MAX_CXL_ID, false);
+		}
 	}
 }
 

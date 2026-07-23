@@ -37,6 +37,7 @@
 #include "plat_power_seq.h"
 #include "plat_pldm_sensor.h"
 #include "plat_dimm.h"
+#include "plat_class.h"
 
 #include "hal_i2c.h"
 
@@ -369,8 +370,13 @@ void set_dev_endpoint_thread(void *arg1, void *arg2, void *arg3)
 	ARG_UNUSED(arg2);
 	ARG_UNUSED(arg3);
 
-	/* init the device endpoint */
-	set_dev_endpoint();
+	uint8_t blade_conf = get_blade_configuration();
+	if (blade_conf == BLADE_CONFIG_without_ASIC) {
+		return;
+	} else { //default: BLADE_CONFIG_with_ASIC
+		/* init the device endpoint */
+		set_dev_endpoint();
+	}
 }
 
 void create_set_dev_endpoint_thread()

@@ -207,4 +207,4 @@ struct pldm_downstream_identifier_table downstream_table[] = {
 	  .descriptor_count = ARRAY_SIZE(PLDM_CXL2_DESCRIPTORS) },
 };
 
-const uint8_t downstream_devices_count = ARRAY_SIZE(downstream_table);
+uint8_t downstream_devices_count = ARRAY_SIZE(downstream_table);

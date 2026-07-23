@@ -19,7 +19,7 @@
 
 #include "pldm_firmware_update.h"
 
-extern const uint8_t downstream_devices_count;
+extern uint8_t downstream_devices_count;
 
 extern struct pldm_downstream_identifier_table downstream_table[];
 

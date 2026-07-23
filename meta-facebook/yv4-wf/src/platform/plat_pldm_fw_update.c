@@ -35,6 +35,7 @@
 #include "cci.h"
 #include "util_spi.h"
 #include "plat_pldm_device_identifier.h"
+#include "plat_class.h"
 
 LOG_MODULE_REGISTER(plat_fwupdate);
 
@@ -267,8 +268,8 @@ uint8_t plat_pldm_query_downstream_devices(const uint8_t *buf, uint16_t len, uin
 
 	resp_p->completion_code = PLDM_SUCCESS;
 	resp_p->downstream_device_update_supported = PLDM_FW_UPDATE_SUPPORT_DOWNSTREAM_DEVICES;
-	resp_p->number_of_downstream_devices = 6;
-	resp_p->max_number_of_downstream_devices = 6;
+	resp_p->number_of_downstream_devices = downstream_devices_count;
+	resp_p->max_number_of_downstream_devices = downstream_devices_count;
 
 	resp_p->capabilities.dynamically_attached = 0;
 	resp_p->capabilities.dynamically_removed = 0;
@@ -432,6 +433,15 @@ uint8_t plat_pldm_query_downstream_identifiers(const uint8_t *buf, uint16_t len,
 	return PLDM_SUCCESS;
 }
 
+void plat_pldm_init_downstream_devices(void)
+{
+	if (get_blade_configuration() == BLADE_CONFIG_without_ASIC) {
+		downstream_devices_count = 0;
+	} else {
+		downstream_devices_count = DOWNSTREAM_DEVICES_MAX;
+	}
+}
+
 void load_pldmupdate_comp_config(void)
 {
 	if (comp_config) {
@@ -439,14 +449,40 @@ void load_pldmupdate_comp_config(void)
 		return;
 	}
 
-	comp_config_count = ARRAY_SIZE(PLDMUPDATE_FW_CONFIG_TABLE);
-	comp_config = malloc(sizeof(pldm_fw_update_info_t) * comp_config_count);
+	uint8_t total_count = ARRAY_SIZE(PLDMUPDATE_FW_CONFIG_TABLE);
+
+	comp_config = malloc(sizeof(pldm_fw_update_info_t) * total_count);
 	if (!comp_config) {
 		LOG_ERR("comp_config malloc failed");
 		return;
 	}
 
-	memcpy(comp_config, PLDMUPDATE_FW_CONFIG_TABLE, sizeof(PLDMUPDATE_FW_CONFIG_TABLE));
+	if (get_blade_configuration() != BLADE_CONFIG_without_ASIC) {
+		memcpy(comp_config, PLDMUPDATE_FW_CONFIG_TABLE, sizeof(PLDMUPDATE_FW_CONFIG_TABLE));
+		comp_config_count = total_count;
+	} else {
+		// Without-ASIC: filter out ASIC-related components
+		comp_config_count = 0;
+		for (int i = 0; i < total_count; i++) {
+			switch (PLDMUPDATE_FW_CONFIG_TABLE[i].comp_identifier) {
+			case WF_COMPNT_VR_PVDDQ_AB_ASIC1:
+			case WF_COMPNT_VR_PVDDQ_CD_ASIC1:
+			case WF_COMPNT_VR_PVDDQ_AB_ASIC2:
+			case WF_COMPNT_VR_PVDDQ_CD_ASIC2:
+			case WF_COMPNT_CXL1:
+			case WF_COMPNT_CXL2:
+				continue;
+			default:
+				break;
+			}
+
+			memcpy(&comp_config[comp_config_count], &PLDMUPDATE_FW_CONFIG_TABLE[i],
+			       sizeof(pldm_fw_update_info_t));
+			comp_config_count++;
+		}
+	}
+
+	plat_pldm_init_downstream_devices();
 }
 
 static bool plat_pldm_vr_i2c_info_get(int comp_identifier, uint8_t *bus, uint8_t *addr)

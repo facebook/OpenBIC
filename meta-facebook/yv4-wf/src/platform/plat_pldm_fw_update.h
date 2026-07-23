@@ -21,6 +21,7 @@
 #include <stdint.h>
 #include "pldm_firmware_update.h"
 
+#define DOWNSTREAM_DEVICES_MAX 6
 #define INF_CRC_PREFIX "Infineon "
 
 void load_pldmupdate_comp_config(void);
