@@ -181,3 +181,19 @@
 &gpio7 {
     label = "GPIO_7";
 };
+
+&i3c0 {
+	status = "disabled";
+};
+ 
+&i3c1 {
+	status = "disabled";
+};
+ 
+&i3c2 {
+	status = "disabled";
+};
+ 
+&i3c3 {
+	status = "disabled";
+};
