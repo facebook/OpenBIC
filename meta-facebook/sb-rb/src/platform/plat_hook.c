@@ -305,7 +305,6 @@ bool post_adc_sensor_read(sensor_cfg *cfg, void *args, int *reading)
 	else if (adc_type == TIC_ADS7066)
 		vref = get_ads7066_vref();
 	else {
-		LOG_ERR("invalid adc type %d", adc_type);
 		return false;
 	}
 
