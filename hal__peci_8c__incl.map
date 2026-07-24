@@ -1,0 +1,16 @@
+<map id="common/hal/hal_peci.c" name="common/hal/hal_peci.c">
+<area shape="rect" id="node1" title=" " alt="" coords="177,5,331,32"/>
+<area shape="rect" id="node2" title=" " alt="" coords="140,229,200,256"/>
+<area shape="rect" id="node3" title=" " alt="" coords="29,80,92,107"/>
+<area shape="rect" id="node4" title=" " alt="" coords="117,80,181,107"/>
+<area shape="rect" id="node5" title=" " alt="" coords="205,80,303,107"/>
+<area shape="rect" id="node6" href="$hal__peci_8h.html" title=" " alt="" coords="327,80,407,107"/>
+<area shape="rect" id="node7" href="$libutil_8h.html" title=" " alt="" coords="432,80,495,107"/>
+<area shape="rect" id="node14" title=" " alt="" coords="519,80,613,107"/>
+<area shape="rect" id="node8" title=" " alt="" coords="293,155,357,181"/>
+<area shape="rect" id="node9" href="$ipmb_8h.html" title=" " alt="" coords="381,155,441,181"/>
+<area shape="rect" id="node11" href="$hal__i2c_8h.html" title=" " alt="" coords="477,155,551,181"/>
+<area shape="rect" id="node10" title=" " alt="" coords="352,229,444,256"/>
+<area shape="rect" id="node12" title=" " alt="" coords="468,229,560,256"/>
+<area shape="rect" id="node13" title=" " alt="" coords="584,229,743,256"/>
+</map>

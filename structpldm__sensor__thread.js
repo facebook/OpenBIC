@@ -1,0 +1,8 @@
+var structpldm__sensor__thread =
+[
+    [ "poll_interval_ms", "structpldm__sensor__thread.html#a7561278142971d5ec01874536eb99b30", null ],
+    [ "still_check_interval", "structpldm__sensor__thread.html#a72c59c48c9e356fb4b671facfcfa0fc9", null ],
+    [ "thread_id", "structpldm__sensor__thread.html#ac15fd019a6e1d8c28f293730e4f5c025", null ],
+    [ "thread_name", "structpldm__sensor__thread.html#ab6618e881a88d7c24bcfced0406dfcbd", null ],
+    [ "using_ms_polling_time", "structpldm__sensor__thread.html#a0a160f0c051d7fd3cd69da0478b77563", null ]
+];

@@ -1,0 +1,8 @@
+<map id="post_intel_dimm_i3c_read" name="post_intel_dimm_i3c_read">
+<area shape="rect" id="node1" title=" " alt="" coords="5,56,179,83"/>
+<area shape="rect" id="node2" href="$power__status_8c.html#abeff55e3cd2e8563760154b81f37f286" title=" " alt="" coords="249,5,363,32"/>
+<area shape="rect" id="node3" href="$yv35-gl_2src_2platform_2plat__dimm_8c.html#a7ae4a67a7204ee407770a4ec4bf723e6" title=" " alt="" coords="227,56,385,83"/>
+<area shape="rect" id="node4" href="$hal__peci_8c.html#af60887092d2b951a97b837c960e6af1c" title=" " alt="" coords="265,107,347,133"/>
+<area shape="rect" id="node5" href="$hal__peci_8c.html#a8e95a227994066af673414f44c4a1f61" title=" " alt="" coords="433,107,540,133"/>
+<area shape="rect" id="node6" href="$hal__peci_8c.html#a83241209febf9da926be7e30afd9cc46" title=" " alt="" coords="588,107,736,133"/>
+</map>

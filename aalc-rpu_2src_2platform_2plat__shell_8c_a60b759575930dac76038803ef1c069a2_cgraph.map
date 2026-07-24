@@ -1,0 +1,4 @@
+<map id="cmd_set_fan_duty" name="cmd_set_fan_duty">
+<area shape="rect" id="node1" title=" " alt="" coords="5,5,133,32"/>
+<area shape="rect" id="node2" href="$plat__pwm_8c.html#a085ebf3f30f0ece0698d71f6d2a7f8cb" title=" " alt="" coords="181,5,284,32"/>
+</map>

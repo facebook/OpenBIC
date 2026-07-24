@@ -1,0 +1,9 @@
+<map id="plat_get_fru_data" name="plat_get_fru_data">
+<area shape="rect" id="node1" title=" " alt="" coords="5,31,128,57"/>
+<area shape="rect" id="node2" href="$aalc-rpu_2src_2platform_2plat__fru_8c.html#aaab6c54ee09d0b82492774295b854fe5" title=" " alt="" coords="176,31,273,57"/>
+<area shape="rect" id="node3" href="$eeprom_8c.html#af84d506534770494cca55b2db24730ba" title=" " alt="" coords="321,5,419,32"/>
+<area shape="rect" id="node7" href="$fru_8c.html#a4694b8ef2f5e4e98917fc28fe989a2d9" title=" " alt="" coords="322,56,418,83"/>
+<area shape="rect" id="node4" href="$eeprom_8c.html#ac470cc411f066d8f6bc2c1d7a74c8a5a" title=" " alt="" coords="467,5,605,32"/>
+<area shape="rect" id="node5" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="653,5,775,32"/>
+<area shape="rect" id="node6" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="823,5,965,32"/>
+</map>

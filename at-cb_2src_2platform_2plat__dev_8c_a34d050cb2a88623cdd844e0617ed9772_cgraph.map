@@ -1,0 +1,11 @@
+<map id="init_fw_update_setting" name="init_fw_update_setting">
+<area shape="rect" id="node1" title=" " alt="" coords="5,122,157,149"/>
+<area shape="rect" id="node2" href="$at-cb_2src_2platform_2plat__dev_8c.html#a162e8228cd04c92d6c6a7e08eca716c6" title=" " alt="" coords="205,46,383,73"/>
+<area shape="rect" id="node4" href="$libutil_8c.html#a143d81b4bb1c57a0fbba65823e309d11" title=" " alt="" coords="635,45,795,71"/>
+<area shape="rect" id="node5" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="655,99,774,126"/>
+<area shape="rect" id="node7" href="$at-cb_2src_2platform_2plat__dev_8c.html#a08c0f8f1009a3b7076719149276e7194" title=" " alt="" coords="431,148,587,189"/>
+<area shape="rect" id="node8" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="654,155,775,182"/>
+<area shape="rect" id="node9" href="$at-cb_2src_2platform_2plat__dev_8c.html#a60383c0a174bcd5b2cdb9fa374789670" title=" " alt="" coords="231,198,357,225"/>
+<area shape="rect" id="node3" href="$at-cb_2src_2platform_2plat__dev_8c.html#af12673f748582bbe901b8cab366975c6" title=" " alt="" coords="442,46,575,73"/>
+<area shape="rect" id="node6" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="843,126,985,153"/>
+</map>

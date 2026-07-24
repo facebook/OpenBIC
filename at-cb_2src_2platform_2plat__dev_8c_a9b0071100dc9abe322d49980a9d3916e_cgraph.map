@@ -1,0 +1,6 @@
+<map id="get_atm_transfer_info" name="get_atm_transfer_info">
+<area shape="rect" id="node1" title=" " alt="" coords="5,31,153,57"/>
+<area shape="rect" id="node2" href="$libutil_8c.html#a143d81b4bb1c57a0fbba65823e309d11" title=" " alt="" coords="201,5,361,32"/>
+<area shape="rect" id="node3" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="222,56,341,83"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="409,56,552,83"/>
+</map>

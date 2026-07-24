@@ -1,0 +1,7 @@
+<map id="emergency_button_action" name="emergency_button_action">
+<area shape="rect" id="node1" title=" " alt="" coords="5,56,176,83"/>
+<area shape="rect" id="node2" href="$aalc-rpu_2src_2platform_2plat__isr_8c.html#a5a965074cd1c8d1c7d45ed046d56ba0d" title=" " alt="" coords="224,5,403,32"/>
+<area shape="rect" id="node4" href="$aalc-rpu_2src_2platform_2plat__log_8c.html#a103e33f69b37672107c44bcf36accc6b" title=" " alt="" coords="258,56,369,83"/>
+<area shape="rect" id="node5" href="$plat__status_8c.html#a6a5e5d3582c3221f9a1b3d94cff8cf6f" title=" " alt="" coords="258,107,369,133"/>
+<area shape="rect" id="node3" href="$hal__gpio_8c.html#ab1b576cbfd9eddaaf57a5aa5fc383dd1" title=" " alt="" coords="451,5,521,32"/>
+</map>

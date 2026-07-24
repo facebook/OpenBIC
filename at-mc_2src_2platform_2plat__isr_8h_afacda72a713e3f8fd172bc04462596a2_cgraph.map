@@ -1,0 +1,6 @@
+<map id="check_cxl_power_status" name="check_cxl_power_status">
+<area shape="rect" id="node1" title=" " alt="" coords="5,35,171,61"/>
+<area shape="rect" id="node2" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="243,5,361,32"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#a989ab3529d6f424e3e11df5e9d720875" title=" " alt="" coords="219,57,385,98"/>
+<area shape="rect" id="node3" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="433,35,576,61"/>
+</map>
