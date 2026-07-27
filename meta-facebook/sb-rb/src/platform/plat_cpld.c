@@ -241,15 +241,79 @@ bool get_plat_vr_hot_mask_flag()
 	return plat_vr_hot_mask_flag;
 }
 
+int get_vr_hot(void)
+{
+	const bool is_evb =
+        (get_asic_board_id() == ASIC_BOARD_ID_EVB);
+	uint8_t reg_val = 0;
+	uint8_t bit_pos = is_evb ?
+        VR_HOT_EVB_BIT : VR_HOT_RAINBOW_BIT;
+
+	if(is_evb) {
+		if (!tca6424a_i2c_read(TCA6424A_OUTPUT_PORT_0, &reg_val, 1)) {
+			LOG_ERR("read VR_HOT via IO exp failed");
+			return -1;
+		}
+	} else {
+		if (!plat_read_cpld(ASIC_VR_HOT_SWITCH, &reg_val, 1)) {
+			LOG_ERR("read VR_HOT via CPLD failed");
+			return -1;
+		}
+	}
+	bool vr_hot_enabled = (reg_val & BIT(bit_pos)) != 0;
+	return vr_hot_enabled;
+}
+
+bool set_vr_hot(bool enable)
+{
+    const bool is_evb =
+        (get_asic_board_id() == ASIC_BOARD_ID_EVB);
+
+    uint8_t reg_val;
+    uint8_t bit_pos = is_evb ?
+        VR_HOT_EVB_BIT : VR_HOT_RAINBOW_BIT;
+
+    if (is_evb) {
+        if (!tca6424a_i2c_read(TCA6424A_OUTPUT_PORT_0, &reg_val, 1)) {
+		LOG_ERR("read VR_HOT via IO exp failed");
+            return false;
+		}
+    } else {
+        if (!plat_read_cpld(ASIC_VR_HOT_SWITCH, &reg_val, 1)) {
+		LOG_ERR("read VR_HOT via CPLD failed");
+            return false;
+		}
+    }
+
+    if (enable)
+        reg_val |= BIT(bit_pos);
+    else
+        reg_val &= ~BIT(bit_pos);
+
+    if (is_evb) {
+        if (!tca6424a_i2c_write(TCA6424A_OUTPUT_PORT_0, &reg_val, 1)) {
+			LOG_ERR("write VR_HOT via IO exp failed");
+			return false;
+		}
+    } else {
+        if (!plat_write_cpld(ASIC_VR_HOT_SWITCH, &reg_val)) {
+			LOG_ERR("write VR_HOT via CPLD failed");
+			return false;
+		}
+    }
+
+    return true;
+}
+
 bool trigger_vr_hot()
 {
 	if(get_plat_vr_hot_mask_flag() == true) {
 		LOG_INF("ASIC_VR_HOT_SWITCH is masked");
 		return false;
 	}
-	// set VR hot switch bit to 1
-	if (!set_cpld_bit(ASIC_VR_HOT_SWITCH, 0, 1)) {
-		LOG_ERR("Failed to write ASIC_VR_HOT_SWITCH");
+
+	if(!set_vr_hot(true)) {
+		LOG_ERR("Failed to set VR hot");
 		return false;
 	}
 
@@ -262,9 +326,9 @@ bool restore_vr_hot()
 		LOG_INF("ASIC_VR_HOT_SWITCH is masked");
 		return false;
 	}
-	// set VR hot switch bit to 0
-	if (!set_cpld_bit(ASIC_VR_HOT_SWITCH, 0, 0)) {
-		LOG_ERR("Failed to write ASIC_VR_HOT_SWITCH");
+	
+	if(!set_vr_hot(false)) {
+		LOG_ERR("Failed to restore VR hot");
 		return false;
 	}
 
@@ -388,7 +452,6 @@ void give_all_vr_pm_alert_sem()
 void poll_cpld_registers()
 {
 	uint8_t data = 0;
-	uint8_t board_id = get_asic_board_id();
 	uint8_t asic_rst = 0;
 	uint8_t prev_asic_rst = 0;
 
@@ -521,7 +584,6 @@ void poll_cpld_registers()
 				if (cpld_info_table[i].cpld_offset == VR_SMBUS_ALERT_EVENT_LOG_REG) {
 					//get sensor pmbus alert status(if temperature bit-2 is 1)
 					uint8_t temp_data = 0;
-					uint8_t vr_hot_switch = 0;
 					plat_read_cpld(VR_SMBUS_ALERT_EVENT_LOG_REG, &temp_data, 1);
 					// check which VR_SMBUS_ALERT_EVENT_LOG_REG bit is changed
 					LOG_INF("VR_SMBUS_ALERT_EVENT_LOG_REG: 0x%x", temp_data);
@@ -534,30 +596,10 @@ void poll_cpld_registers()
 							LOG_WRN("SMBUS_ALERT_REG changed, bit-%d is changed", j);
 							if(!check_temp_status_bit(j))
 							{
-
-								if (board_id == ASIC_BOARD_ID_EVB) {
-									// EVB board handles VR_HOT through IO expander
-									if (!tca6424a_i2c_write_bit(TCA6424A_OUTPUT_PORT_0,
-													HAMSA_MFIO19,
-													1)) {
-										LOG_ERR("Failed to set VR_HOT (HAMSA_MFIO19) via IO expander");
-									} else {
-										LOG_WRN("Temperature bit-%d is 1, set IO exp VR_HOT (HAMSA_MFIO19) to 1", j);
-									}
+								if(!trigger_vr_hot()) {
+									LOG_ERR("Failed to trigger VR_HOT");
 								} else {
-									// Rainbow board uses CPLD to control VR_HOT
-									if(get_plat_vr_hot_mask_flag()) {
-										LOG_INF("ASIC_VR_HOT_SWITCH is masked");
-										continue;
-									}
-									if (!plat_read_cpld(ASIC_VR_HOT_SWITCH, &vr_hot_switch, 1)) {
-										LOG_ERR("Failed to read ASIC_VR_HOT_SWITCH");
-									}
-									vr_hot_switch |= BIT(0);
-									if (!plat_write_cpld(ASIC_VR_HOT_SWITCH, &vr_hot_switch)) {
-										LOG_ERR("Failed to write ASIC_VR_HOT_SWITCH");
-									}
-									LOG_WRN("Temperature bit-%d is 1, write CPLD ASIC_VR_HOT_SWITCH bit-0 to 1", j);
+									LOG_WRN("Temperature bit-%d is 1, trigger VR_HOT", j);
 								}
 								set_led_flag(true);
 								break;

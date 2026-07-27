@@ -32,7 +32,6 @@ LOG_MODULE_REGISTER(power_capping_control, LOG_LEVEL_DBG);
 
 #define POWER_CAPPING_LV1_CPLD_OFFSET 0xA6
 #define POWER_CAPPING_LV2_LV3_CPLD_OFFSET 0x25
-#define VR_HOT_EVB_IOEXP_OUTPUT_OFFSET TCA6424A_OUTPUT_PORT_0
 
 /* Bit mapping */
 #define MEDHA0_PWR_CAP_LV1_BIT 1
@@ -41,8 +40,6 @@ LOG_MODULE_REGISTER(power_capping_control, LOG_LEVEL_DBG);
 #define MEDHA1_PWR_CAP_LV2_BIT 6
 #define MEDHA0_PWR_CAP_LV3_BIT 5
 #define MEDHA1_PWR_CAP_LV3_BIT 4
-#define VR_HOT_RAINBOW_BIT 0
-#define VR_HOT_EVB_BIT HAMSA_MFIO19
 
 #define POWER_CAPPING_SET_BIT(orig, bit) ((uint8_t)((orig) | (1u << (bit))))
 #define POWER_CAPPING_CLR_BIT(orig, bit) ((uint8_t)((orig) & ~(1u << (bit))))
@@ -75,8 +72,6 @@ static int cmd_power_capping_get(const struct shell *shell, size_t argc, char **
 		return -1;
 	}
 
-	uint8_t board_id = get_asic_board_id();
-
 	shell_print(shell, "%s  (status, read only) : %d", gpio_name[MEDHA0_PWR_CAP_LV1_LVC33],
 		    gpio_get(MEDHA0_PWR_CAP_LV1_LVC33));
 	shell_print(shell, "%s  (status, read only) : %d", gpio_name[MEDHA1_PWR_CAP_LV1_LVC33],
@@ -86,16 +81,15 @@ static int cmd_power_capping_get(const struct shell *shell, size_t argc, char **
 		const cpld_pin_map_t *item = &pwr_cap_list[i];
 		uint8_t bit_val = 0;
 
-		if (!strcmp(item->name, "VR_HOT") && (board_id == ASIC_BOARD_ID_EVB)) {
-			uint8_t io_val = 0;
+		if (!strcmp(item->name, "VR_HOT")) {
+			int vr_hot_val = get_vr_hot();
 
-			if (!tca6424a_i2c_read(VR_HOT_EVB_IOEXP_OUTPUT_OFFSET, &io_val, 1)) {
-				shell_error(shell, "read VR_HOT via IO exp failed");
+			if (vr_hot_val < 0) {
+				shell_error(shell, "get VR_HOT failed");
 				return -1;
 			}
 
-			bit_val = (io_val >> VR_HOT_EVB_BIT) & 0x1;
-
+			bit_val = vr_hot_val;
 		} else {
 			uint8_t reg_val = 0;
 
@@ -124,7 +118,6 @@ static int cmd_power_capping_set(const struct shell *shell, size_t argc, char **
 		return -1;
 	}
 
-	uint8_t board_id = get_asic_board_id();
 	const char *name = argv[1];
 	long set_val = strtol(argv[2], NULL, 10);
 
@@ -139,33 +132,31 @@ static int cmd_power_capping_set(const struct shell *shell, size_t argc, char **
 		return -1;
 	}
 
-	if (!strcmp(name, "VR_HOT") && (board_id == ASIC_BOARD_ID_EVB)) {
-		if (!tca6424a_i2c_write_bit(VR_HOT_EVB_IOEXP_OUTPUT_OFFSET, VR_HOT_EVB_BIT,
-					    (uint8_t)set_val)) {
-			shell_error(shell, "write VR_HOT via IO exp failed");
+	if (!strcmp(name, "VR_HOT")) {
+		if (!set_vr_hot((bool)set_val)) {
+			shell_error(shell, "set VR_HOT failed");
+			return -1;
+		}
+		shell_print(shell, "set %s to %ld done", name, set_val);
+		return 0;
+	} else {
+		uint8_t reg_val = 0;
+
+		if (!plat_read_cpld(item->offset, &reg_val, 1)) {
+			shell_error(shell, "read CPLD failed");
 			return -1;
 		}
 
-		shell_print(shell, "set %s to %ld done (EVB IO exp)", name, set_val);
-		return 0;
-	}
+		if (set_val == 1) {
+			reg_val = POWER_CAPPING_SET_BIT(reg_val, item->bit);
+		} else {
+			reg_val = POWER_CAPPING_CLR_BIT(reg_val, item->bit);
+		}
 
-	uint8_t reg_val = 0;
-
-	if (!plat_read_cpld(item->offset, &reg_val, 1)) {
-		shell_error(shell, "read CPLD failed");
-		return -1;
-	}
-
-	if (set_val == 1) {
-		reg_val = POWER_CAPPING_SET_BIT(reg_val, item->bit);
-	} else {
-		reg_val = POWER_CAPPING_CLR_BIT(reg_val, item->bit);
-	}
-
-	if (!plat_write_cpld(item->offset, &reg_val)) {
-		shell_error(shell, "write CPLD failed");
-		return -1;
+		if (!plat_write_cpld(item->offset, &reg_val)) {
+			shell_error(shell, "write CPLD failed");
+			return -1;
+		}
 	}
 
 	shell_print(shell, "set %s to %ld done", name, set_val);

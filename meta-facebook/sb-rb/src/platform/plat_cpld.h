@@ -81,6 +81,9 @@
 #define I2C_BUS_CPLD I2C_BUS11
 typedef struct _cpld_info_ cpld_info;
 
+#define VR_HOT_EVB_BIT HAMSA_MFIO19
+#define VR_HOT_RAINBOW_BIT 0
+
 typedef struct _cpld_info_ {
 	uint8_t cpld_offset;
 	uint8_t dc_off_defaut;
@@ -122,4 +125,6 @@ void check_bootstrap_flag();
 bool get_is_ubc_enabled();
 void set_plat_vr_hot_mask_flag(bool value);
 bool get_plat_vr_hot_mask_flag(void);
+int get_vr_hot(void);
+bool set_vr_hot(bool enable);
 #endif
