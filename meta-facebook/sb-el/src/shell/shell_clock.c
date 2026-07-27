@@ -19,10 +19,10 @@
 #include <string.h>
 #include <zephyr.h>
 #include <logging/log.h>
-#include <sys/slist.h>
 #include "libutil.h"
 #include "plat_i2c.h"
 #include <shell/shell.h>
+#include "plat_clock.h"
 
 LOG_MODULE_REGISTER(clock_shell);
 bool clock_name_get(uint8_t index, uint8_t **name);
@@ -30,19 +30,20 @@ bool clock_name_get(uint8_t index, uint8_t **name);
 #define CLK_BUF_U85_ADDR (0xCE >> 1)
 #define CLK_BUF_U690_ADDR (0xD8 >> 1)
 #define CLK_BUF_U88_ADDR (0xDE >> 1)
-#define CLK_GEN_100M_U86_ADDR 0x9
+#define CLK_GEN_100M_U86_ADDR (0x12 >> 1)
+#define CLK_GEN_312M_U618_ADDR (0x10 >> 1)
 
 #define CLK_BUF_100M_WRITE_LOCK_CLEAR_LOS_EVENT_OFFSET 0x27
 #define CLK_GEN_LOSMON_EVENT_OFFSET 0x5a
 #define CLK_BUF_100M_BYTE_COUNT 0x7
 #define CLK_DEFAULT_BYTE_VALUE 0x00
-#define REGISTER_BYTE_MAX 4
 
 enum CLOCK_COMPONENT {
 	CLK_BUF_100M_U85,
 	CLK_BUF_100M_U690,
 	CLK_BUF_100M_U88,
 	CLK_GEN_100M_U86,
+	CLK_GEN_312M_U618,
 	CLK_COMPONENT_MAX
 };
 
@@ -53,24 +54,15 @@ typedef struct clock_compnt_mapping {
 	uint8_t *clock_name;
 } clock_compnt_mapping;
 
-typedef struct _clock_default_info {
-	sys_snode_t node;
-	bool is_default;
-	uint8_t clock_index;
-	uint8_t value[REGISTER_BYTE_MAX];
-	uint8_t write_length;
-	uint16_t offset;
-} clock_default_info;
-
 clock_compnt_mapping clock_compnt_mapping_table[] = {
 	{ CLK_BUF_100M_U85, CLK_BUF_U85_ADDR, I2C_BUS1, "CLK_BUF_100M_U85" },
 	{ CLK_BUF_100M_U690, CLK_BUF_U690_ADDR, I2C_BUS1, "CLK_BUF_100M_U690" },
 	{ CLK_BUF_100M_U88, CLK_BUF_U88_ADDR, I2C_BUS3, "CLK_BUF_100M_U88" },
 	{ CLK_GEN_100M_U86, CLK_GEN_100M_U86_ADDR, I2C_BUS3, "CLK_GEN_100M_U86" },
+	{ CLK_GEN_312M_U618, CLK_GEN_312M_U618_ADDR, I2C_BUS3, "CLK_GEN_312M_U618" },
 };
 
-static sys_slist_t clock_register_default_list =
-	SYS_SLIST_STATIC_INIT(&clock_register_default_list);
+
 
 int find_clock_address_and_bus_by_clock_name_index(uint8_t clock_index, uint8_t *addr, uint8_t *bus)
 {
@@ -104,10 +96,18 @@ bool clock_enum_get(uint8_t *name, uint8_t *num)
 	return false;
 }
 
+static bool clock_offset_is_two_byte(const char *offset_str)
+{
+	if (offset_str[0] == '0' && (offset_str[1] == 'x' || offset_str[1] == 'X'))
+		offset_str += 2;
+
+	return strlen(offset_str) > 2;
+}
+
 void cmd_set_clock(const struct shell *shell, size_t argc, char **argv)
 {
 	if (argc < 4) {
-		shell_warn(shell, "Help: set <clock> <reg-offset> <value>|default");
+		shell_warn(shell, "Help: set <clock> <reg-offset> <value>");
 		return;
 	}
 
@@ -119,14 +119,13 @@ void cmd_set_clock(const struct shell *shell, size_t argc, char **argv)
 	}
 
 	int result = 0;
-	uint8_t addr = 0, bus = 0, write_length = 0;
-	uint8_t offset_lsb = 0, offset_msb = 0;
+	uint8_t addr = 0, bus = 0;
 	uint16_t offset = 0;
+	uint8_t offset_len;
+	uint8_t value_len = argc - 3; // bytes to write, excluding offset
+	bool two_byte = clock_offset_is_two_byte(argv[2]);
 
 	offset = strtol(argv[2], NULL, 16);
-
-	offset_lsb = offset & 0xff;
-	offset_msb = (offset >> 8) & 0xff;
 
 	result = find_clock_address_and_bus_by_clock_name_index(clock_index, &addr, &bus);
 	if (result != 0) {
@@ -138,118 +137,27 @@ void cmd_set_clock(const struct shell *shell, size_t argc, char **argv)
 	uint8_t retry = 5;
 	i2c_msg.bus = bus;
 	i2c_msg.target_addr = addr;
-	i2c_msg.data[0] = offset_lsb;
+	i2c_msg.rx_len = 0;
 
-	if (strcmp(argv[3], "default") == 0) {
-		sys_snode_t *node;
-		sys_snode_t *s_node;
-
-		SYS_SLIST_FOR_EACH_NODE_SAFE (&clock_register_default_list, node, s_node) {
-			const clock_default_info *p = (clock_default_info *)node;
-
-			if (p->clock_index == clock_index && p->offset == offset) {
-				if (p->is_default == true) {
-					i2c_msg.tx_len = p->write_length + 1;
-					memcpy(&i2c_msg.data[1], p->value, p->write_length);
-
-					if (i2c_master_write(&i2c_msg, retry)) {
-						shell_error(
-							shell,
-							"Failed to write reg, bus: %d, addr: 0x%x, reg: 0x%x",
-							bus, addr, offset);
-						return;
-					}
-
-					shell_print(shell, "clock set %s 0x%x default success!",
-						    argv[1], offset);
-					return;
-				} else {
-					shell_error(shell, "clock set %s 0x%x default failed!",
-						    argv[1], offset);
-					return;
-				}
-			}
-		}
-		shell_error(shell, "clock set %s 0x%x default failed!", argv[1], offset);
-		return;
+	if (two_byte) {
+		offset_len = 2;
+		i2c_msg.data[0] = (offset >> 8) & 0xff;
+		i2c_msg.data[1] = offset & 0xff;
 	} else {
-		//Before setting, you must first get register value and set default table.
+		offset_len = 1;
+		i2c_msg.data[0] = offset & 0xff;
+	}
 
-		write_length = argc - 3; // bytes for writing to register, excluding offset
+	i2c_msg.tx_len = offset_len + value_len;
 
-		i2c_msg.tx_len = 1;
-		i2c_msg.rx_len = write_length;
+	for (uint8_t i = 0; i < value_len; i++) {
+		i2c_msg.data[offset_len + i] = strtol(argv[i + 3], NULL, 16);
+	}
 
-		if (i2c_master_read(&i2c_msg, retry)) {
-			shell_error(shell, "Failed to read reg, bus: %d, addr: 0x%x, reg: 0x%x",
-				    bus, addr, offset);
-			return;
-		}
-
-		if (sys_slist_is_empty(&clock_register_default_list)) {
-			clock_default_info *p = NULL;
-			p = (clock_default_info *)malloc(sizeof(*p));
-			if (!p) {
-				shell_error(shell, "clock_default_info alloc failed!");
-				return;
-			}
-			memset(p, 0, sizeof(*p));
-
-			p->clock_index = clock_index;
-			p->is_default = true;
-			p->offset = offset;
-			p->write_length = write_length;
-			memcpy(p->value, i2c_msg.data, write_length);
-			sys_slist_append(&clock_register_default_list, &p->node);
-		} else {
-			sys_snode_t *node;
-			sys_snode_t *s_node;
-			bool find_default = false;
-
-			SYS_SLIST_FOR_EACH_NODE_SAFE (&clock_register_default_list, node, s_node) {
-				const clock_default_info *p = (clock_default_info *)node;
-
-				if (p->clock_index == clock_index && p->offset == offset) {
-					if (p->is_default == true) {
-						find_default = true;
-						break; // default register value have been stored
-					}
-				}
-			}
-
-			if (find_default == false) {
-				clock_default_info *p = NULL;
-				p = (clock_default_info *)malloc(sizeof(*p));
-				if (!p) {
-					shell_error(shell, "clock_default_info alloc failed!");
-					return;
-				}
-				memset(p, 0, sizeof(*p));
-
-				p->clock_index = clock_index;
-				p->is_default = true;
-				p->offset = offset;
-				p->write_length = write_length;
-				memcpy(p->value, i2c_msg.data, write_length);
-				sys_slist_append(&clock_register_default_list, &p->node);
-			}
-		}
-
-		//Set value to register
-		i2c_msg.tx_len = argc - 2;
-		i2c_msg.rx_len = 0;
-		i2c_msg.data[0] = offset_lsb;
-
-		for (int i = 0; i < i2c_msg.tx_len - 1; i++) {
-			i2c_msg.data[i + 1] = strtol(argv[i + 3], NULL, 16);
-		}
-
-		if (i2c_master_write(&i2c_msg, retry)) {
-			shell_error(shell, "Failed to write reg, bus: %d, addr: 0x%x, reg: 0x%x",
-				    bus, addr, offset);
-			return;
-		}
-
+	if (i2c_master_write(&i2c_msg, retry)) {
+		shell_error(shell, "Failed to write reg, bus: %d, addr: 0x%x, reg: 0x%x", bus, addr,
+			    offset);
+	} else {
 		shell_print(shell, "clock set %s 0x%x <value> success!", argv[1], offset);
 	}
 
@@ -274,14 +182,11 @@ void cmd_get_clock(const struct shell *shell, size_t argc, char **argv)
 	uint8_t addr = 0;
 	uint8_t bus = 0;
 	uint8_t read_len = 0;
-	uint8_t offset_lsb = 0, offset_msb = 0;
 	uint16_t offset = 0;
+	bool two_byte = clock_offset_is_two_byte(argv[2]);
 
 	offset = strtol(argv[2], NULL, 16);
 	read_len = strtol(argv[3], NULL, 10);
-
-	offset_lsb = offset & 0xff;
-	offset_msb = (offset >> 8) & 0xff;
 
 	result = find_clock_address_and_bus_by_clock_name_index(clock_index, &addr, &bus);
 	if (result != 0) {
@@ -293,9 +198,16 @@ void cmd_get_clock(const struct shell *shell, size_t argc, char **argv)
 	uint8_t retry = 5;
 	i2c_msg.bus = bus;
 	i2c_msg.target_addr = addr;
-	i2c_msg.tx_len = 1;
 	i2c_msg.rx_len = read_len;
-	i2c_msg.data[0] = offset_lsb;
+
+	if (two_byte) {
+		i2c_msg.tx_len = 2;
+		i2c_msg.data[0] = (offset >> 8) & 0xff;
+		i2c_msg.data[1] = offset & 0xff;
+	} else {
+		i2c_msg.tx_len = 1;
+		i2c_msg.data[0] = offset & 0xff;
+	}
 
 	if (i2c_master_read(&i2c_msg, retry)) {
 		shell_error(shell, "Failed to read reg, bus: %d, addr: 0x%x, reg: 0x%x", bus, addr,
@@ -305,7 +217,7 @@ void cmd_get_clock(const struct shell *shell, size_t argc, char **argv)
 
 	for (int i = 0; i < read_len; i++) {
 		if (i == 0)
-			shell_print(shell, "Byte count (%d) = 0x%x", i + 1, i2c_msg.data[i]);
+			shell_print(shell, "Byte%d = 0x%x", i + 1, i2c_msg.data[i]);
 		else
 			shell_print(shell, "Byte%d = 0x%x", i + 1, i2c_msg.data[i]);
 	}
@@ -329,15 +241,33 @@ void handle_single_clock_status(const struct shell *shell, enum CLOCK_COMPONENT 
 	const char *status_reg_name = NULL;
 
 	switch (clock_index) {
+	/* CLK GEN read APLL lock status */
+	case CLK_GEN_100M_U86:{
+		uint8_t lock_status_100 = clk_100mhz_get_lock_status_u86();
+		if (lock_status_100 == 0xFF) 
+			shell_error(shell, "Failed to get 100MHz clock(U86) lock status");
+		else if (lock_status_100 == 0)
+			shell_print(shell, "APLL lock status,  value = %d (unlock)", lock_status_100);
+		else
+			shell_print(shell, "APLL lock status,  value = %d (lock)", lock_status_100);
+		return;
+	}
+	case CLK_GEN_312M_U618:{
+		uint8_t lock_status_312 = clk_312_5mhz_get_lock_status_u618();
+		if (lock_status_312 == 0xFF) 
+			shell_error(shell, "Failed to get 312.5MHz clock(U618) lock status");
+		else if (lock_status_312 == 0)
+			shell_print(shell, "APLL lock status,  value = %d (unlock)", lock_status_312);
+		else
+			shell_print(shell, "APLL lock status,  value = %d (lock)", lock_status_312);
+		return;
+	}
+	/* CLK BUF read WRITE_LOCK_CLEAR_LOS_EVENT register */
 	case CLK_BUF_100M_U85:
 	case CLK_BUF_100M_U690:
 	case CLK_BUF_100M_U88:
 		status_reg_offset = CLK_BUF_100M_WRITE_LOCK_CLEAR_LOS_EVENT_OFFSET;
 		status_reg_name = "WRITE_LOCK_CLEAR_LOS_EVENT";
-		break;
-	case CLK_GEN_100M_U86:
-		status_reg_offset = CLK_GEN_LOSMON_EVENT_OFFSET;
-		status_reg_name = "CLK_GEN_LOSMON_EVENT_OFFSET";
 		break;
 	default:
 		shell_error(shell, "Type wrong clock name");
@@ -380,9 +310,7 @@ void cmd_get_clock_status(const struct shell *shell, size_t argc, char **argv)
 			if (!clock_name_get(i, &name) || name == NULL) {
 				continue;
 			}
-
 			shell_print(shell, "\n=== %s ===", name);
-
 			handle_single_clock_status(shell, (enum CLOCK_COMPONENT)i);
 		}
 
@@ -458,32 +386,10 @@ void cmd_clear_clock_status(const struct shell *shell, size_t argc, char **argv)
 		shell_print(shell, "clock clear %s success!", argv[1]);
 		break;
 	case CLK_GEN_100M_U86:
-		i2c_msg.bus = bus;
-		i2c_msg.target_addr = addr;
-		i2c_msg.tx_len = 1;
-		i2c_msg.rx_len = 2;
-		i2c_msg.data[0] = CLK_BUF_100M_BYTE_COUNT;
-
-		if (i2c_master_read(&i2c_msg, retry)) {
-			shell_error(shell, "Failed to read reg, bus: %d, addr: 0x%x, reg: 0x%x",
-				    bus, addr, CLK_BUF_100M_BYTE_COUNT);
-			return;
-		}
-
-		byte_count = i2c_msg.data[1];
-
-		i2c_msg.tx_len = 3;
-		i2c_msg.rx_len = 0;
-		i2c_msg.data[0] = CLK_GEN_LOSMON_EVENT_OFFSET;
-		i2c_msg.data[1] = byte_count;
-		i2c_msg.data[2] = 0x2;
-		if (i2c_master_write(&i2c_msg, retry)) {
-			shell_error(shell, "Failed to write reg, bus: %d, addr: 0x%x, reg: 0x%x",
-				    bus, addr, CLK_GEN_LOSMON_EVENT_OFFSET);
-			return;
-		}
-		shell_print(shell, "clock clear %s success!", argv[1]);
+	case CLK_GEN_312M_U618:
+		shell_print(shell, "clock clear %s not support!", argv[1]);
 		break;
+
 	default:
 		shell_error(shell, "Type wrong clock name");
 	}
@@ -540,7 +446,7 @@ SHELL_DYNAMIC_CMD_CREATE(all_clock_name, all_dynamic_clock_name_get);
 /* Sub-command Level 1 of command clock */
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_clock_cmds,
 			       SHELL_CMD_ARG(set, &clock_name,
-					     "set <clock> <reg-offset> <value>|default",
+					     "set <clock> <reg-offset> <value>",
 					     cmd_set_clock, 4, 3),
 			       SHELL_CMD_ARG(get, &clock_name,
 					     "get <clock> <reg-offset> <read_length>",
@@ -548,7 +454,7 @@ SHELL_STATIC_SUBCMD_SET_CREATE(sub_clock_cmds,
 			       SHELL_SUBCMD_SET_END);
 
 /* Root of command clock */
-SHELL_CMD_REGISTER(clock, &sub_clock_cmds, "Clock commands for AG", NULL);
+SHELL_CMD_REGISTER(clock, &sub_clock_cmds, "Clock commands for EL", NULL);
 
 /* Sub-command Level 1 of command clock_status */
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_clock_status_cmds,
