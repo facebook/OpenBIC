@@ -187,7 +187,7 @@ const char *get_cpld_bit_name(uint8_t cpld_offset, uint8_t bit_pos)
 	return "NA";
 }
 
-static const char *get_mp2971_ot_warning_rail_name(uint8_t sensor_num)
+static const char *get_vr_ot_warning_rail_name(uint8_t sensor_num)
 {
 	switch (sensor_num) {
 	case SENSOR_NUM_ASIC_P0V85_MEDHA0_VDD_TEMP_C:
@@ -352,9 +352,9 @@ void cmd_log_dump(const struct shell *shell, size_t argc, char **argv)
 				default:
 					break;
 				}
-			} else if (extend_case == MP2971_OT_WARNING_EVENT_CAUSE) {
+			} else if (extend_case == VR_OT_WARNING_EVENT_CAUSE) {
 				const char *rail_name =
-					get_mp2971_ot_warning_rail_name(log.error_data[1]);
+					get_vr_ot_warning_rail_name(log.error_data[1]);
 				shell_print(shell, "\t%s OT_WARNING", rail_name);
 				shell_print(shell, "read status(0x7D): 0x%02x", log.error_data[0]);
 				err_data_len = 1;

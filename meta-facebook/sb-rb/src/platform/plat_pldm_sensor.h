@@ -332,7 +332,7 @@
 #define SENSOR_NUM_ASIC_IMON_MEDHA1_VDD_CURR_A 0x84
 
 #define SENSOR_NUM_NUMBERS 0x85
-#define MPS2971_TEMP_RAIL_NUMBERS 23
+#define VR_NON_CORE_TEMP_RAIL_NUMBERS 23
 #define TMP75_TEMP_OFFSET 0x00
 #define UPDATE_INTERVAL_1S 1
 #define UPDATE_INTERVAL_5S 5
@@ -404,4 +404,9 @@ PDR_numeric_sensor *get_pdr_numeric_sensor_by_sensor_id(uint8_t sensor_id);
 uint8_t get_pwr_capping_polling_rate_type();
 uint16_t get_quick_medha_polling_rate();
 void check_temp_sensor(uint8_t tmp_module);
+
+// VR temperature monitor sensors lookup table
+extern const uint16_t vr_temp_monitor_sensors[];
+extern const uint8_t vr_temp_monitor_sensors_count;
+
 #endif
