@@ -31,7 +31,7 @@ bool clock_name_get(uint8_t index, uint8_t **name);
 #define CLK_BUF_U690_ADDR (0xD8 >> 1)
 #define CLK_BUF_U88_ADDR (0xDE >> 1)
 #define CLK_GEN_100M_U86_ADDR (0x12 >> 1)
-#define CLK_GEN_312M_U618_ADDR (0x10 >> 1)
+#define CLK_GEN_312_5M_U618_ADDR (0x10 >> 1)
 
 #define CLK_BUF_100M_WRITE_LOCK_CLEAR_LOS_EVENT_OFFSET 0x27
 #define CLK_GEN_LOSMON_EVENT_OFFSET 0x5a
@@ -43,7 +43,7 @@ enum CLOCK_COMPONENT {
 	CLK_BUF_100M_U690,
 	CLK_BUF_100M_U88,
 	CLK_GEN_100M_U86,
-	CLK_GEN_312M_U618,
+	CLK_GEN_312_5M_U618,
 	CLK_COMPONENT_MAX
 };
 
@@ -59,7 +59,7 @@ clock_compnt_mapping clock_compnt_mapping_table[] = {
 	{ CLK_BUF_100M_U690, CLK_BUF_U690_ADDR, I2C_BUS1, "CLK_BUF_100M_U690" },
 	{ CLK_BUF_100M_U88, CLK_BUF_U88_ADDR, I2C_BUS3, "CLK_BUF_100M_U88" },
 	{ CLK_GEN_100M_U86, CLK_GEN_100M_U86_ADDR, I2C_BUS3, "CLK_GEN_100M_U86" },
-	{ CLK_GEN_312M_U618, CLK_GEN_312M_U618_ADDR, I2C_BUS3, "CLK_GEN_312M_U618" },
+	{ CLK_GEN_312_5M_U618, CLK_GEN_312_5M_U618_ADDR, I2C_BUS3, "CLK_GEN_312_5M_U618" },
 };
 
 
@@ -252,7 +252,7 @@ void handle_single_clock_status(const struct shell *shell, enum CLOCK_COMPONENT 
 			shell_print(shell, "APLL lock status,  value = %d (lock)", lock_status_100);
 		return;
 	}
-	case CLK_GEN_312M_U618:{
+	case CLK_GEN_312_5M_U618:{
 		uint8_t lock_status_312 = clk_312_5mhz_get_lock_status_u618();
 		if (lock_status_312 == 0xFF) 
 			shell_error(shell, "Failed to get 312.5MHz clock(U618) lock status");
@@ -386,7 +386,7 @@ void cmd_clear_clock_status(const struct shell *shell, size_t argc, char **argv)
 		shell_print(shell, "clock clear %s success!", argv[1]);
 		break;
 	case CLK_GEN_100M_U86:
-	case CLK_GEN_312M_U618:
+	case CLK_GEN_312_5M_U618:
 		shell_print(shell, "clock clear %s not support!", argv[1]);
 		break;
 

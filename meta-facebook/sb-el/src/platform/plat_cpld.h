@@ -119,6 +119,9 @@
 #define CPLD_OFFSET_ADC_IDX 0xA0
 #define CPLD_ASIC_RESET_STATUS_REG 0xA2
 
+// clock lose detection register
+#define CLK_100MHZ_BUF_LOSS_REG 0x31
+
 typedef struct _cpld_info_ cpld_info;
 
 typedef struct _cpld_info_ {
