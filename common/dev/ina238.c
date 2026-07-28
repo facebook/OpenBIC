@@ -52,7 +52,7 @@ uint8_t ina238_read(sensor_cfg *cfg, int *reading)
 	CHECK_NULL_ARG_WITH_RETURN(reading, SENSOR_UNSPECIFIED_ERROR);
 	CHECK_NULL_ARG_WITH_RETURN(cfg->init_args, SENSOR_INIT_UNSPECIFIED_ERROR);
 
-	ina238_init_arg *init_args = (ina238_init_arg *)cfg->init_args;
+	const ina238_init_arg *init_args = (const ina238_init_arg *)cfg->init_args;
 
 	if (cfg->num > SENSOR_NUM_MAX) {
 		LOG_ERR("sensor num: 0x%x is invalid", cfg->num);
