@@ -404,6 +404,7 @@ PDR_numeric_sensor *get_pdr_numeric_sensor_by_sensor_id(uint8_t sensor_id);
 uint8_t get_pwr_capping_polling_rate_type();
 uint16_t get_quick_medha_polling_rate();
 void check_temp_sensor(uint8_t tmp_module);
+bool is_any_ot_warning_active(void);
 
 // VR temperature monitor sensors lookup table
 extern const uint16_t vr_temp_monitor_sensors[];

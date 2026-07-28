@@ -127,4 +127,5 @@ void set_plat_vr_hot_mask_flag(bool value);
 bool get_plat_vr_hot_mask_flag(void);
 int get_vr_hot(void);
 bool set_vr_hot(bool enable);
+bool trigger_vr_hot();
 #endif

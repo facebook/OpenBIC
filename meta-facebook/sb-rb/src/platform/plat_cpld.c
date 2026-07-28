@@ -30,6 +30,7 @@
 #include "kernel.h"
 #include "plat_isr.h"
 #include "plat_class.h"
+#include "plat_pldm_sensor.h"
 
 #define POLLING_CPLD_STACK_SIZE 2048
 #define CPLD_POLLING_INTERVAL_MS 1000 // 1 second polling interval
@@ -324,6 +325,11 @@ bool restore_vr_hot()
 {
 	if(get_plat_vr_hot_mask_flag() == true) {
 		LOG_INF("ASIC_VR_HOT_SWITCH is masked");
+		return false;
+	}
+
+	if (is_any_ot_warning_active()) {
+		LOG_WRN("still have ot_warning");
 		return false;
 	}
 	

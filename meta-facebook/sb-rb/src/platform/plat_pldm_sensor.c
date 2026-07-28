@@ -31,6 +31,7 @@
 #include "plat_event.h"
 #include "plat_log.h"
 #include "iris_smbus.h"
+#include "plat_cpld.h"
 
 LOG_MODULE_REGISTER(plat_pldm_sensor);
 
@@ -116,24 +117,6 @@ static void init_ot_warning_table(void)
 	LOG_INF("ot warning monitor sensor count: %d", ot_warning_table_count);
 }
 
-static void set_cpld_ot_warning_high(void)
-{
-	uint8_t reg_val = 0;
-
-	if (!plat_read_cpld(ASIC_VR_HOT_SWITCH, &reg_val, 1)) {
-		LOG_ERR("Failed to read CPLD reg 0x%02X", ASIC_VR_HOT_SWITCH);
-		return;
-	}
-
-	if (reg_val & CPLD_OT_WARNING_BIT)
-		return;
-
-	reg_val |= CPLD_OT_WARNING_BIT;
-
-	if (!plat_write_cpld(ASIC_VR_HOT_SWITCH, &reg_val))
-		LOG_ERR("Failed to write CPLD reg 0x%02X", ASIC_VR_HOT_SWITCH);
-}
-
 static void update_ot_warning_status(void)
 {
 	bool any_ot_warning = false;
@@ -193,7 +176,17 @@ static void update_ot_warning_status(void)
 	}
 
 	if (any_ot_warning && new_ot_warning_detected)
-		set_cpld_ot_warning_high();
+		trigger_vr_hot();
+}
+
+bool is_any_ot_warning_active(void)
+{
+	for (uint8_t i = 0; i < ot_warning_table_count; i++) {
+		if (ot_warning_table[i].ot_warning)
+			return true;
+	}
+
+	return false;
 }
 
 static bool is_quick_vr_sensor(uint8_t sensor_num)
