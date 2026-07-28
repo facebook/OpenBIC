@@ -89,6 +89,7 @@ void error_log_event(uint16_t error_code, bool log_status);
 uint8_t plat_log_get_num(void);
 void plat_clear_log();
 void reset_error_log_event(uint8_t err_type);
+bool check_is_extend_error_code(uint16_t error_code);
 
 typedef struct __attribute__((packed)) _plat_err_log_mapping {
 	uint16_t index;
@@ -110,4 +111,13 @@ enum LOG_ERROR_TRIGGER_CAUSE {
 	MAX_TRIGGER_CAUSE = 0b1000, //trigger cause maxium 3 bit
 };
 
+#define ERROR_TRIGGER_CAUSE_EXTEND_START 0x8800
+#define ERROR_TRIGGER_CAUSE_EXTEND_END 0x9E00
+enum LOG_ERROR_TRIGGER_CAUSE_EXTEND {
+	// start from 0x8800 ~ 0x9E00
+	CLOCK_APLL_UNLOCK_EVENT_CAUSE = 0x8A00, // 0x8A00
+};
+
+void packaged_bmc_log(uint8_t event_type, uint8_t event_data_1, uint8_t event_data_2,
+		      uint8_t event_data_3);
 #endif

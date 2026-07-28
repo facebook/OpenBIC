@@ -10,7 +10,7 @@ enum clock_ctrl_list {
 	CLK_GEN_48M,
 	CLK_BUF_100M,
 	CLK_GEN_100M,
-	CLK_GEN_312M,
+	CLK_GEN_312_5M,
 };
 
 typedef struct power_good_status {
@@ -29,7 +29,7 @@ power_good_status clcok_control_table[] = {
 	{ CLK_BUF_100M, 6, VR_AND_CLK_EN, "CLK_BUF_100M", 0, 1 },
 	{ CLK_GEN_100M, 2, VR_AND_CLK_EN_PIN_CTRL, "CLK_GEN_100M", 1,
 	  0 }, //TODO:To be implemented​
-	{ CLK_GEN_312M, 0, VR_AND_CLK_EN_PIN_CTRL, "CLK_GEN_312M", 0, 1 },
+	{ CLK_GEN_312_5M, 0, VR_AND_CLK_EN_PIN_CTRL, "CLK_GEN_312_5M", 0, 1 },
 };
 
 bool clk_ctrl_set_cmds(uint8_t cpld_offset, uint8_t bit, uint8_t value)
@@ -69,10 +69,10 @@ void set_clk_ctrl_en(const struct shell *shell, size_t argc, char **argv)
 		} else {
 			shell_print(shell, "enable %s successfully !", argv[1]);
 		}
-	} else if (strcmp(argv[1], "CLK_GEN_312M") == 0) {
-		if (!clk_ctrl_set_cmds(clcok_control_table[CLK_GEN_312M].cpld_offsets,
-				       clcok_control_table[CLK_GEN_312M].bit_loc,
-				       clcok_control_table[CLK_GEN_312M].enable_value)) {
+	} else if (strcmp(argv[1], "CLK_GEN_312_5M") == 0) {
+		if (!clk_ctrl_set_cmds(clcok_control_table[CLK_GEN_312_5M].cpld_offsets,
+				       clcok_control_table[CLK_GEN_312_5M].bit_loc,
+				       clcok_control_table[CLK_GEN_312_5M].enable_value)) {
 			shell_error(shell, "enable %s failed !", argv[1]);
 		} else {
 			shell_print(shell, "enable %s successfully !", argv[1]);
@@ -109,10 +109,10 @@ void set_clk_ctrl_dis(const struct shell *shell, size_t argc, char **argv)
 		} else {
 			shell_print(shell, "disable %s successfully !", argv[1]);
 		}
-	} else if (strcmp(argv[1], "CLK_GEN_312M") == 0) {
-		if (!clk_ctrl_set_cmds(clcok_control_table[CLK_GEN_312M].cpld_offsets,
-				       clcok_control_table[CLK_GEN_312M].bit_loc,
-				       clcok_control_table[CLK_GEN_312M].disable_value)) {
+	} else if (strcmp(argv[1], "CLK_GEN_312_5M") == 0) {
+		if (!clk_ctrl_set_cmds(clcok_control_table[CLK_GEN_312_5M].cpld_offsets,
+				       clcok_control_table[CLK_GEN_312_5M].bit_loc,
+				       clcok_control_table[CLK_GEN_312_5M].disable_value)) {
 			shell_error(shell, "disable %s failed !", argv[1]);
 		} else {
 			shell_print(shell, "disable %s successfully !", argv[1]);
@@ -127,7 +127,7 @@ void clk_ctrl_get_cmds(const struct shell *shell, size_t argc, char **argv)
 	CLK_GEN_48M      1
 	CLK_BUF_100M     1
 	CLK_GEN_100M     1
-	CLK_GEN_312M     1
+	CLK_GEN_312_5M     1
 	*/
 	for (int i = 0; i < sizeof(clcok_control_table) / sizeof(power_good_status); i++) {
 		uint8_t read_value = 0;
@@ -140,13 +140,13 @@ void clk_ctrl_get_cmds(const struct shell *shell, size_t argc, char **argv)
 SHELL_STATIC_SUBCMD_SET_CREATE(clk_ctrl_en_cmds, SHELL_CMD(CLK_GEN_48M, NULL, "CLK_GEN_48M", NULL),
 			       SHELL_CMD(CLK_BUF_100M, NULL, "CLK_BUF_100M", NULL),
 			       SHELL_CMD(CLK_GEN_100M, NULL, "CLK_GEN_100M", NULL),
-			       SHELL_CMD(CLK_GEN_312M, NULL, "CLK_GEN_312M", NULL),
+			       SHELL_CMD(CLK_GEN_312_5M, NULL, "CLK_GEN_312_5M", NULL),
 			       SHELL_SUBCMD_SET_END);
 
 SHELL_STATIC_SUBCMD_SET_CREATE(clk_ctrl_dis_cmds, SHELL_CMD(CLK_GEN_48M, NULL, "CLK_GEN_48M", NULL),
 			       SHELL_CMD(CLK_BUF_100M, NULL, "CLK_BUF_100M", NULL),
 			       SHELL_CMD(CLK_GEN_100M, NULL, "CLK_GEN_100M", NULL),
-			       SHELL_CMD(CLK_GEN_312M, NULL, "CLK_GEN_312M", NULL),
+			       SHELL_CMD(CLK_GEN_312_5M, NULL, "CLK_GEN_312_5M", NULL),
 			       SHELL_SUBCMD_SET_END);
 
 SHELL_STATIC_SUBCMD_SET_CREATE(

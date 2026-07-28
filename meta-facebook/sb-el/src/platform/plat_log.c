@@ -35,6 +35,8 @@
 #include "plat_thermal.h"
 #include "pmbus.h"
 #include "plat_led.h"
+#include "plat_clock.h"
+#include "pldm_oem.h"
 
 LOG_MODULE_REGISTER(plat_log);
 
@@ -383,10 +385,40 @@ bool get_multi_vr_status(uint8_t alrt_index, uint8_t *data)
 	return true;
 }
 
+bool check_is_extend_error_code(uint16_t error_code)
+{
+	if (error_code >= ERROR_TRIGGER_CAUSE_EXTEND_START && error_code <= ERROR_TRIGGER_CAUSE_EXTEND_END) {
+		return true;
+	}
+	return false;
+}
+
+bool plat_get_extend_error_data(uint16_t error_code, uint8_t *data)
+{
+	CHECK_NULL_ARG_WITH_RETURN(data, false);
+
+	switch (error_code) {
+	case CLOCK_APLL_UNLOCK_EVENT_CAUSE: {
+		if (!clock_get_error_data(CLOCK_APLL_UNLOCK_EVENT_CAUSE, data)) {
+			LOG_ERR("Failed to get clock APLL unlock error data");
+			return false;
+		}
+		return true;
+	}
+	default:
+		LOG_ERR("Unsupported extended error code: 0x%04x", error_code);
+		return false;
+	}
+}
+
 bool get_error_data(uint16_t error_code, uint8_t *data)
 {
 	CHECK_NULL_ARG_WITH_RETURN(data, false);
 
+	/* check if error code is in extended range */
+	if (check_is_extend_error_code(error_code)) {
+		return plat_get_extend_error_data(error_code, data);
+	}
 	uint8_t trigger_case = (error_code >> 13) & 0x07;
 
 	switch (trigger_case) {
@@ -687,4 +719,20 @@ void init_load_eeprom_log(void)
 
 	// Determine the next log position
 	find_last_log_position();
+}
+
+void packaged_bmc_log(uint8_t event_type, uint8_t event_data_1, uint8_t event_data_2,
+		      uint8_t event_data_3)
+{
+	struct pldm_addsel_data to_bmc_sel_msg = { 0 };
+	to_bmc_sel_msg.assert_type = LOG_ASSERT;
+	to_bmc_sel_msg.event_type = event_type;
+	to_bmc_sel_msg.event_data_1 = event_data_1;
+	to_bmc_sel_msg.event_data_2 = event_data_2;
+	to_bmc_sel_msg.event_data_3 = event_data_3;
+	if (send_event_log_to_bmc(to_bmc_sel_msg) != PLDM_SUCCESS) {
+		LOG_ERR("Failed to send msg to bmc, event_type: 0x%x, event data: 0x%x 0x%x 0x%x\n",
+			to_bmc_sel_msg.event_type, to_bmc_sel_msg.event_data_1,
+			to_bmc_sel_msg.event_data_2, to_bmc_sel_msg.event_data_3);
+	}
 }
