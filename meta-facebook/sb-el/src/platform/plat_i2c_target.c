@@ -1002,7 +1002,7 @@ void plat_master_write_thread_handler()
 				}
 			} break;
 			case SET_SENSOR_POLLING_COMMAND_REG: {
-				if (rlen != 8) {
+				if (rlen != 10) {
 					LOG_ERR("Invalid length for offset: 0x%02x", reg_offset);
 					LOG_ERR("length: 0x%02x", rlen);
 					break;
