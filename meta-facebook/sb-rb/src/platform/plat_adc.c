@@ -74,10 +74,10 @@ typedef struct {
 
 //MEDHA0: level 2 , level3
 //MEDHA1: level 2 , level3
-adc_info_t adc_info[ADC_IDX_MAX] = { { .avg_times = 50, .ucr = 596 },
-				     { .avg_times = 50, .ucr = 596 },
-				     { .avg_times = 500, .ucr = 347 },
-				     { .avg_times = 500, .ucr = 347 } };
+adc_info_t adc_info[ADC_IDX_MAX] = { { .avg_times = 50, .ucr = 606 },
+				     { .avg_times = 50, .ucr = 606 },
+				     { .avg_times = 1000, .ucr = 360 },
+				     { .avg_times = 1000, .ucr = 360 } };
 
 static const struct device *spi_dev;
 
