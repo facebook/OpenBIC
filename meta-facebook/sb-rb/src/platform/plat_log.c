@@ -45,7 +45,7 @@ LOG_MODULE_REGISTER(plat_log);
 #define CPLD_VR_VENDOR_TYPE_REG 0x1C
 #define ERROR_CODE_TYPE_SHIFT 13
 #define SENSOR_NUMBER_DONT_CARE 0xFF
-#define MP2971_OT_WARNING_REG 0x7D
+#define OT_WARNING_REG 0x7D
 
 static plat_err_log_mapping err_log_data[LOG_MAX_NUM];
 static uint16_t err_code_caches[200]; //extend if error code types > 200
@@ -738,9 +738,8 @@ bool get_error_data(uint16_t error_code, uint8_t *data)
 				return false;
 			}
 
-			if (!get_raw_data_from_sensor_id(sensor_num, MP2971_OT_WARNING_REG,
-							 &reg_val, 1)) {
-				LOG_ERR("Failed to read MP2971 OT warning register for sensor: 0x%02x",
+			if (!get_raw_data_from_sensor_id(sensor_num, OT_WARNING_REG, &reg_val, 1)) {
+				LOG_ERR("Failed to read OT warning register for sensor: 0x%02x",
 					sensor_num);
 				return false;
 			}

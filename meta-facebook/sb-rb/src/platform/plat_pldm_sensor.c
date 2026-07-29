@@ -90,10 +90,12 @@ const uint16_t vr_temp_monitor_sensors[] = {
 	SENSOR_NUM_ASIC_P1V8_VPP_HBM1357_TEMP_C,
 	SENSOR_NUM_ASIC_P0V85_MEDHA0_VDD_TEMP_C,
 	SENSOR_NUM_ASIC_P0V85_MEDHA1_VDD_TEMP_C,
+	SENSOR_NUM_UBC1_P12V_TEMP_C,
+	SENSOR_NUM_UBC2_P12V_TEMP_C,
 };
 const uint8_t vr_temp_monitor_sensors_count = ARRAY_SIZE(vr_temp_monitor_sensors);
-
-static ot_warning_status ot_warning_table[VR_NON_CORE_TEMP_RAIL_NUMBERS] = { 0 };
+// size must be same as vr_temp_monitor_sensors_count
+static ot_warning_status ot_warning_table[24] = { 0 };
 static uint8_t ot_warning_table_count;
 
 static void init_ot_warning_table(void)
@@ -106,7 +108,7 @@ static void init_ot_warning_table(void)
 		if (cfg == NULL)
 			continue;
 
-		if (ot_warning_table_count >= VR_NON_CORE_TEMP_RAIL_NUMBERS)
+		if (ot_warning_table_count >= vr_temp_monitor_sensors_count)
 			break;
 
 		ot_warning_table[ot_warning_table_count].sensor_num = cfg->num;
@@ -150,6 +152,10 @@ static void update_ot_warning_status(void)
 			} else if (ot_warning_table[i].sensor_num ==
 				   SENSOR_NUM_ASIC_P0V85_MEDHA1_VDD_TEMP_C) {
 				sel_msg.event_data_1 = 0x7D;
+			} else if (ot_warning_table[i].sensor_num == SENSOR_NUM_UBC1_P12V_TEMP_C) {
+				sel_msg.event_data_1 = 0x7E;
+			} else if (ot_warning_table[i].sensor_num == SENSOR_NUM_UBC2_P12V_TEMP_C) {
+				sel_msg.event_data_1 = 0x7F;
 			} else {
 				sel_msg.event_data_1 = OT_WARNING_EVENT_DATA1_BASE + i;
 			}

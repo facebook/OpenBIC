@@ -234,6 +234,10 @@ static const char *get_vr_ot_warning_rail_name(uint8_t sensor_num)
 		return "ASIC_P1V1_VDDQC_HBM1357";
 	case SENSOR_NUM_ASIC_P1V8_VPP_HBM1357_TEMP_C:
 		return "ASIC_P1V8_VPP_HBM1357";
+	case SENSOR_NUM_UBC1_P12V_TEMP_C:
+		return "UBC1_P12V";
+	case SENSOR_NUM_UBC2_P12V_TEMP_C:
+		return "UBC2_P12V";
 	default:
 		return "UNKNOWN_RAIL";
 	}
