@@ -23,6 +23,7 @@
 #include "plat_user_setting.h"
 #include "shell_plat_power_sequence.h"
 #include "plat_hook.h"
+#include "plat_class.h"
 
 typedef struct {
 	uint8_t cpld_offset;
@@ -408,7 +409,7 @@ void cmd_log_dump(const struct shell *shell, size_t argc, char **argv)
 				}
 
 				if (!has_valid_vr) {
-					shell_print(shell, "no vr sensor status word(0x79)");
+					shell_print(shell, "no vr sensor status");
 					err_data_len = SMBUS_ALRT_STATUS_DATA_LEN;
 					break;
 				}
@@ -422,21 +423,47 @@ void cmd_log_dump(const struct shell *shell, size_t argc, char **argv)
 						continue;
 
 					if (!vr_rail_name_get(rail, &rail_name)) {
-						shell_print(
-							shell,
-							"Unknown VR rail(%u) status word(0x79):",
-							rail);
+						shell_print(shell, "Unknown VR rail(%u) status",
+							    rail);
 					} else {
-						shell_print(shell,
-							    "[0x%02x] %s status word(0x79):", rail,
+						shell_print(shell, "[0x%02x] %s status:", rail,
 							    rail_name);
 					}
 
-					shell_print(shell, "\tlow  byte: 0x%02x",
+					shell_print(shell, "\t\t  status word(0x79):");
+					shell_print(shell, "\t\t    low  byte: 0x%02x",
 						    log.error_data[idx + 1]);
-
-					shell_print(shell, "\thigh byte: 0x%02x",
+					shell_print(shell, "\t\t    high byte: 0x%02x",
 						    log.error_data[idx + 2]);
+
+					shell_print(shell, "\t\t  status vout(0x7A):");
+					shell_print(shell, "\t\t    byte: 0x%02x",
+						    log.error_data[idx + 3]);
+
+					shell_print(shell, "\t\t  status iout(0x7B):");
+					shell_print(shell, "\t\t    byte: 0x%02x",
+						    log.error_data[idx + 4]);
+
+					shell_print(shell, "\t\t  status input(0x7C):");
+					shell_print(shell, "\t\t    byte: 0x%02x",
+						    log.error_data[idx + 5]);
+
+					shell_print(shell, "\t\t  status temperature(0x7D):");
+					shell_print(shell, "\t\t    byte: 0x%02x",
+						    log.error_data[idx + 6]);
+
+					shell_print(shell, "\t\t  status cml(0x7E):");
+					shell_print(shell, "\t\t    byte: 0x%02x",
+						    log.error_data[idx + 7]);
+
+					shell_print(shell, "\t\t  status MFR(0x80):");
+					if (!(log.err_code == 0x8626 || log.err_code == 0x8726) &&
+					    get_vr_module() == VR_MODULE_MPS) {
+						shell_print(shell, "\t\t    byte: not supported");
+					} else {
+						shell_print(shell, "\t\t    byte: 0x%02x",
+							    log.error_data[idx + 8]);
+					}
 				}
 				err_data_len = SMBUS_ALRT_STATUS_DATA_LEN;
 			} else if (cpld_offset == ASIC_TEMP_OVER_LOG_REG ||
@@ -447,10 +474,28 @@ void cmd_log_dump(const struct shell *shell, size_t argc, char **argv)
 			} else {
 				shell_print(shell, "\t%s", reg_name);
 				shell_print(shell, "\t\t%s", bit_name);
-				shell_print(shell, "read vr sensor status word(0x79):");
-				shell_print(shell, "\tlow  byte: 0x%02x", log.error_data[0]);
-				shell_print(shell, "\thigh byte: 0x%02x", log.error_data[1]);
-				err_data_len = 7;
+				shell_print(shell, "\t\t  status word(0x79):");
+				shell_print(shell, "\t\t    low  byte: 0x%02x", log.error_data[0]);
+				shell_print(shell, "\t\t    high byte: 0x%02x", log.error_data[1]);
+				shell_print(shell, "\t\t  status vout(0x7A):");
+				shell_print(shell, "\t\t    byte: 0x%02x", log.error_data[2]);
+				shell_print(shell, "\t\t  status iout(0x7B):");
+				shell_print(shell, "\t\t    byte: 0x%02x", log.error_data[3]);
+				shell_print(shell, "\t\t  status input(0x7C):");
+				shell_print(shell, "\t\t    byte: 0x%02x", log.error_data[4]);
+				shell_print(shell, "\t\t  status temperature(0x7D):");
+				shell_print(shell, "\t\t    byte: 0x%02x", log.error_data[5]);
+				shell_print(shell, "\t\t  status cml(0x7E):");
+				shell_print(shell, "\t\t    byte: 0x%02x", log.error_data[6]);
+				shell_print(shell, "\t\t  status MFR(0x80):");
+				if (!(log.err_code == 0x860E || log.err_code == 0x870E) &&
+				    get_vr_module() == VR_MODULE_MPS) {
+					shell_print(shell, "\t\t    byte: not supported");
+				} else {
+					shell_print(shell, "\t\t    byte: 0x%02x",
+						    log.error_data[7]);
+				}
+				err_data_len = 8;
 			}
 			break;
 		case POWER_ON_SEQUENCE_TRIGGER_CAUSE:

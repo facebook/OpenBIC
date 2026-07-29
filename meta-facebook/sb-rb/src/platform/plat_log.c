@@ -287,7 +287,7 @@ bool vr_fault_get_error_data(uint8_t sensor_id, uint8_t *data)
 	CHECK_NULL_ARG_WITH_RETURN(data, false);
 
 	bool ret = true;
-	uint8_t vr_status_buf[7] = { 0 };
+	uint8_t vr_status_buf[8] = { 0 };
 
 	if (!get_raw_data_from_sensor_id(sensor_id, PMBUS_STATUS_WORD, &vr_status_buf[0], 2)) {
 		LOG_ERR("Failed to read VR status word, sensor_id %d", sensor_id);
@@ -320,6 +320,17 @@ bool vr_fault_get_error_data(uint8_t sensor_id, uint8_t *data)
 		ret = false;
 	}
 
+	if (get_vr_module() == VR_MODULE_MPS && !(sensor_id == VR_RAIL_E_ASIC_P0V85_MEDHA0_VDD ||
+						  sensor_id == VR_RAIL_E_ASIC_P0V85_MEDHA1_VDD)) {
+		vr_status_buf[7] = 0xFF;
+	} else {
+		if (!get_raw_data_from_sensor_id(sensor_id, PMBUS_STATUS_MFR_SPECIFIC,
+						 &vr_status_buf[7], 1)) {
+			LOG_ERR("Failed to read VR status MFR_SPECIFIC, sensor_id %d", sensor_id);
+			ret = false;
+		}
+	}
+
 	memcpy(data, vr_status_buf, sizeof(vr_status_buf));
 
 	return ret;
@@ -328,7 +339,7 @@ bool vr_fault_get_error_data(uint8_t sensor_id, uint8_t *data)
 bool get_multi_vr_status(uint8_t alrt_index, uint8_t *data)
 {
 	const vr_smbus_alrt_sensor_map *entry;
-	uint16_t vr_data;
+	uint8_t vr_status_buf[8];
 	uint8_t vr_list[SMBUS_ALRT_MAX_VR_NUM];
 
 	CHECK_NULL_ARG_WITH_RETURN(data, false);
@@ -354,16 +365,22 @@ bool get_multi_vr_status(uint8_t alrt_index, uint8_t *data)
 	vr_list[3] = entry->vr_rail_2_page_1;
 
 	for (int i = 0; i < entry->vr_cnt; i++) {
-		if (!plat_get_vr_status(vr_list[i], VR_STAUS_E_STATUS_WORD, &vr_data)) {
-			LOG_ERR("SMBus alert: Failed to get VR[%d] status word", vr_list[i]);
-			return false;
-		}
-		LOG_INF("VR[%d] status word: 0x%04x", vr_list[i], vr_data);
-		// Write each uint16_t value into the output buffer (little-endian)
+		uint8_t offset = i * SMBUS_ALRT_ENTRY_SIZE;
+		memset(vr_status_buf, 0xFF, sizeof(vr_status_buf));
 
-		data[(i * SMBUS_ALRT_ENTRY_SIZE)] = vr_list[i];
-		data[(i * SMBUS_ALRT_ENTRY_SIZE) + 1] = (uint8_t)(vr_data & 0xFF);
-		data[(i * SMBUS_ALRT_ENTRY_SIZE) + 2] = (uint8_t)((vr_data >> 8) & 0xFF);
+		bool ret;
+
+		ret = vr_fault_get_error_data(vr_list[i], vr_status_buf);
+
+		if (!ret) {
+			LOG_WRN("VR[%d] partial read fail", vr_list[i]);
+		}
+
+		// Byte0 : Sensor ID
+		data[offset] = vr_list[i];
+
+		// Bytes 1~8: vr_fault_get_error_data result
+		memcpy(&data[offset + 1], vr_status_buf, sizeof(vr_status_buf));
 	}
 
 	return true;

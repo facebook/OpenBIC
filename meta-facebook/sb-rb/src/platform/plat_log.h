@@ -65,9 +65,9 @@
 #define CLK_BUF2_100M_LOSB_PLD_ERR_CODE 0x8a05
 #define CLK_312_5MHZ_REINIT_ERR_CODE 0x8a06
 
-#define SMBUS_ALRT_STATUS_DATA_LEN 12
+#define SMBUS_ALRT_STATUS_DATA_LEN 36
 #define SMBUS_ALRT_MAX_VR_NUM 4
-#define SMBUS_ALRT_ENTRY_SIZE 3
+#define SMBUS_ALRT_ENTRY_SIZE 9
 
 enum VR_ERR_LOG_DEVICE_INDEX_E {
 	//pwr fault reg 1
@@ -131,9 +131,9 @@ typedef struct __attribute__((packed)) _plat_err_log_mapping {
 	uint16_t index;
 	uint16_t err_code;
 	uint64_t sys_time;
-	uint8_t error_data[20];
+	uint8_t error_data[36];
 	uint8_t cpld_dump[CPLD_REGISTER_MAX_NUM];
-	uint8_t reserved[24];
+	uint8_t reserved[8];
 } plat_err_log_mapping;
 
 enum LOG_ERROR_TRIGGER_CAUSE {
