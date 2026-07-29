@@ -1006,7 +1006,7 @@ void error_log_event(uint16_t error_code, bool log_status)
 	}
 	if (bmc_err_type != 0) {
 		// send bmc event for clock error
-		packaged_bmc_log(ASIC_MODULE_ERROR, bmc_err_type, send_err_data[0], 0);
+		packaged_bmc_log(IRIS_FAULT, bmc_err_type, send_err_data[0], 0);
 	}
 
 	if (!plat_read_cpld(CPLD_REGISTER_1ST_PART_START_OFFSET, err_log_data[fru_count].cpld_dump,

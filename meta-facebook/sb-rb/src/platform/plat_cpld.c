@@ -31,6 +31,7 @@
 #include "plat_isr.h"
 #include "plat_class.h"
 #include "plat_pldm_sensor.h"
+#include "pldm_oem.h"
 
 #define POLLING_CPLD_STACK_SIZE 2048
 #define CPLD_POLLING_INTERVAL_MS 1000 // 1 second polling interval
@@ -429,7 +430,7 @@ bool asic_temp_error_callback(cpld_info *cpld_info, uint8_t *current_cpld_value)
 			// black bix log
 			error_log_event(error_code, LOG_ASSERT);
 			// send log to bmc
-			packaged_bmc_log(ASIC_MODULE_ERROR, error_asic_temp_code, asic_send_data, 0);
+			packaged_bmc_log(IRIS_FAULT, error_asic_temp_code, asic_send_data, 0);
 		} else {
 			uint8_t check_lv2_data = 0;
 			switch (bit) {
@@ -710,7 +711,7 @@ void check_bootstrap_flag()
 
 		struct pldm_addsel_data bootstrap_sel_msg = { 0 };
 		bootstrap_sel_msg.assert_type = LOG_ASSERT;
-		bootstrap_sel_msg.event_type = ASIC_MODULE_ERROR; //ASIC_MODULE_ERROR;
+		bootstrap_sel_msg.event_type = IRIS_FAULT; //IRIS_FAULT;
 		bootstrap_sel_msg.event_data_1 = BOOTSTRAP_SET_AFTER_PWR_EN;
 		bootstrap_sel_msg.event_data_2 = get_error_bootstrap_index_list(0); // error BOOTSTRAP index 0
 		bootstrap_sel_msg.event_data_3 = get_error_bootstrap_index_list(1); // error BOOTSTRAP index 1

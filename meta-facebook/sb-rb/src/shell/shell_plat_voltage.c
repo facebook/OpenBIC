@@ -306,6 +306,11 @@ static int cmd_ovp_set(const struct shell *shell, size_t argc, char **argv)
 	if (!ovp_uvp_check(shell, argv[1], &rail))
 		return -1;
 	uint16_t val = (uint16_t)strtol(argv[2], NULL, 0);
+	// ovp should be <=940(medha0/1 ovp1:940mv)
+	if (val > 940) {
+		shell_error(shell, "OVP target out of range, should be <= 940 mV");
+		return -1;
+	}
 	if (set_vr_mp29816a_reg(rail, &val, OVP_1) != 0) {
 		shell_error(shell, "OVP set fail");
 		return -1;

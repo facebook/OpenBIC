@@ -142,7 +142,7 @@ static void update_ot_warning_status(void)
 
 			struct pldm_addsel_data sel_msg = { 0 };
 			sel_msg.assert_type = LOG_ASSERT;
-			sel_msg.event_type = ASIC_MODULE_ERROR;
+			sel_msg.event_type = IRIS_FAULT;
 
 			if (ot_warning_table[i].sensor_num ==
 			    SENSOR_NUM_ASIC_P0V85_MEDHA0_VDD_TEMP_C) {

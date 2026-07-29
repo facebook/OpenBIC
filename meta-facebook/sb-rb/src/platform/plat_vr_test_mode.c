@@ -159,9 +159,9 @@ const mps_vr_test_mode_setting_t vr_mps_normal_mode_table[] = {
 	uint16_t vout_max;
 	uint16_t uvp;
 	*/
-	{ VR_RAIL_E_ASIC_P0V85_MEDHA0_VDD, 1424, NO_USE, 200, 653, 940, NO_USE, NO_USE, 977, 940,
+	{ VR_RAIL_E_ASIC_P0V85_MEDHA0_VDD, 1424, NO_USE, 350, 653, 940, NO_USE, NO_USE, NO_USE, 940,
 	  850, 918, 427 },
-	{ VR_RAIL_E_ASIC_P0V85_MEDHA1_VDD, 1424, NO_USE, 200, 653, 940, NO_USE, NO_USE, 980, 940,
+	{ VR_RAIL_E_ASIC_P0V85_MEDHA1_VDD, 1424, NO_USE, 350, 653, 940, NO_USE, NO_USE, NO_USE, 940,
 	  850, 918, 430 },
 	{ VR_RAIL_E_ASIC_P0V9_OWL_E_TRVDD, 16, 1, 200, 846, 954, NO_USE, NO_USE, 1010, 1055, 900,
 	  955, 700 },
@@ -169,14 +169,14 @@ const mps_vr_test_mode_setting_t vr_mps_normal_mode_table[] = {
 	  795, 580 },
 	{ VR_RAIL_E_ASIC_P0V75_MAX_M_VDD, 58, 1, 200, 690, 848, NO_USE, NO_USE, 885, 950, 775, 850,
 	  575 },
-	{ VR_RAIL_E_ASIC_P0V75_VDDPHY_HBM1357, 114, 1, 175, 705, 795, NO_USE, NO_USE, 880, 895, 770,
-	  795, 595 },
+	{ VR_RAIL_E_ASIC_P0V75_VDDPHY_HBM1357, 114, 1, 175, 705, 795, NO_USE, NO_USE, 865, 895, 770,
+	  795, 580 },
 	{ VR_RAIL_E_ASIC_P0V75_OWL_E_VDD, 150, 1, 175, 690, 810, NO_USE, NO_USE, 880, 910, 770, 810,
 	  595 },
-	{ VR_RAIL_E_ASIC_P0V4_VDDQL_HBM1357, 36, 1, 75, 380, 440, NO_USE, NO_USE, 605, 790, 405,
-	  440, 330 },
-	{ VR_RAIL_E_ASIC_P1V1_VDDQC_HBM1357, 270, 1, 200, 1067, 1177, NO_USE, NO_USE, 1225, 1275,
-	  1115, 1175, 915 },
+	{ VR_RAIL_E_ASIC_P0V4_VDDQL_HBM1357, 36, 1, 75, 380, 440, NO_USE, NO_USE, 600, 790, 405,
+	  440, 325 },
+	{ VR_RAIL_E_ASIC_P1V1_VDDQC_HBM1357, 270, 1, 200, 1067, 1177, NO_USE, NO_USE, 1220, 1275,
+	  1115, 1175, 910 },
 	{ VR_RAIL_E_ASIC_P1V8_VPP_HBM1357, 14, 1, 400, 1746, 1950, NO_USE, NO_USE, 1960, 2000, 1820,
 	  1950, 1420 },
 	{ VR_RAIL_E_ASIC_P0V75_MAX_N_VDD, 57, 1, 175, 690, 848, NO_USE, NO_USE, 890, 950, 780, 850,
@@ -194,7 +194,7 @@ const mps_vr_test_mode_setting_t vr_mps_normal_mode_table[] = {
 	{ VR_RAIL_E_ASIC_P0V4_VDDQL_HBM0246, 36, 1, 75, 380, 440, NO_USE, NO_USE, 605, 790, 405,
 	  440, 330 },
 	{ VR_RAIL_E_ASIC_P0V75_VDDPHY_HBM0246, 114, 1, 175, 705, 795, NO_USE, NO_USE, 870, 895, 770,
-	  795, 595 },
+	  795, 585 },
 	{ VR_RAIL_E_ASIC_P0V75_OWL_W_VDD, 150, 1, 175, 690, 810, NO_USE, NO_USE, 875, 910, 765, 810,
 	  590 },
 	{ VR_RAIL_E_ASIC_P0V75_MAX_S_VDD, 48, 1, 200, 690, 848, NO_USE, NO_USE, 870, 950, 760, 850,
@@ -485,8 +485,8 @@ void vr_test_mode_enable(bool onoff)
 			return;
 		}
 		for (uint8_t i = 0; i <= VR_RAIL_E_ASIC_P0V85_MEDHA1_VDD; i++) {
-			// set ovp2 action to no action
-			if (set_vr_mp29816a_reg(i, &action, OVP_2_ACTION))
+			// set ovp2 action to no action(normal and test mode)
+			if (set_vr_mp29816a_reg(i, NO_ACTION, OVP_2_ACTION))
 				LOG_ERR("set vr %d ovp2 action fail!", i);
 		}
 		for (uint8_t i = VR_RAIL_E_ASIC_P0V9_OWL_E_TRVDD; i < VR_RAIL_E_P3V3_OSFP_VOLT_V;

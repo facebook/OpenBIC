@@ -92,16 +92,33 @@ void cmd_vr_test_mode_show_default(const struct shell *shell, size_t argc, char 
 			shell,
 			"----------------------------------------------------------------------------------------------------------------");
 		// mp29816c
+		char ovp2_str[16];
 		for (uint8_t i = 0; i < vr_mps_normal_mode_table_size; i++) {
 			uint8_t *rail_name = NULL;
 			if (vr_rail_name_get((uint8_t)i, &rail_name)) {
 				const mps_vr_test_mode_setting_t *cfg =
 					&vr_mps_normal_mode_table[i];
+				uint8_t rail = cfg->vr_rail;
+				uint16_t uvp_val = cfg->uvp;
+				if (rail == VR_RAIL_E_ASIC_P0V85_MEDHA0_VDD ||
+				    rail == VR_RAIL_E_ASIC_P0V85_MEDHA1_VDD) {
+					snprintf(ovp2_str, sizeof(ovp2_str), "no action");
+					// For medha0/medha1, calculate uvp as vout - uvp_threshold
+					uint16_t vout = 0;
+					plat_get_vout_command(rail, &vout);
+					int32_t uvp_show =
+						(int32_t)vout - (int32_t)cfg->uvp_threshold;
+					if (uvp_show < 0)
+						uvp_show = 0;
+					uvp_val = (uint16_t)uvp_show;
+				} else {
+					snprintf(ovp2_str, sizeof(ovp2_str), "%d", cfg->ovp2);
+				}
 				shell_print(
 					shell,
-					"%-30s | %-12d | %-7d | %-8d | %-9d | %-9d | %-7d | %-7d",
-					(char *)rail_name, cfg->total_ocp, cfg->uvp, cfg->ovp1,
-					cfg->ovp2, cfg->vout_max, cfg->lcr, cfg->ucr);
+					"%-30s | %-12d | %-7d | %-8d | %-9s | %-9d | %-7d | %-7d",
+					(char *)rail_name, cfg->total_ocp, uvp_val, cfg->ovp1,
+					ovp2_str, cfg->vout_max, cfg->lcr, cfg->ucr);
 			}
 		}
 	} else {

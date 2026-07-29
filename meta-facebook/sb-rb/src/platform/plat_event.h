@@ -43,12 +43,6 @@ typedef struct _vr_fault_info {
 	bool is_pmbus_vr;
 	uint8_t rail_id;
 } vr_fault_info;
-
-enum event_type {
-	VR_POWER_FAULT = 0x01,
-	ASIC_MODULE_ERROR = 0x29,
-};
-
 typedef struct __attribute__((packed)) _plat_asic_error_event {
 	uint8_t event_id_0;
 	uint8_t event_id_1;

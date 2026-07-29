@@ -346,7 +346,7 @@ void ISR_GPIO_SMB_HAMSA_MMC_LVC33_ALERT_N()
 
 	struct pldm_addsel_data smb_hamsa_sel_msg = { 0 };
 	smb_hamsa_sel_msg.assert_type = LOG_ASSERT;
-	smb_hamsa_sel_msg.event_type = ASIC_MODULE_ERROR; //ASIC_MODULE_ERROR;
+	smb_hamsa_sel_msg.event_type = IRIS_FAULT; //IRIS_FAULT;
 	smb_hamsa_sel_msg.event_data_1 = HAMSA_SMB_ERR_EVENT_HEADER;
 	smb_hamsa_sel_msg.event_data_2 = data[1]; // 123
 	smb_hamsa_sel_msg.event_data_3 = data[2]; // 124
