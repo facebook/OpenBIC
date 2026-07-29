@@ -50,7 +50,13 @@ LOG_MODULE_REGISTER(plat_i2c_target);
 #define DATA_TABLE_LENGTH_4 4
 #define DATA_TABLE_LENGTH_7 7
 #define DATA_TABLE_LENGTH_13 13
-#define DEVICE_TYPE 0x01
+/*
+ * Device type definitions:
+ *   Aegis  : 0x01
+ *   Rainbow: 0x02
+ *   Electra: 0x03
+ */
+#define DEVICE_TYPE 0x03
 #define REGISTER_LAYOUT_VERSION 0x01
 #define SENSOR_READING_PDR_INDEX_MAX 50
 #define SENSOR_INIT_PDR_INDEX_MAX 248
