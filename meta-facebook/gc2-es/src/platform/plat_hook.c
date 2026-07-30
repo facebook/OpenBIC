@@ -68,11 +68,12 @@ mp5990_init_arg mp5990_init_args[] = { [0] = { .is_init = false,
 					       .iout_oc_fault_limit = 0x0046,
 					       .ocw_sc_ref = 0xFFFF } };
 mp5998_plat_init_arg mp5998_plat_init_args[] = {
-	[0] = { .vin_ov_fault_limit = 0x0370, //55h value : 13.75      lsb : 1/64 V
-		.vin_ov_warn_limit = 0x0360, //57h value : 13.5
-		.vin_uv_warn_limit = 0x028D, //58h value : 10.203125
-		.iin_oc_fault_limit = 0x01B7, //5Bh value : 27.4375    lsb : 1/16 A
-		.iin_oc_warn_limit = 0x0195, //5Dh value : 25.3125
+	[0] = { .vin_ov_fault_limit = 0x236F, //55h value : 13.73      lsb : 1/64 V
+		.vin_ov_warn_limit = 0x034D, //57h value : 13.2
+		.vin_uv_warn_limit = 0x02B3, //58h value : 10.8
+		.iin_oc_fault_limit = 0x01B8, //5Bh value : 27.5           lsb : 1/16 A
+		.iin_oc_warn_limit = 0x0196, //5Dh value : 25.38
+		.vin_off = 0x029A, //36h 10.41
 		.fault_mask = 0x0008, //D4h
 		.efuse_cfg = 0x49CC, //C4h
 		.protect_en = 0x3EFF } //CAh
@@ -81,11 +82,11 @@ mp5998_plat_init_arg mp5998_plat_init_args[] = {
 tps25990_init_arg tps25990_init_args[] = { [0] = { .is_init = false }, [1] = { .is_init = false } };
 
 tps25990_plat_init_arg tps25990_plat_init_args[] = {
-	[0] = { .vin_ov_fault_limit = 0x000B, //55h value : 13.79
-		.vin_ov_warn_limit = 0x00B1, //57h value : 13.482
-		.vin_uv_warn_limit = 0x0086, //58h value : 10.207
-		.vin_uv_fault_limit = 0x0077, //59h value : 9.064
-		.iin_oc_warn_limit = 0x0078, //5Dh value : 25.210
+	[0] = { .vin_ov_fault_limit = 0x000B, //55h value : 13.78
+		.vin_ov_warn_limit = 0x00AD, //57h value : 13.18
+		.vin_uv_warn_limit = 0x008E, //58h value : 10.82
+		.vin_uv_fault_limit = 0x0088, //59h value : 10.36
+		.iin_oc_warn_limit = 0x0078, //5Dh value : 25.20
 		.protect_en = 0xA2 } //F8h
 };
 

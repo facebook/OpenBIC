@@ -40,6 +40,7 @@ typedef struct _mp5998_plat_init_arg {
 	uint16_t vin_uv_warn_limit;
 	uint16_t iin_oc_fault_limit;
 	uint16_t iin_oc_warn_limit;
+	uint16_t vin_off;
 	uint16_t fault_mask;
 	uint16_t efuse_cfg;
 	uint16_t protect_en;
