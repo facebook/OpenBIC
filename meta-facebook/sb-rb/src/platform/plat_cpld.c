@@ -393,20 +393,14 @@ bool asic_temp_error_callback(cpld_info *cpld_info, uint8_t *current_cpld_value)
 			case 6:
 				error_asic_temp_code = HAMSA_MFIO22_ERR_EVENT; // HAMSA_MFIO22
 				asic_send_data = temp_data[1];
-				if(trigger_vr_hot()) 
-					LOG_WRN("Temperature bit-%d is 1, write CPLD ASIC_VR_HOT_SWITCH bit-0 to 1", bit);
 				break;
 			case 3:
 				error_asic_temp_code = MEDHA0_MFIO24_ERR_EVENT; // MEDHA0_MFIO24
 				asic_send_data = temp_data[2];
-				if(trigger_vr_hot()) 
-					LOG_WRN("Temperature bit-%d is 1, write CPLD ASIC_VR_HOT_SWITCH bit-0 to 1", bit);
 				break;
 			case 1:
 				error_asic_temp_code = MEDHA1_MFIO24_ERR_EVENT; // MEDHA1_MFIO24
 				asic_send_data = temp_data[3];
-				if(trigger_vr_hot()) 
-					LOG_WRN("Temperature bit-%d is 1, write CPLD ASIC_VR_HOT_SWITCH bit-0 to 1", bit);
 				break;
 			case 5:
 				error_asic_temp_code = HAMSA_MFIO23_ERR_EVENT;

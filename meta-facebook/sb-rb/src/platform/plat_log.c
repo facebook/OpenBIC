@@ -369,15 +369,27 @@ bool get_multi_vr_status(uint8_t alrt_index, uint8_t *data)
 		memset(vr_status_buf, 0xFF, sizeof(vr_status_buf));
 
 		bool ret;
+		uint8_t rail = vr_list[i];
+		uint8_t sensor_num = 0;
 
-		ret = vr_fault_get_error_data(vr_list[i], vr_status_buf);
+		if (rail >= VR_RAIL_E_MAX) {
+			LOG_WRN("Invalid VR rail index %u at SMBus alert index %u", rail,
+				alrt_index);
+			data[offset] = rail;
+			memcpy(&data[offset + 1], vr_status_buf, sizeof(vr_status_buf));
+			continue;
+		}
+
+		sensor_num = vr_rail_table[rail].sensor_id;
+
+		ret = vr_fault_get_error_data(sensor_num, vr_status_buf);
 
 		if (!ret) {
-			LOG_WRN("VR[%d] partial read fail", vr_list[i]);
+			LOG_WRN("VR rail[%d] sensor[0x%02X] partial read fail", rail, sensor_num);
 		}
 
 		// Byte0 : Sensor ID
-		data[offset] = vr_list[i];
+		data[offset] = rail;
 
 		// Bytes 1~8: vr_fault_get_error_data result
 		memcpy(&data[offset + 1], vr_status_buf, sizeof(vr_status_buf));
