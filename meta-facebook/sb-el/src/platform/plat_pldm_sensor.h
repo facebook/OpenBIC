@@ -335,6 +335,13 @@ typedef struct _power_capping_time_setting {
 enum TMP_ADDRESS_VIRSION { FAB1_1ND_TMP432 = 0, FAB1_2ND_EMC1413, MAX_TMP_ADDRESS_VIRSION };
 enum VR_ADDRESS_VIRSION { FAB1_1ND_MPS = 0, FAB1_2ND_RNS, MAX_VR_ADDRESS_VIRSION };
 
+//OT WARNING
+#define OT_WARNING_REG 0x7D
+#define OT_WARNING_BIT BIT(6)
+#define CPLD_OT_WARNING_BIT BIT(0)
+#define OT_WARNING_EVENT_DATA1_BASE 0x61
+#define QUICK_SENSOR_OT_WARNING_POLL_COUNT 34
+
 int plat_pldm_sensor_get_sensor_count(int thread_id);
 sensor_cfg *get_sensor_cfg_by_sensor_id(uint8_t sensor_id);
 void plat_pldm_sensor_get_pdr_numeric_sensor(int thread_id, int sensor_num,
@@ -368,4 +375,10 @@ void quick_sensor_poll_init();
 PDR_numeric_sensor *get_pdr_numeric_sensor_by_sensor_id(uint8_t sensor_id);
 uint8_t get_pwr_capping_polling_rate_type();
 uint16_t get_quick_nuwa_polling_rate();
+// vr hot
+bool is_any_ot_warning_active(void);
+
+// VR temperature monitor sensors lookup table
+extern const uint16_t vr_temp_monitor_sensors[];
+extern const uint8_t vr_temp_monitor_sensors_count;
 #endif

@@ -122,6 +122,10 @@
 // clock lose detection register
 #define CLK_100MHZ_BUF_LOSS_REG 0x31
 
+// vr hot
+#define VR_HOT_EVB_BIT HAMSA_MFIO19_BIT
+#define VR_HOT_ELECTRA_BIT 0
+
 typedef struct _cpld_info_ cpld_info;
 
 typedef struct _cpld_info_ {
@@ -157,5 +161,11 @@ void get_cpld_polling_power_info(int *reading);
 void set_cpld_polling_enable_flag(bool status);
 bool get_cpld_polling_enable_flag(void);
 void reset_error_log_states(uint8_t err_type);
+// vr hot
+void set_plat_vr_hot_mask_flag(bool value);
+bool get_plat_vr_hot_mask_flag(void);
+int get_vr_hot(void);
+bool set_vr_hot(bool enable);
+bool trigger_vr_hot();
 
 #endif

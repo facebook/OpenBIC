@@ -116,6 +116,7 @@ enum LOG_ERROR_TRIGGER_CAUSE {
 enum LOG_ERROR_TRIGGER_CAUSE_EXTEND {
 	// start from 0x8800 ~ 0x9E00
 	CLOCK_APLL_UNLOCK_EVENT_CAUSE = 0x8A00, // 0x8A00
+	VR_OT_WARNING_EVENT_CAUSE = 0x8B00, // 0x8B00
 };
 
 void packaged_bmc_log(uint8_t event_type, uint8_t event_data_1, uint8_t event_data_2,

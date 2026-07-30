@@ -24,6 +24,8 @@
 #include "plat_util.h"
 #include "plat_class.h"
 #include "plat_ioexp.h"
+#include "plat_log.h"
+#include "plat_cpld.h"
 // #include "shell_plat_average_power.h"
 #include "plat_power_capping.h"
 #include "ina238.h"
@@ -119,6 +121,46 @@ static const addr_map_t vr_addr_map_table[] = {
 	{I2C_BUS3, ASIC_P0V75_OWL_W_TRVDD_ADDR, ASIC_P0V75_OWL_W_TRVDD_RNS_ADDR},
 };
 // clang-format on
+
+//OT WARNING
+typedef struct {
+	uint8_t sensor_num;
+	uint8_t ot_warning;
+} ot_warning_status;
+
+const uint16_t vr_temp_monitor_sensors[] = {
+	SENSOR_NUM_ASIC_P0V9_OWL_E_TRVDD_TEMP_C,
+	SENSOR_NUM_ASIC_P0V75_OWL_E_TRVDD_TEMP_C,
+	SENSOR_NUM_ASIC_P0V75_OWL_E_VDD_TEMP_C,
+	SENSOR_NUM_ASIC_P0V9_OWL_W_TRVDD_TEMP_C,
+	SENSOR_NUM_ASIC_P0V75_OWL_W_TRVDD_TEMP_C,
+	SENSOR_NUM_ASIC_P0V75_OWL_W_VDD_TEMP_C,
+	SENSOR_NUM_ASIC_P0V75_MAX_M_VDD_TEMP_C,
+	SENSOR_NUM_ASIC_P0V75_MAX_N_VDD_TEMP_C,
+	SENSOR_NUM_ASIC_P0V75_MAX_S_VDD_TEMP_C,
+	SENSOR_NUM_ASIC_P0V8_HAMSA_AVDD_PCIE_TEMP_C,
+	SENSOR_NUM_ASIC_P1V2_HAMSA_VDDHRXTX_PCIE_TEMP_C,
+	SENSOR_NUM_ASIC_P0V85_HAMSA_VDD_TEMP_C,
+	SENSOR_NUM_ASIC_P0V75_VDDPHY_HBM0246_TEMP_C,
+	SENSOR_NUM_ASIC_P0V4_VDDQL_HBM0246_TEMP_C,
+	SENSOR_NUM_ASIC_P1V05_VDDC_HBM0246_TEMP_C,
+	SENSOR_NUM_ASIC_P0V9_VDDQ_HBM0246_TEMP_C,
+	SENSOR_NUM_ASIC_P1V8_VPP_HBM0246_TEMP_C,
+	SENSOR_NUM_ASIC_P0V75_VDDPHY_HBM1357_TEMP_C,
+	SENSOR_NUM_ASIC_P0V4_VDDQL_HBM1357_TEMP_C,
+	SENSOR_NUM_ASIC_P1V05_VDDC_HBM1357_TEMP_C,
+	SENSOR_NUM_ASIC_P0V9_VDDQ_HBM1357_TEMP_C,
+	SENSOR_NUM_ASIC_P1V8_VPP_HBM1357_TEMP_C,
+	SENSOR_NUM_ASIC_P0V75_NUWA0_VDD_TEMP_C,
+	SENSOR_NUM_ASIC_P0V75_NUWA1_VDD_TEMP_C,
+	SENSOR_NUM_UBC1_P12V_TEMP_C,
+	SENSOR_NUM_UBC2_P12V_TEMP_C,
+};
+
+const uint8_t vr_temp_monitor_sensors_count = ARRAY_SIZE(vr_temp_monitor_sensors);
+// size must be same as vr_temp_monitor_sensors_count
+static ot_warning_status ot_warning_table[24] = { 0 };
+static uint8_t ot_warning_table_count;
 
 uint8_t convert_tmp_addr(uint8_t bus, uint8_t addr, uint8_t tmp_change_mode)
 {
@@ -13879,6 +13921,102 @@ void leak_sensor_handler(void)
 	}
 }
 
+bool is_any_ot_warning_active(void)
+{
+	for (uint8_t i = 0; i < ot_warning_table_count; i++) {
+		if (ot_warning_table[i].ot_warning)
+			return true;
+	}
+
+	return false;
+}
+
+static void update_ot_warning_status(void)
+{
+	bool any_ot_warning = false;
+	bool new_ot_warning_detected = false;
+
+	for (uint8_t i = 0; i < ot_warning_table_count; i++) {
+		uint8_t old_ot_warning = ot_warning_table[i].ot_warning;
+		uint8_t reg_val = 0;
+		bool read_ok = get_raw_data_from_sensor_id(ot_warning_table[i].sensor_num,  OT_WARNING_REG, &reg_val, 1);
+
+		if (read_ok)
+			ot_warning_table[i].ot_warning = (reg_val & OT_WARNING_BIT) ? 1 : 0;
+
+		if (!old_ot_warning && ot_warning_table[i].ot_warning) {
+			new_ot_warning_detected = true;
+			LOG_ERR("OT_WARNING detected on sensor 0x%02X, reg_val: 0x%02X",
+				ot_warning_table[i].sensor_num, reg_val);
+
+			uint16_t error_code = VR_OT_WARNING_EVENT_CAUSE + i;
+
+			error_log_event(error_code, LOG_ASSERT);
+
+			struct pldm_addsel_data sel_msg = { 0 };
+			sel_msg.assert_type = LOG_ASSERT;
+			sel_msg.event_type = ARKE_FAULT;
+
+			if (ot_warning_table[i].sensor_num ==
+			    SENSOR_NUM_ASIC_P0V75_NUWA0_VDD_TEMP_C) {
+				sel_msg.event_data_1 = 0x7C;
+			} else if (ot_warning_table[i].sensor_num ==
+				   SENSOR_NUM_ASIC_P0V75_NUWA1_VDD_TEMP_C) {
+				sel_msg.event_data_1 = 0x7D;
+			} else if (ot_warning_table[i].sensor_num == SENSOR_NUM_UBC1_P12V_TEMP_C) {
+				sel_msg.event_data_1 = 0x7E;
+			} else if (ot_warning_table[i].sensor_num == SENSOR_NUM_UBC2_P12V_TEMP_C) {
+				sel_msg.event_data_1 = 0x7F;
+			} else {
+				sel_msg.event_data_1 = OT_WARNING_EVENT_DATA1_BASE + i;
+			}
+
+			sel_msg.event_data_2 = reg_val;
+			sel_msg.event_data_3 = 0;
+
+			if (PLDM_SUCCESS != send_event_log_to_bmc(sel_msg)) {
+				LOG_ERR("Failed to send OT warning SEL: 0x%x 0x%x 0x%x",
+					sel_msg.event_data_1, sel_msg.event_data_2,
+					sel_msg.event_data_3);
+			}
+		} else if (old_ot_warning && !ot_warning_table[i].ot_warning) {
+			LOG_INF("OT_WARNING cleared on sensor 0x%02X, reg_val: 0x%02X",
+				ot_warning_table[i].sensor_num, reg_val);
+
+			uint16_t error_code = VR_OT_WARNING_EVENT_CAUSE + i;
+
+			error_log_event(error_code, LOG_DEASSERT);
+		}
+
+		if (ot_warning_table[i].ot_warning)
+			any_ot_warning = true;
+	}
+
+	if (any_ot_warning && new_ot_warning_detected)
+		trigger_vr_hot();
+}
+
+static void init_ot_warning_table(void)
+{
+	ot_warning_table_count = 0;
+
+	for (uint8_t i = 0; i < ARRAY_SIZE(vr_temp_monitor_sensors); i++) {
+		sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(vr_temp_monitor_sensors[i]);
+
+		if (cfg == NULL)
+			continue;
+
+		if (ot_warning_table_count >= vr_temp_monitor_sensors_count)
+			break;
+
+		ot_warning_table[ot_warning_table_count].sensor_num = cfg->num;
+		ot_warning_table[ot_warning_table_count].ot_warning = 0;
+		ot_warning_table_count++;
+	}
+
+	LOG_INF("ot warning monitor sensor count: %d", ot_warning_table_count);
+}
+
 struct k_thread quick_sensor_poll;
 K_KERNEL_STACK_MEMBER(quick_sensor_poll_stack, 1024);
 k_tid_t quick_sensor_tid;
@@ -13888,13 +14026,26 @@ void quick_sensor_poll_handler(void *arug0, void *arug1, void *arug2)
 {
 	k_msleep(DC_ON_DELAY_TIMMING); // delay to wait for drivers ready before start sensor polling
 	int quick_sensor_poll_interval_ms = 30;
+	uint8_t ot_warning_poll_count = 0;
+	uint8_t cycle_counter = 0;
 
 	while (1) {
+		if (is_mb_dc_on() == false || !get_plat_sensor_polling_enable_flag())
+			cycle_counter = 5; //dc off will sleep 1000ms, 5*1000ms = 5s
+		else
+			cycle_counter = 167; // 167*30ms = 5s
 		//check dc on/off and polling enable/disable
 		if (is_mb_dc_on() == false || !get_plat_sensor_polling_enable_flag()) {
+			ot_warning_poll_count = 0;
 			//dc is off, sleep 1 second
 			k_msleep(1000);
 			continue;
+		}
+
+		ot_warning_poll_count++;
+		if (ot_warning_poll_count >= QUICK_SENSOR_OT_WARNING_POLL_COUNT) {
+			ot_warning_poll_count = 0;
+			update_ot_warning_status();
 		}
 
 		/* Only EVB reads the IO expander to check leak status */
@@ -13907,6 +14058,8 @@ void quick_sensor_poll_handler(void *arug0, void *arug1, void *arug2)
 
 void quick_sensor_poll_init()
 {
+	init_ot_warning_table();
+
 	quick_sensor_tid = k_thread_create(&quick_sensor_poll, quick_sensor_poll_stack,
 					   K_THREAD_STACK_SIZEOF(quick_sensor_poll_stack),
 					   quick_sensor_poll_handler, NULL, NULL, NULL,
