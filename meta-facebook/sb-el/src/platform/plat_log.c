@@ -70,23 +70,17 @@ typedef struct vr_smbus_alrt_sensor_map {
 } vr_smbus_alrt_sensor_map;
 
 vr_smbus_alrt_sensor_map vr_smbus_alrt_sensor_map_table[] = {
-	{ 0, 4, VR_RAIL_E_ASIC_P0V9_VDDQ_HBM0246,
-	  VR_RAIL_E_ASIC_P1V2_HAMSA_VDDHRXTX_PCIE, VR_RAIL_E_ASIC_P0V9_VDDQ_HBM1357,
-	  VR_RAIL_E_ASIC_P0V85_HAMSA_VDD },
-	{ 1, 2, VR_RAIL_E_ASIC_P0V75_MAX_N_VDD,
-	  VR_RAIL_E_ASIC_P0V8_HAMSA_AVDD_PCIE },
-	{ 2, 4, VR_RAIL_E_ASIC_P1V05_VDDC_HBM0246,
-	  VR_RAIL_E_ASIC_P1V8_VPP_HBM0246, VR_RAIL_E_ASIC_P0V4_VDDQL_HBM0246,
-	  VR_RAIL_E_ASIC_P0V75_VDDPHY_HBM0246 },
-	{ 3, 4, VR_RAIL_E_ASIC_P0V75_MAX_M_VDD,
-	  VR_RAIL_E_ASIC_P0V75_VDDPHY_HBM1357, VR_RAIL_E_ASIC_P1V05_VDDC_HBM1357,
-	  VR_RAIL_E_ASIC_P1V8_VPP_HBM1357 },
-	{ 4, 4, VR_RAIL_E_ASIC_P0V9_OWL_W_TRVDD,
-	  VR_RAIL_E_ASIC_P0V75_OWL_W_TRVDD, VR_RAIL_E_ASIC_P0V75_OWL_W_VDD,
-	  VR_RAIL_E_ASIC_P0V75_MAX_S_VDD },
-	{ 5, 4, VR_RAIL_E_ASIC_P0V9_OWL_E_TRVDD,
-	  VR_RAIL_E_ASIC_P0V75_OWL_E_TRVDD, VR_RAIL_E_ASIC_P0V75_OWL_E_VDD,
-	  VR_RAIL_E_ASIC_P0V4_VDDQL_HBM1357 },
+	{ 0, 4, VR_RAIL_E_ASIC_P0V9_VDDQ_HBM0246, VR_RAIL_E_ASIC_P1V2_HAMSA_VDDHRXTX_PCIE,
+	  VR_RAIL_E_ASIC_P0V9_VDDQ_HBM1357, VR_RAIL_E_ASIC_P0V85_HAMSA_VDD },
+	{ 1, 2, VR_RAIL_E_ASIC_P0V75_MAX_N_VDD, VR_RAIL_E_ASIC_P0V8_HAMSA_AVDD_PCIE },
+	{ 2, 4, VR_RAIL_E_ASIC_P1V05_VDDC_HBM0246, VR_RAIL_E_ASIC_P1V8_VPP_HBM0246,
+	  VR_RAIL_E_ASIC_P0V4_VDDQL_HBM0246, VR_RAIL_E_ASIC_P0V75_VDDPHY_HBM0246 },
+	{ 3, 4, VR_RAIL_E_ASIC_P0V75_MAX_M_VDD, VR_RAIL_E_ASIC_P0V75_VDDPHY_HBM1357,
+	  VR_RAIL_E_ASIC_P1V05_VDDC_HBM1357, VR_RAIL_E_ASIC_P1V8_VPP_HBM1357 },
+	{ 4, 4, VR_RAIL_E_ASIC_P0V9_OWL_W_TRVDD, VR_RAIL_E_ASIC_P0V75_OWL_W_TRVDD,
+	  VR_RAIL_E_ASIC_P0V75_OWL_W_VDD, VR_RAIL_E_ASIC_P0V75_MAX_S_VDD },
+	{ 5, 4, VR_RAIL_E_ASIC_P0V9_OWL_E_TRVDD, VR_RAIL_E_ASIC_P0V75_OWL_E_TRVDD,
+	  VR_RAIL_E_ASIC_P0V75_OWL_E_VDD, VR_RAIL_E_ASIC_P0V4_VDDQL_HBM1357 },
 	{ 6, 1, VR_RAIL_E_ASIC_P0V75_NUWA1_VDD },
 	{ 7, 1, VR_RAIL_E_ASIC_P0V75_NUWA0_VDD },
 };
@@ -373,7 +367,7 @@ bool get_multi_vr_status(uint8_t alrt_index, uint8_t *data)
 		// Write each uint16_t value into the output buffer (little-endian)
 
 		/* Temperature bit from status word */
-		if ((status_word >> 2) & 0x01){
+		if ((status_word >> 2) & 0x01) {
 			set_vr_hot_alert();
 		}
 
@@ -385,9 +379,25 @@ bool get_multi_vr_status(uint8_t alrt_index, uint8_t *data)
 	return true;
 }
 
+static bool get_vr_ot_warning_sensor_num_by_index(uint8_t rail_index, uint8_t *sensor_num)
+{
+	CHECK_NULL_ARG_WITH_RETURN(sensor_num, false);
+
+	if (rail_index >= vr_temp_monitor_sensors_count)
+		return false;
+
+	sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(vr_temp_monitor_sensors[rail_index]);
+	if (cfg == NULL)
+		return false;
+
+	*sensor_num = cfg->num;
+	return true;
+}
+
 bool check_is_extend_error_code(uint16_t error_code)
 {
-	if (error_code >= ERROR_TRIGGER_CAUSE_EXTEND_START && error_code <= ERROR_TRIGGER_CAUSE_EXTEND_END) {
+	if (error_code >= ERROR_TRIGGER_CAUSE_EXTEND_START &&
+	    error_code <= ERROR_TRIGGER_CAUSE_EXTEND_END) {
 		return true;
 	}
 	return false;
@@ -397,13 +407,34 @@ bool plat_get_extend_error_data(uint16_t error_code, uint8_t *data)
 {
 	CHECK_NULL_ARG_WITH_RETURN(data, false);
 
-	switch (error_code) {
+	switch (error_code & 0xFF00) {
 	case CLOCK_APLL_UNLOCK_EVENT_CAUSE: {
 		if (!clock_get_error_data(CLOCK_APLL_UNLOCK_EVENT_CAUSE, data)) {
 			LOG_ERR("Failed to get clock APLL unlock error data");
 			return false;
 		}
 		return true;
+	}
+	case VR_OT_WARNING_EVENT_CAUSE: {
+		uint8_t rail_index = error_code & 0xFF;
+		uint8_t sensor_num = 0;
+		uint8_t reg_val = 0;
+
+		if (!get_vr_ot_warning_sensor_num_by_index(rail_index, &sensor_num)) {
+			LOG_ERR("Failed to map VR OT warning rail index: 0x%02x", rail_index);
+			return false;
+		}
+
+		if (!get_raw_data_from_sensor_id(sensor_num, OT_WARNING_REG, &reg_val, 1)) {
+			LOG_ERR("Failed to read OT warning register for sensor: 0x%02x",
+				sensor_num);
+			return false;
+		}
+
+		data[0] = reg_val;
+		data[1] = sensor_num;
+		return true;
+		break;
 	}
 	default:
 		LOG_ERR("Unsupported extended error code: 0x%04x", error_code);

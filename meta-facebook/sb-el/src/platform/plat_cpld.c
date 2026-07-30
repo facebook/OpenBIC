@@ -398,3 +398,114 @@ void init_cpld_polling(void)
 				NULL, NULL, NULL, CONFIG_MAIN_THREAD_PRIORITY, 0, K_MSEC(1000));
 	k_thread_name_set(&cpld_polling_thread, "cpld_polling_thread");
 }
+
+bool plat_vr_hot_mask_flag = false;
+
+void set_plat_vr_hot_mask_flag(bool value)
+{
+	plat_vr_hot_mask_flag = value;
+}
+
+bool get_plat_vr_hot_mask_flag()
+{
+	return plat_vr_hot_mask_flag;
+}
+
+int get_vr_hot(void)
+{
+	const bool is_evb =
+        (get_asic_board_id() == ASIC_BOARD_ID_EVB);
+	uint8_t reg_val = 0;
+	uint8_t bit_pos = is_evb ?
+        VR_HOT_EVB_BIT : VR_HOT_ELECTRA_BIT;
+
+	if(is_evb) {
+		if (!tca6424a_i2c_read(TCA6424A_OUTPUT_PORT_0, &reg_val, 1)) {
+			LOG_ERR("read VR_HOT via IO exp failed");
+			return -1;
+		}
+	} else {
+		if (!plat_read_cpld(ASIC_VR_HOT_SWITCH, &reg_val, 1)) {
+			LOG_ERR("read VR_HOT via CPLD failed");
+			return -1;
+		}
+	}
+	bool vr_hot_enabled = (reg_val & BIT(bit_pos)) != 0;
+	return vr_hot_enabled;
+}
+
+bool set_vr_hot(bool enable)
+{
+    const bool is_evb =
+        (get_asic_board_id() == ASIC_BOARD_ID_EVB);
+
+    uint8_t reg_val;
+    uint8_t bit_pos = is_evb ?
+        VR_HOT_EVB_BIT : VR_HOT_ELECTRA_BIT;
+
+    if (is_evb) {
+        if (!tca6424a_i2c_read(TCA6424A_OUTPUT_PORT_0, &reg_val, 1)) {
+		LOG_ERR("read VR_HOT via IO exp failed");
+            return false;
+		}
+    } else {
+        if (!plat_read_cpld(ASIC_VR_HOT_SWITCH, &reg_val, 1)) {
+		LOG_ERR("read VR_HOT via CPLD failed");
+            return false;
+		}
+    }
+
+    if (enable)
+        reg_val |= BIT(bit_pos);
+    else
+        reg_val &= ~BIT(bit_pos);
+
+    if (is_evb) {
+        if (!tca6424a_i2c_write(TCA6424A_OUTPUT_PORT_0, &reg_val, 1)) {
+			LOG_ERR("write VR_HOT via IO exp failed");
+			return false;
+		}
+    } else {
+        if (!plat_write_cpld(ASIC_VR_HOT_SWITCH, &reg_val)) {
+			LOG_ERR("write VR_HOT via CPLD failed");
+			return false;
+		}
+    }
+
+    return true;
+}
+
+bool trigger_vr_hot()
+{
+	if(get_plat_vr_hot_mask_flag() == true) {
+		LOG_INF("ASIC_VR_HOT_SWITCH is masked");
+		return false;
+	}
+
+	if(!set_vr_hot(true)) {
+		LOG_ERR("Failed to set VR hot");
+		return false;
+	}
+
+	return true;
+}
+
+bool restore_vr_hot()
+{
+	if(get_plat_vr_hot_mask_flag() == true) {
+		LOG_INF("ASIC_VR_HOT_SWITCH is masked");
+		return false;
+	}
+
+	if (is_any_ot_warning_active()) {
+		LOG_WRN("still have ot_warning");
+		return false;
+	}
+
+	if(!set_vr_hot(false)) {
+		LOG_ERR("Failed to restore VR hot");
+		return false;
+	}
+
+	return true;
+}

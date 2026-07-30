@@ -167,6 +167,66 @@ const cpld_bit_name_table_t cpld_bit_name_table[] = {
 	  } },
 };
 
+static const char *get_vr_ot_warning_rail_name(uint8_t sensor_num)
+{
+	switch (sensor_num) {
+	case SENSOR_NUM_ASIC_P0V75_NUWA0_VDD_TEMP_C:
+		return "ASIC_P0V75_NUWA0_VDD";
+	case SENSOR_NUM_ASIC_P0V75_NUWA1_VDD_TEMP_C:
+		return "ASIC_P0V75_NUWA1_VDD";
+	case SENSOR_NUM_ASIC_P0V9_OWL_E_TRVDD_TEMP_C:
+		return "ASIC_P0V9_OWL_E_TRVDD";
+	case SENSOR_NUM_ASIC_P0V75_OWL_E_TRVDD_TEMP_C:
+		return "ASIC_P0V75_OWL_E_TRVDD";
+	case SENSOR_NUM_ASIC_P0V75_OWL_E_VDD_TEMP_C:
+		return "ASIC_P0V75_OWL_E_VDD";
+	case SENSOR_NUM_ASIC_P0V9_OWL_W_TRVDD_TEMP_C:
+		return "ASIC_P0V9_OWL_W_TRVDD";
+	case SENSOR_NUM_ASIC_P0V75_OWL_W_TRVDD_TEMP_C:
+		return "ASIC_P0V75_OWL_W_TRVDD";
+	case SENSOR_NUM_ASIC_P0V75_OWL_W_VDD_TEMP_C:
+		return "ASIC_P0V75_OWL_W_VDD";
+	case SENSOR_NUM_ASIC_P0V75_MAX_M_VDD_TEMP_C:
+		return "ASIC_P0V75_MAX_M_VDD";
+	case SENSOR_NUM_ASIC_P0V75_MAX_N_VDD_TEMP_C:
+		return "ASIC_P0V75_MAX_N_VDD";
+	case SENSOR_NUM_ASIC_P0V75_MAX_S_VDD_TEMP_C:
+		return "ASIC_P0V75_MAX_S_VDD";
+	case SENSOR_NUM_ASIC_P0V8_HAMSA_AVDD_PCIE_TEMP_C:
+		return "ASIC_P0V8_HAMSA_AVDD_PCIE";
+	case SENSOR_NUM_ASIC_P1V2_HAMSA_VDDHRXTX_PCIE_TEMP_C:
+		return "ASIC_P1V2_HAMSA_VDDHRXTX_PCIE";
+	case SENSOR_NUM_ASIC_P0V85_HAMSA_VDD_TEMP_C:
+		return "ASIC_P0V85_HAMSA_VDD";
+	case SENSOR_NUM_ASIC_P0V75_VDDPHY_HBM0246_TEMP_C:
+		return "ASIC_P0V75_VDDPHY_HBM0246";
+	case SENSOR_NUM_ASIC_P0V4_VDDQL_HBM0246_TEMP_C:
+		return "ASIC_P0V4_VDDQL_HBM0246";
+	case SENSOR_NUM_ASIC_P1V05_VDDC_HBM0246_TEMP_C:
+		return "ASIC_P1V05_VDDC_HBM0246";
+	case SENSOR_NUM_ASIC_P0V9_VDDQ_HBM0246_TEMP_C:
+		return "ASIC_P0V9_VDDQ_HBM0246";
+	case SENSOR_NUM_ASIC_P1V8_VPP_HBM0246_TEMP_C:
+		return "ASIC_P1V8_VPP_HBM0246";
+	case SENSOR_NUM_ASIC_P0V75_VDDPHY_HBM1357_TEMP_C:
+		return "ASIC_P0V75_VDDPHY_HBM1357";
+	case SENSOR_NUM_ASIC_P0V4_VDDQL_HBM1357_TEMP_C:
+		return "ASIC_P0V4_VDDQL_HBM1357";
+	case SENSOR_NUM_ASIC_P1V05_VDDC_HBM1357_TEMP_C:
+		return "ASIC_P1V05_VDDC_HBM1357";
+	case SENSOR_NUM_ASIC_P0V9_VDDQ_HBM1357_TEMP_C:
+		return "ASIC_P0V9_VDDQ_HBM1357";
+	case SENSOR_NUM_ASIC_P1V8_VPP_HBM1357_TEMP_C:
+		return "ASIC_P1V8_VPP_HBM1357";
+	case SENSOR_NUM_UBC1_P12V_TEMP_C:
+		return "UBC1_P12V";
+	case SENSOR_NUM_UBC2_P12V_TEMP_C:
+		return "UBC2_P12V";
+	default:
+		return "UNKNOWN_RAIL";
+	}
+}
+
 const char *get_cpld_reg_name(uint8_t cpld_offset)
 {
 	for (int i = 0; i < ARRAY_SIZE(cpld_bit_name_table); i++) {
@@ -205,9 +265,9 @@ void cmd_set_event(const struct shell *shell, size_t argc, char **argv)
 	return;
 }
 
-uint8_t normal_error_code_dump(const struct shell *shell, uint16_t err_code, uint8_t *data, uint8_t data_len)
+uint8_t normal_error_code_dump(const struct shell *shell, uint16_t err_code, uint8_t *data,
+			       uint8_t data_len)
 {
-	
 	uint8_t err_type = (err_code >> 13) & 0x07;
 	uint8_t cpld_offset = err_code & 0xFF;
 	uint8_t bit_position = (err_code >> 8) & 0x07;
@@ -217,194 +277,175 @@ uint8_t normal_error_code_dump(const struct shell *shell, uint16_t err_code, uin
 
 	uint8_t err_data_len = 2; //sizeof(log.error_data)
 	switch (err_type) {
-		case CPLD_UNEXPECTED_VAL_TRIGGER_CAUSE:
-			if (cpld_offset == VR_SMBUS_ALERT_EVENT_LOG_REG) {
-				shell_print(shell, "\t%s", reg_name);
-				shell_print(shell, "\t\t%s", bit_name);
-				bool has_valid_vr = false;
+	case CPLD_UNEXPECTED_VAL_TRIGGER_CAUSE:
+		if (cpld_offset == VR_SMBUS_ALERT_EVENT_LOG_REG) {
+			shell_print(shell, "\t%s", reg_name);
+			shell_print(shell, "\t\t%s", bit_name);
+			bool has_valid_vr = false;
 
-				for (int j = 0; j < SMBUS_ALRT_STATUS_DATA_LEN; j++) {
-					if (data[j] != 0xFF) {
-						has_valid_vr = true;
-						break;
-					}
-				}
-
-				if (!has_valid_vr) {
-					shell_print(shell, "no vr sensor status word(0x79)");
-					err_data_len = SMBUS_ALRT_STATUS_DATA_LEN;
+			for (int j = 0; j < SMBUS_ALRT_STATUS_DATA_LEN; j++) {
+				if (data[j] != 0xFF) {
+					has_valid_vr = true;
 					break;
 				}
+			}
 
-				for (int j = 0; j < SMBUS_ALRT_MAX_VR_NUM; j++) {
-					uint8_t idx = j * SMBUS_ALRT_ENTRY_SIZE;
-					uint8_t rail = data[idx];
-					uint8_t *rail_name;
-
-					if (rail == 0xFF)
-						continue;
-
-					if (!vr_rail_name_get(rail, &rail_name)) {
-						shell_print(
-							shell,
-							"Unknown VR rail(%u) status word(0x79):",
-							rail);
-					} else {
-						shell_print(shell,
-							    "[0x%02x] %s status word(0x79):", rail,
-							    rail_name);
-					}
-
-					shell_print(shell, "\tlow  byte: 0x%02x",
-						    data[idx + 1]);
-
-					shell_print(shell, "\thigh byte: 0x%02x",
-						    data[idx + 2]);
-				}
+			if (!has_valid_vr) {
+				shell_print(shell, "no vr sensor status word(0x79)");
 				err_data_len = SMBUS_ALRT_STATUS_DATA_LEN;
-			} else if (cpld_offset == ASIC_CATTRIP_REG) {
-				shell_print(shell, "\t%s", reg_name);
-				shell_print(shell, "\t\t%s", bit_name);
 				break;
-			} else {
-				shell_print(shell, "\t%s", reg_name);
-				shell_print(shell, "\t\t%s", bit_name);
-				shell_print(shell, "read vr sensor status word(0x79):");
-				shell_print(shell, "\tlow  byte: 0x%02x", data[0]);
-				shell_print(shell, "\thigh byte: 0x%02x", data[1]);
-				shell_print(shell, "read vr sensor status vout(0x20): 0x%02x",
-					    data[2]);
-				shell_print(shell, "read vr sensor status iout(0x21): 0x%02x",
-					    data[3]);
-				shell_print(shell, "read vr sensor status input(0x22): 0x%02x",
-					    data[4]);
-				shell_print(shell,
-					    "read vr sensor status temperature(0x24): 0x%02x",
-					    data[5]);
-				shell_print(shell, "read vr sensor status CML(0x7e): 0x%02x",
-					    data[6]);
-				err_data_len = 7;
 			}
-			break;
-		case POWER_ON_SEQUENCE_TRIGGER_CAUSE:
-			shell_print(shell, "\tPOWER_ON_SEQUENCE_FAILURE");
-			err_data_len = 1;
-			uint8_t *name = NULL;
-			plat_get_power_seq_pwrgd_event_fail_name(data[0], &name);
-			shell_print(shell, "RAIL: %s", name);
-			shell_print(
-				shell,
-				"PWRGD REG(start from 0xBE): 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x",
-				data[1], data[2], data[3],
-				data[4], data[5], data[6]);
-			break;
-		case AC_ON_TRIGGER_CAUSE:
-			shell_print(shell, "\tAC_ON");
-			err_data_len = 1;
-			break;
-		case DC_ON_TRIGGER_CAUSE:
-			shell_print(shell, "\tDC_ON_DETECTED");
-			err_data_len = 1;
-			break;
-		case TEMPERATURE_TRIGGER_CAUSE:
-			shell_print(shell, "\tTEMPERATURE_TRIGGER");
-			uint8_t temp_sensor_num = err_code & 0xFF;
-			//find name in temp_index_table
-			for (int j = 0; j < TEMP_INDEX_MAX; j++) {
-				if (temp_sensor_num == temp_index_table[j].sensor_id) {
-					shell_print(shell, "\t\t%s",
-						    temp_index_table[j].sensor_name);
-					shell_print(shell, "sensor_num 0x%02x status(02h): 0x%02x",
-						    data[2], data[0]);
-					// check whether the open status
-					if (data[0] & BIT(2))
-						shell_print(
-							shell,
-							"sensor_num 0x%02x open status(1Bh): 0x%02x",
-							data[2], data[1]);
-					else if (data[0] & BIT(4))
-						shell_print(
-							shell,
-							"high limit trigger, status(35h): 0x%02x",
-							data[1]);
-					else if (data[0] & BIT(3))
-						shell_print(
-							shell,
-							"low limit trigger, status(36h): 0x%02x",
-							data[1]);
-					err_data_len = 3;
-					break;
+
+			for (int j = 0; j < SMBUS_ALRT_MAX_VR_NUM; j++) {
+				uint8_t idx = j * SMBUS_ALRT_ENTRY_SIZE;
+				uint8_t rail = data[idx];
+				uint8_t *rail_name;
+
+				if (rail == 0xFF)
+					continue;
+
+				if (!vr_rail_name_get(rail, &rail_name)) {
+					shell_print(shell,
+						    "Unknown VR rail(%u) status word(0x79):", rail);
+				} else {
+					shell_print(shell, "[0x%02x] %s status word(0x79):", rail,
+						    rail_name);
 				}
+
+				shell_print(shell, "\tlow  byte: 0x%02x", data[idx + 1]);
+
+				shell_print(shell, "\thigh byte: 0x%02x", data[idx + 2]);
 			}
+			err_data_len = SMBUS_ALRT_STATUS_DATA_LEN;
+		} else if (cpld_offset == ASIC_CATTRIP_REG) {
+			shell_print(shell, "\t%s", reg_name);
+			shell_print(shell, "\t\t%s", bit_name);
 			break;
-		case ASIC_THERMTRIP_TRIGGER_CAUSE:
-			shell_print(shell, "\tASIC_THERMTRIP_TRIGGER");
-			shell_print(shell, "read cpld offset(0x27): 0x%02x", data[0]);
-			shell_print(shell, "read cpld offset(0x29): 0x%02x", data[1]);
-			break;
-		case ASIC_ERROR_TRIGGER_CAUSE:
-			shell_print(shell, "\tASIC_ERROR_TRIGGER");
-			shell_print(shell, "event_id:   0x%02x%02x", data[1],
-				    data[0]);
-			shell_print(shell, "chiplet_id: 0x%02x", data[2]);
-			shell_print(shell, "module_id:  0x%02x", data[3]);
-			err_data_len = 4;
-			break;
-		default:
-			shell_print(shell, "Unknown error type: %d", err_type);
-			break;
+		} else {
+			shell_print(shell, "\t%s", reg_name);
+			shell_print(shell, "\t\t%s", bit_name);
+			shell_print(shell, "read vr sensor status word(0x79):");
+			shell_print(shell, "\tlow  byte: 0x%02x", data[0]);
+			shell_print(shell, "\thigh byte: 0x%02x", data[1]);
+			shell_print(shell, "read vr sensor status vout(0x20): 0x%02x", data[2]);
+			shell_print(shell, "read vr sensor status iout(0x21): 0x%02x", data[3]);
+			shell_print(shell, "read vr sensor status input(0x22): 0x%02x", data[4]);
+			shell_print(shell, "read vr sensor status temperature(0x24): 0x%02x",
+				    data[5]);
+			shell_print(shell, "read vr sensor status CML(0x7e): 0x%02x", data[6]);
+			err_data_len = 7;
 		}
+		break;
+	case POWER_ON_SEQUENCE_TRIGGER_CAUSE:
+		shell_print(shell, "\tPOWER_ON_SEQUENCE_FAILURE");
+		err_data_len = 1;
+		uint8_t *name = NULL;
+		plat_get_power_seq_pwrgd_event_fail_name(data[0], &name);
+		shell_print(shell, "RAIL: %s", name);
+		shell_print(shell, "PWRGD REG(start from 0xBE): 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x",
+			    data[1], data[2], data[3], data[4], data[5], data[6]);
+		break;
+	case AC_ON_TRIGGER_CAUSE:
+		shell_print(shell, "\tAC_ON");
+		err_data_len = 1;
+		break;
+	case DC_ON_TRIGGER_CAUSE:
+		shell_print(shell, "\tDC_ON_DETECTED");
+		err_data_len = 1;
+		break;
+	case TEMPERATURE_TRIGGER_CAUSE:
+		shell_print(shell, "\tTEMPERATURE_TRIGGER");
+		uint8_t temp_sensor_num = err_code & 0xFF;
+		//find name in temp_index_table
+		for (int j = 0; j < TEMP_INDEX_MAX; j++) {
+			if (temp_sensor_num == temp_index_table[j].sensor_id) {
+				shell_print(shell, "\t\t%s", temp_index_table[j].sensor_name);
+				shell_print(shell, "sensor_num 0x%02x status(02h): 0x%02x", data[2],
+					    data[0]);
+				// check whether the open status
+				if (data[0] & BIT(2))
+					shell_print(shell,
+						    "sensor_num 0x%02x open status(1Bh): 0x%02x",
+						    data[2], data[1]);
+				else if (data[0] & BIT(4))
+					shell_print(shell,
+						    "high limit trigger, status(35h): 0x%02x",
+						    data[1]);
+				else if (data[0] & BIT(3))
+					shell_print(shell, "low limit trigger, status(36h): 0x%02x",
+						    data[1]);
+				err_data_len = 3;
+				break;
+			}
+		}
+		break;
+	case ASIC_THERMTRIP_TRIGGER_CAUSE:
+		shell_print(shell, "\tASIC_THERMTRIP_TRIGGER");
+		shell_print(shell, "read cpld offset(0x27): 0x%02x", data[0]);
+		shell_print(shell, "read cpld offset(0x29): 0x%02x", data[1]);
+		break;
+	case ASIC_ERROR_TRIGGER_CAUSE:
+		shell_print(shell, "\tASIC_ERROR_TRIGGER");
+		shell_print(shell, "event_id:   0x%02x%02x", data[1], data[0]);
+		shell_print(shell, "chiplet_id: 0x%02x", data[2]);
+		shell_print(shell, "module_id:  0x%02x", data[3]);
+		err_data_len = 4;
+		break;
+	default:
+		shell_print(shell, "Unknown error type: %d", err_type);
+		break;
+	}
 	return err_data_len;
 }
 
-uint8_t extend_error_code_dump(const struct shell *shell, uint16_t err_code, uint8_t *data, uint8_t data_len)
+uint8_t extend_error_code_dump(const struct shell *shell, uint16_t err_code, uint8_t *data,
+			       uint8_t data_len)
 {
 	uint8_t err_data_len = 0;
 	switch (err_code & 0xFF00) {
-		case CLOCK_APLL_UNLOCK_EVENT_CAUSE:{
-			uint8_t clk_idx = err_code & 0x0F;
-			switch (clk_idx) {
-				case CLK_100MHZ_ERR_IDX:
-					shell_print(shell, "\t100MHz CLOCK_APLL_UNLOCK");
-					shell_print(shell,
-						    "read 100MHz clock APLL lock status: 0x%02x",
-						    data[0]);
-					err_data_len = 1;
-					break;
-				case CLK_312_5MHZ_ERR_IDX:
-					shell_print(shell, "\t312.5MHz CLOCK_APLL_UNLOCK");
-					shell_print(shell,
-						    "read 312.5MHz clock APLL lock status: 0x%02x",
-						    data[0]);
-					err_data_len = 1;
-					break;
-				case CLK_BUF0_100M_LOSB_PLD:
-					shell_print(shell, "\tCLK_BUF0_100M_LOSB_PLD");
-					shell_print(shell, "read cpld reg 0x31: 0x%02x",
-						    data[0]);
-					err_data_len = 1;
-					break;
-				case CLK_BUF1_100M_LOSB_PLD:
-					shell_print(shell, "\tCLK_BUF1_100M_LOSB_PLD");
-					shell_print(shell, "read cpld reg 0x31: 0x%02x",
-						    data[0]);
-					err_data_len = 1;
-					break;
-				case CLK_BUF2_100M_LOSB_PLD:
-					shell_print(shell, "\tCLK_BUF2_100M_LOSB_PLD");
-					shell_print(shell, "read cpld reg 0x31: 0x%02x",
-						    data[0]);
-					err_data_len = 1;
-					break;
-				default:
-					shell_print(shell, "\tCLOCK_APLL_UNLOCK_EVENT_CAUSE: UNKNOWN");
-					break;
-			}
-			break;	
-		}
-		default:
-			shell_print(shell, "Unknown extend error code: %d", err_code);
+	case CLOCK_APLL_UNLOCK_EVENT_CAUSE: {
+		uint8_t clk_idx = err_code & 0x0F;
+		switch (clk_idx) {
+		case CLK_100MHZ_ERR_IDX:
+			shell_print(shell, "\t100MHz CLOCK_APLL_UNLOCK");
+			shell_print(shell, "read 100MHz clock APLL lock status: 0x%02x", data[0]);
+			err_data_len = 1;
 			break;
+		case CLK_312_5MHZ_ERR_IDX:
+			shell_print(shell, "\t312.5MHz CLOCK_APLL_UNLOCK");
+			shell_print(shell, "read 312.5MHz clock APLL lock status: 0x%02x", data[0]);
+			err_data_len = 1;
+			break;
+		case CLK_BUF0_100M_LOSB_PLD:
+			shell_print(shell, "\tCLK_BUF0_100M_LOSB_PLD");
+			shell_print(shell, "read cpld reg 0x31: 0x%02x", data[0]);
+			err_data_len = 1;
+			break;
+		case CLK_BUF1_100M_LOSB_PLD:
+			shell_print(shell, "\tCLK_BUF1_100M_LOSB_PLD");
+			shell_print(shell, "read cpld reg 0x31: 0x%02x", data[0]);
+			err_data_len = 1;
+			break;
+		case CLK_BUF2_100M_LOSB_PLD:
+			shell_print(shell, "\tCLK_BUF2_100M_LOSB_PLD");
+			shell_print(shell, "read cpld reg 0x31: 0x%02x", data[0]);
+			err_data_len = 1;
+			break;
+		default:
+			shell_print(shell, "\tCLOCK_APLL_UNLOCK_EVENT_CAUSE: UNKNOWN");
+			break;
+		}
+		break;
+	}
+	case VR_OT_WARNING_EVENT_CAUSE: {
+		const char *rail_name = get_vr_ot_warning_rail_name(data[1]);
+		shell_print(shell, "\t%s OT_WARNING", rail_name);
+		shell_print(shell, "read status(0x7D): 0x%02x", data[0]);
+		err_data_len = 1;
+	}
+	default:
+		shell_print(shell, "Unknown extend error code: %d", err_code);
+		break;
 	}
 	return err_data_len;
 }
@@ -432,9 +473,11 @@ void cmd_log_dump(const struct shell *shell, size_t argc, char **argv)
 		uint8_t err_data_len = 2; //sizeof(log.error_data)
 
 		if (check_is_extend_error_code(log.err_code)) {
-			err_data_len = extend_error_code_dump(shell, log.err_code, log.error_data, sizeof(log.error_data));
+			err_data_len = extend_error_code_dump(shell, log.err_code, log.error_data,
+							      sizeof(log.error_data));
 		} else {
-			err_data_len = normal_error_code_dump(shell, log.err_code, log.error_data, sizeof(log.error_data));
+			err_data_len = normal_error_code_dump(shell, log.err_code, log.error_data,
+							      sizeof(log.error_data));
 		}
 
 		shell_print(shell, "error_data:");
