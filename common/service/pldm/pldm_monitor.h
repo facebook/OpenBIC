@@ -71,6 +71,8 @@ typedef enum pldm_platform_monitor_commands {
 #define PLDM_ADDSEL_ASSERT_MASK 0x80
 #define PLDM_ADDSEL_DEASSERT_MASK 0x7F
 
+#define CPER_FORMAT_VERSION 0x01
+
 typedef enum pldm_sensor_readings_data_type {
 	PLDM_SENSOR_DATA_SIZE_UINT8,
 	PLDM_SENSOR_DATA_SIZE_SINT8,
@@ -229,7 +231,13 @@ enum pldm_event_types {
 	PLDM_REDFISH_MESSAGE_EVENT = 0x03,
 	PLDM_PDR_REPOSITORY_CHG_EVENT = 0x04,
 	PLDM_MESSAGE_POLL_EVENT = 0x05,
-	PLDM_HEARTBEAT_TIMER_ELAPSED_EVENT = 0x06
+	PLDM_HEARTBEAT_TIMER_ELAPSED_EVENT = 0x06,
+	PLDM_CPER_EVENT = 0x07,
+};
+
+enum cper_event_format_type {
+	FULL_CPER_SECTION = 0x00,
+	SINGLE_CPER_SECTION = 0x01,
 };
 
 typedef enum pldm_sensor_event_class {

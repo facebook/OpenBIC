@@ -76,7 +76,6 @@
 
 #define LEVEL_2 2
 #define LEVEL_3 3
-#define ERROR_CODE_LEN 5
 #define CPLD_ADDR (0x4C >> 1)
 #define I2C_BUS_CPLD I2C_BUS11
 typedef struct _cpld_info_ cpld_info;

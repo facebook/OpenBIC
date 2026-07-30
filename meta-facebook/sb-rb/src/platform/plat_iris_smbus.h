@@ -64,7 +64,8 @@
 
 #define MAX_DATA_PKT_SIZE 24
 #define STATUS_RETRY_CNT 2
-#define ERROR_CODE_LEN 5
+#define FATAL_ERROR_LEN 82
+#define ERROR_CODE_LEN 80
 
 // smbus error code
 #define SMBUS_ERROR 122
@@ -82,6 +83,47 @@
 #define FW_CTRL_READ 137
 // firmware block write
 #define FW_DATA_WRITE 138
+
+struct event_record_common {
+ uint64_t timestamp;          // 8 bytes: Event timestamp (nanoseconds) [System-populated]
+ uint16_t event_id;           // 2 bytes: Event ID (0-4095 for 12-bit field) [Module-populated]
+ uint8_t severity;            // 1 byte: Event severity (EVENT_LOG_INFO, EVENT_LOG_WARNING, EVENT_LOG_FATAL) [Module-populated]
+ uint8_t scope;               // 1 byte: Event scope (local, module, chiplet, package, system) [Module-populated]
+ uint8_t device_id;           // 1 byte: Chip identifier [System-populated]
+ uint8_t platform_id;         // 1 byte: Platform identifier [System-populated]
+ uint8_t sku_id;              // 1 byte: SKU identifier [System-populated]
+ uint8_t chiplet_id;          // 1 byte: Chiplet identifier [System-populated]
+ uint8_t module_id;           // 1 byte: Module identifier (maps to module_id_t enum) [Module-populated]
+ uint8_t flags;               // 1 byte: Event flags [System-populated]
+ uint8_t detail_format_id;    // 1 byte: Detail format identifier [Module-populated]
+ uint8_t detail_length;       // 1 byte: Actual length of data in event_detail[] [System-populated]
+ uint8_t reserved[12];        // 12 bytes: Padding to align to 32 bytes [System-populated]
+}__packed;
+
+typedef struct __attribute__((packed)) _event_record {
+	struct event_record_common common;
+	uint8_t event_detail[48];   // Event-specific detail syndrome
+} event_record;
+
+typedef struct __attribute__((packed)) _sb_cmd_fatal_error {
+	uint8_t length;
+	event_record event_record_data;
+	uint8_t pec_byte;
+} sb_cmd_fatal_error;
+
+struct pldm_platform_event_msg {
+	uint8_t format_version;
+	uint8_t tid;
+	uint8_t event_class;
+	uint8_t event_data[];
+} __attribute__((packed));
+
+struct pldm_cper_event_data {
+	uint8_t cper_format_version;
+	uint8_t cper_format_type;
+	uint16_t cper_data_length;
+	uint8_t cper_record[];
+} __attribute__((packed));
 
 int iris_smbus_fast_boot(uint8_t *image_buff, uint32_t img_dest_addr, uint32_t img_size);
 #endif
