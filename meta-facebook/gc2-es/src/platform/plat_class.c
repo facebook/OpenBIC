@@ -397,38 +397,53 @@ void init_hsc_module()
 
 uint8_t detect_vr_module_via_pmbus(void)
 {
+	const uint8_t max_attempt = 5;
 	uint8_t retry = 5;
 	I2C_MSG msg;
-	memset(&msg, 0, sizeof(msg));
 
-	// PVCCD_HV as the representative VR (adjusted based on actual hardware)
-	msg.bus = I2C_BUS5;
-	msg.target_addr = PVCCD_HV_ADDR;
-	msg.tx_len = 1;
-	msg.rx_len = 7;
-	msg.data[0] = PMBUS_IC_DEVICE_ID;
+	for (uint8_t attempt = 0; attempt < max_attempt; attempt++) {
+		memset(&msg, 0, sizeof(msg));
 
-	if (i2c_master_read(&msg, retry) != 0) {
-		return VR_MODULE_ISL69259; // Read failed, conservatively return ISL
+		// PVCCD_HV as the representative VR (adjusted based on actual hardware)
+		msg.bus = I2C_BUS5;
+		msg.target_addr = PVCCD_HV_ADDR;
+		msg.tx_len = 1;
+		msg.rx_len = 7;
+		msg.data[0] = PMBUS_IC_DEVICE_ID;
+
+		if (i2c_master_read(&msg, retry) != 0) {
+			LOG_ERR("Failed to read VR IC_DEVICE_ID, attempt %d", attempt);
+			k_sleep(K_MSEC(50));
+			continue;
+		}
+
+		// TPS53689
+		if ((msg.data[0] == 0x06) && (msg.data[1] == 0x54) && (msg.data[2] == 0x49) &&
+		    (msg.data[3] == 0x53) && (msg.data[4] == 0x68) && (msg.data[5] == 0x90) &&
+		    (msg.data[6] == 0x00)) {
+			LOG_INF("VR module detected: TPS53689, attempt %d", attempt);
+			return VR_MODULE_TPS53689;
+		}
+		// XDPE15284
+		if ((msg.data[0] == 0x02) && (msg.data[2] == 0x8A)) {
+			LOG_INF("VR module detected: XDPE15284D, attempt %d", attempt);
+			return VR_MODULE_XDPE15284D;
+		}
+		// ISL69259
+		if ((msg.data[0] == 0x04) && (msg.data[1] == 0x00) && (msg.data[2] == 0x81) &&
+		    (msg.data[3] == 0xD2) && (msg.data[4] == 0x49)) {
+			LOG_INF("VR module detected: ISL69259, attempt %d", attempt);
+			return VR_MODULE_ISL69259;
+		}
+
+		LOG_ERR("Unknown VR IC_DEVICE_ID: %02X %02X %02X %02X %02X %02X %02X, attempt %d",
+			msg.data[0], msg.data[1], msg.data[2], msg.data[3], msg.data[4],
+			msg.data[5], msg.data[6], attempt);
+		k_sleep(K_MSEC(50));
 	}
 
-	// TPS53689
-	if ((msg.data[0] == 0x06) && (msg.data[1] == 0x54) && (msg.data[2] == 0x49) &&
-	    (msg.data[3] == 0x53) && (msg.data[4] == 0x68) && (msg.data[5] == 0x90) &&
-	    (msg.data[6] == 0x00)) {
-		return VR_MODULE_TPS53689;
-	}
-	// XDPE15284
-	if ((msg.data[0] == 0x02) && (msg.data[2] == 0x8A)) {
-		return VR_MODULE_XDPE15284D;
-	}
-	// ISL69259
-	if ((msg.data[0] == 0x04) && (msg.data[1] == 0x00) && (msg.data[2] == 0x81) &&
-	    (msg.data[3] == 0xD2) && (msg.data[4] == 0x49)) {
-		return VR_MODULE_ISL69259;
-	}
-
-	return VR_MODULE_ISL69259;
+	LOG_ERR("VR type detection failed after %d attempts, fallback to ISL69259", max_attempt);
+	return VR_MODULE_ISL69259; // conservative fallback
 }
 
 static void init_vr_module(void)
