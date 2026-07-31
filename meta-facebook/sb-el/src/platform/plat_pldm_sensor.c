@@ -159,7 +159,7 @@ const uint16_t vr_temp_monitor_sensors[] = {
 
 const uint8_t vr_temp_monitor_sensors_count = ARRAY_SIZE(vr_temp_monitor_sensors);
 // size must be same as vr_temp_monitor_sensors_count
-static ot_warning_status ot_warning_table[24] = { 0 };
+static ot_warning_status ot_warning_table[26] = { 0 };
 static uint8_t ot_warning_table_count;
 
 uint8_t convert_tmp_addr(uint8_t bus, uint8_t addr, uint8_t tmp_change_mode)
