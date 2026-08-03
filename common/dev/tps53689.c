@@ -280,6 +280,10 @@ uint8_t tps53689_read(sensor_cfg *cfg, int *reading)
 		/* SLINEAR11 */
 		uint16_t read_value = (msg.data[1] << 8) | msg.data[0];
 		float actual_value = slinear11_to_float(read_value);
+
+		if (actual_value < 0 && (plat_sensor_clamp_negative_reading(offset) == true)) {
+			actual_value = 0;
+		}
 		sval->integer = actual_value;
 		sval->fraction = (actual_value - sval->integer) * 1000;
 	} else {

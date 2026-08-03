@@ -1586,3 +1586,10 @@ bool get_sensor_init_done_flag()
 {
 	return is_sensor_initial_done;
 }
+
+__weak bool plat_sensor_clamp_negative_reading(uint8_t pmbus_cmd)
+{
+	ARG_UNUSED(pmbus_cmd);
+
+	return false;
+}

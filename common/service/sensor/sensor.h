@@ -866,5 +866,5 @@ bool get_sensor_init_done_flag();
 sensor_cfg *get_common_sensor_cfg_info(uint8_t sensor_num);
 uint8_t common_tbl_sen_reinit(uint8_t sen_num);
 void plat_sensor_poll_post();
-
+bool plat_sensor_clamp_negative_reading(uint8_t pmbus_cmd);
 #endif
