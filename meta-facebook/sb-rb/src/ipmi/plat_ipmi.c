@@ -43,7 +43,6 @@ void IPMI_APP_handler(ipmi_msg *msg)
 	return;
 }
 
-
 void IPMI_OEM_1S_handler(ipmi_msg *msg)
 {
 	CHECK_NULL_ARG(msg);
