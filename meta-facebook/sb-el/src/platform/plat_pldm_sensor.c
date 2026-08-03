@@ -70,6 +70,7 @@ static bool is_quick_vr_sensor(uint8_t sensor_num)
 	case SENSOR_NUM_ASIC_P0V75_OWL_E_VDD_PWR_W:
 	case SENSOR_NUM_ASIC_P0V75_OWL_W_VDD_PWR_W:
 	case SENSOR_NUM_ASIC_P0V85_HAMSA_VDD_PWR_W:
+	case SENSOR_NUM_INA238_PWR_W:
 
 		return true;
 	}
@@ -170,7 +171,7 @@ uint8_t convert_tmp_addr(uint8_t bus, uint8_t addr, uint8_t tmp_change_mode)
 			if (tmp_change_mode == FAB1_2ND_EMC1413)
 				return tmp_addr_map_table[i].fab1_2nd_addr;
 			// else if (tmp_change_mode == FAB1_1ND_TMP432)
-				// LOG_DBG("don't need to change TMP address");
+			// LOG_DBG("don't need to change TMP address");
 			else
 				LOG_ERR("tmp_change_mode: 0x%x error", tmp_change_mode);
 		}
@@ -186,7 +187,7 @@ uint8_t convert_vr_addr(uint8_t bus, uint8_t addr, uint8_t vr_change_mode)
 			if (vr_change_mode == FAB1_2ND_RNS)
 				return vr_addr_map_table[i].fab1_2nd_addr;
 			// else if (vr_change_mode == FAB1_1ND_MPS)
-				// LOG_DBG("don't need to change VR address");
+			// LOG_DBG("don't need to change VR address");
 			else
 				LOG_ERR("vr_change_mode: 0x%x error", vr_change_mode);
 		}
@@ -199,18 +200,28 @@ uint8_t check_sensor_type(uint8_t sensor_num)
 	if (sensor_num == 0 || sensor_num >= SENSOR_NUM_NUMBERS)
 		return MAX_SENSOR_THREAD_ID;
 
+	/* Temperature sensors */
 	if (sensor_num <= SENSOR_NUM_ASIC_HAMSA_LS_TEMP_C)
 		return TEMP_SENSOR_THREAD_ID;
 
+	/* Normal and quick VR sensors */
 	if (sensor_num <= SENSOR_NUM_INA238_PWR_W)
 		return is_quick_vr_sensor(sensor_num) ? QUICK_VR_SENSOR_THREAD_ID :
 							VR_SENSOR_THREAD_ID;
 
+	/* UBC sensors */
 	if (sensor_num <= SENSOR_NUM_UBC2_P52V_INPUT_VOLT_V)
 		return UBC_SENSOR_THREAD_ID;
 
-	if (sensor_num <= SENSOR_NUM_P3V3_OSFP_PWR_W)
+	/* EVB OSFP sensors */
+	if (sensor_num <= SENSOR_NUM_P3V3_OSFP_INPUT_VOLT_V)
 		return EVB_SENSOR_THREAD_ID;
+
+	/* VR input-voltage sensors */
+	if (sensor_num >= SENSOR_NUM_ASIC_P0V75_NUWA0_VDD_INPUT_VOLT_V &&
+	    sensor_num <= SENSOR_NUM_P3V3_OSFP_INPUT_VOLT_V) {
+		return VR_SENSOR_THREAD_ID;
+	}
 
 	return MAX_SENSOR_THREAD_ID;
 }
@@ -8971,6 +8982,148 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.post_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_6 * 2],
 		},
 	},
+	{
+		{
+			// SENSOR_NUM_INA238_VOLT_VBUS_A
+			/*** PDR common header***/
+			{
+				0x00000000, //uint32_t record_handle
+				0x01, //uint8_t PDR_header_version
+				PLDM_NUMERIC_SENSOR_PDR, //uint8_t PDR_type
+				0x0000, //uint16_t record_change_number
+				0x0000, //uint16_t data_length
+			},
+
+			/***numeric sensor format***/
+			0x0000, //uint16_t PLDM_terminus_handle;
+			SENSOR_NUM_INA238_VOLT_VBUS_A, //uint16_t sensor_id;
+			0x0000, //uint16_t entity_type; //Need to check
+			SENSOR_NUM_INA238_VOLT_VBUS_A, //uint16_t entity_instance_number;
+			0x0000, //uint16_t container_id;
+			0x00, //uint8_t sensor_init; //Need to check
+			0x01, //uint8_t sensor_auxiliary_names_pdr;
+			0x05, //uint8_t base_unit;  //unit
+			-3, //int8_t unit_modifier; //Need to check
+			0x00, //uint8_t rate_unit;
+			0x00, //uint8_t base_oem_unit_handle;
+			0x00, //uint8_t aux_unit;
+			0x00, //int8_t aux_unit_modifier;
+			0x00, //uint8_t auxrate_unit;
+			0x00, //uint8_t rel;
+			0x00, //uint8_t aux_oem_unit_handle;
+			0x00, //uint8_t is_linear;
+			0x5, //uint8_t sensor_data_size;
+			1, //real32_t resolution;
+			0, //real32_t offset;
+			0x0000, //uint16_t accuracy;
+			0x00, //uint8_t plus_tolerance;
+			0x00, //uint8_t minus_tolerance;
+			0x00000000, //uint32_t hysteresis;
+			0x00, //uint8_t supported_thresholds;
+			0x00, //uint8_t threshold_and_hysteresis_volatility;
+			0, //real32_t state_transition_interval;
+			UPDATE_INTERVAL_1S, //real32_t update_interval;
+			0x00000000, //uint32_t max_readable; //Need to check
+			0x00000000, //uint32_t min_readable;
+			0x05, //uint8_t range_field_format;
+			0x00, //uint8_t range_field_support; //Need to check
+			0x00000000, //uint32_t nominal_value;
+			0x00000000, //uint32_t normal_max;
+			0x00000000, //uint32_t normal_min;
+			0, //uint32_t warning_high;
+			0, //uint32_t warning_low;
+			3564, //uint32_t critical_high;
+			3036, //uint32_t critical_low;
+			0, //uint32_t fatal_high;
+			0, //uint32_t fatal_low;
+		},
+		.update_time = 0,
+		{
+			.num = SENSOR_NUM_INA238_VOLT_VBUS_A,
+			.type = sensor_dev_ina238,
+			.port = I2C_BUS10,
+			.target_addr = INA238_ADDR_0,
+			.offset = INA238_VBUS_OFFSET,
+			.access_checker = is_ubc_access,
+			.sample_count = SAMPLE_COUNT_DEFAULT,
+			.cache = 0,
+			.cache_status = PLDM_SENSOR_INITIALIZING,
+			.init_args = &ina238_pwr_w_init_args,
+			.post_sensor_read_hook = post_common_sensor_read,
+		},
+		.poll_interval_ms = 1000, //1000ms
+	},
+	{
+		{
+			// INA238_CURR_A
+			/*** PDR common header***/
+			{
+				0x00000000, //uint32_t record_handle
+				0x01, //uint8_t PDR_header_version
+				PLDM_NUMERIC_SENSOR_PDR, //uint8_t PDR_type
+				0x0000, //uint16_t record_change_number
+				0x0000, //uint16_t data_length
+			},
+
+			/***numeric sensor format***/
+			0x0000, //uint16_t PLDM_terminus_handle;
+			SENSOR_NUM_INA238_CURR_A, //uint16_t sensor_id;
+			0x0000, //uint16_t entity_type; //Need to check
+			SENSOR_NUM_INA238_CURR_A, //uint16_t entity_instance_number;
+			0x0000, //uint16_t container_id;
+			0x00, //uint8_t sensor_init; //Need to check
+			0x01, //uint8_t sensor_auxiliary_names_pdr;
+			0x06, //uint8_t base_unit;  //unit
+			-3, //int8_t unit_modifier; //Need to check
+			0x00, //uint8_t rate_unit;
+			0x00, //uint8_t base_oem_unit_handle;
+			0x00, //uint8_t aux_unit;
+			0x00, //int8_t aux_unit_modifier;
+			0x00, //uint8_t auxrate_unit;
+			0x00, //uint8_t rel;
+			0x00, //uint8_t aux_oem_unit_handle;
+			0x00, //uint8_t is_linear;
+			0x5, //uint8_t sensor_data_size;
+			1, //real32_t resolution;
+			0, //real32_t offset;
+			0x0000, //uint16_t accuracy;
+			0x00, //uint8_t plus_tolerance;
+			0x00, //uint8_t minus_tolerance;
+			0x00000000, //uint32_t hysteresis;
+			0, //uint8_t supported_thresholds;
+			0x00, //uint8_t threshold_and_hysteresis_volatility;
+			0, //real32_t state_transition_interval;
+			UPDATE_INTERVAL_1S, //real32_t update_interval;
+			0x00000000, //uint32_t max_readable; //Need to check
+			0x00000000, //uint32_t min_readable;
+			0x05, //uint8_t range_field_format;
+			0x00, //uint8_t range_field_support; //Need to check
+			0x00000000, //uint32_t nominal_value;
+			0x00000000, //uint32_t normal_max;
+			0x00000000, //uint32_t normal_min;
+			0, //uint32_t warning_high;
+			0, //uint32_t warning_low;
+			180000, //uint32_t critical_high;
+			0, //uint32_t critical_low;
+			0, //uint32_t fatal_high;
+			0, //uint32_t fatal_low;
+		},
+		.update_time = 0,
+		{
+			.num = SENSOR_NUM_INA238_CURR_A,
+			.type = sensor_dev_ina238,
+			.port = I2C_BUS10,
+			.target_addr = INA238_ADDR_0,
+			.offset = INA238_CUR_OFFSET,
+			.access_checker = is_ubc_access,
+			.sample_count = SAMPLE_COUNT_DEFAULT,
+			.cache = 0,
+			.cache_status = PLDM_SENSOR_INITIALIZING,
+			.init_args = &ina238_pwr_w_init_args,
+			.post_sensor_read_hook = post_common_sensor_read,
+		},
+		.poll_interval_ms = 1000, //1000ms
+	},
 };
 
 pldm_sensor_info plat_pldm_sensor_quick_vr_table[] = {
@@ -9628,148 +9781,6 @@ pldm_sensor_info plat_pldm_sensor_quick_vr_table[] = {
 			.pre_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_7 * 2 + 1],
 			.post_sensor_read_hook = post_vr_read,
 			.post_sensor_read_args = &vr_pre_read_args[VR_INDEX_E_7 * 2 + 1],
-		},
-		.poll_interval_ms = 1000, //1000ms
-	},
-	{
-		{
-			// SENSOR_NUM_INA238_VOLT_VBUS_A
-			/*** PDR common header***/
-			{
-				0x00000000, //uint32_t record_handle
-				0x01, //uint8_t PDR_header_version
-				PLDM_NUMERIC_SENSOR_PDR, //uint8_t PDR_type
-				0x0000, //uint16_t record_change_number
-				0x0000, //uint16_t data_length
-			},
-
-			/***numeric sensor format***/
-			0x0000, //uint16_t PLDM_terminus_handle;
-			SENSOR_NUM_INA238_VOLT_VBUS_A, //uint16_t sensor_id;
-			0x0000, //uint16_t entity_type; //Need to check
-			SENSOR_NUM_INA238_VOLT_VBUS_A, //uint16_t entity_instance_number;
-			0x0000, //uint16_t container_id;
-			0x00, //uint8_t sensor_init; //Need to check
-			0x01, //uint8_t sensor_auxiliary_names_pdr;
-			0x05, //uint8_t base_unit;  //unit
-			-3, //int8_t unit_modifier; //Need to check
-			0x00, //uint8_t rate_unit;
-			0x00, //uint8_t base_oem_unit_handle;
-			0x00, //uint8_t aux_unit;
-			0x00, //int8_t aux_unit_modifier;
-			0x00, //uint8_t auxrate_unit;
-			0x00, //uint8_t rel;
-			0x00, //uint8_t aux_oem_unit_handle;
-			0x00, //uint8_t is_linear;
-			0x5, //uint8_t sensor_data_size;
-			1, //real32_t resolution;
-			0, //real32_t offset;
-			0x0000, //uint16_t accuracy;
-			0x00, //uint8_t plus_tolerance;
-			0x00, //uint8_t minus_tolerance;
-			0x00000000, //uint32_t hysteresis;
-			0x00, //uint8_t supported_thresholds;
-			0x00, //uint8_t threshold_and_hysteresis_volatility;
-			0, //real32_t state_transition_interval;
-			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x00000000, //uint32_t max_readable; //Need to check
-			0x00000000, //uint32_t min_readable;
-			0x05, //uint8_t range_field_format;
-			0x00, //uint8_t range_field_support; //Need to check
-			0x00000000, //uint32_t nominal_value;
-			0x00000000, //uint32_t normal_max;
-			0x00000000, //uint32_t normal_min;
-			0, //uint32_t warning_high;
-			0, //uint32_t warning_low;
-			3564, //uint32_t critical_high;
-			3036, //uint32_t critical_low;
-			0, //uint32_t fatal_high;
-			0, //uint32_t fatal_low;
-		},
-		.update_time = 0,
-		{
-			.num = SENSOR_NUM_INA238_VOLT_VBUS_A,
-			.type = sensor_dev_ina238,
-			.port = I2C_BUS10,
-			.target_addr = INA238_ADDR_0,
-			.offset = INA238_VBUS_OFFSET,
-			.access_checker = is_ubc_access,
-			.sample_count = SAMPLE_COUNT_DEFAULT,
-			.cache = 0,
-			.cache_status = PLDM_SENSOR_INITIALIZING,
-			.init_args = &ina238_pwr_w_init_args,
-			.post_sensor_read_hook = post_common_sensor_read,
-		},
-		.poll_interval_ms = 1000, //1000ms
-	},
-	{
-		{
-			// INA238_CURR_A
-			/*** PDR common header***/
-			{
-				0x00000000, //uint32_t record_handle
-				0x01, //uint8_t PDR_header_version
-				PLDM_NUMERIC_SENSOR_PDR, //uint8_t PDR_type
-				0x0000, //uint16_t record_change_number
-				0x0000, //uint16_t data_length
-			},
-
-			/***numeric sensor format***/
-			0x0000, //uint16_t PLDM_terminus_handle;
-			SENSOR_NUM_INA238_CURR_A, //uint16_t sensor_id;
-			0x0000, //uint16_t entity_type; //Need to check
-			SENSOR_NUM_INA238_CURR_A, //uint16_t entity_instance_number;
-			0x0000, //uint16_t container_id;
-			0x00, //uint8_t sensor_init; //Need to check
-			0x01, //uint8_t sensor_auxiliary_names_pdr;
-			0x06, //uint8_t base_unit;  //unit
-			-3, //int8_t unit_modifier; //Need to check
-			0x00, //uint8_t rate_unit;
-			0x00, //uint8_t base_oem_unit_handle;
-			0x00, //uint8_t aux_unit;
-			0x00, //int8_t aux_unit_modifier;
-			0x00, //uint8_t auxrate_unit;
-			0x00, //uint8_t rel;
-			0x00, //uint8_t aux_oem_unit_handle;
-			0x00, //uint8_t is_linear;
-			0x5, //uint8_t sensor_data_size;
-			1, //real32_t resolution;
-			0, //real32_t offset;
-			0x0000, //uint16_t accuracy;
-			0x00, //uint8_t plus_tolerance;
-			0x00, //uint8_t minus_tolerance;
-			0x00000000, //uint32_t hysteresis;
-			0, //uint8_t supported_thresholds;
-			0x00, //uint8_t threshold_and_hysteresis_volatility;
-			0, //real32_t state_transition_interval;
-			UPDATE_INTERVAL_1S, //real32_t update_interval;
-			0x00000000, //uint32_t max_readable; //Need to check
-			0x00000000, //uint32_t min_readable;
-			0x05, //uint8_t range_field_format;
-			0x00, //uint8_t range_field_support; //Need to check
-			0x00000000, //uint32_t nominal_value;
-			0x00000000, //uint32_t normal_max;
-			0x00000000, //uint32_t normal_min;
-			0, //uint32_t warning_high;
-			0, //uint32_t warning_low;
-			180000, //uint32_t critical_high;
-			0, //uint32_t critical_low;
-			0, //uint32_t fatal_high;
-			0, //uint32_t fatal_low;
-		},
-		.update_time = 0,
-		{
-			.num = SENSOR_NUM_INA238_CURR_A,
-			.type = sensor_dev_ina238,
-			.port = I2C_BUS10,
-			.target_addr = INA238_ADDR_0,
-			.offset = INA238_CUR_OFFSET,
-			.access_checker = is_ubc_access,
-			.sample_count = SAMPLE_COUNT_DEFAULT,
-			.cache = 0,
-			.cache_status = PLDM_SENSOR_INITIALIZING,
-			.init_args = &ina238_pwr_w_init_args,
-			.post_sensor_read_hook = post_common_sensor_read,
 		},
 		.poll_interval_ms = 1000, //1000ms
 	},
@@ -13021,51 +13032,6 @@ PDR_sensor_auxiliary_names plat_pdr_sensor_aux_names_table[] = {
 		.nameLanguageTag = "en",
 		.sensorName = u"UBC2_P52V_INPUT_VOLT_V",
 	},
-	{
-		{
-			.record_handle = 0x00000000,
-			.PDR_header_version = 0x01,
-			.PDR_type = PLDM_SENSOR_AUXILIARY_NAMES_PDR,
-			.record_change_number = 0x0000,
-			.data_length = 0x0000,
-		},
-		.terminus_handle = 0x0000,
-		.sensor_id = SENSOR_NUM_INA238_VOLT_VBUS_A,
-		.sensor_count = 0x1,
-		.nameStringCount = 0x1,
-		.nameLanguageTag = "en",
-		.sensorName = u"INA238_VOLT_VBUS_A",
-	},
-	{
-		{
-			.record_handle = 0x00000000,
-			.PDR_header_version = 0x01,
-			.PDR_type = PLDM_SENSOR_AUXILIARY_NAMES_PDR,
-			.record_change_number = 0x0000,
-			.data_length = 0x0000,
-		},
-		.terminus_handle = 0x0000,
-		.sensor_id = SENSOR_NUM_INA238_CURR_A,
-		.sensor_count = 0x1,
-		.nameStringCount = 0x1,
-		.nameLanguageTag = "en",
-		.sensorName = u"INA238_CURR_A",
-	},
-	{
-		{
-			.record_handle = 0x00000000,
-			.PDR_header_version = 0x01,
-			.PDR_type = PLDM_SENSOR_AUXILIARY_NAMES_PDR,
-			.record_change_number = 0x0000,
-			.data_length = 0x0000,
-		},
-		.terminus_handle = 0x0000,
-		.sensor_id = SENSOR_NUM_INA238_PWR_W,
-		.sensor_count = 0x1,
-		.nameStringCount = 0x1,
-		.nameLanguageTag = "en",
-		.sensorName = u"INA238_PWR_W",
-	},
 };
 
 PDR_sensor_auxiliary_names plat_evb_pdr_sensor_aux_names_table[] = {
@@ -13146,6 +13112,54 @@ PDR_sensor_auxiliary_names plat_evb_pdr_sensor_aux_names_table[] = {
 	},
 };
 
+static PDR_sensor_auxiliary_names plat_ina238_pdr_sensor_aux_names_table[] = {
+	{
+		{
+			.record_handle = 0x00000000,
+			.PDR_header_version = 0x01,
+			.PDR_type = PLDM_SENSOR_AUXILIARY_NAMES_PDR,
+			.record_change_number = 0x0000,
+			.data_length = 0x0000,
+		},
+		.terminus_handle = 0x0000,
+		.sensor_id = SENSOR_NUM_INA238_VOLT_VBUS_A,
+		.sensor_count = 0x1,
+		.nameStringCount = 0x1,
+		.nameLanguageTag = "en",
+		.sensorName = u"INA238_VOLT_VBUS_A",
+	},
+	{
+		{
+			.record_handle = 0x00000000,
+			.PDR_header_version = 0x01,
+			.PDR_type = PLDM_SENSOR_AUXILIARY_NAMES_PDR,
+			.record_change_number = 0x0000,
+			.data_length = 0x0000,
+		},
+		.terminus_handle = 0x0000,
+		.sensor_id = SENSOR_NUM_INA238_CURR_A,
+		.sensor_count = 0x1,
+		.nameStringCount = 0x1,
+		.nameLanguageTag = "en",
+		.sensorName = u"INA238_CURR_A",
+	},
+	{
+		{
+			.record_handle = 0x00000000,
+			.PDR_header_version = 0x01,
+			.PDR_type = PLDM_SENSOR_AUXILIARY_NAMES_PDR,
+			.record_change_number = 0x0000,
+			.data_length = 0x0000,
+		},
+		.terminus_handle = 0x0000,
+		.sensor_id = SENSOR_NUM_INA238_PWR_W,
+		.sensor_count = 0x1,
+		.nameStringCount = 0x1,
+		.nameLanguageTag = "en",
+		.sensorName = u"INA238_PWR_W",
+	},
+};
+
 PDR_entity_auxiliary_names plat_pdr_entity_aux_names_table[] = { {
 	{
 		.record_handle = 0x00000000,
@@ -13175,6 +13189,8 @@ uint32_t plat_get_pdr_size(uint8_t pdr_type)
 		break;
 	case PLDM_SENSOR_AUXILIARY_NAMES_PDR:
 		total_size = ARRAY_SIZE(plat_pdr_sensor_aux_names_table);
+		if (get_board_rev_id() >= REV_ID_EVT1B)
+			total_size += ARRAY_SIZE(plat_ina238_pdr_sensor_aux_names_table);
 		if (get_asic_board_id() == ASIC_BOARD_ID_EVB)
 			total_size += ARRAY_SIZE(plat_evb_pdr_sensor_aux_names_table);
 		break;
@@ -13222,11 +13238,14 @@ int plat_pldm_sensor_get_sensor_count(int thread_id)
 		break;
 	case VR_SENSOR_THREAD_ID:
 		count = ARRAY_SIZE(plat_pldm_sensor_vr_table);
+		if (get_board_rev_id() == REV_ID_EVT1A) {
+			count -= 2;
+		}
 		break;
 	case QUICK_VR_SENSOR_THREAD_ID:
 		count = ARRAY_SIZE(plat_pldm_sensor_quick_vr_table);
 		if (get_board_rev_id() == REV_ID_EVT1A)
-			count -= EVT1B_LATER_INA238_SENSOR_COUNT;
+			count -= 1;
 		break;
 	case UBC_SENSOR_THREAD_ID:
 		count = ARRAY_SIZE(plat_pldm_sensor_ubc_table);
@@ -13297,12 +13316,16 @@ void plat_load_numeric_sensor_pdr_table(PDR_numeric_sensor *numeric_sensor_table
 
 void plat_load_aux_sensor_names_pdr_table(PDR_sensor_auxiliary_names *aux_sensor_name_table)
 {
-	memcpy(aux_sensor_name_table, &plat_pdr_sensor_aux_names_table,
+	size_t common_count = ARRAY_SIZE(plat_pdr_sensor_aux_names_table);
+
+	memcpy(aux_sensor_name_table,
+	       plat_pdr_sensor_aux_names_table,
 	       sizeof(plat_pdr_sensor_aux_names_table));
-	if (get_asic_board_id() == ASIC_BOARD_ID_EVB)
-		memcpy(&aux_sensor_name_table[ARRAY_SIZE(plat_pdr_sensor_aux_names_table)],
-		       plat_evb_pdr_sensor_aux_names_table,
+
+	if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
+		memcpy(&aux_sensor_name_table[common_count], plat_evb_pdr_sensor_aux_names_table,
 		       sizeof(plat_evb_pdr_sensor_aux_names_table));
+	}
 }
 
 uint16_t plat_pdr_entity_aux_names_table_size = 0;
