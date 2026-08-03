@@ -111,7 +111,7 @@ const cpld_bit_name_table_t cpld_bit_name_table[] = {
 		  "VDDQ_01234567_SMBALRT_N",
 		  "MAX_N_SMBALRT_N",
 		  "VDDQC_VDDQL_0246_SMBALRT_N",
-		  "MAX_M_VDDQC_1357_SMBALRT_N",
+		  "MAX_M_VDDC_1357_SMBALRT_N",
 		  "OWL_W_SMBALRT_N",
 		  "OWL_E_SMBALRT_N",
 		  "NUWA1_VDD_ALERT_R_N",
