@@ -13312,16 +13312,30 @@ void plat_load_numeric_sensor_pdr_table(PDR_numeric_sensor *numeric_sensor_table
 	}
 }
 
-void plat_load_aux_sensor_names_pdr_table(PDR_sensor_auxiliary_names *aux_sensor_name_table)
+void plat_load_aux_sensor_names_pdr_table(
+	PDR_sensor_auxiliary_names *aux_sensor_name_table)
 {
-	size_t common_count = ARRAY_SIZE(plat_pdr_sensor_aux_names_table);
+	if (aux_sensor_name_table == NULL) {
+		LOG_ERR("aux_sensor_name_table is NULL");
+		return;
+	}
 
-	memcpy(aux_sensor_name_table,
-	       plat_pdr_sensor_aux_names_table,
+	size_t offset = 0;
+
+	memcpy(&aux_sensor_name_table[offset], plat_pdr_sensor_aux_names_table,
 	       sizeof(plat_pdr_sensor_aux_names_table));
 
+	offset += ARRAY_SIZE(plat_pdr_sensor_aux_names_table);
+
+	if (get_board_rev_id() >= REV_ID_EVT1B) {
+		memcpy(&aux_sensor_name_table[offset], plat_ina238_pdr_sensor_aux_names_table,
+		       sizeof(plat_ina238_pdr_sensor_aux_names_table));
+
+		offset += ARRAY_SIZE(plat_ina238_pdr_sensor_aux_names_table);
+	}
+
 	if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
-		memcpy(&aux_sensor_name_table[common_count], plat_evb_pdr_sensor_aux_names_table,
+		memcpy(&aux_sensor_name_table[offset], plat_evb_pdr_sensor_aux_names_table,
 		       sizeof(plat_evb_pdr_sensor_aux_names_table));
 	}
 }
