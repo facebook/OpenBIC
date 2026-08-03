@@ -9051,7 +9051,6 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.init_args = &ina238_pwr_w_init_args,
 			.post_sensor_read_hook = post_common_sensor_read,
 		},
-		.poll_interval_ms = 1000, //1000ms
 	},
 	{
 		{
@@ -9122,7 +9121,6 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.init_args = &ina238_pwr_w_init_args,
 			.post_sensor_read_hook = post_common_sensor_read,
 		},
-		.poll_interval_ms = 1000, //1000ms
 	},
 };
 
