@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -28,7 +28,7 @@
 #define NUMERIC_PDR_SIZE 128
 #define MAX_AUX_SENSOR_NAME_LEN 50
 #define DISABLE_SENSOR_RESP_DURING_FW_UPDATE
-#define PLDM_MAX_DATA_SIZE 1450
+#define PLDM_MAX_DATA_SIZE 1500
 
 #define ENABLE_U50SU4P180PMDAFC
 #define ENABLE_MPC12109
