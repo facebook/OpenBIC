@@ -124,16 +124,20 @@ void clk_ctrl_get_cmds(const struct shell *shell, size_t argc, char **argv)
 {
 	/*
 	"clock_control get" will show below value
-	CLK_GEN_48M      1
-	CLK_BUF_100M     1
-	CLK_GEN_100M     1
-	CLK_GEN_312_5M     1
+	CLK_GEN_48M      enable
+	CLK_BUF_100M     enable
+	CLK_GEN_100M     enable
+	CLK_GEN_312_5M   enable
 	*/
+	shell_print(shell, "%-20s %-12s", "Clock Name", "Status");
 	for (int i = 0; i < sizeof(clcok_control_table) / sizeof(power_good_status); i++) {
 		uint8_t read_value = 0;
 		plat_read_cpld(clcok_control_table[i].cpld_offsets, &read_value, 1);
-		shell_info(shell, "%-20s %d", clcok_control_table[i].power_rail_name,
-			   (read_value >> clcok_control_table[i].bit_loc) & 0x01);
+		shell_info(shell, "%-20s %-12s", clcok_control_table[i].power_rail_name,
+			   (read_value >> clcok_control_table[i].bit_loc & 1) ==
+					   clcok_control_table[i].enable_value ?
+				   "Enabled" :
+				   "Disabled");
 	}
 }
 
