@@ -558,7 +558,9 @@ void vr_power_reading(uint8_t *buffer, size_t buf_size)
 	[30:31] - P0V75_MAX_M_VDD (Unit: W)
 	[32:33] - P0V75_OWL_E_VDD (Unit: W)
 	[34:35] - P0V75_OWL_W_VDD (Unit: W)
-	[36:37] - PDB1_P52V_ASIC_SENSE_PWR (Unit: W) (Need BMC support)
+	[36:37] - PDB1_P52V_ASIC_SENSE_PWR (Unit: W)
+				EVT1A: Read from BMC through CPLD
+				EVT1B and later: Read from INA238 sensor cache
 	each data is 2 bytes
 	*/
 	float x = 0;
@@ -566,6 +568,7 @@ void vr_power_reading(uint8_t *buffer, size_t buf_size)
 	float chiplet1 = 0;
 	float nuwa0 = 0;
 	float nuwa1 = 0;
+	uint8_t board_rev_id = get_board_rev_id();
 
 	for (size_t i = 0; i < ARRAY_SIZE(vr_pwr_sensor_table); i++) {
 		if (get_asic_board_id() != ASIC_BOARD_ID_EVB &&
@@ -655,10 +658,19 @@ void vr_power_reading(uint8_t *buffer, size_t buf_size)
 			x += milivolt;
 		}
 	}
-	int reading;
-	get_cpld_polling_power_info(&reading);
-	uint16_t val = (uint16_t)reading;
-	memcpy(&buffer[36], &val, 2);
+
+	/* EVT1A PDB1 power comes from BMC through CPLD */
+	if (board_rev_id == REV_ID_EVT1A) {
+		int reading = 0;
+		get_cpld_polling_power_info(&reading);
+		uint16_t val = (uint16_t)reading;
+		memcpy(&buffer[36], &val, sizeof(val));
+	} else {
+		/* EVT1B and later PDB1 power comes from INA238 sensor cache */
+		int milivolt = get_cached_sensor_reading_by_sensor_number(SENSOR_NUM_INA238_PWR_W);
+		uint16_t val = (milivolt + 500) / 1000;
+		memcpy(&buffer[36], &val, sizeof(val));
+	}
 
 	chiplet0 = ((nuwa0 + 0.5 * x) + 500) / 1000;
 	chiplet1 = ((nuwa1 + 0.5 * x) + 500) / 1000;
