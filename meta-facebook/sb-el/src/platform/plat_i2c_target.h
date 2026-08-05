@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -71,6 +71,8 @@
 #define CONTROL_VOL_VR_ASIC_P1V8_VPP_HBM1357_REG 0x87
 #define CONTROL_VOL_VR_ASIC_P0V75_NUWA0_VDD_REG 0x88
 #define CONTROL_VOL_VR_ASIC_P0V75_NUWA1_VDD_REG 0x89
+#define CONTROL_VOL_VR_ASIC_P0V9_VDDQ_HBM0246_REG 0x8A
+#define CONTROL_VOL_VR_ASIC_P0V9_VDDQ_HBM1357_REG 0x8B
 #define LEVEL_1_PWR_ALERT_THRESHOLD_TIME_REG 0x90
 #define LEVEL_2_PWR_ALERT_THRESHOLD_TIME_REG 0x91
 #define LEVEL_3_PWR_ALERT_THRESHOLD_TIME_REG 0x92
