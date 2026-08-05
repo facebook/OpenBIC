@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -20,7 +20,7 @@
   DESCRIPTION: Provide i2c target EN/CFG table "I2C_TARGET_EN_TABLE[]/I2C_TARGET_CFG_TABLE[]" for init target config.
   AUTHOR: MouchenHung
   DATE/VERSION: 2021.11.26 - v1.1
-  Note: 
+  Note:
     (1) "plat_i2c_target.h" is included by "hal_i2c_target.h"
 */
 
@@ -498,6 +498,8 @@ voltage_rail_mapping_sensor voltage_rail_mapping_table[] = {
 	{ CONTROL_VOL_VR_ASIC_P1V8_VPP_HBM1357_REG, VR_RAIL_E_ASIC_P1V8_VPP_HBM1357 },
 	{ CONTROL_VOL_VR_ASIC_P0V75_NUWA0_VDD_REG, VR_RAIL_E_ASIC_P0V75_NUWA0_VDD },
 	{ CONTROL_VOL_VR_ASIC_P0V75_NUWA1_VDD_REG, VR_RAIL_E_ASIC_P0V75_NUWA1_VDD },
+	{ CONTROL_VOL_VR_ASIC_P0V9_VDDQ_HBM0246_REG, VR_RAIL_E_ASIC_P0V9_VDDQ_HBM0246 },
+	{ CONTROL_VOL_VR_ASIC_P0V9_VDDQ_HBM1357_REG, VR_RAIL_E_ASIC_P0V9_VDDQ_HBM1357 },
 };
 
 uint8_t get_vr_rail_by_control_vol_reg(uint8_t control_vol_reg)
@@ -904,7 +906,9 @@ void plat_master_write_thread_handler()
 			case CONTROL_VOL_VR_ASIC_P1V8_VPP_HBM0246_REG:
 			case CONTROL_VOL_VR_ASIC_P1V8_VPP_HBM1357_REG:
 			case CONTROL_VOL_VR_ASIC_P0V75_NUWA0_VDD_REG:
-			case CONTROL_VOL_VR_ASIC_P0V75_NUWA1_VDD_REG: {
+			case CONTROL_VOL_VR_ASIC_P0V75_NUWA1_VDD_REG:
+			case CONTROL_VOL_VR_ASIC_P0V9_VDDQ_HBM0246_REG:
+			case CONTROL_VOL_VR_ASIC_P0V9_VDDQ_HBM1357_REG: {
 				if (rlen != 3) {
 					LOG_ERR("Invalid length for offset(write): 0x%02x",
 						reg_offset);
@@ -950,6 +954,15 @@ void plat_master_write_thread_handler()
 					if (sensor_data->set_value < 750 ||
 					    sensor_data->set_value > 850) {
 						LOG_ERR("Set voltage out of range: %d mV(750~850)",
+							sensor_data->set_value);
+						free(sensor_data);
+						break;
+					}
+				} else if (reg_offset == CONTROL_VOL_VR_ASIC_P0V9_VDDQ_HBM0246_REG ||
+				    	   reg_offset == CONTROL_VOL_VR_ASIC_P0V9_VDDQ_HBM1357_REG) {
+					if (sensor_data->set_value < 850 ||
+					    sensor_data->set_value > 950) {
+						LOG_ERR("Set voltage out of range: %d mV(850~950)",
 							sensor_data->set_value);
 						free(sensor_data);
 						break;
@@ -1255,7 +1268,10 @@ static bool command_reply_data_handle(void *arg)
 			case CONTROL_VOL_VR_ASIC_P1V8_VPP_HBM0246_REG:
 			case CONTROL_VOL_VR_ASIC_P1V8_VPP_HBM1357_REG:
 			case CONTROL_VOL_VR_ASIC_P0V75_NUWA0_VDD_REG:
-			case CONTROL_VOL_VR_ASIC_P0V75_NUWA1_VDD_REG: {
+			case CONTROL_VOL_VR_ASIC_P0V75_NUWA1_VDD_REG:
+			case CONTROL_VOL_VR_ASIC_P0V9_VDDQ_HBM0246_REG:
+			case CONTROL_VOL_VR_ASIC_P0V9_VDDQ_HBM1357_REG:
+			{
 				uint8_t rail = get_vr_rail_by_control_vol_reg(reg_offset);
 				uint16_t vout = 0xFFFF;
 				if (!voltage_command_setting_get(rail, &vout)) {
@@ -1273,6 +1289,15 @@ static bool command_reply_data_handle(void *arg)
 						// need to minus vout offset(read back from VR)
 						vout -= vout_offset_value;
 					}
+				}
+				if(reg_offset == CONTROL_VOL_VR_ASIC_P0V9_VDDQ_HBM0246_REG ||
+				   reg_offset == CONTROL_VOL_VR_ASIC_P0V9_VDDQ_HBM1357_REG) {
+					if (!voltage_offset_get(rail, &vout_offset_value)) {
+						LOG_ERR("Failed to get vout offset for reg_offset 0x%02x", reg_offset);
+							break;
+						}
+					// need to minus vout offset(read back from VR)
+					vout -= vout_offset_value;
 				}
 				memcpy(data->target_rd_msg.msg, &vout, sizeof(vout));
 				data->target_rd_msg.msg_length = 2;

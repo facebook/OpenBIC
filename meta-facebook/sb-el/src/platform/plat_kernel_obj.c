@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -15,6 +15,7 @@
  */
 
 #include "plat_kernel_obj.h"
+#include "plat_user_setting.h"
 #include "plat_gpio.h"
 #include "plat_log.h"
 #include "plat_hook.h"
@@ -32,6 +33,9 @@ static struct k_sem cpld_polling_sem; // "all_vr_pm_alert_sem" in rainbow
 
 /* mutex for pwrlevel */
 static struct k_mutex pwrlevel_mutex;
+
+void get_vr_vout_handler(struct k_work *work);
+K_WORK_DEFINE(vr_vout_work, get_vr_vout_handler);
 
 void plat_ragular_cpld_polling_sem_handler(struct k_timer *timer)
 {
@@ -55,6 +59,11 @@ void plat_trigger_cpld_polling(void)
 	k_sem_give(&cpld_polling_sem);
 }
 
+void get_vr_vout_handler(struct k_work *work)
+{
+	vr_vout_default_settings_init();
+	vr_vout_user_settings_init();
+}
 
 /* work for checking CLK status */
 #define CLK_APLL_CHECK_INTERVAL K_SECONDS(10)
@@ -97,12 +106,46 @@ K_TIMER_DEFINE(check_ubc_delayed_timer, plat_check_ubc_delayed_timer_handler, NU
 
 void plat_check_ubc_delayed_timer_handler(struct k_timer *timer)
 {
+	ARG_UNUSED(timer);
+
 	/* FM_PLD_UBC_EN_R
 	 * 1 -> UBC is enabled
 	 * 0 -> UBC is disabled
 	 */
 	bool is_ubc_enabled = (gpio_get(FM_PLD_UBC_EN_R) == GPIO_HIGH);
+	bool is_dc_on = is_mb_dc_on();
+
+	if (is_ubc_enabled) {
+		if (is_dc_on != is_ubc_enabled) {
+			//send event to bmc
+			uint16_t error_code = (POWER_ON_SEQUENCE_TRIGGER_CAUSE << 13);
+			error_log_event(error_code, LOG_ASSERT);
+			LOG_ERR("UBC enabled but DC is off, error_code: 0x%x", error_code);
+
+			struct pldm_addsel_data sel_msg = { 0 };
+			sel_msg.assert_type = LOG_ASSERT;
+			sel_msg.event_type = ARKE_FAULT;
+			sel_msg.event_data_1 = ARKE_POWER_ON_SEQUENCE_FAIL;
+
+			if (PLDM_SUCCESS != send_event_log_to_bmc(sel_msg)) {
+				LOG_ERR("Send SEL fail: 0x%x 0x%x 0x%x 0x%x", sel_msg.assert_type,
+					sel_msg.event_data_1, sel_msg.event_data_2,
+					sel_msg.event_data_3);
+			} else {
+				LOG_INF("Send SEL: 0x%x 0x%x 0x%x 0x%x", sel_msg.assert_type,
+					sel_msg.event_data_1, sel_msg.event_data_2,
+					sel_msg.event_data_3);
+			}
+		}
+	}
+
 	ubc_status = is_ubc_enabled;
+
+	LOG_DBG("UBC enabled delayed status: %d", ubc_status);
+
+	if (is_ubc_enabled == true) {
+		k_work_submit(&vr_vout_work);
+	}
 }
 
 void plat_update_ubc_status(void)
