@@ -958,8 +958,10 @@ void plat_master_write_thread_handler()
 						free(sensor_data);
 						break;
 					}
-				} else if (reg_offset == CONTROL_VOL_VR_ASIC_P0V9_VDDQ_HBM0246_REG ||
-				    	   reg_offset == CONTROL_VOL_VR_ASIC_P0V9_VDDQ_HBM1357_REG) {
+				} else if (reg_offset ==
+						   CONTROL_VOL_VR_ASIC_P0V9_VDDQ_HBM0246_REG ||
+					   reg_offset ==
+						   CONTROL_VOL_VR_ASIC_P0V9_VDDQ_HBM1357_REG) {
 					if (sensor_data->set_value < 850 ||
 					    sensor_data->set_value > 950) {
 						LOG_ERR("Set voltage out of range: %d mV(850~950)",
@@ -1079,6 +1081,20 @@ void plat_master_write_thread_handler()
 					flag = 1;
 					break;
 				}
+			} break;
+			case INA238_POLLING_RATE_REG: {
+				if (rlen != 2) {
+					LOG_ERR("Invalid length for offset(write): 0x%02x",
+						reg_offset);
+					break;
+				}
+
+				if (rdata[1] > 2) {
+					LOG_ERR("INA238 polling rate type should be 0-2");
+					break;
+				}
+
+				set_ina238_polling_rate_type(rdata[1]);
 			} break;
 			case SET_SENSOR_POLLING_COMMAND_REG: {
 				if (rlen != 10) {
@@ -1270,8 +1286,7 @@ static bool command_reply_data_handle(void *arg)
 			case CONTROL_VOL_VR_ASIC_P0V75_NUWA0_VDD_REG:
 			case CONTROL_VOL_VR_ASIC_P0V75_NUWA1_VDD_REG:
 			case CONTROL_VOL_VR_ASIC_P0V9_VDDQ_HBM0246_REG:
-			case CONTROL_VOL_VR_ASIC_P0V9_VDDQ_HBM1357_REG:
-			{
+			case CONTROL_VOL_VR_ASIC_P0V9_VDDQ_HBM1357_REG: {
 				uint8_t rail = get_vr_rail_by_control_vol_reg(reg_offset);
 				uint16_t vout = 0xFFFF;
 				if (!voltage_command_setting_get(rail, &vout)) {
@@ -1290,12 +1305,13 @@ static bool command_reply_data_handle(void *arg)
 						vout -= vout_offset_value;
 					}
 				}
-				if(reg_offset == CONTROL_VOL_VR_ASIC_P0V9_VDDQ_HBM0246_REG ||
-				   reg_offset == CONTROL_VOL_VR_ASIC_P0V9_VDDQ_HBM1357_REG) {
+				if (reg_offset == CONTROL_VOL_VR_ASIC_P0V9_VDDQ_HBM0246_REG ||
+				    reg_offset == CONTROL_VOL_VR_ASIC_P0V9_VDDQ_HBM1357_REG) {
 					if (!voltage_offset_get(rail, &vout_offset_value)) {
-						LOG_ERR("Failed to get vout offset for reg_offset 0x%02x", reg_offset);
-							break;
-						}
+						LOG_ERR("Failed to get vout offset for reg_offset 0x%02x",
+							reg_offset);
+						break;
+					}
 					// need to minus vout offset(read back from VR)
 					vout -= vout_offset_value;
 				}
@@ -1398,6 +1414,12 @@ static bool command_reply_data_handle(void *arg)
 				// LOG_DBG("TRAY_INFO_REG: slot=0x%02x, tray=0x%02x", slot, tray);
 				// LOG_HEXDUMP_DBG(data->target_rd_msg.msg,
 				// 		data->target_rd_msg.msg_length, "tray info");
+			} break;
+			case INA238_POLLING_RATE_REG: {
+				uint8_t type = get_ina238_polling_rate_type();
+				data->target_rd_msg.msg[0] = type;
+				data->target_rd_msg.msg_length = 1;
+				LOG_INF("INA238 polling rate read successfully: type=%u", type);
 			} break;
 			default:
 				LOG_ERR("Unknown reg offset: 0x%02x", reg_offset);

@@ -38,6 +38,7 @@ static bool plat_sensor_temp_polling_enable_flag = true;
 static bool plat_sensor_vr_polling_enable_flag = true;
 static uint8_t plat_sensor_one_step_power_enable_flag = 0;
 uint8_t pwr_capping_pollng_rate_type = 0;
+static uint8_t ina238_polling_rate_type = 0;
 
 static ina238_init_arg ina238_pwr_w_init_args = {
 	.is_init = false,
@@ -51,7 +52,8 @@ static struct pldm_sensor_thread pal_pldm_sensor_thread[MAX_SENSOR_THREAD_ID] = 
 	// thread id, thread name
 	{ TEMP_SENSOR_THREAD_ID, "TEMP_SENSOR_THREAD" },
 	{ VR_SENSOR_THREAD_ID, "VR_PLDM_SENSOR_THREAD" },
-	{ QUICK_VR_SENSOR_THREAD_ID, "QUICK_VR_PLDM_SENSOR_THREAD", QUICK_POLL_INTERVAL, true },
+	{ QUICK_VR_SENSOR_THREAD_ID, "QUICK_VR_PLDM_SENSOR_THREAD", QUICK_POLL_INTERVAL, true,
+	  true },
 	{ UBC_SENSOR_THREAD_ID, "UBC_PLDM_SENSOR_THREAD" },
 	{ EVB_SENSOR_THREAD_ID, "EVB_SENSOR_THREAD" },
 };
@@ -9851,7 +9853,7 @@ pldm_sensor_info plat_pldm_sensor_quick_vr_table[] = {
 			.init_args = &ina238_pwr_w_init_args,
 			.post_sensor_read_hook = post_common_sensor_read,
 		},
-		.poll_interval_ms = 1000, //1000ms
+		.poll_interval_ms = 10, //10ms
 	},
 };
 
@@ -13923,6 +13925,40 @@ uint8_t get_pwr_capping_polling_rate_type()
 uint16_t get_quick_nuwa_polling_rate()
 {
 	return pwr_capping_setting_table[0].case_time_ms[pwr_capping_pollng_rate_type];
+}
+
+void set_ina238_polling_rate_type(uint8_t type)
+{
+	static const uint16_t polling_interval_ms[] = { 10, 5, 1 };
+
+	if (type >= ARRAY_SIZE(polling_interval_ms)) {
+		LOG_ERR("INA238 polling rate type should be 0-2");
+		return;
+	}
+
+	pldm_sensor_info *vr_table = plat_pldm_sensor_load(QUICK_VR_SENSOR_THREAD_ID);
+	int count = plat_pldm_sensor_get_sensor_count(QUICK_VR_SENSOR_THREAD_ID);
+	if (vr_table == NULL || count < 0) {
+		LOG_ERR("Cannot get quick VR table for INA238 polling rate");
+		return;
+	}
+
+	for (uint8_t i = 0; i < count; i++) {
+		if (vr_table[i].pldm_sensor_cfg.num == SENSOR_NUM_INA238_PWR_W) {
+			vr_table[i].poll_interval_ms = polling_interval_ms[type];
+			ina238_polling_rate_type = type;
+			LOG_INF("INA238 polling rate set successfully: type=%u, interval=%u ms",
+				type, polling_interval_ms[type]);
+			return;
+		}
+	}
+
+	LOG_ERR("Cannot find INA238 power sensor");
+}
+
+uint8_t get_ina238_polling_rate_type()
+{
+	return ina238_polling_rate_type;
 }
 
 void leak_sensor_handler(void)
