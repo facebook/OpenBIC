@@ -957,3 +957,15 @@ uint8_t get_dimm_status(uint8_t dimm_index)
 
 	return sensor_config[sensor_index].cache_status;
 }
+
+bool plat_sensor_clamp_negative_reading(uint8_t pmbus_cmd)
+{
+	switch (pmbus_cmd) {
+	case PMBUS_READ_IOUT:
+	case PMBUS_READ_POUT:
+		return true;
+
+	default:
+		return false;
+	}
+}
