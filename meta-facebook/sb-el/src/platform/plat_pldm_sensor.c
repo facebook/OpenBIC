@@ -36,6 +36,7 @@ static bool plat_sensor_polling_enable_flag = true;
 static bool plat_sensor_ubc_polling_enable_flag = true;
 static bool plat_sensor_temp_polling_enable_flag = true;
 static bool plat_sensor_vr_polling_enable_flag = true;
+static bool plat_sensor_ina238_polling_enable_flag = true;
 static uint8_t plat_sensor_one_step_power_enable_flag = 0;
 uint8_t pwr_capping_pollng_rate_type = 0;
 static uint8_t ina238_polling_rate_type = 0;
@@ -9046,7 +9047,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.port = I2C_BUS10,
 			.target_addr = INA238_ADDR_0,
 			.offset = INA238_VBUS_OFFSET,
-			.access_checker = is_ubc_access,
+			.access_checker = is_ina238_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
@@ -9116,7 +9117,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			.port = I2C_BUS10,
 			.target_addr = INA238_ADDR_0,
 			.offset = INA238_CUR_OFFSET,
-			.access_checker = is_ubc_access,
+			.access_checker = is_ina238_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
@@ -9846,7 +9847,7 @@ pldm_sensor_info plat_pldm_sensor_quick_vr_table[] = {
 			.port = I2C_BUS10,
 			.target_addr = INA238_ADDR_0,
 			.offset = INA238_PWR_OFFSET,
-			.access_checker = is_ubc_access,
+			.access_checker = is_ina238_access,
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
@@ -13721,6 +13722,11 @@ void set_plat_sensor_ubc_polling_enable_flag(bool value)
 	plat_sensor_ubc_polling_enable_flag = value;
 }
 
+void set_plat_sensor_ina238_polling_enable_flag(bool value)
+{
+	plat_sensor_ina238_polling_enable_flag = value;
+}
+
 void set_plat_sensor_temp_polling_enable_flag(bool value)
 {
 	plat_sensor_temp_polling_enable_flag = value;
@@ -13744,6 +13750,11 @@ bool get_plat_sensor_polling_enable_flag()
 bool get_plat_sensor_ubc_polling_enable_flag()
 {
 	return plat_sensor_ubc_polling_enable_flag;
+}
+
+bool get_plat_sensor_ina238_polling_enable_flag()
+{
+	return plat_sensor_ina238_polling_enable_flag;
 }
 
 bool get_plat_sensor_temp_polling_enable_flag()
@@ -13770,6 +13781,38 @@ bool is_ubc_access(uint8_t sensor_num)
 		return (is_dc_access(sensor_num) && get_plat_sensor_ubc_polling_enable_flag() &&
 			get_plat_sensor_polling_enable_flag() && is_update_state_idle());
 	}
+}
+
+bool is_ina238_access(uint8_t sensor_num)
+{
+	bool polling_access = false;
+
+	if (get_plat_sensor_one_step_enable_flag() == ONE_STEP_POWER_MAGIC_NUMBER) {
+		polling_access =
+			(get_plat_sensor_ina238_polling_enable_flag() &&
+			 get_plat_sensor_polling_enable_flag() && is_update_state_idle());
+	} else {
+		polling_access =
+			(is_dc_access(sensor_num) && get_plat_sensor_ina238_polling_enable_flag() &&
+			 get_plat_sensor_polling_enable_flag() && is_update_state_idle());
+	}
+
+	if (!polling_access)
+		return false;
+
+	sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_num);
+	if (cfg == NULL || cfg->target_addr == 0)
+		return false;
+
+	I2C_MSG msg = {
+		.bus = cfg->port,
+		.target_addr = cfg->target_addr,
+		.rx_len = 2,
+		.tx_len = 1,
+	};
+	msg.data[0] = INA238_DEVICE_ID_OFFSET;
+
+	return (i2c_master_read_without_error_log(&msg, 0) == 0);
 }
 
 bool is_temp_access(uint8_t cfg_idx)

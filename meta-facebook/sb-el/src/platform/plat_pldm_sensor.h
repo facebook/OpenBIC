@@ -349,15 +349,18 @@ void plat_pldm_sensor_get_pdr_numeric_sensor(int thread_id, int sensor_num,
 bool is_dc_access(uint8_t sensor_num);
 void set_plat_sensor_polling_enable_flag(bool value);
 void set_plat_sensor_ubc_polling_enable_flag(bool value);
+void set_plat_sensor_ina238_polling_enable_flag(bool value);
 void set_plat_sensor_temp_polling_enable_flag(bool value);
 void set_plat_sensor_vr_polling_enable_flag(bool value);
 void set_plat_sensor_one_step_enable_flag(uint8_t value);
 bool get_plat_sensor_polling_enable_flag();
 bool get_plat_sensor_ubc_polling_enable_flag();
+bool get_plat_sensor_ina238_polling_enable_flag();
 bool get_plat_sensor_temp_polling_enable_flag();
 bool get_plat_sensor_vr_polling_enable_flag();
 uint8_t get_plat_sensor_one_step_enable_flag();
 bool is_ubc_access(uint8_t sensor_num);
+bool is_ina238_access(uint8_t sensor_num);
 bool is_temp_access(uint8_t cfg_idx);
 bool is_vr_access(uint8_t sensor_num);
 size_t char16_strlen(const char16_t *str);
