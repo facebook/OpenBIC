@@ -1303,7 +1303,8 @@ bool vr_vout_default_settings_init(void)
 		uint16_t vout = 0;
 		if (!plat_get_vout_command(i, &vout)) {
 			LOG_ERR("Can't find vout default by rail index: %d", i);
-			return false;
+			voltage_command_get.vout[i] = 0xffff;
+			continue;
 		}
 		voltage_command_get.vout[i] = vout;
 	}
