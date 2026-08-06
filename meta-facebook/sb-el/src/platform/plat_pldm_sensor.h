@@ -375,6 +375,8 @@ void quick_sensor_poll_init();
 PDR_numeric_sensor *get_pdr_numeric_sensor_by_sensor_id(uint8_t sensor_id);
 uint8_t get_pwr_capping_polling_rate_type();
 uint16_t get_quick_nuwa_polling_rate();
+void set_ina238_polling_rate_type(uint8_t type);
+uint8_t get_ina238_polling_rate_type();
 // vr hot
 bool is_any_ot_warning_active(void);
 
