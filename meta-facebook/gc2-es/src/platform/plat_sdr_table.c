@@ -3195,10 +3195,10 @@ SDR_Full_sensor efuse_sdr_table[] = {
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
 		0xC2, // UNRT
-		0xBE, // UCT
+		0xBD, // UCT
 		0xBC, // UNCT
 		0x91, // LNRT
-		0x99, // LCT
+		0x9A, // LCT
 		0x9B, // LNCT
 		0x00, // positive-going threshold
 		0x00, // negative-going threshold
@@ -3256,7 +3256,7 @@ SDR_Full_sensor efuse_sdr_table[] = {
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
 		0xF7, // UNRT
-		0xE2, // UCT
+		0xE8, // UCT
 		0xD8, // UNCT
 		0x00, // LNRT
 		0x00, // LCT

@@ -252,6 +252,13 @@ void mp5998_plat_init()
 	msg = construct_i2c_message(bus, addr, 3, data, 0);
 	i2c_master_write(&msg, retry);
 
+	/* VIN_OFF */
+	data[0] = PMBUS_VIN_OFF; // 0x36
+	data[1] = init_args->vin_off & 0xFF;
+	data[2] = (init_args->vin_off >> 8) & 0xFF;
+	msg = construct_i2c_message(bus, addr, 3, data, 0);
+	i2c_master_write(&msg, retry);
+
 	/* fault_mask */
 	data[0] = 0xD4; // 0xD4
 	data[1] = init_args->fault_mask & 0xFF;
