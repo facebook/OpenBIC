@@ -1,0 +1,189 @@
+From 9f0bef6a9923177881493bc58ac76051f0d2e490 Mon Sep 17 00:00:00 2001
+From: Jim Liu <JJLIU0@nuvoton.com>
+Date: Fri, 24 Jul 2026 10:20:49 +0800
+Subject: [PATCH] drivers: i2c: npcm4xx: add per-speed SCL timing and runtime
+ speed shell command
+
+Allow the fast (400K) and fast-plus (1M) modes to use independent SCL
+low/high timing values so a single bus can switch speed at runtime and
+still apply the correct special timing for each speed.
+
+Signed-off-by: Jim Liu <JJLIU0@nuvoton.com>
+---
+ drivers/i2c/i2c_npcm4xx.c                 | 32 +++++++++++---
+ drivers/i2c/i2c_shell.c                   | 51 +++++++++++++++++++++++
+ dts/bindings/i2c/nuvoton,npcm4xx-i2c.yaml | 12 +++++-
+ 3 files changed, 88 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/i2c/i2c_npcm4xx.c b/drivers/i2c/i2c_npcm4xx.c
+index bf0cbb0b5a2..cbfa11b878a 100755
+--- a/drivers/i2c/i2c_npcm4xx.c
++++ b/drivers/i2c/i2c_npcm4xx.c
+@@ -75,8 +75,10 @@ struct i2c_npcm4xx_config {
+ 	uint32_t default_bitrate;
+ 	uint8_t irq;                    /* i2c controller irq */
+ 	uint32_t wait_free_time;
+-	uint32_t scllt;
+-	uint32_t sclht;
++	uint32_t scllt;        /* fast mode (400K) SCL low time, 0 = auto */
++	uint32_t sclht;        /* fast mode (400K) SCL high time, 0 = auto */
++	uint32_t scllt_fp;     /* fast-plus mode (1M) SCL low time, 0 = auto */
++	uint32_t sclht_fp;     /* fast-plus mode (1M) SCL high time, 0 = auto */
+ 	uint8_t multi_master;
+ };
+ 
+@@ -314,6 +316,8 @@ static void i2c_npcm4xx_set_baudrate(const struct device *dev, uint32_t bus_freq
+ 			inst->SMBnCTL4 = 7;
+ 		}
+ 	} else {
++		uint32_t use_scllt, use_sclht;
++
+ 		if (reg_tmp < 5) {
+ 			reg_tmp = 5;
+ 		} else if (reg_tmp > 255) {
+@@ -324,12 +328,26 @@ static void i2c_npcm4xx_set_baudrate(const struct device *dev, uint32_t bus_freq
+ 		inst->SMBnCTL3 |= BIT(NPCM4XX_SMBnCTL3_400K_MODE);
+ 		SET_FIELD(inst->SMBnCTL2, NPCM4XX_SMBnCTL2_SCLFRQ60_FIELD, 0);
+ 		SET_FIELD(inst->SMBnCTL3, NPCM4XX_SMBnCTL3_SCLFRQ87_FIELD, 0);
+-		if ( (config->scllt == 0) || (config->sclht == 0) ) {
++
++		/* Pick the SCL timing set for the requested speed:
++		 * fast-plus (> 400K, e.g. 1M) uses scllt_fp/sclht_fp,
++		 * fast (400K) uses scllt/sclht. A value of 0
++		 * means "not specified" and falls back to the computed value.
++		 */
++		if (bus_freq > 400000) {
++			use_scllt = config->scllt_fp;
++			use_sclht = config->sclht_fp;
++		} else {
++			use_scllt = config->scllt;
++			use_sclht = config->sclht;
++		}
++
++		if ( (use_scllt == 0) || (use_sclht == 0) ) {
+ 			inst->SMBnSCLHT = reg_tmp - 3;
+ 			inst->SMBnSCLLT = reg_tmp - 1;
+ 		} else {
+-			inst->SMBnSCLHT = config->sclht;
+-			inst->SMBnSCLLT = config->scllt;
++			inst->SMBnSCLHT = use_sclht;
++			inst->SMBnSCLLT = use_scllt;
+ 		}
+ 
+ 		/* Set HLDT (48MHz, HLDT = 17, Hold Time = 360ns) */
+@@ -1287,6 +1305,10 @@ static const struct i2c_driver_api i2c_npcm4xx_driver_api = {
+ 				  0),	 		                         \
+ 		.sclht = DT_INST_PROP_OR(inst, sclht,		                 \
+ 				  0),	 		                         \
++		.scllt_fp = DT_INST_PROP_OR(inst, scllt_fp,	                 \
++				  0),	 		                         \
++		.sclht_fp = DT_INST_PROP_OR(inst, sclht_fp,	                 \
++				  0),	 		                         \
+ 		.multi_master = DT_INST_PROP_OR(inst, multi_master, 0),          \
+ 	};									 \
+ 										 \
+diff --git a/drivers/i2c/i2c_shell.c b/drivers/i2c/i2c_shell.c
+index 489fd10125f..8cb33d65dac 100644
+--- a/drivers/i2c/i2c_shell.c
++++ b/drivers/i2c/i2c_shell.c
+@@ -18,6 +18,10 @@ LOG_MODULE_REGISTER(i2c_shell, CONFIG_LOG_DEFAULT_LEVEL);
+ 
+ /* Maximum bytes we can write or read at once */
+ #define MAX_I2C_BYTES 32
++#define ARGV_DEV        1
++#define ARGV_ADDR       2
++#define ARGV_REG        3
++
+ 
+ /*
+  * This sends I2C messages without any data (i.e. stop condition after
+@@ -276,6 +280,49 @@ static int cmd_i2c_read(const struct shell *shell, size_t argc, char **argv)
+ 	return 0;
+ }
+ 
++static int cmd_i2c_speed(const struct shell *shell_ctx, size_t argc, char **argv)
++{
++        char *s_dev_name = argv[ARGV_DEV];
++        const struct device *dev;
++        uint32_t dev_config = 0;
++        uint32_t freq;
++        uint32_t speed;
++        int ret;
++
++        dev = device_get_binding(s_dev_name);
++        if (!dev) {
++                shell_error(shell_ctx, "I2C: Device driver %s not found.",
++                            s_dev_name);
++                return -ENODEV;
++        }
++
++        /* Input is the bus frequency in Hz (e.g. 100000, 400000, 1000000) */
++        freq = strtoul(argv[ARGV_DEV + 1], NULL, 10);
++
++        if (freq <= 100000) {
++                speed = I2C_SPEED_STANDARD;
++        } else if (freq <= 400000) {
++                speed = I2C_SPEED_FAST;
++        } else if (freq <= 1000000) {
++                speed = I2C_SPEED_FAST_PLUS;
++        } else {
++                shell_error(shell_ctx,
++                            "I2C: Unsupported speed %u Hz (max 1000000 Hz)",
++                            freq);
++                return -EINVAL;
++        }
++
++        dev_config = I2C_MODE_MASTER | I2C_SPEED_SET(speed);
++		ret = i2c_configure(dev, dev_config);
++        if (ret < 0) {
++                shell_error(shell_ctx, "I2C: Failed to configure device: %s",
++                            s_dev_name);
++                return -EIO;
++        }
++        return 0;
++}
++
++
+ static void device_name_get(size_t idx, struct shell_static_entry *entry);
+ 
+ SHELL_DYNAMIC_CMD_CREATE(dsub_device_name, device_name_get);
+@@ -309,6 +356,10 @@ SHELL_STATIC_SUBCMD_SET_CREATE(sub_i2c_cmds,
+ 			       SHELL_CMD_ARG(write_byte, &dsub_device_name,
+ 					     "Write a byte to an I2C device",
+ 					     cmd_i2c_write_byte, 4, 1),
++			       SHELL_CMD_ARG(speed, &dsub_device_name,
++					     "Configure I2C bus speed\n"
++					     "Usage: speed <device> <freq_hz>",
++					     cmd_i2c_speed, 3, 0),
+ 			       SHELL_SUBCMD_SET_END     /* Array terminated. */
+ 			       );
+ 
+diff --git a/dts/bindings/i2c/nuvoton,npcm4xx-i2c.yaml b/dts/bindings/i2c/nuvoton,npcm4xx-i2c.yaml
+index 680c08cba8f..0a1ff632f4e 100644
+--- a/dts/bindings/i2c/nuvoton,npcm4xx-i2c.yaml
++++ b/dts/bindings/i2c/nuvoton,npcm4xx-i2c.yaml
+@@ -21,11 +21,19 @@ properties:
+     scllt:
+         type: int
+         required: false
+-        description: value from 5 to 255
++        description: fast mode (400K) SCL low time, value from 5 to 255
+     sclht:
+         type: int
+         required: false
+-        description: value from 5 to 255
++        description: fast mode (400K) SCL high time, value from 5 to 255
++    scllt_fp:
++        type: int
++        required: false
++        description: fast-plus mode (1M) SCL low time, value from 5 to 255
++    sclht_fp:
++        type: int
++        required: false
++        description: fast-plus mode (1M) SCL high time, value from 5 to 255
+     multi-master:
+         type: int
+         required: false
+-- 
+2.34.1
+
