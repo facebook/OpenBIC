@@ -86,8 +86,9 @@ void pal_post_init()
 	init_thermal_polling();
 
 	init_vr_test_mode_polling();
-	vr_vout_offset_get_init();
+
 	if (is_mb_dc_on() == true) {
+		vr_vout_offset_get_init();
 		//set perm vout command when DC on
 		if (!set_all_vout_command())
 			LOG_ERR("set all vout command fail!");
