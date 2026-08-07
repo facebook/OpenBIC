@@ -119,10 +119,6 @@
     status = "disabled";
 };
 
-&i3c4 {
-    status = "disabled";
-};
-
 &peci0 {
     status = "disabled";
 };
@@ -168,10 +164,6 @@
        fiu-prescaler = <4>; /* FIU_CLK runs at 24MHz */
 };
 
-&i3c5 {
-	status = "disabled";
-};
-
 &pwm1 {
     status = "disabled";
 };
@@ -194,4 +186,28 @@
 
 &gpio7 {
     label = "GPIO_7";
+};
+
+&i3c0 {
+	status = "disabled";
+};
+
+&i3c1 {
+	status = "disabled";
+};
+
+&i3c2 {
+	status = "disabled";
+};
+
+&i3c3 {
+	status = "disabled";
+};
+
+&i3c4 {
+    status = "disabled";
+};
+
+&i3c5 {
+	status = "disabled";
 };
