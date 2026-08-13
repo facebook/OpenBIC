@@ -1301,13 +1301,13 @@ void plat_reset_prepare()
 				     "I2C_6", "I2C_7", "I2C_8", "I2C_9", "I2C_10", "I2C_11" };
 
 	for (int i = 0; i < ARRAY_SIZE(i2c_labels); i++) {
-		const struct device *i2c_dev = device_get_binding(i2c_labels[i]);
-		if (!i2c_dev) {
+		const struct device *check_i2c_dev_by_bus = device_get_binding(i2c_labels[i]);
+		if (!check_i2c_dev_by_bus) {
 			LOG_ERR("Failed to get binding for %s", i2c_labels[i]);
 			continue;
 		}
 
-		int ret = i2c_npcm_device_disable(i2c_dev);
+		int ret = i2c_npcm_device_disable(check_i2c_dev_by_bus);
 		if (ret) {
 			LOG_ERR("Failed to disable %s (ret=%d)", i2c_labels[i], ret);
 		} else {
