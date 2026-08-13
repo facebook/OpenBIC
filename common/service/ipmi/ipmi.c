@@ -128,7 +128,7 @@ static uint8_t send_msg_by_pldm(ipmi_msg_cfg *msg_cfg)
 			"mctp ext param");
 
 	/* get the pldm hdr for response */
-	pldm_hdr *hdr = (pldm_hdr *)(msg_cfg->buffer.data + pldm_hdr_ofs);
+	const pldm_hdr *hdr = (const pldm_hdr *)(msg_cfg->buffer.data + pldm_hdr_ofs);
 	LOG_HEXDUMP_DBG(msg_cfg->buffer.data + pldm_hdr_ofs, sizeof(pldm_hdr), "pldm header");
 
 	/* make response data */

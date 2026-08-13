@@ -687,7 +687,7 @@ uint16_t pldm_fw_update_read(void *mctp_p, enum pldm_firmware_update_commands cm
 	CHECK_NULL_ARG_WITH_RETURN(ext_params, 0);
 
 	pldm_msg msg = { 0 };
-	mctp_ext_params *extra_data = (mctp_ext_params *)ext_params;
+	const mctp_ext_params *extra_data = (const mctp_ext_params *)ext_params;
 
 	msg.ext_params = *extra_data;
 
@@ -1278,7 +1278,8 @@ static uint8_t activate_firmware(void *mctp_inst, uint8_t *buf, uint16_t len, ui
 	CHECK_NULL_ARG_WITH_RETURN(resp_len, PLDM_ERROR);
 	CHECK_NULL_ARG_WITH_RETURN(ext_params, PLDM_ERROR);
 
-	struct pldm_activate_firmware_req *req_p = (struct pldm_activate_firmware_req *)buf;
+	const struct pldm_activate_firmware_req *req_p =
+		(const struct pldm_activate_firmware_req *)buf;
 	struct pldm_activate_firmware_resp *resp_p = (struct pldm_activate_firmware_resp *)resp;
 
 	*resp_len = 1;
@@ -1444,7 +1445,7 @@ static uint8_t get_firmware_parameter(void *mctp_inst, uint8_t *buf, uint16_t le
 		(struct pldm_get_firmware_parameters_resp *)resp;
 
 	*resp_len = 1;
-	uint8_t *resp_end = resp + PLDM_MAX_DATA_SIZE;
+	const uint8_t *resp_end = resp + PLDM_MAX_DATA_SIZE;
 	if (len != 0) {
 		resp_p->completion_code = PLDM_ERROR_INVALID_LENGTH;
 		return PLDM_SUCCESS;
@@ -1744,7 +1745,7 @@ uint8_t fill_descriptor_into_buf(struct pldm_descriptor_string *descriptor, uint
 	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
 	CHECK_NULL_ARG_WITH_RETURN(fill_length, PLDM_ERROR);
 
-	char data[2];
+	char data[3] = { 0 };
 	uint8_t val = 0;
 	uint8_t index = 0;
 	uint8_t data_ptr[sizeof(struct pldm_descriptor_tlv) +

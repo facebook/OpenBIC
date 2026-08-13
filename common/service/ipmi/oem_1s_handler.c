@@ -1573,10 +1573,10 @@ __weak void OEM_1S_READ_BIC_REGISTER(ipmi_msg *msg)
 		msg->completion_code = CC_INVALID_LENGTH;
 		return;
 	}
-	uint32_t *addr = (uint32_t *)(msg->data[0] | (msg->data[1] << 8) | (msg->data[2] << 16) |
-				      (msg->data[3] << 24));
+	const uint32_t *addr = (const uint32_t *)(msg->data[0] | (msg->data[1] << 8) |
+						  (msg->data[2] << 16) | (msg->data[3] << 24));
 	uint8_t read_len = msg->data[4];
-	memcpy(&msg->data[0], (uint8_t *)addr, read_len);
+	memcpy(&msg->data[0], addr, read_len);
 
 	msg->data_len = read_len;
 	msg->completion_code = CC_SUCCESS;
@@ -2131,7 +2131,7 @@ __weak void OEM_1S_GET_SDR(ipmi_msg *msg)
 	uint16_t next_record_ID = 0;
 	uint16_t rsv_ID = 0, record_ID = 0;
 	uint8_t offset = 0, req_len = 0;
-	uint8_t *table_ptr = NULL;
+	const uint8_t *table_ptr = NULL;
 	uint8_t rsv_table_index = RSV_TABLE_INDEX_0;
 
 	// Config D: slot1 and slot3 need to use different reservation id
