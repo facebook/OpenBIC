@@ -160,6 +160,7 @@ const char *const sensor_type_name[] = {
 	sensor_name_to_num(pex90144)
 	sensor_name_to_num(octeon)
 	sensor_name_to_num(tps25990)
+	sensor_name_to_num(raa229140a)
 };
 // clang-format on
 
@@ -401,6 +402,9 @@ SENSOR_DRIVE_INIT_DECLARE(octeon);
 #endif
 #ifndef DISABLE_TPS25990
 SENSOR_DRIVE_INIT_DECLARE(tps25990);
+#endif
+#ifdef ENABLE_RAA229140a
+SENSOR_DRIVE_INIT_DECLARE(raa229140a);
 #endif
 
 // The sequence needs to same with SENSOR_DEV ID
@@ -808,6 +812,11 @@ sensor_drive_api sensor_drive_tbl[] = {
 	SENSOR_DRIVE_TYPE_INIT_MAP(tps25990),
 #else
 	SENSOR_DRIVE_TYPE_UNUSE(tps25990),
+#endif
+#ifdef ENABLE_RAA229140a
+	SENSOR_DRIVE_TYPE_INIT_MAP(raa229140a),
+#else
+	SENSOR_DRIVE_TYPE_UNUSE(raa229140a),
 #endif
 
 };
