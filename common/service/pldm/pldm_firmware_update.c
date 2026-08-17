@@ -31,6 +31,7 @@
 #include "pt5161l.h"
 #include "mp2985.h"
 #include "raa229621.h"
+#include "raa229140a.h"
 #include "mpq8746.h"
 #include "mp289x.h"
 #include "tps53689.h"
@@ -51,7 +52,7 @@ LOG_MODULE_DECLARE(pldm);
 #define UPDATE_REQUEST_DATA_MAX_RETRY_COUNT 3
 
 #define GET_EEPROM_SLAVE_MASK(offset) (((offset) >> 16) & 0xF)
-#define GET_EERPOM_OFFSET(offset) ((offset) & 0xFFFF)
+#define GET_EERPOM_OFFSET(offset) ((offset)&0xFFFF)
 
 #ifndef PLDM_UPDATE_DELAY_AFTER_POST_UPDATE
 #define PLDM_UPDATE_DELAY_AFTER_POST_UPDATE 3000
@@ -296,8 +297,16 @@ uint8_t pldm_vr_update(void *fw_update_param)
 		if (raa229621_fwupdate(p->bus, p->addr, hex_buff, fw_update_cfg.image_size) ==
 		    false)
 			goto exit;
-	} else if (!strncmp(p->comp_version_str, KEYWORD_VR_MPQ8746,
-			    ARRAY_SIZE(KEYWORD_VR_MPQ8746) - 1)) {
+	}
+#ifdef ENABLE_RAA229140a
+	else if (!strncmp(p->comp_version_str, KEYWORD_VR_RAA229140A,
+			  ARRAY_SIZE(KEYWORD_VR_RAA229140A) - 1)) {
+		if (!raa229140a_fwupdate(p->bus, p->addr, hex_buff, fw_update_cfg.image_size))
+			goto exit;
+	}
+#endif
+	else if (!strncmp(p->comp_version_str, KEYWORD_VR_MPQ8746,
+			  ARRAY_SIZE(KEYWORD_VR_MPQ8746) - 1)) {
 		if (mpq8746_fwupdate(p->bus, p->addr, hex_buff, fw_update_cfg.image_size) == false)
 			goto exit;
 	} else if ((!strncmp(p->comp_version_str, KEYWORD_VR_MP2898,
