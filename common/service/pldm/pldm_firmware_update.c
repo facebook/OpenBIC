@@ -41,6 +41,7 @@
 #include "mp2988.h"
 #include "mp29816a.h"
 #include "raa228249.h"
+#include "mp29526.h"
 
 LOG_MODULE_DECLARE(pldm);
 
@@ -214,6 +215,30 @@ uint8_t pldm_pcie_switch_update(void *fw_update_param)
 	return pldm_fw_update(fw_update_param, pos);
 }
 
+/*
+ * VRs whose images are too large to buffer whole in RAM stream their PLDM
+ * data chunks incrementally instead of going through the hex_buff path
+ * below. Add new VRs here as more of them need this treatment.
+ *
+ * Sets *handled to true iff comp_version_str matched one of them, in which
+ * case the returned status is the final result for this pldm_vr_update()
+ * call (0 = ok/continue, 1 = failure) and the caller must return it as-is.
+ */
+static uint8_t pldm_vr_update_streaming(pldm_fw_update_param_t *p, bool *handled)
+{
+	*handled = false;
+
+#ifdef ENABLE_MP29526
+	if (!strncmp(p->comp_version_str, KEYWORD_VR_MP29526,
+		     ARRAY_SIZE(KEYWORD_VR_MP29526) - 1)) {
+		*handled = true;
+		return mp29526_pldm_update(p);
+	}
+#endif
+
+	return 0;
+}
+
 uint8_t pldm_vr_update(void *fw_update_param)
 {
 	CHECK_NULL_ARG_WITH_RETURN(fw_update_param, 1);
@@ -221,6 +246,11 @@ uint8_t pldm_vr_update(void *fw_update_param)
 	pldm_fw_update_param_t *p = (pldm_fw_update_param_t *)fw_update_param;
 
 	CHECK_NULL_ARG_WITH_RETURN(p->data, 1);
+
+	bool streaming_handled = false;
+	uint8_t streaming_ret = pldm_vr_update_streaming(p, &streaming_handled);
+	if (streaming_handled)
+		return streaming_ret;
 
 	uint8_t ret = 1;
 
