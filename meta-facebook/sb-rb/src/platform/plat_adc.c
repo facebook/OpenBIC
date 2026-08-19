@@ -348,9 +348,18 @@ void read_adc_info()
 	ad4058_write_reg(0xA8, 0x00, 0);
 	ad4058_read_reg(0x0C, 0, &value);
 	if (value == 0x56) {
-		adc_idx_read = 0;
+		// ad4058
+		adc_idx_read = ADC_TYPE_AD4058;
 	} else {
-		adc_idx_read = 1;
+		// check if is ads7066
+		ads7066_write_reg(0x3, 0x6, 0); // medha0
+		ads7066_read_reg(0x3, 0, &value);
+		if (value == 0x6) {
+			adc_idx_read = ADC_TYPE_ADS7066;
+		} else {
+			adc_idx_read = ADC_TYPE_UNKNOWN;
+			LOG_ERR("Unknown ADC type, read value: 0x%02x", value);
+		}
 	}
 }
 
