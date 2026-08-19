@@ -881,7 +881,7 @@ void error_log_event(uint16_t error_code, bool log_status)
 	}
 	// CLK bmc event will send if is the first time to assert
 	uint8_t bmc_err_type = 0;
-	uint8_t *send_err_data = err_log_data[fru_count].error_data;
+	const uint8_t *send_err_data = err_log_data[fru_count].error_data;
 	switch (error_code) {
 	case CLK_100MHZ_ERR_CODE:
 		bmc_err_type = CLOCK_APLL_UNLOCK_EVENT;
