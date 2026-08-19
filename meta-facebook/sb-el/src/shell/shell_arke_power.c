@@ -11,6 +11,7 @@
 #include "plat_class.h"
 #include "shell_arke_power.h"
 #include "plat_gpio.h"
+#include "plat_util.h"
 // arke power command
 
 #define enable 0x01
@@ -395,7 +396,7 @@ void cmd_arke_power_on(const struct shell *shell, size_t argc, char **argv)
 	if (!arke_power_control(1))
 		shell_warn(shell, "arke power on set cpld fail!");
 	// wait 1s
-	k_msleep(1500);
+	k_msleep(DC_ON_DELAY_TIMMING);
 	if (gpio_get(RST_ARKE_PWR_ON_PLD_R1_N) == GPIO_HIGH) {
 		shell_print(shell, "arke power on success!");
 		set_pwr_steps_on_flag(0);
@@ -410,7 +411,7 @@ void cmd_arke_power_off(const struct shell *shell, size_t argc, char **argv)
 	if (!arke_power_control(0))
 		shell_warn(shell, "arke power off set cpld fail!");
 	// wait 1s
-	k_msleep(1500);
+	k_msleep(DC_ON_DELAY_TIMMING);
 	if (gpio_get(FM_PLD_UBC_EN_R) == GPIO_LOW) {
 		shell_print(shell, "arke power off success!");
 	} else {
@@ -496,8 +497,8 @@ void cmd_arke_steps_on(const struct shell *shell, size_t argc, char **argv)
 		power_steps += 1;
 		return;
 	}
-	//delay 1s
-	k_msleep(1500);
+	//delay
+	k_msleep(DC_ON_DELAY_TIMMING);
 
 	power_good_status *entry = find_pwrgd_entry(pwrgd_idx);
 	uint8_t reg_data = 0;

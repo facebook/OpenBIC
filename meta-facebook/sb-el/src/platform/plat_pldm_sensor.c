@@ -56,7 +56,6 @@ static struct pldm_sensor_thread pal_pldm_sensor_thread[MAX_SENSOR_THREAD_ID] = 
 
 extern vr_pre_proc_arg vr_pre_read_args[];
 extern mpc12109_init_arg mpc12109_init_args[];
-uint8_t ioe_init_flag = 0;
 static bool is_quick_vr_sensor(uint8_t sensor_num)
 {
 	switch (sensor_num) {
@@ -206,7 +205,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -219,7 +218,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -275,7 +274,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -288,7 +287,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -344,7 +343,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -357,7 +356,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -413,7 +412,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -426,7 +425,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -482,7 +481,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -495,7 +494,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -551,7 +550,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -564,7 +563,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -620,7 +619,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -633,7 +632,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -689,7 +688,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -702,7 +701,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -758,7 +757,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -771,7 +770,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -827,7 +826,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -840,7 +839,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -896,7 +895,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -909,7 +908,7 @@ pldm_sensor_info plat_pldm_sensor_temp_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -968,7 +967,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -981,7 +980,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -1040,7 +1039,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -1053,7 +1052,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -1112,7 +1111,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -1125,7 +1124,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -1184,7 +1183,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -1197,7 +1196,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -1256,7 +1255,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -1269,7 +1268,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -1328,7 +1327,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -1341,7 +1340,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -1400,7 +1399,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -1413,7 +1412,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -1472,7 +1471,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -1485,7 +1484,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -1544,7 +1543,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -1557,7 +1556,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -1616,7 +1615,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -1629,7 +1628,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -1688,7 +1687,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -1701,7 +1700,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -1760,7 +1759,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -1773,7 +1772,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -1832,7 +1831,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -1845,7 +1844,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -1904,7 +1903,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -1917,7 +1916,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -1976,7 +1975,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -1989,7 +1988,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -2048,7 +2047,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -2061,7 +2060,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -2120,7 +2119,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -2133,7 +2132,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -2192,7 +2191,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -2205,7 +2204,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -2264,7 +2263,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -2277,7 +2276,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -2336,7 +2335,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -2349,7 +2348,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -2408,7 +2407,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -2421,7 +2420,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -2480,7 +2479,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -2493,7 +2492,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -2552,7 +2551,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -2565,7 +2564,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -2624,7 +2623,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -2637,7 +2636,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -2696,7 +2695,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -2709,7 +2708,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -2768,7 +2767,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -2781,7 +2780,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -2840,7 +2839,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -2853,7 +2852,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -2912,7 +2911,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -2925,7 +2924,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -2984,7 +2983,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -2997,7 +2996,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -3056,7 +3055,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -3069,7 +3068,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -3128,7 +3127,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -3141,7 +3140,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -3200,7 +3199,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -3213,7 +3212,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -3272,7 +3271,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -3285,7 +3284,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -3344,7 +3343,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -3357,7 +3356,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -3416,7 +3415,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -3429,7 +3428,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -3488,7 +3487,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -3501,7 +3500,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -3560,7 +3559,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -3573,7 +3572,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -3632,7 +3631,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -3645,7 +3644,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -3704,7 +3703,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -3717,7 +3716,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -3776,7 +3775,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -3789,7 +3788,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -3848,7 +3847,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -3861,7 +3860,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -3920,7 +3919,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -3933,7 +3932,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -3992,7 +3991,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -4005,7 +4004,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -4064,7 +4063,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -4077,7 +4076,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -4136,7 +4135,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -4149,7 +4148,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -4208,7 +4207,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -4221,7 +4220,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -4280,7 +4279,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -4293,7 +4292,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -4352,7 +4351,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -4365,7 +4364,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -4424,7 +4423,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -4437,7 +4436,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -4496,7 +4495,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -4509,7 +4508,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -4568,7 +4567,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -4581,7 +4580,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -4640,7 +4639,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -4653,7 +4652,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -4712,7 +4711,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -4725,7 +4724,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -4784,7 +4783,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -4797,7 +4796,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -4856,7 +4855,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -4869,7 +4868,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -4928,7 +4927,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -4941,7 +4940,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -5000,7 +4999,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -5013,7 +5012,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -5072,7 +5071,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -5085,7 +5084,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -5144,7 +5143,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -5157,7 +5156,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -5216,7 +5215,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -5229,7 +5228,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -5288,7 +5287,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -5301,7 +5300,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -5360,7 +5359,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -5373,7 +5372,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -5432,7 +5431,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -5445,7 +5444,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -5504,7 +5503,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -5517,7 +5516,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -5576,7 +5575,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -5589,7 +5588,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -5648,7 +5647,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -5661,7 +5660,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -5720,7 +5719,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -5733,7 +5732,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -5792,7 +5791,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -5805,7 +5804,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -5864,7 +5863,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -5877,7 +5876,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -5936,7 +5935,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -5949,7 +5948,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -6008,7 +6007,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -6021,7 +6020,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -6080,7 +6079,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -6093,7 +6092,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -6152,7 +6151,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -6165,7 +6164,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -6224,7 +6223,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -6237,7 +6236,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -6296,7 +6295,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -6309,7 +6308,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -6368,7 +6367,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -6381,7 +6380,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -6440,7 +6439,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -6453,7 +6452,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -6512,7 +6511,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -6525,7 +6524,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -6584,7 +6583,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -6597,7 +6596,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -6656,7 +6655,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -6669,7 +6668,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -6728,7 +6727,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -6741,7 +6740,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -6800,7 +6799,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -6813,7 +6812,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -6872,7 +6871,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -6885,7 +6884,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -6944,7 +6943,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -6957,7 +6956,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -7016,7 +7015,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -7029,7 +7028,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -7088,7 +7087,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -7101,7 +7100,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -7160,7 +7159,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -7173,7 +7172,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -7232,7 +7231,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -7245,7 +7244,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -7304,7 +7303,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -7317,7 +7316,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -7376,7 +7375,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -7389,7 +7388,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -7448,7 +7447,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -7461,7 +7460,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -7520,7 +7519,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -7533,7 +7532,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -7592,7 +7591,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -7605,7 +7604,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -7664,7 +7663,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -7677,7 +7676,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -7736,7 +7735,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -7749,7 +7748,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -7808,7 +7807,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -7821,7 +7820,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -7880,7 +7879,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -7893,7 +7892,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -7952,7 +7951,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -7965,7 +7964,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -8024,7 +8023,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -8037,7 +8036,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -8096,7 +8095,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -8109,7 +8108,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -8168,7 +8167,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -8181,7 +8180,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -8240,7 +8239,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -8253,7 +8252,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -8312,7 +8311,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -8325,7 +8324,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -8384,7 +8383,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -8397,7 +8396,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -8456,7 +8455,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -8469,7 +8468,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -8528,7 +8527,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -8541,7 +8540,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -8600,7 +8599,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -8613,7 +8612,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -8672,7 +8671,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -8685,7 +8684,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -8744,7 +8743,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -8757,7 +8756,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -8816,7 +8815,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -8829,7 +8828,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -8888,7 +8887,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -8901,7 +8900,7 @@ pldm_sensor_info plat_pldm_sensor_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -8963,7 +8962,7 @@ pldm_sensor_info plat_pldm_sensor_quick_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -8976,7 +8975,7 @@ pldm_sensor_info plat_pldm_sensor_quick_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -9036,7 +9035,7 @@ pldm_sensor_info plat_pldm_sensor_quick_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -9049,7 +9048,7 @@ pldm_sensor_info plat_pldm_sensor_quick_vr_table[] = {
 			0, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -9109,7 +9108,7 @@ pldm_sensor_info plat_pldm_sensor_quick_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -9122,7 +9121,7 @@ pldm_sensor_info plat_pldm_sensor_quick_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -9182,7 +9181,7 @@ pldm_sensor_info plat_pldm_sensor_quick_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -9195,7 +9194,7 @@ pldm_sensor_info plat_pldm_sensor_quick_vr_table[] = {
 			0, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -9255,7 +9254,7 @@ pldm_sensor_info plat_pldm_sensor_quick_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -9268,7 +9267,7 @@ pldm_sensor_info plat_pldm_sensor_quick_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -9328,7 +9327,7 @@ pldm_sensor_info plat_pldm_sensor_quick_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -9341,7 +9340,7 @@ pldm_sensor_info plat_pldm_sensor_quick_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -9401,7 +9400,7 @@ pldm_sensor_info plat_pldm_sensor_quick_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -9414,7 +9413,7 @@ pldm_sensor_info plat_pldm_sensor_quick_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -9474,7 +9473,7 @@ pldm_sensor_info plat_pldm_sensor_quick_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -9487,7 +9486,7 @@ pldm_sensor_info plat_pldm_sensor_quick_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -9547,7 +9546,7 @@ pldm_sensor_info plat_pldm_sensor_quick_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -9560,7 +9559,7 @@ pldm_sensor_info plat_pldm_sensor_quick_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -9620,7 +9619,7 @@ pldm_sensor_info plat_pldm_sensor_quick_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -9633,7 +9632,7 @@ pldm_sensor_info plat_pldm_sensor_quick_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -9691,7 +9690,7 @@ pldm_sensor_info plat_pldm_sensor_quick_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -9704,7 +9703,7 @@ pldm_sensor_info plat_pldm_sensor_quick_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -9762,7 +9761,7 @@ pldm_sensor_info plat_pldm_sensor_quick_vr_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -9775,7 +9774,7 @@ pldm_sensor_info plat_pldm_sensor_quick_vr_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -9836,7 +9835,7 @@ pldm_sensor_info plat_pldm_sensor_ubc_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -9849,7 +9848,7 @@ pldm_sensor_info plat_pldm_sensor_ubc_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -9905,7 +9904,7 @@ pldm_sensor_info plat_pldm_sensor_ubc_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -9918,7 +9917,7 @@ pldm_sensor_info plat_pldm_sensor_ubc_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -9974,7 +9973,7 @@ pldm_sensor_info plat_pldm_sensor_ubc_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -9987,7 +9986,7 @@ pldm_sensor_info plat_pldm_sensor_ubc_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -10043,7 +10042,7 @@ pldm_sensor_info plat_pldm_sensor_ubc_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -10056,7 +10055,7 @@ pldm_sensor_info plat_pldm_sensor_ubc_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -10112,7 +10111,7 @@ pldm_sensor_info plat_pldm_sensor_ubc_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -10125,7 +10124,7 @@ pldm_sensor_info plat_pldm_sensor_ubc_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -10181,7 +10180,7 @@ pldm_sensor_info plat_pldm_sensor_ubc_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -10194,7 +10193,7 @@ pldm_sensor_info plat_pldm_sensor_ubc_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -10250,7 +10249,7 @@ pldm_sensor_info plat_pldm_sensor_ubc_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -10263,7 +10262,7 @@ pldm_sensor_info plat_pldm_sensor_ubc_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -10319,7 +10318,7 @@ pldm_sensor_info plat_pldm_sensor_ubc_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -10332,7 +10331,7 @@ pldm_sensor_info plat_pldm_sensor_ubc_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -10388,7 +10387,7 @@ pldm_sensor_info plat_pldm_sensor_ubc_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -10401,7 +10400,7 @@ pldm_sensor_info plat_pldm_sensor_ubc_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -10457,7 +10456,7 @@ pldm_sensor_info plat_pldm_sensor_ubc_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -10470,7 +10469,7 @@ pldm_sensor_info plat_pldm_sensor_ubc_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -10529,7 +10528,7 @@ pldm_sensor_info plat_pldm_sensor_evb_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -10542,7 +10541,7 @@ pldm_sensor_info plat_pldm_sensor_evb_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -10601,7 +10600,7 @@ pldm_sensor_info plat_pldm_sensor_evb_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -10614,7 +10613,7 @@ pldm_sensor_info plat_pldm_sensor_evb_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -10674,7 +10673,7 @@ pldm_sensor_info plat_pldm_sensor_evb_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -10687,7 +10686,7 @@ pldm_sensor_info plat_pldm_sensor_evb_table[] = {
 			0x00, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -10746,7 +10745,7 @@ pldm_sensor_info plat_pldm_sensor_evb_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -10759,7 +10758,7 @@ pldm_sensor_info plat_pldm_sensor_evb_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -10819,7 +10818,7 @@ pldm_sensor_info plat_pldm_sensor_evb_table[] = {
 			0x00, //uint8_t rel;
 			0x00, //uint8_t aux_oem_unit_handle;
 			0x00, //uint8_t is_linear;
-			0x4, //uint8_t sensor_data_size;
+			0x5, //uint8_t sensor_data_size;
 			1, //real32_t resolution;
 			0, //real32_t offset;
 			0x0000, //uint16_t accuracy;
@@ -10832,7 +10831,7 @@ pldm_sensor_info plat_pldm_sensor_evb_table[] = {
 			UPDATE_INTERVAL_1S, //real32_t update_interval;
 			0x00000000, //uint32_t max_readable; //Need to check
 			0x00000000, //uint32_t min_readable;
-			0x04, //uint8_t range_field_format;
+			0x05, //uint8_t range_field_format;
 			0x00, //uint8_t range_field_support; //Need to check
 			0x00000000, //uint32_t nominal_value;
 			0x00000000, //uint32_t normal_max;
@@ -13853,15 +13852,31 @@ uint16_t get_quick_nuwa_polling_rate()
 	return pwr_capping_setting_table[0].case_time_ms[pwr_capping_pollng_rate_type];
 }
 
-
-uint8_t get_ioe_init_flag()
+void leak_sensor_handler(void)
 {
-	return ioe_init_flag;
-}
+	uint8_t leak_2_value = 0;
+	uint8_t set_io7_value = 0;
+	static uint8_t log_show_flag = 0;
 
-void set_ioe_init_flag(uint8_t flag)
-{
-	ioe_init_flag = flag;
+	// read mux U200051 IO_6, if change means leak detected set io_7 to 1
+	if (get_pca6554apw_ioe_value(U200051_IO_I2C_BUS, U200051_IO_ADDR, INPUT_PORT, &leak_2_value)) {
+		LOG_ERR("Failed to read IOE(0x%02X). The register is 0x%02X.",
+			U200051_IO_ADDR, OUTPUT_PORT);
+		return;
+	}
+
+	if (leak_2_value & 0x40) {
+		if (log_show_flag == 0) {
+			LOG_WRN("leak_2 detected");
+			get_pca6554apw_ioe_value(U200051_IO_I2C_BUS, U200051_IO_ADDR, OUTPUT_PORT, &set_io7_value);
+			//inverse bit-7
+			set_io7_value ^= 0x80;
+			set_pca6554apw_ioe_value(U200051_IO_I2C_BUS, U200051_IO_ADDR, OUTPUT_PORT, set_io7_value);
+			log_show_flag = 1;
+		}
+	} else {
+		log_show_flag = 0;
+	}
 }
 
 struct k_thread quick_sensor_poll;
@@ -13871,12 +13886,9 @@ k_tid_t quick_sensor_tid;
 /* quick sensor */
 void quick_sensor_poll_handler(void *arug0, void *arug1, void *arug2)
 {
-	k_msleep(1000); // delay 1 second to wait for drivers ready before start sensor polling
+	k_msleep(DC_ON_DELAY_TIMMING); // delay to wait for drivers ready before start sensor polling
 	int quick_sensor_poll_interval_ms = 30;
-	int ret = 0;
-	uint8_t leak_2_value = 0;
-	uint8_t set_io7_value = 0;
-	uint8_t log_show_flag = 0;
+
 	while (1) {
 		//check dc on/off and polling enable/disable
 		if (is_mb_dc_on() == false || !get_plat_sensor_polling_enable_flag()) {
@@ -13885,28 +13897,11 @@ void quick_sensor_poll_handler(void *arug0, void *arug1, void *arug2)
 			continue;
 		}
 
+		/* Only EVB reads the IO expander to check leak status */
+		if (get_asic_board_id() == ASIC_BOARD_ID_EVB){
+			leak_sensor_handler();
+		}
 		k_msleep(quick_sensor_poll_interval_ms);
-		// read mux U200051 IO_6, if change means leak detected set io_7 to 1
-		ret = get_pca6554apw_ioe_value(U200051_IO_I2C_BUS, U200051_IO_ADDR, INPUT_PORT, &leak_2_value);
-
-		if (ret != 0) {
-			LOG_ERR("Failed to read IOE(0x%02X). The register is 0x%02X.",
-				U200051_IO_ADDR, OUTPUT_PORT);
-			continue;
-		}
-
-		if (leak_2_value & 0x40) {
-			if (log_show_flag == 0) {
-				LOG_WRN("leak_2 detected");
-				get_pca6554apw_ioe_value(U200051_IO_I2C_BUS, U200051_IO_ADDR, OUTPUT_PORT, &set_io7_value);
-				//inverse bit-7
-				set_io7_value ^= 0x80;
-				set_pca6554apw_ioe_value(U200051_IO_I2C_BUS, U200051_IO_ADDR, OUTPUT_PORT, set_io7_value);
-				log_show_flag = 1;
-			}
-		} else {
-			log_show_flag = 0;
-		}
 	}
 }
 

@@ -126,7 +126,6 @@ void ISR_GPIO_RST_ARKE_PWR_ON_PLD_R1_N()
 		reset_error_log_states(err_type);
 	} else {
 		plat_switch_pin_a12(true); /* LOW -> A12 = GPIO73 output low */
-		LOG_INF("dc off, clear io expander init flag");
 		// vr_test_mode_enable(false);
 		// if board id == EVB , ctrl fan pwm
 		if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
