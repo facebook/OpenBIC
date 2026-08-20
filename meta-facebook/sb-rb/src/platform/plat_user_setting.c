@@ -1445,6 +1445,8 @@ void set_clock_u87_u88_lphcsl_amp_ctrl_to_1v()
 void user_settings_init(void)
 {
 	bootstrap_default_settings_init();
+	vr_vout_default_settings_init();
+	vr_vout_offset_get_init();
 	bootstrap_user_settings_init();
 	vr_vout_range_user_settings_init();
 	thermaltrip_user_settings_init();

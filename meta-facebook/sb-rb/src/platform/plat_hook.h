@@ -19,6 +19,8 @@
 
 #include "sensor.h"
 #include "plat_pldm_sensor.h"
+#include "mp29816a.h"
+#include "raa228249.h"
 
 #define VR_MUTEX_LOCK_TIMEOUT_MS 1000
 
@@ -220,6 +222,9 @@ typedef struct vr_vout_range_user_settings_struct {
 typedef struct vr_vout_user_settings {
 	uint16_t vout[VR_RAIL_E_MAX];
 } vr_vout_user_settings;
+typedef struct vr_vout_offset {
+	uint16_t vout_offset[2]; // onlt medha0/1
+} vr_vout_offset;
 typedef struct bootstrap_mapping_register {
 	uint8_t index;
 	uint8_t type;
@@ -297,4 +302,10 @@ uint8_t get_emc1413_cache_status(uint8_t idx);
 bool get_pre_read_bootstrap_setting_value();
 void add_error_bootstrap_index_to_list(uint8_t index);
 uint8_t get_error_bootstrap_index_list(uint8_t index);
+uint8_t get_svs_flag();
+void set_svs_flag(uint8_t flag);
+bool vr_vout_default_settings_init(void);
+bool plat_get_get_vout_offset(uint8_t rail, uint16_t *vout_offset);
+bool vr_vout_offset_get_init(void);
+bool voltage_offset_get(uint8_t rail, uint16_t *vout_offset);
 #endif

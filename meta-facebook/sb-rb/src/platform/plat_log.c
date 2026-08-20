@@ -33,6 +33,7 @@
 #include "plat_gpio.h"
 #include "plat_thermal.h"
 #include "shell_plat_power_sequence.h"
+#include "pmbus.h"
 
 LOG_MODULE_REGISTER(plat_log);
 
@@ -266,8 +267,43 @@ bool vr_fault_get_error_data(uint8_t sensor_id, uint8_t *data)
 {
 	CHECK_NULL_ARG_WITH_RETURN(data, false);
 
-	// vr status word
-	return get_raw_data_from_sensor_id(sensor_id, 0x79, data, 2);
+	bool ret = true;
+	uint8_t vr_status_buf[7] = { 0 };
+
+	if (!get_raw_data_from_sensor_id(sensor_id, PMBUS_STATUS_WORD, &vr_status_buf[0], 2)) {
+		LOG_ERR("Failed to read VR status word, sensor_id %d", sensor_id);
+		ret = false;
+	}
+
+	if (!get_raw_data_from_sensor_id(sensor_id, PMBUS_STATUS_VOUT, &vr_status_buf[2], 1)) {
+		LOG_ERR("Failed to read VR status vout, sensor_id %d", sensor_id);
+		ret = false;
+	}
+
+	if (!get_raw_data_from_sensor_id(sensor_id, PMBUS_STATUS_IOUT, &vr_status_buf[3], 1)) {
+		LOG_ERR("Failed to read VR status iout, sensor_id %d", sensor_id);
+		ret = false;
+	}
+
+	if (!get_raw_data_from_sensor_id(sensor_id, PMBUS_STATUS_INPUT, &vr_status_buf[4], 1)) {
+		LOG_ERR("Failed to read VR status input, sensor_id %d", sensor_id);
+		ret = false;
+	}
+
+	if (!get_raw_data_from_sensor_id(sensor_id, PMBUS_STATUS_TEMPERATURE, &vr_status_buf[5],
+					 1)) {
+		LOG_ERR("Failed to read VR status temperature, sensor_id %d", sensor_id);
+		ret = false;
+	}
+
+	if (!get_raw_data_from_sensor_id(sensor_id, PMBUS_STATUS_CML, &vr_status_buf[6], 1)) {
+		LOG_ERR("Failed to read VR status CML, sensor_id %d", sensor_id);
+		ret = false;
+	}
+
+	memcpy(data, vr_status_buf, sizeof(vr_status_buf));
+
+	return ret;
 }
 
 bool get_multi_vr_status(uint8_t alrt_index, uint8_t *data)

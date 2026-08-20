@@ -33,5 +33,5 @@ bool raa228249_set_iout_oc_warn_limit(sensor_cfg *cfg, uint16_t value);
 bool raa228249_get_vr_status(sensor_cfg *cfg, uint8_t rail, uint8_t vr_status_rail,
 			     uint16_t *vr_status);
 bool raa228249_clear_vr_status(sensor_cfg *cfg, uint8_t rail);
-
+bool raa228249_get_vout_offset(sensor_cfg *cfg, uint16_t *offset_return);
 #endif
