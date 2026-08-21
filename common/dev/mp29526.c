@@ -190,13 +190,9 @@ LOG_MODULE_REGISTER(mp29526);
 #define MP29526_MAX_READ_BYTES (8 + 1) /* IC_DEVICE_ID: 8 data + 1 length */
 #define MAX_CFG_LEN 1024
 
-/*
- * STORE_USER writes pages 0/1/2 plus two CRC sets into NVM. The datasheet
- * quotes ~10ms for the reverse (NVM -> registers) copy at power-on and does
- * not specify a store time, so allow a generous margin before reading back
- * STATUS_CML. Erase/program is rated >10,000 cycles.
- */
-#define MP29526_NVM_STORE_DELAY_MS 200
+/* wait 1s after STORE_USER, 100ms after RESTORE_USER before checking STATUS_CML */
+#define MP29526_NVM_STORE_DELAY_MS 1000
+#define MP29526_NVM_RESTORE_DELAY_MS 100
 
 /* =============================================================================
  * Low level access
@@ -1417,40 +1413,406 @@ exit:
 /* =============================================================================
  * Config update - streaming variant
  *
- * mp29526 images are ~200KB of the same tab-separated text lines that
- * mp29526_fwupdate() above buffers whole and parses in one pass. That doesn't
- * fit this platform's heap (CONFIG_HEAP_MEM_POOL_SIZE), so this variant is
- * fed one PLDM data chunk at a time (in offset order) and applies each
- * complete "\r\n"-terminated line to the device as soon as it is assembled,
- * instead of malloc'ing the full image. Only a small fixed line-assembly
- * buffer is kept, matching parsing_line()'s own tmp[] bound.
+ * mp29526 images are ~200KB of the same tab-separated ATE-format text lines
+ * that mp29526_fwupdate() above buffers whole and parses in one pass. That
+ * doesn't fit this platform's heap, so this
+ * variant is fed one PLDM data chunk at a time (in offset order) and applies
+ * each complete "\r\n"-terminated line to the device as soon as it is
+ * assembled, instead of malloc'ing the full image.
+ *
+ * Column layout (tab-separated):
+ *   col0  configuration ID (constant per file, informational only here)
+ *   col1  page, or "<group><page>" for a multi-config register (group is
+ *         the leading digit 1-5 when the field is 3 digits long; a 1-2
+ *         digit field is a plain page number with no group)
+ *   col2  register address, hex. For "P1"/"P2"/"BP1" rows this is
+ *         <command_code_hi><data_byte_lo> packed together, not a plain
+ *         address.
+ *   col3  register address, decimal (redundant, ignored)
+ *   col4  register name ("CRC_USER_Multi_N"/"TRIM*" rows are reference
+ *         values, not configuration writes)
+ *   col5  value, hex
+ *   col6  value, decimal (redundant, ignored)
+ *   col7  row type: "1"/"2" = byte/word write; "Bn" = block write of n
+ *         bytes (n<=4: the value is already in this one row; n>4: one
+ *         byte per row across n consecutive rows, concatenated into a
+ *         single block write); "P1"/"P2"/"BP1" = process-call write-word
+ *         to the command code encoded in col2's high byte
+ *
+ * Rows before "END" are real writes. CRC_CHECK_START/STOP brackets the
+ * per-group reference CRC, read back from B8h after STORE_USER and
+ * compared here as a log-only sanity check. CUSTOM_START/STOP and
+ * anything after CRC_CHECK_STOP is readback verification data, not
+ * writes, and is ignored entirely.
  * ========================================================================== */
 
 #define MP29526_STREAM_LINE_BUF_LEN 128
+#define MP29526_STREAM_BLOCK_MAX_LEN 32
+#define MP29526_MULTICFG_SEL_BASE 0x08
+#define MP29526_MULTICFG_GROUP_MAX 5
+
+struct mp29526_row {
+	uint8_t group; /* 0 = shared/user register, 1-5 = multi-config set */
+	uint8_t page;
+	uint16_t addr_field;
+	char name[40];
+	char value_hex[16];
+	char tag[8];
+};
 
 static struct {
 	uint8_t bus;
 	uint8_t addr;
 	uint8_t page;
+	uint8_t group; /* multi-config set currently selected on the device */
 	uint8_t saved_wp;
 	uint32_t applied_cnt;
 	uint16_t line_len;
 	bool aborted;
+	bool config_id_logged;
+	/* "\r\n"-terminated line reassembly, spanning PLDM chunk boundaries */
+	char line_buf[MP29526_STREAM_LINE_BUF_LEN];
 	/*
-	 * The exported config has real register writes, then a bare "END"
-	 * line, then a CRC_CHECK_START/STOP block (self-check reference
-	 * values, REG_NAME "CRC_..." - already skipped below) and a
-	 * CUSTOM_START/STOP block (REG_NAME "IC_DEVICE_ID"/"READ_FW_VERSION"/
-	 * "READ_APP_FLASH_CRC"/"READ_OTA_FLASH_CRC" - readback verification
-	 * queries, not writes). Those CUSTOM rows don't match the CRC/TRIM
-	 * name filter, so without this they'd fall through to a real
-	 * mp29526_i2c_write() against read-only registers. Once "END" is
-	 * seen, nothing past it is a real write, so stop applying entirely
-	 * instead of relying on per-row name matching to catch every case.
+	 * "Bn" rows with n>4 spread one byte per row across n consecutive
+	 * lines (MSByte first) instead of putting the whole value in one
+	 * row; these fields reassemble that run into a single block write.
+	 */
+	uint8_t block_cmd;
+	uint8_t block_want;
+	uint8_t block_have;
+	uint8_t block_data[MP29526_STREAM_BLOCK_MAX_LEN];
+	/*
+	 * state machine for the file's tail: real writes, then "END", then
+	 * CRC_CHECK_START..CRC_CHECK_STOP (reference CRC capture only), then
+	 * CUSTOM_START..CUSTOM_STOP plus trailing comments (ignored).
 	 */
 	bool past_end;
-	char line_buf[MP29526_STREAM_LINE_BUF_LEN];
+	bool in_crc_block;
+	uint32_t crc_ref[MP29526_MULTICFG_GROUP_MAX + 1];
+	bool crc_ref_valid[MP29526_MULTICFG_GROUP_MAX + 1];
 } mp29526_stream;
+
+/* col1: "<group><page>" (3 digits) or "<page>" (1-2 digits). */
+static bool mp29526_parse_group_page(const char *s, uint8_t *group, uint8_t *page)
+{
+	size_t len = strlen(s);
+	if (len == 0 || len > 3)
+		return false;
+
+	if (len <= 2) {
+		*group = 0;
+		*page = (uint8_t)strtol(s, NULL, 16);
+	} else {
+		if (s[0] < '0' || s[0] > '9')
+			return false;
+		*group = (uint8_t)(s[0] - '0');
+		*page = (uint8_t)strtol(s + 1, NULL, 16);
+	}
+	return true;
+}
+
+static bool mp29526_hex_to_bytes_msb_first(const char *hex, uint8_t *out, uint8_t n)
+{
+	if (strlen(hex) != (size_t)(n * 2))
+		return false;
+
+	for (uint8_t i = 0; i < n; i++) {
+		char byte_str[3] = { hex[i * 2], hex[i * 2 + 1], '\0' };
+		out[i] = (uint8_t)strtol(byte_str, NULL, 16);
+	}
+	return true;
+}
+
+static bool mp29526_parse_row(char *line, struct mp29526_row *row)
+{
+	memset(row, 0, sizeof(*row));
+
+	char *save_ptr;
+	char *tok = strtok_r(line, "\t", &save_ptr);
+	int idx = 0;
+
+	while (tok) {
+		switch (idx) {
+		case 1:
+			if (!mp29526_parse_group_page(tok, &row->group, &row->page))
+				return false;
+			break;
+		case 2:
+			row->addr_field = (uint16_t)strtol(tok, NULL, 16);
+			break;
+		case 4:
+			strncpy(row->name, tok, sizeof(row->name) - 1);
+			break;
+		case 5:
+			strncpy(row->value_hex, tok, sizeof(row->value_hex) - 1);
+			break;
+		case 7:
+			strncpy(row->tag, tok, sizeof(row->tag) - 1);
+			break;
+		default:
+			break;
+		}
+		idx++;
+		tok = strtok_r(NULL, "\t", &save_ptr);
+	}
+
+	return idx == 8;
+}
+
+static void mp29526_stream_restore_wp(void)
+{
+	if (mp29526_stream.saved_wp != MP29526_WP_DISABLE) {
+		if (!mp29526_set_write_protect(mp29526_stream.bus, mp29526_stream.addr,
+					       mp29526_stream.saved_wp))
+			LOG_ERR("Failed to restore WRITE_PROTECT to 0x%02x - the device is left "
+				"unprotected",
+				mp29526_stream.saved_wp);
+	}
+}
+
+/* STORE_USER + wait + B8h CRC readback (log-only compare) + RESTORE_USER +
+ * wait + STATUS_CML check, for whichever group's registers were just written. */
+static bool mp29526_stream_store_and_verify(uint8_t group)
+{
+	uint8_t bus = mp29526_stream.bus;
+	uint8_t addr = mp29526_stream.addr;
+
+	if (!mp29526_set_page(bus, addr, MP29526_PAGE_RAIL1))
+		return false;
+	mp29526_stream.page = MP29526_PAGE_RAIL1;
+
+	if (!mp29526_i2c_write(bus, addr, MP29526_REG_STORE_USER, NULL, 0)) {
+		LOG_ERR("STORE_USER failed for group %d", group);
+		return false;
+	}
+	k_msleep(MP29526_NVM_STORE_DELAY_MS);
+
+	uint32_t rev = 0;
+	if (mp29526_get_fw_version(bus, addr, &rev)) {
+		if (group <= MP29526_MULTICFG_GROUP_MAX && mp29526_stream.crc_ref_valid[group]) {
+			if (rev != mp29526_stream.crc_ref[group])
+				LOG_WRN("Group %d CRC mismatch: B8h readback 0x%08x, file expects 0x%08x",
+					group, rev, mp29526_stream.crc_ref[group]);
+			else
+				LOG_INF("Group %d CRC matches file (0x%08x)", group, rev);
+		} else {
+			LOG_INF("Group %d B8h readback 0x%08x (no reference captured to compare)",
+				group, rev);
+		}
+	} else {
+		LOG_WRN("Failed to read back B8h for group %d verification", group);
+	}
+
+	if (!mp29526_i2c_write(bus, addr, MP29526_REG_RESTORE_USER, NULL, 0)) {
+		LOG_ERR("RESTORE_USER failed for group %d", group);
+		return false;
+	}
+	k_msleep(MP29526_NVM_RESTORE_DELAY_MS);
+
+	if (!mp29526_check_nvm_status(bus, addr)) {
+		LOG_ERR("NVM status check failed after group %d store/restore", group);
+		return false;
+	}
+
+	mp29526_stream.page = MP29526_PAGE_RAIL1;
+	return true;
+}
+
+/* Finishes the group being left (store+verify, unless it's the initial
+ * "no group yet" state) and selects the new group on the device. */
+static bool mp29526_stream_switch_group(uint8_t new_group)
+{
+	if (new_group == mp29526_stream.group)
+		return true;
+
+	/* group 0 (shared registers) has no store of its own - it gets
+	 * committed together with whichever group is written first */
+	if (mp29526_stream.group != 0) {
+		if (!mp29526_stream_store_and_verify(mp29526_stream.group))
+			return false;
+	}
+
+	if (new_group != 0) {
+		if (!mp29526_set_page(mp29526_stream.bus, mp29526_stream.addr,
+				      MP29526_PAGE_MFR_ALL))
+			return false;
+		mp29526_stream.page = MP29526_PAGE_MFR_ALL;
+
+		uint8_t sel = MP29526_MULTICFG_SEL_BASE + (new_group - 1);
+		uint8_t d[1] = { sel };
+		if (!mp29526_i2c_write(mp29526_stream.bus, mp29526_stream.addr,
+				       MP29526_REG_MULTICFG_SEL, d, 1)) {
+			LOG_ERR("Failed to select multi-config set %d", new_group);
+			return false;
+		}
+		LOG_INF("Selected multi-config set %d (09h=0x%02x)", new_group, sel);
+	}
+
+	mp29526_stream.group = new_group;
+	return true;
+}
+
+static bool mp29526_stream_flush_block(void)
+{
+	if (!mp29526_stream.block_want)
+		return true;
+
+	if (mp29526_stream.block_have != mp29526_stream.block_want) {
+		LOG_ERR("Block write for reg 0x%02x truncated (%d of %d bytes)",
+			mp29526_stream.block_cmd, mp29526_stream.block_have,
+			mp29526_stream.block_want);
+		return false;
+	}
+
+	uint8_t payload[MP29526_STREAM_BLOCK_MAX_LEN + 1];
+	payload[0] = mp29526_stream.block_want;
+	/* wire order is the file's row order reversed */
+	for (uint8_t i = 0; i < mp29526_stream.block_want; i++)
+		payload[1 + i] = mp29526_stream.block_data[mp29526_stream.block_want - 1 - i];
+
+	bool ok = mp29526_i2c_write(mp29526_stream.bus, mp29526_stream.addr,
+				    mp29526_stream.block_cmd, payload,
+				    mp29526_stream.block_want + 1);
+	if (!ok)
+		LOG_ERR("Block write failed (reg 0x%02x, %d bytes)", mp29526_stream.block_cmd,
+			mp29526_stream.block_want);
+	else
+		mp29526_stream.applied_cnt++;
+
+	mp29526_stream.block_want = 0;
+	mp29526_stream.block_have = 0;
+	return ok;
+}
+
+static bool mp29526_stream_apply_row(const struct mp29526_row *row)
+{
+	if (!strncmp(row->name, "CRC", strlen("CRC")) || !strncmp(row->name, "TRIM", strlen("TRIM")))
+		return true;
+
+	if (row->group != mp29526_stream.group) {
+		if (!mp29526_stream_flush_block())
+			return false;
+		if (!mp29526_stream_switch_group(row->group))
+			return false;
+	}
+
+	if (row->page != mp29526_stream.page) {
+		if (!mp29526_set_page(mp29526_stream.bus, mp29526_stream.addr, row->page))
+			return false;
+		mp29526_stream.page = row->page;
+	}
+
+	if (!strcmp(row->tag, "1") || !strcmp(row->tag, "2")) {
+		uint8_t len = (uint8_t)(row->tag[0] - '0');
+		uint8_t cmd = (uint8_t)row->addr_field;
+		uint16_t val = (uint16_t)strtol(row->value_hex, NULL, 16);
+		uint8_t data[2];
+		memcpy(data, &val, len);
+		if (!mp29526_i2c_write(mp29526_stream.bus, mp29526_stream.addr, cmd, data, len)) {
+			LOG_ERR("Config write failed (page 0x%x reg 0x%02x)", row->page, cmd);
+			return false;
+		}
+		mp29526_stream.applied_cnt++;
+	} else if (!strcmp(row->tag, "P1") || !strcmp(row->tag, "P2") || !strcmp(row->tag, "BP1")) {
+		if (!mp29526_stream_flush_block())
+			return false;
+		uint8_t cmd = (uint8_t)(row->addr_field >> 8);
+		uint8_t addr_low = (uint8_t)(row->addr_field & 0xFF);
+		uint8_t value_byte;
+		if (!mp29526_hex_to_bytes_msb_first(row->value_hex, &value_byte, 1)) {
+			LOG_ERR("Malformed process-call value for %s", log_strdup(row->name));
+			return false;
+		}
+		/* PMBus write-word sends the low byte first on the wire */
+		uint8_t data[2] = { addr_low, value_byte };
+		if (!mp29526_i2c_write(mp29526_stream.bus, mp29526_stream.addr, cmd, data, 2)) {
+			LOG_ERR("Process-call write failed (page 0x%x reg 0x%02x)", row->page,
+				cmd);
+			return false;
+		}
+		mp29526_stream.applied_cnt++;
+	} else if (row->tag[0] == 'B') {
+		/* checked after P1/P2/BP1 above, since "BP1" also starts with 'B' */
+		uint8_t n = (uint8_t)atoi(row->tag + 1);
+		uint8_t cmd = (uint8_t)row->addr_field;
+		if (!n || n > MP29526_STREAM_BLOCK_MAX_LEN) {
+			LOG_ERR("Unsupported block length in tag '%s' for %s",
+				log_strdup(row->tag), log_strdup(row->name));
+			return false;
+		}
+
+		if (n <= 4) {
+			if (!mp29526_stream_flush_block())
+				return false;
+			uint8_t bytes[4];
+			if (!mp29526_hex_to_bytes_msb_first(row->value_hex, bytes, n)) {
+				LOG_ERR("Malformed block value for %s", log_strdup(row->name));
+				return false;
+			}
+			uint8_t payload[5];
+			payload[0] = n;
+			/* wire order is the hex string's byte-pairs reversed */
+			for (uint8_t i = 0; i < n; i++)
+				payload[1 + i] = bytes[n - 1 - i];
+			if (!mp29526_i2c_write(mp29526_stream.bus, mp29526_stream.addr, cmd,
+					       payload, n + 1)) {
+				LOG_ERR("Block write failed (page 0x%x reg 0x%02x)", row->page,
+					cmd);
+				return false;
+			}
+			mp29526_stream.applied_cnt++;
+		} else {
+			if (mp29526_stream.block_want && (mp29526_stream.block_cmd != cmd ||
+							  mp29526_stream.block_want != n)) {
+				LOG_WRN("Block run for reg 0x%02x changed mid-sequence, restarting",
+					cmd);
+				mp29526_stream.block_want = 0;
+				mp29526_stream.block_have = 0;
+			}
+			if (!mp29526_stream.block_want) {
+				mp29526_stream.block_cmd = cmd;
+				mp29526_stream.block_want = n;
+				mp29526_stream.block_have = 0;
+			}
+			uint8_t byte_val;
+			if (!mp29526_hex_to_bytes_msb_first(row->value_hex, &byte_val, 1)) {
+				LOG_ERR("Malformed block byte for %s", log_strdup(row->name));
+				return false;
+			}
+			mp29526_stream.block_data[mp29526_stream.block_have++] = byte_val;
+			if (mp29526_stream.block_have == mp29526_stream.block_want) {
+				if (!mp29526_stream_flush_block())
+					return false;
+			}
+		}
+	} else {
+		LOG_WRN("Unknown row type tag '%s' for %s, skipping", log_strdup(row->tag),
+			log_strdup(row->name));
+	}
+
+	return true;
+}
+
+/* CRC_CHECK_START..STOP rows only capture a reference value, keyed by
+ * group; they're never written. col1 is always "0" for these, so the
+ * group comes from the REG_NAME suffix ("CRC_USER_Multi_<N>") instead. */
+static void mp29526_stream_capture_crc_ref(const struct mp29526_row *row)
+{
+	uint8_t group = row->group;
+	const char *last_us = strrchr(row->name, '_');
+	if (last_us && last_us[1] >= '1' && last_us[1] <= '9' && last_us[2] == '\0')
+		group = (uint8_t)(last_us[1] - '0');
+
+	if (group < 1 || group > MP29526_MULTICFG_GROUP_MAX) {
+		LOG_WRN("Could not determine group for CRC reference row '%s'",
+			log_strdup(row->name));
+		return;
+	}
+
+	uint32_t val = (uint32_t)strtoul(row->value_hex, NULL, 16);
+	mp29526_stream.crc_ref[group] = val;
+	mp29526_stream.crc_ref_valid[group] = true;
+}
 
 static bool mp29526_stream_apply_line(void)
 {
@@ -1463,49 +1825,45 @@ static bool mp29526_stream_apply_line(void)
 		line[--len] = '\0';
 	else
 		line[len] = '\0';
+	mp29526_stream.line_len = 0;
+
+	if (!len)
+		return true;
 
 	if (mp29526_stream.past_end) {
-		mp29526_stream.line_len = 0;
-		return true;
-	}
-
-	if (len == strlen("END") && !strncmp(line, "END", len)) {
-		LOG_INF("Reached END marker, ignoring anything after it");
-		mp29526_stream.past_end = true;
-		mp29526_stream.line_len = 0;
-		return true;
-	}
-
-	if (len && cnt_char(line, '\t') == 7) {
-		struct cfg_data cfg = { 0 };
-		if (!parsing_line(line, len, &cfg)) {
-			if (cfg.reg_len > 2) {
-				LOG_ERR("Config entry has unsupported length %d", cfg.reg_len);
-				return false;
-			}
-
-			if (cfg.cfg_page != mp29526_stream.page) {
-				mp29526_stream.page = cfg.cfg_page;
-				if (!mp29526_set_page(mp29526_stream.bus, mp29526_stream.addr,
-						      mp29526_stream.page))
-					return false;
-			}
-
-			uint8_t data[2];
-			memcpy(data, &cfg.reg_val, cfg.reg_len);
-			if (!mp29526_i2c_write(mp29526_stream.bus, mp29526_stream.addr,
-					       cfg.reg_addr, data, cfg.reg_len)) {
-				LOG_ERR("Config write failed (page 0x%x reg 0x%02x)", cfg.cfg_page,
-					cfg.reg_addr);
-				return false;
-			}
-
-			mp29526_stream.applied_cnt++;
+		if (!strcmp(line, "CRC_CHECK_START")) {
+			mp29526_stream.in_crc_block = true;
+		} else if (!strcmp(line, "CRC_CHECK_STOP")) {
+			mp29526_stream.in_crc_block = false;
+		} else if (mp29526_stream.in_crc_block && cnt_char(line, '\t') == 7) {
+			struct mp29526_row row;
+			if (mp29526_parse_row(line, &row))
+				mp29526_stream_capture_crc_ref(&row);
 		}
+		return true;
 	}
 
-	mp29526_stream.line_len = 0;
-	return true;
+	if (!strcmp(line, "END")) {
+		LOG_INF("Reached END marker; finishing group %d and ignoring anything after it",
+			mp29526_stream.group);
+		bool ok = mp29526_stream_flush_block() &&
+			  (mp29526_stream.group == 0 && !mp29526_stream.applied_cnt ?
+				   true :
+				   mp29526_stream_store_and_verify(mp29526_stream.group));
+		mp29526_stream.past_end = true;
+		return ok;
+	}
+
+	if (cnt_char(line, '\t') != 7)
+		return true;
+
+	struct mp29526_row row;
+	if (!mp29526_parse_row(line, &row)) {
+		LOG_ERR("Malformed config line (wrong column count)");
+		return false;
+	}
+
+	return mp29526_stream_apply_row(&row);
 }
 
 static bool mp29526_stream_consume(const uint8_t *data, uint32_t data_len)
@@ -1529,17 +1887,6 @@ static bool mp29526_stream_consume(const uint8_t *data, uint32_t data_len)
 	return true;
 }
 
-static void mp29526_stream_restore_wp(void)
-{
-	if (mp29526_stream.saved_wp != MP29526_WP_DISABLE) {
-		if (!mp29526_set_write_protect(mp29526_stream.bus, mp29526_stream.addr,
-					       mp29526_stream.saved_wp))
-			LOG_ERR("Failed to restore WRITE_PROTECT to 0x%02x - the device is left "
-				"unprotected",
-				mp29526_stream.saved_wp);
-	}
-}
-
 bool mp29526_fwupdate_stream(uint8_t bus, uint8_t addr, const uint8_t *data, uint32_t data_len,
 			     bool is_first, bool is_last)
 {
@@ -1550,11 +1897,17 @@ bool mp29526_fwupdate_stream(uint8_t bus, uint8_t addr, const uint8_t *data, uin
 		mp29526_stream.bus = bus;
 		mp29526_stream.addr = addr;
 		mp29526_stream.page = 0xFF;
+		mp29526_stream.group = 0;
 
 		if (!mp29526_check_device_id(bus, addr)) {
 			mp29526_stream.aborted = true;
 			return false;
 		}
+
+		/* informational only - logged, does not gate the update */
+		uint8_t pw[2] = { 0 };
+		if (mp29526_i2c_read(bus, addr, 0xE0, pw, sizeof(pw)))
+			LOG_INF("E0h readback: 0x%02x 0x%02x", pw[0], pw[1]);
 
 		if (!mp29526_get_write_protect(bus, addr, &mp29526_stream.saved_wp)) {
 			mp29526_stream.aborted = true;
@@ -1596,6 +1949,17 @@ bool mp29526_fwupdate_stream(uint8_t bus, uint8_t addr, const uint8_t *data, uin
 		return false;
 	}
 
+	/* well-formed files hit "END" and finish their last group there; this
+	 * only fires for a truncated/malformed file that never saw "END" */
+	if (!mp29526_stream.past_end) {
+		if (!mp29526_stream_flush_block() ||
+		    !mp29526_stream_store_and_verify(mp29526_stream.group)) {
+			mp29526_stream.aborted = true;
+			mp29526_stream_restore_wp();
+			return false;
+		}
+	}
+
 	if (!mp29526_stream.applied_cnt) {
 		LOG_ERR("parsing image fail");
 		mp29526_stream.aborted = true;
@@ -1603,29 +1967,9 @@ bool mp29526_fwupdate_stream(uint8_t bus, uint8_t addr, const uint8_t *data, uin
 		return false;
 	}
 
-	bool ret = false;
-
-	if (!mp29526_set_page(bus, addr, MP29526_PAGE_RAIL1))
-		goto restore_wp;
-
-	if (!mp29526_i2c_write(bus, addr, MP29526_REG_STORE_USER, NULL, 0)) {
-		LOG_ERR("STORE_USER (15h) failed");
-		goto restore_wp;
-	}
-
-	k_msleep(MP29526_NVM_STORE_DELAY_MS);
-
-	if (!mp29526_check_nvm_status(bus, addr))
-		goto restore_wp;
-
-	LOG_INF("MP29526 config stored to NVM (%d registers). Takes effect at the next POR; "
-		"RESTORE_USER is not issued because it is illegal while the rail is powered.",
-		mp29526_stream.applied_cnt);
-	ret = true;
-
-restore_wp:
+	LOG_INF("MP29526 config stored to NVM (%d registers)", mp29526_stream.applied_cnt);
 	mp29526_stream_restore_wp();
-	return ret;
+	return true;
 }
 
 /*
