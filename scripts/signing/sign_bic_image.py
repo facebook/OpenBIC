@@ -38,6 +38,7 @@ valid_projects = {
     "wc": {"mb", },
     "yv3": {"dl", "vf", },
     "yv35": {"cl", "bb", "rf", "hd", "op", "gl", "nf", "ji"},
+    "gc2":  {"sb", },
 }
 
 # Numeric encoding of boards.
@@ -61,6 +62,8 @@ board_map = {
     "gl": "01000",
     "nf": "01001",
     "ji": "01010",
+    # GC2.0
+    "sb": "00001",
 }
 
 # Mapping between short and full project names.
@@ -70,6 +73,7 @@ project_name_mapping = {
     "wc": "Waimea Canyon",
     "yv3": "Yosemite V3",
     "yv35": "Yosemite V3.5",
+    "gc2": "GrandCanyon V2.0",
 }
 
 
