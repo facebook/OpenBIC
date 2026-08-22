@@ -40,22 +40,54 @@ of `common/`'s vendor-specific pipeline is usable as-is.
 ## What this target actually does
 
 `src/main.c` is a from-scratch `main()` (not `common/service/main.c`)
-that prints an OpenBIC-style banner, brings up the shell, and toggles
-the on-board red LED as a heartbeat - proving the build, flash, and
-console/shell all work end-to-end via OpenBIC's own CMakeLists.txt/
-west setup, on real MCX-N9XX-EVK hardware.
+that prints an explicit "OpenBIC" ASCII banner, brings up the shell,
+and toggles the on-board red LED as a heartbeat - proving the build,
+flash, and console/shell all work end-to-end via OpenBIC's own
+CMakeLists.txt/west setup, on real MCX-N9XX-EVK hardware.
 
 ```
 meta-facebook/mcx-n9xx-evk/
 ├── CMakeLists.txt   Only builds src/*.c - no common/ globs
-├── prj.conf         GPIO + shell + logging only
+├── prj.conf         GPIO + shell + logging + hwinfo + watchdog only
 ├── boards/          Devicetree overlay: enables red_led + user_button_2
 ├── src/main.c       Banner + shell + heartbeat LED
 ├── src/plat_version.h
 ├── src/plat_gpio.[ch]   GPIO status-monitoring subsystem (see below)
 ├── src/plat_hwinfo.[ch] Device ID + reset-cause reporting (see below)
-└── src/plat_shell.c     "plat gpio mon0" shell command
+├── src/plat_wdt.[ch]    Watchdog subsystem (see below)
+└── src/plat_shell.c     "plat version"/"plat gpio mon0"/"plat wdt starve"
 ```
+
+### Watchdog (third real subsystem, verified on hardware)
+
+`src/plat_wdt.c` installs and arms a 3-second timeout on `wwdt0` via
+mainline Zephyr's `wdt` API (`WDT_MCUX_WWDT` backend, auto-selected -
+no board-specific code needed), fed every 500ms from the main
+heartbeat loop - the mainline-Zephyr equivalent of `wdt_init()` +
+feeding in `common/service/main.c`. A `plat wdt starve` shell command
+deliberately stops feeding, to prove the SoC actually resets itself on
+starvation rather than just trusting that it would.
+
+Verified on real hardware (typed interactively into the shell):
+
+```
+uart:~$ plat wdt starve
+Stopping watchdog feed - SoC will reset shortly.
+[00:01:46.630,000] <wrn> plat_wdt: watchdog feeding stopped on purpose - SoC will reset in <= 3000ms
+uart:~$ *** Booting Zephyr OS build v4.4.0 ***
+
+  ___                   ____ ___ ____
+ / _ \ _ __   ___ _ __ | __ )_ _/ ___|
+| | | | '_ \ / _ \ '_ \|  _ \| | |
+| |_| | |_) |  __/ | | | |_) | | |___
+ \___/| .__/ \___|_| |_|____/___\____|
+      |_|
+Hello, welcome to OpenBIC / NXP MCX-N9XX-EVK Minimal Bring-up 2026.34.0
+```
+
+The SoC reset itself roughly 3 seconds after the last feed, exactly as
+configured - a real, deliberate watchdog-triggered reset, not just a
+successful install/arm.
 
 ### HWINFO: device identity + reset cause (second real subsystem, verified on hardware)
 

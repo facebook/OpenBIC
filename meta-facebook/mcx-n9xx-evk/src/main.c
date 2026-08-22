@@ -25,6 +25,7 @@
 #include "plat_gpio.h"
 #include "plat_hwinfo.h"
 #include "plat_version.h"
+#include "plat_wdt.h"
 
 #define HEARTBEAT_PERIOD_MS 500
 
@@ -32,12 +33,20 @@ static const struct gpio_dt_spec heartbeat_led = GPIO_DT_SPEC_GET(DT_ALIAS(led0)
 
 int main(void)
 {
-	printk("Hello, welcome to %s %s %x%x.%x.%x\n", PLATFORM_NAME, PROJECT_NAME,
+	printk("\n"
+	       "  ___                   ____ ___ ____\n"
+	       " / _ \\ _ __   ___ _ __ | __ )_ _/ ___|\n"
+	       "| | | | '_ \\ / _ \\ '_ \\|  _ \\| | |\n"
+	       "| |_| | |_) |  __/ | | | |_) | | |___\n"
+	       " \\___/| .__/ \\___|_| |_|____/___\\____|\n"
+	       "      |_|\n");
+	printk("Hello, welcome to OpenBIC / %s %s %x%x.%x.%x\n", PLATFORM_NAME, PROJECT_NAME,
 	       BIC_FW_YEAR_MSB, BIC_FW_YEAR_LSB, BIC_FW_WEEK, BIC_FW_VER);
 	printk("Minimal bring-up: no sensor/IPMI/FRU services in this build.\n");
 
 	plat_hwinfo_init();
 	plat_gpio_init();
+	plat_wdt_init();
 
 	if (!gpio_is_ready_dt(&heartbeat_led)) {
 		printk("Heartbeat LED device not ready\n");
@@ -48,6 +57,7 @@ int main(void)
 
 	while (1) {
 		gpio_pin_toggle_dt(&heartbeat_led);
+		plat_wdt_feed();
 		k_msleep(HEARTBEAT_PERIOD_MS);
 	}
 
