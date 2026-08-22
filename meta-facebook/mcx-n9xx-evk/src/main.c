@@ -22,6 +22,7 @@
 #include <zephyr/kernel.h>
 #include <zephyr/drivers/gpio.h>
 
+#include "plat_gpio.h"
 #include "plat_version.h"
 
 #define HEARTBEAT_PERIOD_MS 500
@@ -33,6 +34,8 @@ int main(void)
 	printk("Hello, welcome to %s %s %x%x.%x.%x\n", PLATFORM_NAME, PROJECT_NAME,
 	       BIC_FW_YEAR_MSB, BIC_FW_YEAR_LSB, BIC_FW_WEEK, BIC_FW_VER);
 	printk("Minimal bring-up: no sensor/IPMI/FRU services in this build.\n");
+
+	plat_gpio_init();
 
 	if (!gpio_is_ready_dt(&heartbeat_led)) {
 		printk("Heartbeat LED device not ready\n");

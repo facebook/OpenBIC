@@ -1,10 +1,12 @@
-# MCX-N9XX-EVK — minimal bring-up
+# MCX-N9XX-EVK — bring-up
 
-Phase 1 of porting OpenBIC to the NXP MCX-N9XX-EVK (MCXN947, dual
-Cortex-M33). This target boots to an interactive shell over OpenBIC's
-own repo/build/west pipeline, on mainline Zephyr - it does **not** yet
-run any of OpenBIC's actual BIC functionality (sensors, IPMI, FRU,
-IPMB, PLDM, etc).
+Porting OpenBIC to the NXP MCX-N9XX-EVK (MCXN947, dual Cortex-M33).
+Phase 1 got this board booting to an interactive shell over OpenBIC's
+own repo/build/west pipeline, on mainline Zephyr. Phase 2 (in progress)
+is adding real subsystems one at a time, ported to mainline Zephyr's
+API surface instead of reusing `common/` as-is - starting with GPIO
+status monitoring (below). It does **not** yet run OpenBIC's IPMI/FRU/
+sensor-table pipeline as a whole.
 
 ## Why this is scoped as "bring-up only", not a real board port
 
@@ -45,11 +47,38 @@ west setup, on real MCX-N9XX-EVK hardware.
 
 ```
 meta-facebook/mcx-n9xx-evk/
-├── CMakeLists.txt   Only builds src/main.c - no common/ globs
+├── CMakeLists.txt   Only builds src/*.c - no common/ globs
 ├── prj.conf         GPIO + shell + logging only
-├── boards/          Devicetree overlay slot (currently a no-op)
+├── boards/          Devicetree overlay: enables red_led + user_button_2
 ├── src/main.c       Banner + shell + heartbeat LED
-└── src/plat_version.h
+├── src/plat_version.h
+├── src/plat_gpio.[ch]   GPIO status-monitoring subsystem (see below)
+└── src/plat_shell.c     "plat gpio mon0" shell command
+```
+
+### GPIO status monitoring (first real subsystem, verified on hardware)
+
+`src/plat_gpio.c` is a from-scratch port of the pattern
+`common/hal/hal_gpio.c` + `common/lib/power_status.c` implement for
+real OpenBIC boards - interrupt-driven GPIO monitoring with debounce,
+used on actual BICs to track things like power-good/host-presence
+signals - written against mainline Zephyr's GPIO API instead of the
+legacy one those files use.
+
+This EVK has no dedicated sensor or platform-status input, so it
+monitors **SW2** (`user_button_2`/`sw0` alias, GPIO1.3, active-low)
+as a stand-in signal source: `GPIO_INT_EDGE_BOTH` interrupt +
+30ms debounce, logs every transition, and exposes live state via
+`plat gpio mon0` in the shell.
+
+Verified on real hardware (physical button presses, captured over the
+serial console):
+
+```
+[00:05:28.232] <inf> plat_gpio: mon0 (SW2) state changed: asserted
+[00:05:28.383] <inf> plat_gpio: mon0 (SW2) state changed: deasserted
+[00:05:30.668] <inf> plat_gpio: mon0 (SW2) state changed: asserted
+[00:05:30.798] <inf> plat_gpio: mon0 (SW2) state changed: deasserted
 ```
 
 ## Build / flash

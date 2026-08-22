@@ -1,5 +1,11 @@
-/* red_led (D2 red channel) is already enabled by the board's own
- * devicetree; nothing to override here yet. Reserved for board-specific
- * peripheral enablement as the full bring-up adds real hardware support
- * (I2C buses, ADC channels, additional GPIOs, etc).
+/* red_led (D2 red channel) is enabled by the board's own devicetree.
+ *
+ * user_button_2 (SW2, gpio1.3, active-low w/ pull-up) is disabled by
+ * default on this board - enabled here for the GPIO status-monitoring
+ * subsystem in src/plat_gpio.c, standing in for a real BIC's
+ * power-good/host-presence input until actual platform signals are
+ * wired up.
  */
+&user_button_2 {
+	status = "okay";
+};
