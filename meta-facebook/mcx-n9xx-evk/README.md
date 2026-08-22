@@ -53,8 +53,26 @@ meta-facebook/mcx-n9xx-evk/
 ├── src/main.c       Banner + shell + heartbeat LED
 ├── src/plat_version.h
 ├── src/plat_gpio.[ch]   GPIO status-monitoring subsystem (see below)
+├── src/plat_hwinfo.[ch] Device ID + reset-cause reporting (see below)
 └── src/plat_shell.c     "plat gpio mon0" shell command
 ```
+
+### HWINFO: device identity + reset cause (second real subsystem, verified on hardware)
+
+`src/plat_hwinfo.c` reads the chip's unique device ID and the cause of
+the last reset via mainline Zephyr's `hwinfo` API
+(`HWINFO_MCUX_SYSCON` + `HWINFO_MCUX_RSTCTL` backends, auto-selected -
+no board-specific code needed) - the stand-in here for the
+device-identity data a real BIC reports over IPMI (Get Device ID / Get
+Device GUID). `CONFIG_HWINFO_SHELL=y` also gets you Zephyr's own
+`hwinfo devid`/`hwinfo reset_cause` shell commands for free, for
+comparison against the plat-level log output.
+
+Verified on real hardware: after a `west flash`-triggered reset, the
+console reported this board's actual per-chip device ID
+(`36353630004d4...`, truncated as read off the console) and correctly
+identified the reset cause as a software reset (as expected for a
+debugger-issued reset, distinct from a power-on or watchdog reset).
 
 ### GPIO status monitoring (first real subsystem, verified on hardware)
 

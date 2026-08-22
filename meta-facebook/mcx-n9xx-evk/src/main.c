@@ -23,6 +23,7 @@
 #include <zephyr/drivers/gpio.h>
 
 #include "plat_gpio.h"
+#include "plat_hwinfo.h"
 #include "plat_version.h"
 
 #define HEARTBEAT_PERIOD_MS 500
@@ -35,6 +36,7 @@ int main(void)
 	       BIC_FW_YEAR_MSB, BIC_FW_YEAR_LSB, BIC_FW_WEEK, BIC_FW_VER);
 	printk("Minimal bring-up: no sensor/IPMI/FRU services in this build.\n");
 
+	plat_hwinfo_init();
 	plat_gpio_init();
 
 	if (!gpio_is_ready_dt(&heartbeat_led)) {
