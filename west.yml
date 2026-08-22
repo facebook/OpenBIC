@@ -1,29 +1,18 @@
 manifest:
   remotes:
-    - name: aspeed
-      url-base: https://github.com/AspeedTech-BMC
-    - name: nuvoton
-      url-base: https://github.com/Nuvoton-Israel
+    - name: zephyr
+      url-base: https://github.com/zephyrproject-rtos
 
   # Please add items below based on alphabetical order.
   # These dependencies may need updating if new features are added to the firmware.
   projects:
     - name: zephyr
-      remote: aspeed
-      path: zephyr
-      revision: 641ac3b4d956f2d237c109526c017fdee4715bfb
-      import: 
+      remote: zephyr
+      revision: v4.4.0
+      import:
         name-allowlist:
           - cmsis
-          - mcuboot
-          - mbedtls
-
-    - name: zephyr_nuvoton
-      remote: nuvoton
-      repo-path: zephyr
-      path: zephyr_nuvoton
-      revision: openbic-v2.6.0.0
+          - hal_nxp
 
   self:
     path: openbic
-
