@@ -24,6 +24,7 @@
 
 #include "plat_gpio.h"
 #include "plat_hwinfo.h"
+#include "plat_storage.h"
 #include "plat_version.h"
 #include "plat_wdt.h"
 
@@ -45,6 +46,7 @@ int main(void)
 	printk("Minimal bring-up: no sensor/IPMI/FRU services in this build.\n");
 
 	plat_hwinfo_init();
+	plat_storage_init();
 	plat_gpio_init();
 	plat_wdt_init();
 

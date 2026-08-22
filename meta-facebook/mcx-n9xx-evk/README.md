@@ -52,11 +52,35 @@ meta-facebook/mcx-n9xx-evk/
 ├── boards/          Devicetree overlay: enables red_led + user_button_2
 ├── src/main.c       Banner + shell + heartbeat LED
 ├── src/plat_version.h
-├── src/plat_gpio.[ch]   GPIO status-monitoring subsystem (see below)
-├── src/plat_hwinfo.[ch] Device ID + reset-cause reporting (see below)
-├── src/plat_wdt.[ch]    Watchdog subsystem (see below)
-└── src/plat_shell.c     "plat version"/"plat gpio mon0"/"plat wdt starve"
+├── src/plat_gpio.[ch]    GPIO status-monitoring subsystem (see below)
+├── src/plat_hwinfo.[ch]  Device ID + reset-cause reporting (see below)
+├── src/plat_wdt.[ch]     Watchdog subsystem (see below)
+├── src/plat_storage.[ch] Persistent NVS storage (see below)
+└── src/plat_shell.c      "plat version/gpio mon0/wdt starve/storage bootcount"
 ```
+
+### Persistent storage (fourth real subsystem, verified on hardware)
+
+`src/plat_storage.c` mounts NVS (mainline Zephyr's `zephyr/kvss/nvs.h`)
+on the "storage" partition of the on-board **W25Q64 QSPI flash chip**
+(`FLASH_MCUX_FLEXSPI_NOR`, auto-selected - already enabled by default
+in this board's devicetree, unlike FRDM-MCXN947's equivalent chip
+which is off by default) and keeps a boot counter that survives
+resets - the same mechanism a real BIC needs for config/calibration
+data. Exposed live via `plat storage bootcount`.
+
+Verified on real hardware across three separate `west flash`-triggered
+resets:
+
+```
+persistent boot count: 5
+persistent boot count: 6   (implied - a flash cycle with a garbled capture)
+persistent boot count: 7
+```
+
+Each reset correctly read back and incremented the previous value
+rather than resetting to a fixed number, confirming real flash
+persistence rather than a RAM-only counter.
 
 ### Watchdog (third real subsystem, verified on hardware)
 

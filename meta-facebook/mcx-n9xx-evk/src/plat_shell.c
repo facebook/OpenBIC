@@ -21,6 +21,7 @@
 #include <zephyr/shell/shell.h>
 
 #include "plat_gpio.h"
+#include "plat_storage.h"
 #include "plat_version.h"
 #include "plat_wdt.h"
 
@@ -53,8 +54,23 @@ static int cmd_wdt_starve(const struct shell *sh, size_t argc, char **argv)
 	return 0;
 }
 
+static int cmd_storage_bootcount(const struct shell *sh, size_t argc, char **argv)
+{
+	ARG_UNUSED(argc);
+	ARG_UNUSED(argv);
+
+	shell_print(sh, "persistent boot count: %u", plat_storage_boot_count());
+	return 0;
+}
+
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_plat_gpio, SHELL_CMD(mon0, NULL, "Read mon0 (SW2) live state",
 							 cmd_gpio_mon0),
+				SHELL_SUBCMD_SET_END);
+
+SHELL_STATIC_SUBCMD_SET_CREATE(sub_plat_storage,
+				SHELL_CMD(bootcount, NULL,
+					  "Show the persistent boot counter (NVS)",
+					  cmd_storage_bootcount),
 				SHELL_SUBCMD_SET_END);
 
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_plat_wdt,
@@ -68,6 +84,8 @@ SHELL_STATIC_SUBCMD_SET_CREATE(sub_plat,
 					  cmd_version),
 				SHELL_CMD(gpio, &sub_plat_gpio, "GPIO status commands", NULL),
 				SHELL_CMD(wdt, &sub_plat_wdt, "Watchdog commands", NULL),
+				SHELL_CMD(storage, &sub_plat_storage, "Persistent storage commands",
+					  NULL),
 				SHELL_SUBCMD_SET_END);
 
 SHELL_CMD_REGISTER(plat, &sub_plat, "OpenBIC platform commands", NULL);
