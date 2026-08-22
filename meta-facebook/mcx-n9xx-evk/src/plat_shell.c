@@ -21,6 +21,7 @@
 #include <zephyr/shell/shell.h>
 
 #include "plat_gpio.h"
+#include "plat_mbox.h"
 #include "plat_storage.h"
 #include "plat_version.h"
 #include "plat_wdt.h"
@@ -63,8 +64,23 @@ static int cmd_storage_bootcount(const struct shell *sh, size_t argc, char **arg
 	return 0;
 }
 
+static int cmd_mbox_ping(const struct shell *sh, size_t argc, char **argv)
+{
+	ARG_UNUSED(argc);
+	ARG_UNUSED(argv);
+
+	shell_print(sh, "Sending ping to cpu1...");
+	plat_mbox_ping();
+	return 0;
+}
+
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_plat_gpio, SHELL_CMD(mon0, NULL, "Read mon0 (SW2) live state",
 							 cmd_gpio_mon0),
+				SHELL_SUBCMD_SET_END);
+
+SHELL_STATIC_SUBCMD_SET_CREATE(sub_plat_mbox,
+				SHELL_CMD(ping, NULL, "Send a ping to cpu1 over the mailbox",
+					  cmd_mbox_ping),
 				SHELL_SUBCMD_SET_END);
 
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_plat_storage,
@@ -86,6 +102,7 @@ SHELL_STATIC_SUBCMD_SET_CREATE(sub_plat,
 				SHELL_CMD(wdt, &sub_plat_wdt, "Watchdog commands", NULL),
 				SHELL_CMD(storage, &sub_plat_storage, "Persistent storage commands",
 					  NULL),
+				SHELL_CMD(mbox, &sub_plat_mbox, "Inter-core mailbox commands", NULL),
 				SHELL_SUBCMD_SET_END);
 
 SHELL_CMD_REGISTER(plat, &sub_plat, "OpenBIC platform commands", NULL);

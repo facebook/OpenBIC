@@ -9,3 +9,16 @@
 &user_button_2 {
 	status = "okay";
 };
+
+/* Inter-core mailbox endpoint for the dual-core subsystem
+ * (src/plat_mbox.c) - only exercised when built with sysbuild
+ * (west build --sysbuild), pairing with remote/boards/
+ * mcx_n9xx_evk_mcxn947_cpu1.overlay's swapped tx/rx channels.
+ */
+/ {
+	mbox-consumer {
+		compatible = "vnd,mbox-consumer";
+		mboxes = <&mbox 1>, <&mbox 0>;
+		mbox-names = "tx", "rx";
+	};
+};

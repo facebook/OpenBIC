@@ -2,11 +2,12 @@
 
 Porting OpenBIC to the NXP MCX-N9XX-EVK (MCXN947, dual Cortex-M33).
 Phase 1 got this board booting to an interactive shell over OpenBIC's
-own repo/build/west pipeline, on mainline Zephyr. Phase 2 (in progress)
-is adding real subsystems one at a time, ported to mainline Zephyr's
-API surface instead of reusing `common/` as-is - starting with GPIO
-status monitoring (below). It does **not** yet run OpenBIC's IPMI/FRU/
-sensor-table pipeline as a whole.
+own repo/build/west pipeline, on mainline Zephyr. Phase 2 adds real
+subsystems one at a time, ported to mainline Zephyr's API surface
+instead of reusing `common/` as-is: GPIO status monitoring, HWINFO,
+watchdog, persistent NVS storage, and dual-core cpu0↔cpu1 mailbox IPC
+(all below, each verified on real hardware). It does **not** yet run
+OpenBIC's IPMI/FRU/sensor-table pipeline as a whole.
 
 ## Why this is scoped as "bring-up only", not a real board port
 
@@ -56,8 +57,71 @@ meta-facebook/mcx-n9xx-evk/
 ├── src/plat_hwinfo.[ch]  Device ID + reset-cause reporting (see below)
 ├── src/plat_wdt.[ch]     Watchdog subsystem (see below)
 ├── src/plat_storage.[ch] Persistent NVS storage (see below)
-└── src/plat_shell.c      "plat version/gpio mon0/wdt starve/storage bootcount"
+├── src/plat_mbox.[ch]    Inter-core mailbox, cpu0 side (see below)
+├── src/plat_shell.c      "plat version/gpio mon0/wdt starve/storage bootcount/mbox ping"
+├── sysbuild.cmake        Orchestrates the optional dual-core build
+├── Kconfig.sysbuild      Selects mcx_n9xx_evk/mcxn947/cpu1 as the remote board
+└── remote/               cpu1's image (see "Dual-core" below)
+    ├── CMakeLists.txt, prj.conf, boards/*.conf|overlay
+    └── src/main.c        Headless mailbox echo responder
 ```
+
+### Dual-core bring-up (fifth real subsystem, verified on hardware)
+
+The MCXN947 is dual Cortex-M33 (cpu0 + cpu1). This is the only
+subsystem here that needs `west build --sysbuild` - the normal
+cpu0-only build (used by every other subsystem above) doesn't touch
+`remote/` at all. Closely follows Zephyr's own upstream
+`samples/drivers/mbox` sample, which already has a verified
+configuration for this exact board (`mcx_n9xx_evk/mcxn947/cpu0` +
+`mcx_n9xx_evk/mcxn947/cpu1`) - adapted into this app's structure/style
+instead of copied as a standalone sample.
+
+How it boots: `boards/mcx_n9xx_evk_mcxn947_cpu0.conf` sets
+`CONFIG_SECOND_CORE_MCUX=y`, which makes cpu0's SoC init code
+(`soc/nxp/mcx/mcxn/soc.c`) point cpu1's boot address at
+`slot1_partition` and release it out of reset during cpu0's own boot -
+no separate flashing step or button press needed to start cpu1.
+
+Communication is over the MU (Messaging Unit) hardware mailbox via
+mainline Zephyr's generic `mbox` API: `src/plat_mbox.c` (cpu0) sends a
+ping every 2s and logs whatever it receives back; `remote/src/main.c`
+(cpu1) is headless (its own console UART, `flexcomm2_lpuart2`, isn't
+wired up - no need for a second serial adapter) and immediately echoes
+back anything it receives. A `plat mbox ping` shell command sends one
+on demand.
+
+Verified on real hardware - cpu0's console showing real, repeating
+round trips to cpu1 and back:
+
+```
+[00:00:09.506,000] <inf> plat_mbox: ping sent to cpu1 (channel 1)
+[00:00:09.506,000] <inf> plat_mbox: pong from cpu1 (channel 0)
+[00:00:11.507,000] <inf> plat_mbox: ping sent to cpu1 (channel 1)
+[00:00:11.507,000] <inf> plat_mbox: pong from cpu1 (channel 0)
+[00:00:13.507,000] <inf> plat_mbox: ping sent to cpu1 (channel 1)
+[00:00:13.507,000] <inf> plat_mbox: pong from cpu1 (channel 0)
+```
+
+The reply on every single cycle (not just the first) is what shows
+cpu1 is genuinely alive and reacting in real time, not just running
+whatever was left over from a previous flash.
+
+Build/flash this specific subsystem:
+
+```sh
+west build -p always -b mcx_n9xx_evk/mcxn947/cpu0 --sysbuild meta-facebook/mcx-n9xx-evk
+west flash   # flashes both cpu0 and cpu1 images
+```
+
+**Note:** `boards/mcx_n9xx_evk_mcxn947_cpu0.conf` (which releases cpu1)
+applies to *every* build of this app, not just `--sysbuild` ones -
+matching upstream's own sample. A plain single-core rebuild will still
+release cpu1, which then runs whatever was last flashed to
+`slot1_partition` (garbage/erased flash if nothing ever was). This is
+harmless - cpu1 has its own isolated core/RAM - but don't be surprised
+if cpu1's LED-adjacent behavior (there isn't any yet) seems to have "a
+mind of its own" after mixing sysbuild and non-sysbuild builds.
 
 ### Persistent storage (fourth real subsystem, verified on hardware)
 
@@ -172,7 +236,7 @@ west flash
 Open a serial console (115200 8N1) on the MCU-Link's VCOM port to see
 the banner and shell prompt; the red LED should blink every 500ms.
 
-## Phase 2: full bring-up (tracked separately, not started here)
+## Beyond this: full IPMI/sensor/FRU bring-up (not started here)
 
 Making this a real BIC target means porting `common/` to mainline
 Zephyr's API surface, which is substantial, open-ended work (153 `.c`

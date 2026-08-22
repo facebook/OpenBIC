@@ -24,11 +24,13 @@
 
 #include "plat_gpio.h"
 #include "plat_hwinfo.h"
+#include "plat_mbox.h"
 #include "plat_storage.h"
 #include "plat_version.h"
 #include "plat_wdt.h"
 
 #define HEARTBEAT_PERIOD_MS 500
+#define MBOX_PING_PERIOD_MS 2000
 
 static const struct gpio_dt_spec heartbeat_led = GPIO_DT_SPEC_GET(DT_ALIAS(led0), gpios);
 
@@ -49,6 +51,7 @@ int main(void)
 	plat_storage_init();
 	plat_gpio_init();
 	plat_wdt_init();
+	plat_mbox_init();
 
 	if (!gpio_is_ready_dt(&heartbeat_led)) {
 		printk("Heartbeat LED device not ready\n");
@@ -57,9 +60,14 @@ int main(void)
 
 	gpio_pin_configure_dt(&heartbeat_led, GPIO_OUTPUT_ACTIVE);
 
+	int loop_count = 0;
+
 	while (1) {
 		gpio_pin_toggle_dt(&heartbeat_led);
 		plat_wdt_feed();
+		if (++loop_count % (MBOX_PING_PERIOD_MS / HEARTBEAT_PERIOD_MS) == 0) {
+			plat_mbox_ping();
+		}
 		k_msleep(HEARTBEAT_PERIOD_MS);
 	}
 

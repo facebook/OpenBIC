@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# Selects the cpu1 ("remote") board target for the optional dual-core
+# build (`west build --sysbuild`). Not needed for the normal cpu0-only
+# build used by every other subsystem in this directory.
+
+source "share/sysbuild/Kconfig"
+
+config REMOTE_BOARD
+	string "Remote (cpu1) board"
+	default "mcx_n9xx_evk/mcxn947/cpu1" if $(BOARD) = "mcx_n9xx_evk"
