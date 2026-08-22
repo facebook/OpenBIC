@@ -1,0 +1,5 @@
+/* red_led (D2 red channel) is already enabled by the board's own
+ * devicetree; nothing to override here yet. Reserved for board-specific
+ * peripheral enablement as the full bring-up adds real hardware support
+ * (I2C buses, ADC channels, additional GPIOs, etc).
+ */
