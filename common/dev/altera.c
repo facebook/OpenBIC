@@ -17,11 +17,11 @@
 #include "altera.h"
 #include "hal_i2c.h"
 #include "util_spi.h"
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-#include <zephyr.h>
+#include <zephyr/kernel.h>
 
 #define MAX_RETRY 3
 #define CHECK_ALTERA_STATUS_DELAY_US 100

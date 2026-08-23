@@ -22,8 +22,8 @@ extern "C" {
 #endif
 
 #include <stdint.h>
-#include <sys/printk.h>
-#include <zephyr.h>
+#include <zephyr/sys/printk.h>
+#include <zephyr/kernel.h>
 #include "plat_def.h"
 
 #define MCTP_DEBUG 1

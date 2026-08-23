@@ -18,8 +18,8 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
-#include <sys/crc.h>
-#include <logging/log.h>
+#include <zephyr/sys/crc.h>
+#include <zephyr/logging/log.h>
 #include "libutil.h"
 #include "sensor.h"
 #include "m88rt51632.h"

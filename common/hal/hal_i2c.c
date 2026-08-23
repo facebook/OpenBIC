@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-#include <zephyr.h>
+#include <zephyr/kernel.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "cmsis_os2.h"
+#include <zephyr/portability/cmsis_os2.h>
 #include "hal_i2c.h"
 #include "timer.h"
 #include "plat_i2c.h"
 #include "libutil.h"
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 
 LOG_MODULE_REGISTER(hal_i2c);
 
@@ -59,7 +59,7 @@ int i2c_freq_set(uint8_t i2c_bus, uint8_t i2c_speed_mode, uint8_t en_slave)
 	}
 
 	uint32_t dev_config_raw;
-	dev_config_raw = I2C_MODE_MASTER | I2C_SPEED_SET(i2c_speed_mode);
+	dev_config_raw = I2C_MODE_CONTROLLER | I2C_SPEED_SET(i2c_speed_mode);
 
 	if (i2c_configure(dev_i2c[i2c_bus], dev_config_raw)) {
 		LOG_ERR("i2c freq set failed");
@@ -417,7 +417,33 @@ void i2c_scan(uint8_t bus, uint8_t *target_addr, uint8_t *target_addr_len)
 	}
 }
 
+#if defined(CONFIG_I2C_MCUX_LPI2C)
+static void util_init_I2C_mcux_flexcomm(void)
+{
+	int status;
+
+#ifdef DEV_I2C_2
+	dev_i2c[I2C_BUS_LCD_HEADER] = DEVICE_DT_GET(DT_NODELABEL(flexcomm2_lpi2c2));
+	status = k_mutex_init(&i2c_mutex[I2C_BUS_LCD_HEADER]);
+	if (status)
+		LOG_ERR("i2c%d mutex init fail", I2C_BUS_LCD_HEADER);
+#endif
+#ifdef DEV_I2C_3
+	dev_i2c[I2C_BUS_ARDUINO_HEADER] = DEVICE_DT_GET(DT_NODELABEL(flexcomm3_lpi2c3));
+	status = k_mutex_init(&i2c_mutex[I2C_BUS_ARDUINO_HEADER]);
+	if (status)
+		LOG_ERR("i2c%d mutex init fail", I2C_BUS_ARDUINO_HEADER);
+#endif
+}
+#endif /* CONFIG_I2C_MCUX_LPI2C */
+
 void util_init_I2C(void)
+{
+#if defined(CONFIG_I2C_MCUX_LPI2C)
+	util_init_I2C_mcux_flexcomm();
+}
+#else
+static void util_init_I2C_device_get_binding(void)
 {
 	int status;
 
@@ -520,6 +546,12 @@ void util_init_I2C(void)
 #endif
 #endif /* CONFIG_I2C_ASPEED */
 }
+
+void util_init_I2C(void)
+{
+	util_init_I2C_device_get_binding();
+}
+#endif /* CONFIG_I2C_MCUX_LPI2C */
 
 int check_i2c_bus_valid(uint8_t bus)
 {

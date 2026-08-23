@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#include <zephyr.h>
-#include <logging/log.h>
+#include <zephyr/kernel.h>
+#include <zephyr/logging/log.h>
 #include "libutil.h"
 #include "mctp.h"
 #include "sensor.h"

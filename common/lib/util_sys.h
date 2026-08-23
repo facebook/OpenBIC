@@ -17,7 +17,7 @@
 #ifndef UTIL_SYS_H
 #define UTIL_SYS_H
 
-#include <sys/reboot.h>
+#include <zephyr/sys/reboot.h>
 #include "stdbool.h"
 #include "stdint.h"
 

@@ -18,7 +18,7 @@
 #include "hal_gpio.h"
 #include "expansion_board.h"
 
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 
 LOG_MODULE_REGISTER(expansion_board);
 

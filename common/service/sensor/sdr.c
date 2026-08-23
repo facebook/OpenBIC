@@ -22,7 +22,7 @@
 #include "plat_sensor_table.h"
 #include "plat_ipmb.h"
 
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 
 LOG_MODULE_REGISTER(sdr);
 
@@ -222,7 +222,7 @@ uint8_t sdr_init(void)
 
 		if (DEBUG_SENSOR) {
 			LOG_DBG("%s ID: 0x%x%x, size: %d, recordlen: %d",
-				log_strdup(full_sdr_table[i].ID_str), full_sdr_table[i].record_id_h,
+				full_sdr_table[i].ID_str, full_sdr_table[i].record_id_h,
 				full_sdr_table[i].record_id_l, full_sdr_table[i].ID_len,
 				full_sdr_table[i].record_len);
 		}

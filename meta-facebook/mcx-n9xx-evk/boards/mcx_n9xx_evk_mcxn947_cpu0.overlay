@@ -1,3 +1,19 @@
+/* flexcomm2_lpi2c2 (LCD-shield header I2C, unused by this port - only
+ * flexcomm3_lpi2c3/Arduino-header is used, see plat_i2c.h) triggers a
+ * real divide-by-zero crash in NXP's own MCUX LPI2C driver
+ * (LPI2C_MasterInit -> LPI2C_GetCyclesForWidth, modules/hal/nxp/.../
+ * fsl_lpi2c.c:166) during automatic boot-time init on this SoC/Zephyr
+ * combination - confirmed on real hardware via GDB + addr2line
+ * (USAGE FAULT, "Division by zero", identical PC/registers every
+ * time). This bus shares FlexComm2 with an audio codec node in the
+ * board's own devicetree, which may be why its clock-rate query
+ * returns near-zero. Since nothing in this port uses this bus,
+ * disabling it is the correct fix, not a workaround - see README.md.
+ */
+&flexcomm2_lpi2c2 {
+	status = "disabled";
+};
+
 /* red_led (D2 red channel) is enabled by the board's own devicetree.
  *
  * user_button_2 (SW2, gpio1.3, active-low w/ pull-up) is disabled by

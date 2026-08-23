@@ -16,13 +16,13 @@
 
 #include "mctp.h"
 #include "hal_i2c_target.h"
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/crc.h>
-#include <sys/printk.h>
-#include <zephyr.h>
+#include <zephyr/sys/crc.h>
+#include <zephyr/sys/printk.h>
+#include <zephyr/kernel.h>
 #include "libutil.h"
 #include "plat_def.h"
 

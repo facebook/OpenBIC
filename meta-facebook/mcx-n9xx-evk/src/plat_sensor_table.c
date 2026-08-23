@@ -1,3 +1,4 @@
+#include <zephyr/sys/util.h>
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
@@ -14,21 +15,9 @@
  * limitations under the License.
  */
 
-#ifndef PLAT_WDT_H
-#define PLAT_WDT_H
+#include "sensor.h"
+#include "plat_sensor_table.h"
 
-/* Installs a hardware watchdog timeout on wwdt0 and starts it. Call
- * plat_wdt_feed() periodically (e.g. from the heartbeat loop) or the
- * SoC resets. Mirrors the role of common/service/main.c's wdt_init().
- */
-void plat_wdt_init(void);
+sensor_cfg plat_sensor_config[] = {};
 
-/* Services the watchdog. No-op if plat_wdt_stop_feeding() was called. */
-void plat_wdt_feed(void);
-
-/* Stops feeding on purpose, for testing that the watchdog actually
- * resets the SoC on starvation (see "plat wdt starve" shell command).
- */
-void plat_wdt_stop_feeding(void);
-
-#endif
+const int SENSOR_CONFIG_SIZE = ARRAY_SIZE(plat_sensor_config);

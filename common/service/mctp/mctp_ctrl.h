@@ -23,7 +23,7 @@ extern "C" {
 
 #include "mctp.h"
 #include <stdint.h>
-#include <zephyr.h>
+#include <zephyr/kernel.h>
 
 typedef uint8_t (*mctp_ctrl_cmd_fn)(void *, uint8_t *, uint16_t, uint8_t *, uint16_t *, void *);
 

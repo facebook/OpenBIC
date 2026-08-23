@@ -18,7 +18,7 @@
 #include "sensor.h"
 #include "hal_i2c.h"
 #include "libutil.h"
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 #include "tmp75.h"
 
 LOG_MODULE_REGISTER(tmp75);

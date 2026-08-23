@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-#include <zephyr.h>
+#include <zephyr/kernel.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include "sensor.h"
 #include "hal_i2c.h"
 #include "mctp.h"
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 #include "plat_def.h"
 #include "libutil.h"
 

@@ -20,11 +20,11 @@
 
 #include <zephyr/shell/shell.h>
 
+#include "hal_wdt.h"
 #include "plat_gpio.h"
 #include "plat_mbox.h"
 #include "plat_storage.h"
 #include "plat_version.h"
-#include "plat_wdt.h"
 
 static int cmd_version(const struct shell *sh, size_t argc, char **argv)
 {
@@ -51,7 +51,7 @@ static int cmd_wdt_starve(const struct shell *sh, size_t argc, char **argv)
 	ARG_UNUSED(argv);
 
 	shell_print(sh, "Stopping watchdog feed - SoC will reset shortly.");
-	plat_wdt_stop_feeding();
+	set_wdt_continue_feed(false);
 	return 0;
 }
 

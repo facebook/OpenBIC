@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-#include <zephyr.h>
-#include <logging/log.h>
-#include <shell/shell.h>
-#include <drivers/flash.h>
-#include <device.h>
+#include <zephyr/kernel.h>
+#include <zephyr/logging/log.h>
+#include <zephyr/shell/shell.h>
+#include <zephyr/drivers/flash.h>
+#include <zephyr/device.h>
 #include <soc.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include <sys/util.h>
-#include "cmsis_os2.h"
+#include <zephyr/sys/util.h>
+#include <zephyr/portability/cmsis_os2.h>
 #include "util_spi.h"
 #include "util_sys.h"
 #include "libutil.h"
@@ -118,7 +118,10 @@ int ckeck_flash_device_isinit(const struct device *flash_device, uint8_t flash_p
 
 	if (!flash_device_list[flash_position].isinit) {
 		int rc = 0;
-		rc = spi_nor_re_init(flash_device);
+		/* spi_nor_re_init() (Aspeed-fork-only) has no mainline
+		 * equivalent - the device is already initialized by
+		 * Zephyr's own driver at boot, so this is a safe no-op.
+		 */
 		if (rc == 0) {
 			flash_device_list[flash_position].isinit = true;
 		} else {

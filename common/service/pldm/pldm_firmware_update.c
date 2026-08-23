@@ -17,7 +17,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 #include "util_spi.h"
 #include "util_sys.h"
 #include "libutil.h"

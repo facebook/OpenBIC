@@ -16,13 +16,13 @@
 
 #include "mctp.h"
 #include "mctp_ctrl.h"
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/printk.h>
-#include <zephyr.h>
+#include <zephyr/sys/printk.h>
+#include <zephyr/kernel.h>
 #include "libutil.h"
 
 LOG_MODULE_DECLARE(mctp);

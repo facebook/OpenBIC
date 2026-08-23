@@ -17,8 +17,13 @@
 #ifndef HAL_I2C_H
 #define HAL_I2C_H
 
-#include <drivers/i2c.h>
-#include <drivers/i2c/slave/ipmb.h>
+#include <zephyr/drivers/i2c.h>
+/* Note: <drivers/i2c/slave/ipmb.h> (Aspeed-only I2C-slave-as-IPMB
+ * convenience header) is intentionally not carried over - nothing in
+ * this file actually used its types, and no mainline Zephyr driver on
+ * this board implements I2C target/slave mode anyway (see
+ * meta-facebook/mcx-n9xx-evk/README.md).
+ */
 
 #if defined(CONFIG_I2C_ASPEED)
 #if DT_NODE_HAS_STATUS(DT_NODELABEL(i2c0), okay)
@@ -144,6 +149,19 @@
 
 #if DT_NODE_HAS_STATUS(DT_NODELABEL(i2c12a), okay)
 #define DEV_I2C_11
+#endif
+
+#elif defined(CONFIG_I2C_MCUX_LPI2C)
+/* NXP MCX-N9XX-EVK: real I2C buses on this board are flexcomm2_lpi2c2
+ * (LCD-shield header) and flexcomm3_lpi2c3 (Arduino header) - see
+ * plat_i2c.h for the DT_NODELABEL() mapping used in util_init_I2C().
+ */
+#if DT_NODE_HAS_STATUS(DT_NODELABEL(flexcomm2_lpi2c2), okay)
+#define DEV_I2C_2
+#endif
+
+#if DT_NODE_HAS_STATUS(DT_NODELABEL(flexcomm3_lpi2c3), okay)
+#define DEV_I2C_3
 #endif
 
 #else /* defined(CONFIG_GPIO_ASPEED) */

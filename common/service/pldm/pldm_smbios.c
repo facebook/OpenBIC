@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 #include <string.h>
 #include <stdlib.h>
 

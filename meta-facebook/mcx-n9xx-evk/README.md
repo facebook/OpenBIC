@@ -1,13 +1,66 @@
-# MCX-N9XX-EVK — bring-up
+# MCX-N9XX-EVK — full board port
 
 Porting OpenBIC to the NXP MCX-N9XX-EVK (MCXN947, dual Cortex-M33).
-Phase 1 got this board booting to an interactive shell over OpenBIC's
-own repo/build/west pipeline, on mainline Zephyr. Phase 2 adds real
-subsystems one at a time, ported to mainline Zephyr's API surface
-instead of reusing `common/` as-is: GPIO status monitoring, HWINFO,
-watchdog, persistent NVS storage, and dual-core cpu0↔cpu1 mailbox IPC
-(all below, each verified on real hardware). It does **not** yet run
-OpenBIC's IPMI/FRU/sensor-table pipeline as a whole.
+
+This branch (`full-board-port`) builds on the `mcx-n9xx-evk-port`
+bring-up branch's 5 from-scratch subsystems (GPIO monitoring, HWINFO,
+watchdog, NVS storage, dual-core mailbox - all still present, see
+below) and goes further: `main()` now calls the **real**
+`common/hal`/`common/lib`/`common/service` code - `wdt_init()`,
+`util_init_timer()`, `util_init_I2C()`, `sensor_init()`, `FRU_init()` -
+ported to mainline Zephyr's API surface, plus real MCTP (transport
+core) and PLDM (base protocol), instead of reusing the bring-up
+branch's stand-ins. See "What's real, what's excluded" below for
+exactly what was ported vs. left out and why - nothing is stubbed
+silently.
+
+## What's real, what's excluded, and why
+
+**Real, ported, verified on hardware:**
+- `common/hal/hal_wdt.c` - watchdog, `DEVICE_DT_GET(DT_ALIAS(watchdog0))` instead of string-name `device_get_binding()`.
+- `common/hal/hal_i2c.c` - I2C master (`I2C_MODE_CONTROLLER`, real `DEVICE_DT_GET` bindings, dead Aspeed-only `<drivers/i2c/slave/ipmb.h>` include dropped). Genuinely talks to real hardware: `i2c scan flexcomm3_lpi2c3` performs 128 real bus transactions (0 found - nothing's wired to the Arduino header, honestly).
+- `common/lib/timer.c`, `common/lib/libutil.c`, `common/lib/util_pmbus.c` - portable as-is/near-as-is (CMSIS-RTOS2 timing, generic helpers, PMBus math).
+- `common/service/sensor/sensor.c` + `sdr.c` - the real sensor framework, with an intentionally **empty** per-board table (`src/plat_sensor_table.c`/`plat_sdr_table.c` - this EVK has no sensors wired up). `sensor_init()` genuinely runs and honestly logs `Init sensor size is zero` - the real code's real behavior for a board with nothing configured, not silenced.
+- `common/dev/fru.c` + `eeprom.c` - real FRU read/write path; `src/plat_fru.c` points it at a plausible 24C-EEPROM I2C address with nothing physically there, so it fails gracefully (real I2C NACK/timeout), which is honest given the hardware.
+- `common/service/mctp/mctp.c` + `mctp_ctrl.c` - MCTP's core protocol logic, which turned out to be genuinely portable (clean C, no Aspeed coupling).
+- `common/service/pldm/pldm.c` + `pldm_base.c` - PLDM's base protocol/message types, likewise portable.
+- ~90 `common/dev/*.c` sensor-chip drivers (pmbus/i2c-based power/temp/etc. ICs) - compiled because `sensor.c`'s dispatch table (`sensor_drive_tbl`) unconditionally references every chip driver's init function regardless of what any board's table configures; this is how every real OpenBIC board's build already works, not something specific to this port.
+
+**Excluded, with a real reason (not silently stubbed):**
+- **IPMI transport** (`ipmi_init()` not called) - `CONFIG_IPMI` and the KCS/I2C-slave-as-IPMB transport are Aspeed-fork-only additions with zero presence in mainline Zephyr. This is a missing *subsystem*, not a hardware gap - no amount of driver work on this board fixes it. `libutil.h`'s `ipmi_msg` *type* is portable and used as-is (only the transport is missing).
+- **I3C** (`util_init_i3c()`/`hal_i3c.c` not used) - `hal_i3c.c` binds directly to the Aspeed fork's own I3C subsystem (`i3c_master_send_ccc()`, `i3c_master_priv_xfer()`, etc.) with no 1:1 mainline equivalent. A from-scratch real-I3C attempt (`i3c_do_daa()` against mainline's actual generic I3C API, which does exist and does work in principle) was built and tested on hardware: enabling `CONFIG_I3C=y` alone made the board hang before `main()` ever runs - no boot banner at all, before any of our own code executes. That's the mainline `I3C_MCUX` driver itself failing to initialize on this SoC in this Zephyr version, not something introduced by the new code, and not something reasonable to debug further here. Reverted; this attempt is not in the current source tree.
+- **`common/hal/hal_gpio.c`** and everything that needs it (`common/service/pldm/pldm_monitor.c`'s `pldm_platform_monitor_read()`, and the 5 dev drivers that call it - `cx7.c`/`nv_satmc.c`/`mpro.c`/`pm8702.c`/`vistara.c`) - `hal_gpio.c` is a hand-rolled, register-level GPIO driver hardcoded to Aspeed/NPCM4XX physical addresses (`REG_GPIO_BASE 0x7e780000`, etc.), not a portable wrapper - it even has `#error "Unsupported GPIO driver"` for anything else. Porting it means writing a new low-level GPIO driver for MCXN947's own registers - real driver development, out of scope here. `cx7_init` (the one symbol of these five `sensor_drive_tbl` actually needs) is stubbed in `src/plat_stubs.c`; the other four aren't referenced at all once `pldm_monitor.c` is excluded from the build.
+- **`common/dev/snoop.c`/`pcc.c`** - genuinely Aspeed-only hardware (SNOOP/POST Code Capture peripherals), not referenced by `sensor_drive_tbl`, so simply not compiled.
+- **`common/dev/ast_adc.c`** (Aspeed ADC register access) and **`common/dev/intel_peci.c`**'s `peci_read()`/`peci_init()` calls (OpenBIC's own PECI wrappers, distinct from mainline's real `peci_transfer()`/`peci_enable()` API, and MCXN947 has no PECI peripheral *at all* - a genuine hardware absence, not a missing driver) - both stubbed with fixed/error return values in `src/plat_stubs.c`, since `ast_adc_init`/`intel_peci_init` are `sensor_drive_tbl` link requirements but never actually invoked (empty sensor table).
+- **`common/lib/util_spi.c`**'s two `spi_nor_config_4byte_mode()`/`spi_nor_re_init()` calls (Aspeed-only SPI-NOR extensions) - stubbed as no-ops inline; nothing in this port exercises SPI flash updates.
+- **SPDM** - doesn't exist anywhere in upstream OpenBIC (no `spdm/` directory, no vendored library) - there is nothing to port, so nothing was attempted. Real support would mean integrating a third-party stack (e.g. DMTF's `libspdm`) from scratch, a separate project.
+
+## A real bug found and fixed on hardware
+
+`flexcomm2_lpi2c2` (the LCD-shield-header I2C bus - unused by this
+port; only `flexcomm3_lpi2c3`/Arduino-header does anything here)
+triggers a genuine divide-by-zero in **NXP's own MCUX LPI2C driver**
+during automatic boot-time init, on this SoC in this Zephyr version -
+confirmed via GDB + `addr2line` pointing at
+`LPI2C_GetCyclesForWidth`/`LPI2C_MasterInit`
+(`modules/hal/nxp/.../fsl_lpi2c.c:166`), with identical PC/registers
+on every reproduction:
+
+```
+***** USAGE FAULT *****
+  Division by zero
+r0/a1:  0x0000000f  r1/a2:  0x00000000  r2/a3:  0x00000000
+r3/a4:  0x000f4240 r12/ip:  0x00000002 r14/lr:  0x10012815
+Faulting instruction address (r15/pc): 0x1001271c
+>>> ZEPHYR FATAL ERROR 30: Unknown error on CPU 0
+Current thread: 0x300026d8 (main)
+```
+
+This bus shares FlexComm2 with an audio-codec node in the board's own
+devicetree, which may be why its clock-rate query returns near-zero.
+Since nothing in this port uses this bus, `boards/
+mcx_n9xx_evk_mcxn947_cpu0.overlay` disables it - the correct fix given
+the actual need, not a workaround for something we broke.
 
 ## Why this is scoped as "bring-up only", not a real board port
 
@@ -38,24 +91,25 @@ this port's manifest (`west.yml` at the repo root) points `zephyr` at
 That's what makes this board buildable at all, but it also means none
 of `common/`'s vendor-specific pipeline is usable as-is.
 
-## What this target actually does
-
-`src/main.c` is a from-scratch `main()` (not `common/service/main.c`)
-that prints an explicit "OpenBIC" ASCII banner, brings up the shell,
-and toggles the on-board red LED as a heartbeat - proving the build,
-flash, and console/shell all work end-to-end via OpenBIC's own
-CMakeLists.txt/west setup, on real MCX-N9XX-EVK hardware.
+## Layout
 
 ```
 meta-facebook/mcx-n9xx-evk/
-├── CMakeLists.txt   Only builds src/*.c - no common/ globs
-├── prj.conf         GPIO + shell + logging + hwinfo + watchdog only
-├── boards/          Devicetree overlay: enables red_led + user_button_2
-├── src/main.c       Banner + shell + heartbeat LED
-├── src/plat_version.h
+├── CMakeLists.txt   Real common/ sources (hal/lib/sensor/mctp/pldm/dev)
+│                    + this board's own src/*.c
+├── prj.conf         GPIO, I2C, shell, logging, hwinfo, watchdog, NVS, mbox
+├── boards/          Devicetree overlay: red_led, user_button_2, mbox-consumer,
+│                    disables the broken flexcomm2_lpi2c2 (see bug writeup above)
+├── src/main.c       Banner + shell + heartbeat LED + real wdt/timer/I2C/
+│                    sensor/FRU init calls
+├── src/plat_version.h, plat_def.h, plat_ipmb.h   Minimal per-board glue
+├── src/plat_i2c.[h]        Board I2C bus map (real bus used by hal_i2c.c)
+├── src/plat_sensor_table.[ch], plat_sdr_table.[ch]   Empty per-board tables
+├── src/plat_fru.[ch]       FRU EEPROM config (points at real I2C, nothing wired)
+├── src/plat_stubs.c        Link-only stubs for genuinely unportable/absent
+│                           deps (cx7_init, ast_adc, intel_peci - see above)
 ├── src/plat_gpio.[ch]    GPIO status-monitoring subsystem (see below)
 ├── src/plat_hwinfo.[ch]  Device ID + reset-cause reporting (see below)
-├── src/plat_wdt.[ch]     Watchdog subsystem (see below)
 ├── src/plat_storage.[ch] Persistent NVS storage (see below)
 ├── src/plat_mbox.[ch]    Inter-core mailbox, cpu0 side (see below)
 ├── src/plat_shell.c      "plat version/gpio mon0/wdt starve/storage bootcount/mbox ping"
@@ -65,6 +119,11 @@ meta-facebook/mcx-n9xx-evk/
     ├── CMakeLists.txt, prj.conf, boards/*.conf|overlay
     └── src/main.c        Headless mailbox echo responder
 ```
+
+## Bring-up subsystems (from the earlier `mcx-n9xx-evk-port` branch)
+
+These 5 from-scratch subsystems predate the full port above and are
+unaffected by it - still real, still verified, still in the build:
 
 ### Dual-core bring-up (fifth real subsystem, verified on hardware)
 
@@ -234,23 +293,28 @@ west flash
 ```
 
 Open a serial console (115200 8N1) on the MCU-Link's VCOM port to see
-the banner and shell prompt; the red LED should blink every 500ms.
+the banner, shell prompt, and real init log lines (device ID, reset
+cause, NVS boot count, GPIO monitor start, mbox ready, and the honest
+`sensor: Init sensor size is zero`); the red LED should blink every
+500ms. Try `i2c scan flexcomm3_lpi2c3` for a live 128-address real bus
+scan (0 devices - nothing's wired to the Arduino header).
 
-## Beyond this: full IPMI/sensor/FRU bring-up (not started here)
+## What's still not done
 
-Making this a real BIC target means porting `common/` to mainline
-Zephyr's API surface, which is substantial, open-ended work (153 `.c`
-files / ~57K LOC across `common/`):
+The remaining gap to a real, fully-functional BIC target on this
+board:
 
-- Mechanical pass: fix legacy include paths repo-wide
-  (`<zephyr.h>` → `<zephyr/kernel.h>`, etc.) - large diff, low risk.
-- Real porting: modernize driver-level API calls (GPIO v1→v2, I2C,
-  `k_work`, etc.) file by file as each subsystem gets wired up for
-  this board.
-- Replace or reimplement the Aspeed-only subsystems this board will
-  actually need against stock Zephyr APIs: IPMI transport, I2C-slave-
-  as-IPMB, EEPROM-emulation-over-I2C. None of these have a drop-in
-  mainline equivalent - each is its own design decision.
-- Decide, board by board, which of `common/service`'s init calls
-  (sensor, FRU, IPMI, USB) actually apply to this platform's role
-  before wiring them back into `main()`.
+- **IPMI transport** - needs a from-scratch transport design (no
+  mainline equivalent to port), independent of any further hardware
+  work on this board.
+- **I3C** - blocked on a real MCXN947 `I3C_MCUX` driver issue in this
+  Zephyr version (see above) - would need upstream Zephyr driver
+  debugging/fixing, not application-level work.
+- **A real low-level GPIO driver** for MCXN947, to replace
+  `hal_gpio.c` and unlock `pldm_monitor.c`'s platform-monitoring
+  effectors (and the 5 dev drivers gated on it).
+- **Real sensors** - this EVK has none wired up; the sensor/SDR tables
+  are genuinely empty. Wiring up an external I2C sensor (e.g. to the
+  Arduino header) and giving it a real `plat_sensor_table.c` entry
+  would be the natural next step to prove a sensor reading end-to-end.
+- **SPDM** - a separate project (see above), not attempted.

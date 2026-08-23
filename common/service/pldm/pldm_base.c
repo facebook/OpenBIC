@@ -15,12 +15,12 @@
  */
 
 #include "pldm.h"
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 #include <string.h>
-#include <sys/printk.h>
-#include <sys/slist.h>
-#include <sys/util.h>
-#include <zephyr.h>
+#include <zephyr/sys/printk.h>
+#include <zephyr/sys/slist.h>
+#include <zephyr/sys/util.h>
+#include <zephyr/kernel.h>
 #include "libutil.h"
 
 LOG_MODULE_DECLARE(pldm);
