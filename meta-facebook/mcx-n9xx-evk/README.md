@@ -21,7 +21,7 @@ what was ported vs. left out and why - nothing is stubbed silently.
 
 **Real, ported, verified on hardware:**
 - `common/hal/hal_wdt.c` - watchdog, `DEVICE_DT_GET(DT_ALIAS(watchdog0))` instead of string-name `device_get_binding()`.
-- `common/hal/hal_i2c.c` - I2C master (`I2C_MODE_CONTROLLER`, real `DEVICE_DT_GET` bindings, dead Aspeed-only `<drivers/i2c/slave/ipmb.h>` include dropped). Genuinely talks to real hardware on **two** independent buses: `i2c scan flexcomm3_lpi2c3` (Arduino header, controller mode) performs 128 real bus transactions (0 found - nothing's wired to the Arduino header, honestly); `flexcomm2_lpi2c2` (LCD-shield header) is the second bus, used in target mode - see "I2C target mode" below.
+- `common/hal/hal_i2c.c` - I2C master (`I2C_MODE_CONTROLLER`, real `DEVICE_DT_GET` bindings, dead Aspeed-only `<drivers/i2c/slave/ipmb.h>` include dropped). Genuinely talks to real hardware on **two** independent buses, both on the Arduino-compatible header J2 (see "I2C target mode" below for the exact pinout): `i2c scan flexcomm3_lpi2c3` (controller mode, J2 pins 15/17) performs 128 real bus transactions (0 found - nothing's wired there, honestly); `flexcomm2_lpi2c2` (J2 pins 18/20) is the second bus, used in target mode.
 - `src/plat_i2c_target.c` - a real I2C **target-mode** device (Zephyr's generic `i2c_target_register()`/`i2c_target_callbacks` API, backed natively by the MCUX LPI2C driver's target-mode IRQ handling) registered on `flexcomm2_lpi2c2` - see "I2C target mode" below.
 - `common/lib/timer.c`, `common/lib/libutil.c`, `common/lib/util_pmbus.c` - portable as-is/near-as-is (CMSIS-RTOS2 timing, generic helpers, PMBus math).
 - `common/service/sensor/sensor.c` + `sdr.c` - the real sensor framework, with an intentionally **empty** per-board table (`src/plat_sensor_table.c`/`plat_sdr_table.c` - this EVK has no sensors wired up). `sensor_init()` genuinely runs and honestly logs `Init sensor size is zero` - the real code's real behavior for a board with nothing configured, not silenced.
@@ -41,10 +41,10 @@ what was ported vs. left out and why - nothing is stubbed silently.
 
 ## Two real bugs found and fixed on hardware
 
-Getting `flexcomm2_lpi2c2` (the LCD-shield-header I2C bus) working at
-all - needed as a second bus for I2C target-mode testing, see below -
-took chasing down two separate, genuine bugs, not application-level
-config mistakes:
+Getting `flexcomm2_lpi2c2` (J2 pins 18/20 - see "I2C target mode"
+below for the full pinout) working at all - needed as a second bus for
+I2C target-mode testing - took chasing down two separate, genuine
+bugs, not application-level config mistakes:
 
 **1. A devicetree conflict inherited from NXP's reference board.**
 `flexcomm2_lpi2c2` and `flexcomm2_lpuart2` were *both* enabled
@@ -124,10 +124,23 @@ Verified on real hardware: boots cleanly and logs
 
 **To exercise a real controller<->target transaction** (not yet done
 on this specific board - needs a physical jumper wire, offered but not
-performed as of this writing): jumper the LCD-shield header's I2C
-pins (`FC2_P0`/`FC2_P1`, i.e. `PIO4_0`/`PIO4_1` - SDA/SCL) to the
-Arduino header's I2C pins (`FC3_P0`/`FC3_P1`, i.e. `PIO1_0`/`PIO1_1` -
-D15/D14, SCL/SDA), plus a shared GND, then from the shell:
+performed as of this writing): both buses' SDA/SCL lines land on the
+*same* physical header - the Arduino-compatible header J2 - per
+Table 24 of the official MCX-N9XX-EVK Board User Manual (UM12036):
+
+| J2 pin | MCU pin | Signal              |
+|--------|---------|----------------------|
+| 14     | GND     | Ground               |
+| 15     | P1_1    | `flexcomm3_lpi2c3` SCL |
+| 17     | P1_0    | `flexcomm3_lpi2c3` SDA |
+| 18     | P4_0    | `flexcomm2_lpi2c2` SDA |
+| 20     | P4_1    | `flexcomm2_lpi2c2` SCL |
+
+Jumper J2 pin 17 to pin 18 (SDA<->SDA) and J2 pin 15 to pin 20
+(SCL<->SCL) - both short jumps on the same header strip. A dedicated
+GND jumper (pin 14) isn't required since both buses already share the
+board's common ground plane, but it's there if you want a firmer
+reference. Then from the shell:
 
 ```
 uart:~$ i2c write flexcomm3_lpi2c3 0x50 0x00 0xde 0xad 0xbe 0xef
@@ -407,9 +420,9 @@ board:
 
 - **A real wire-level I2C target-mode test** - the software side is
   done and verified (registers cleanly, see above); proving a genuine
-  controller<->target transaction over the wire just needs the
-  LCD-shield and Arduino headers jumper-wired together (SDA, SCL,
-  GND) - see "I2C target mode" above for the exact commands.
+  controller<->target transaction over the wire just needs two short
+  jumpers on header J2 (both buses' SDA/SCL land on the same header -
+  see "I2C target mode" above for the exact pin table and commands).
 - **IPMI transport** - needs a from-scratch transport design (no
   mainline equivalent to port), independent of any further hardware
   work on this board. Note that IPMB-over-I2C specifically no longer
