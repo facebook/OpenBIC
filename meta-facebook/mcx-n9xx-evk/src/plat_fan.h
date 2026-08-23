@@ -12,11 +12,26 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ * Required by common/service/ipmi/oem_handler.c's include chain. This
+ * board has no fans - pal_set_fan_duty() (src/plat_stubs.c) always
+ * fails, honestly reporting "not supported" rather than pretending to
+ * control real hardware.
  */
 
-#ifndef PLAT_I2C_TARGET_H
-#define PLAT_I2C_TARGET_H
+#ifndef PLAT_FAN_H
+#define PLAT_FAN_H
 
-void plat_i2c_target_init(void);
+#include <stdint.h>
+
+#define MAX_FAN_DUTY_VALUE 100
+#define MAX_FAN_PWM_INDEX_COUNT 0
+#define INDEX_ALL_PWM 0xFF
+
+enum { FAN_AUTO_MODE = 0, FAN_MANUAL_MODE = 1 };
+
+int pal_set_fan_duty(uint8_t pwm_id, uint8_t duty, uint8_t slot_index);
+int pal_get_fan_ctrl_mode(uint8_t *mode);
+void pal_set_fan_ctrl_mode(uint8_t mode);
 
 #endif

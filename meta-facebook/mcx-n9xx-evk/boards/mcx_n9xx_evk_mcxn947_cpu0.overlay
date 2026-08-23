@@ -39,4 +39,16 @@
 		mboxes = <&mbox 1>, <&mbox 0>;
 		mbox-names = "tx", "rx";
 	};
+
+	/* Marker node only - common/service/ipmb/ipmb.h gates DEV_IPMB_0
+	 * on DT_NODE_EXISTS(DT_NODELABEL(ipmb0)) to decide whether an IPMB
+	 * channel 0 is configured for this board at all. The actual
+	 * transport (which physical I2C bus/address) is real
+	 * i2c_target_register()-based code in hal_i2c.c, driven by
+	 * src/plat_ipmb.c's IPMB_0_BUS/IPMB_0_SELF_ADDR - this node isn't
+	 * bound to a Zephyr driver and carries no hardware meaning itself.
+	 */
+	ipmb0: ipmb0 {
+		compatible = "vnd,ipmb-marker";
+	};
 };

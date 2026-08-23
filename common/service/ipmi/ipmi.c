@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-#include <zephyr.h>
-#include <kernel.h>
+#include <zephyr/kernel.h>
+#include <zephyr/kernel.h>
 #include <stdio.h>
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 #include <zephyr/portability/cmsis_os2.h>
 #include "ipmi.h"
 

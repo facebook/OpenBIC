@@ -15,17 +15,16 @@
  *
  * Board-specific I2C bus map for the MCX-N9XX-EVK. hal_i2c's bus
  * indices are firmware-internal (0-based). Both buses are enabled and
- * used here - flexcomm3_lpi2c3 (Arduino header D14/D15) as the
- * controller-mode bus, and flexcomm2_lpi2c2 (LCD-shield connector) as
- * a second bus for I2C target-mode testing. flexcomm2_lpi2c2 used to
- * crash at boot with a real divide-by-zero in NXP's own MCUX LPI2C
- * driver - see the overlay for the root cause (a FlexComm2 clock
- * conflict with the unused flexcomm2_lpuart2 node) and README.md for
- * the full writeup. Nothing is physically attached to either header
- * by default, so a controller-mode transaction will genuinely
- * NACK/timeout unless the two headers are jumper-wired together for a
- * real controller<->target test - see README.md for why that's still
- * a meaningful real-hardware milestone.
+ * used here - flexcomm3_lpi2c3 as the controller-mode bus, and
+ * flexcomm2_lpi2c2 as the target/slave-mode bus carrying the real
+ * IPMB-over-I2C channel (see plat_ipmb.h, common/hal/hal_i2c.c's
+ * ipmb_target_register()/ipmb_target_read(), and README.md's "IPMI
+ * transport" section). Both buses' SDA/SCL lines are physically on
+ * the same Arduino-compatible header, J2 - see README.md for the
+ * verified pin table. flexcomm2_lpi2c2 used to crash at boot with a
+ * real divide-by-zero in NXP's own MCUX LPI2C driver - see the
+ * overlay for the root cause (a FlexComm2 clock conflict with the
+ * unused flexcomm2_lpuart2 node) and README.md for the full writeup.
  */
 
 #ifndef PLAT_I2C_H

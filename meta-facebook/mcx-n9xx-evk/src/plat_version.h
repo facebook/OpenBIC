@@ -25,4 +25,17 @@
 #define BIC_FW_WEEK 0x34
 #define BIC_FW_VER 0x00
 
+/* IPMI Get Device ID (app_handler.c) response fields - this board has
+ * no real product/FRU catalog, so these are placeholder-but-honest
+ * values (0 = "not assigned"), same convention every real OpenBIC
+ * board uses for fields it hasn't been given real IDs for. */
+#define DEVICE_ID 0x00
+#define DEVICE_REVISION 0x80 /* bit7=1: device provides Device SDRs */
+#define FIRMWARE_REVISION_1 (BIC_FW_YEAR_LSB & 0x7F)
+#define FIRMWARE_REVISION_2 BIC_FW_WEEK
+#define IPMI_VERSION 0x02 /* IPMI v2.0 */
+#define ADDITIONAL_DEVICE_SUPPORT 0xBF
+#define PRODUCT_ID 0x0000
+#define AUXILIARY_FW_REVISION 0x00000000
+
 #endif

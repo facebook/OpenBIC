@@ -1,11 +1,10 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 # Full board port: builds real common/ subsystems (hal_wdt, hal_i2c,
-# lib/timer, lib/libutil, sensor framework, FRU/eeprom) ported to
-# mainline Zephyr's API surface, in place of the bring-up branch's
-# from-scratch stand-ins. See README.md for exactly what was ported,
-# what's stubbed (nothing, currently - ipmi_init()/util_init_i3c()
-# just aren't called from main() yet), and why.
+# lib/timer, lib/libutil, sensor framework, FRU/eeprom, IPMI/IPMB)
+# ported to mainline Zephyr's API surface, in place of the bring-up
+# branch's from-scratch stand-ins. See README.md for exactly what was
+# ported, what's stubbed, and why.
 
 cmake_minimum_required(VERSION 3.20.0)
 
@@ -24,7 +23,7 @@ target_sources(app PRIVATE
   src/plat_sensor_table.c
   src/plat_sdr_table.c
   src/plat_fru.c
-  src/plat_i2c_target.c
+  src/plat_ipmb.c
   src/plat_stubs.c
   ${common_path}/lib/timer.c
   ${common_path}/lib/libutil.c
@@ -37,8 +36,26 @@ target_sources(app PRIVATE
   ${common_path}/service/mctp/mctp_ctrl.c
   ${common_path}/service/pldm/pldm.c
   ${common_path}/service/pldm/pldm_base.c
+  ${common_path}/service/pldm/pldm_oem.c
+  ${common_path}/service/ipmb/ipmb.c
+  ${common_path}/service/ipmi/ipmi.c
+  ${common_path}/service/ipmi/app_handler.c
+  ${common_path}/service/ipmi/chassis_handler.c
+  ${common_path}/service/ipmi/sensor_handler.c
+  ${common_path}/service/ipmi/storage_handler.c
+  ${common_path}/service/ipmi/oem_handler.c
   ${common_path}/shell/commands/sensor_shell.c
 )
+
+# common/service/ipmi/oem_1s_handler.c implements Meta's proprietary
+# OEM-1S NetFn (0x38) command set (fan/GPIO/JTAG/PECI/APML etc, all
+# x86-host-adjacent BMC/BIC functionality). It unconditionally
+# includes hal_gpio.h and hal_peci.h, neither portable to this board
+# (see above/README.md), and none of its commands apply to an EVK with
+# no host, fans, or PECI. ipmi.c's dispatch table calls
+# IPMI_OEM_1S_handler() unconditionally for that NetFn regardless -
+# stubbed (CC_INVALID_CMD, the honest "not implemented" answer) in
+# src/plat_stubs.c.
 
 # common/service/sensor/sensor.c's driver-dispatch table
 # (sensor_drive_tbl) unconditionally references every possible sensor
@@ -80,5 +97,6 @@ target_include_directories(app PRIVATE
   ${common_path}/service/pldm
   ${common_path}/service/mctp
   ${common_path}/service/ipmi/include
+  ${common_path}/service/usb
   ${common_path}/shell/commands
 )

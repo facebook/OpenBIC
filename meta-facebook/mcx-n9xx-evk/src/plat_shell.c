@@ -21,6 +21,7 @@
 #include <zephyr/shell/shell.h>
 
 #include "hal_wdt.h"
+#include "ipmi.h"
 #include "plat_gpio.h"
 #include "plat_mbox.h"
 #include "plat_storage.h"
@@ -74,6 +75,48 @@ static int cmd_mbox_ping(const struct shell *sh, size_t argc, char **argv)
 	return 0;
 }
 
+/* Exercises the real IPMI dispatch pipeline (notify_ipmi_client ->
+ * ipmi_msgq -> IPMI_handler -> ipmi_cmd_handle -> netfn/cmd handler ->
+ * response routed back via the "SELF" InF_source/InF_target case in
+ * ipmi_cmd_handle()) without needing a second real device on the wire
+ * - see README.md's "IPMI transport" section for why a genuine
+ * wire-level IPMB test needs one and is documented separately as
+ * untested. This proves the transport's message-routing/handler
+ * plumbing is real and working, end to end, in isolation.
+ */
+static int cmd_ipmi_selftest(const struct shell *sh, size_t argc, char **argv)
+{
+	ARG_UNUSED(argc);
+	ARG_UNUSED(argv);
+
+	struct ipmi_msg_cfg req = { 0 };
+
+	req.buffer.InF_source = SELF;
+	req.buffer.InF_target = SELF;
+	req.buffer.netfn = NETFN_APP_REQ;
+	req.buffer.cmd = CMD_APP_GET_DEVICE_ID;
+	req.buffer.data_len = 0;
+
+	shell_print(sh, "Submitting IPMI Get Device ID via SELF...");
+	if (notify_ipmi_client(&req) != IPMB_ERROR_SUCCESS) {
+		shell_error(sh, "Failed to submit request to ipmi_msgq");
+		return -EIO;
+	}
+
+	struct ipmi_msg_cfg resp;
+
+	if (k_msgq_get(&self_ipmi_msgq, &resp, K_SECONDS(2))) {
+		shell_error(sh, "Timed out waiting for response on self_ipmi_msgq");
+		return -ETIMEDOUT;
+	}
+
+	shell_print(sh, "Response: netfn=0x%02x cmd=0x%02x cc=0x%02x data_len=%u",
+		    resp.buffer.netfn, resp.buffer.cmd, resp.buffer.completion_code,
+		    resp.buffer.data_len);
+	shell_hexdump(sh, resp.buffer.data, resp.buffer.data_len);
+	return 0;
+}
+
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_plat_gpio, SHELL_CMD(mon0, NULL, "Read mon0 (SW2) live state",
 							 cmd_gpio_mon0),
 				SHELL_SUBCMD_SET_END);
@@ -103,6 +146,10 @@ SHELL_STATIC_SUBCMD_SET_CREATE(sub_plat,
 				SHELL_CMD(storage, &sub_plat_storage, "Persistent storage commands",
 					  NULL),
 				SHELL_CMD(mbox, &sub_plat_mbox, "Inter-core mailbox commands", NULL),
+				SHELL_CMD(ipmi_selftest, NULL,
+					  "Round-trip an IPMI Get Device ID through the real "
+					  "dispatch pipeline via the SELF interface",
+					  cmd_ipmi_selftest),
 				SHELL_SUBCMD_SET_END);
 
 SHELL_CMD_REGISTER(plat, &sub_plat, "OpenBIC platform commands", NULL);

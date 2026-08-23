@@ -17,6 +17,7 @@
 #ifndef HAL_I2C_H
 #define HAL_I2C_H
 
+#include <zephyr/kernel.h>
 #include <zephyr/drivers/i2c.h>
 /* Note: <drivers/i2c/slave/ipmb.h> (Aspeed-only I2C-slave-as-IPMB
  * convenience header) is intentionally not carried over - nothing in
@@ -198,4 +199,16 @@ void i2c_scan(uint8_t bus, uint8_t *target_addr, uint8_t *target_addr_len);
 void util_init_I2C(void);
 int check_i2c_bus_valid(uint8_t bus);
 int i2c_master_read_without_error_log(I2C_MSG *msg, uint8_t retry);
+
+#if defined(CONFIG_I2C_MCUX_LPI2C) && defined(CONFIG_I2C_TARGET)
+/* IPMB-over-I2C target-mode glue: real i2c_target_register()-based
+ * replacement for the Aspeed-fork's i2c_slave_driver_register()/
+ * ipmb_slave_read(), used by common/service/ipmb/ipmb.c. See
+ * meta-facebook/mcx-n9xx-evk/README.md for the "I2C target mode"
+ * writeup this builds on.
+ */
+int ipmb_target_register(uint8_t bus, uint8_t addr);
+int ipmb_target_read(uint8_t bus, uint8_t *buf, uint8_t *len, k_timeout_t timeout);
+#endif
+
 #endif

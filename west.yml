@@ -2,6 +2,8 @@ manifest:
   remotes:
     - name: zephyr
       url-base: https://github.com/zephyrproject-rtos
+    - name: wrouwet
+      url-base: https://github.com/wrouwet
 
   # Please add items below based on alphabetical order.
   # These dependencies may need updating if new features are added to the firmware.
@@ -14,6 +16,19 @@ manifest:
           - cmsis
           - cmsis_6
           - hal_nxp
+    # Override the hal_nxp revision imported above: it carries a real
+    # divide-by-zero fix (LPI2C_GetCyclesForWidth, see
+    # meta-facebook/mcx-n9xx-evk/README.md) needed for this board's
+    # flexcomm2_lpi2c2 to boot at all. Submitted upstream as
+    # https://github.com/zephyrproject-rtos/hal_nxp/pull/799; once
+    # that merges and a release picks it up, this override (and the
+    # fork branch it points at) can be dropped in favor of the
+    # zephyr west.yml's own pinned revision.
+    - name: hal_nxp
+      remote: wrouwet
+      repo-path: hal_nxp
+      revision: fix/lpi2c-divzero-guard
+      path: modules/hal/nxp
 
   self:
     path: openbic

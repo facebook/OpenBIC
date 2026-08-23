@@ -20,8 +20,14 @@
  * satisfy the linker honestly (fail/no-op), not behave correctly.
  */
 
+#include <stdbool.h>
 #include <stdint.h>
+#include <zephyr/kernel.h>
+#include <zephyr/sys/reboot.h>
 #include "sensor.h"
+#include "ipmi.h"
+#include "plat_fan.h"
+#include "util_sys.h"
 
 /* cx7.c (CXL retimer PLDM-over-MCTP sensor) needs
  * common/service/pldm/pldm_monitor.c's pldm_platform_monitor_read(),
@@ -64,4 +70,96 @@ int peci_read(uint8_t command, uint8_t addr, uint8_t index, uint16_t param, uint
 	(void)readlen;
 	(void)readbuf;
 	return -1;
+}
+
+/* oem_1s_handler.c implements Meta's proprietary OEM-1S NetFn (0x38)
+ * command set - fan control, GPIO, JTAG, PECI, APML, and other
+ * x86-host-adjacent BMC/BIC functionality specific to Meta's own
+ * server platforms. None of it applies to this EVK, and the file
+ * unconditionally includes hal_gpio.h/hal_peci.h (both genuinely
+ * unportable - see hal_gpio.c's own exclusion above and README.md),
+ * so it isn't compiled here. ipmi.c's dispatch table calls this
+ * function unconditionally for NETFN_OEM_1S_REQ, so this link stub
+ * honestly reports "not implemented" via the real completion code
+ * rather than silently no-oping.
+ */
+void IPMI_OEM_1S_handler(ipmi_msg *msg)
+{
+	msg->completion_code = CC_INVALID_CMD;
+	msg->data_len = 0;
+}
+
+/* This board has no fans - oem_handler.c's fan-control commands need
+ * these three pal_* hooks to link, but MAX_FAN_PWM_INDEX_COUNT is 0
+ * (see plat_fan.h) so they're never actually reachable through a
+ * valid pwm_id; genuine hardware absence, not a missing driver.
+ */
+int pal_set_fan_duty(uint8_t pwm_id, uint8_t duty, uint8_t slot_index)
+{
+	(void)pwm_id;
+	(void)duty;
+	(void)slot_index;
+	return -1;
+}
+
+int pal_get_fan_ctrl_mode(uint8_t *mode)
+{
+	(void)mode;
+	return -1;
+}
+
+void pal_set_fan_ctrl_mode(uint8_t mode)
+{
+	(void)mode;
+}
+
+/* chassis_handler.c's CHASSIS Get Chassis Status command needs
+ * get_DC_status() from common/lib/power_status.c - not built here
+ * since that file needs hal_gpio.c (Aspeed-only, see above) and
+ * snoop.c (also excluded). This board has no real host-power-good
+ * GPIO wired up, so reporting "off" is the honest answer, not a
+ * placeholder for real power sequencing logic.
+ */
+bool get_DC_status(void)
+{
+	return false;
+}
+
+/* common/lib/util_sys.c isn't built here - it unconditionally includes
+ * cmsis_os.h/soc_common.h (Aspeed-fork-only headers with no mainline
+ * equivalent anywhere in this tree) and hal_gpio.h alongside its cold/
+ * warm reset logic. That reset logic itself is genuinely portable
+ * (just sys_reboot(), a real mainline Zephyr API), so it's
+ * reimplemented here directly instead of dragging in the whole file -
+ * this is real, working functionality for IPMI's Cold/Warm Reset
+ * commands (app_handler.c), not a stub.
+ */
+#define BIC_WARM_RESET_DELAY_MS 2000
+#define BIC_COLD_RESET_DELAY_MS 100
+
+static void bic_warm_reset_work_handler(struct k_work *work)
+{
+	ARG_UNUSED(work);
+	k_msleep(BIC_WARM_RESET_DELAY_MS);
+	sys_reboot(SOC_RESET);
+}
+
+static void bic_cold_reset_work_handler(struct k_work *work)
+{
+	ARG_UNUSED(work);
+	k_msleep(BIC_COLD_RESET_DELAY_MS);
+	sys_reboot(SOC_RESET);
+}
+
+K_WORK_DEFINE(bic_warm_reset_work, bic_warm_reset_work_handler);
+K_WORK_DEFINE(bic_cold_reset_work, bic_cold_reset_work_handler);
+
+void submit_bic_warm_reset(void)
+{
+	k_work_submit(&bic_warm_reset_work);
+}
+
+void submit_bic_cold_reset(void)
+{
+	k_work_submit(&bic_cold_reset_work);
 }

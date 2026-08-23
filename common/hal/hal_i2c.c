@@ -435,6 +435,107 @@ static void util_init_I2C_mcux_flexcomm(void)
 		LOG_ERR("i2c%d mutex init fail", I2C_BUS_ARDUINO_HEADER);
 #endif
 }
+
+#if defined(CONFIG_I2C_TARGET)
+/* IPMB-over-I2C target-mode glue. IPMB frames on the wire begin with
+ * the responder's own slave address (8-bit form) for checksum
+ * purposes, but real I2C carries addressing out-of-band in the
+ * address phase, not as a literal data byte - so on write_requested()
+ * we synthesize that leading byte to match what
+ * common/service/ipmb/ipmb.c's validate_checksum()/ipmb_decode()
+ * expect, exactly as a real IPMB-capable I2C slave controller would
+ * present it. IPMB is write-only in both directions (a "response" is
+ * simply a separate write from the other node back to our address),
+ * so only write_requested/write_received/stop are needed - no read
+ * callback exists in this protocol.
+ */
+struct ipmb_target_msg {
+	uint8_t len;
+	uint8_t data[I2C_BUFF_SIZE];
+};
+
+struct ipmb_target_ctx {
+	struct i2c_target_config cfg;
+	uint8_t bus;
+	struct ipmb_target_msg accum;
+};
+
+static struct ipmb_target_ctx ipmb_target_ctx[I2C_BUS_MAX_NUM];
+static struct k_msgq ipmb_target_msgq[I2C_BUS_MAX_NUM];
+static char __aligned(4)
+	ipmb_target_msgq_buf[I2C_BUS_MAX_NUM][2 * sizeof(struct ipmb_target_msg)];
+
+static int ipmb_target_write_requested(struct i2c_target_config *config)
+{
+	struct ipmb_target_ctx *ctx = CONTAINER_OF(config, struct ipmb_target_ctx, cfg);
+
+	ctx->accum.data[0] = config->address << 1;
+	ctx->accum.len = 1;
+	return 0;
+}
+
+static int ipmb_target_write_received(struct i2c_target_config *config, uint8_t val)
+{
+	struct ipmb_target_ctx *ctx = CONTAINER_OF(config, struct ipmb_target_ctx, cfg);
+
+	if (ctx->accum.len < I2C_BUFF_SIZE) {
+		ctx->accum.data[ctx->accum.len++] = val;
+	}
+	return 0;
+}
+
+static int ipmb_target_stop(struct i2c_target_config *config)
+{
+	struct ipmb_target_ctx *ctx = CONTAINER_OF(config, struct ipmb_target_ctx, cfg);
+
+	/* len > 1: more than just the synthesized address byte arrived */
+	if (ctx->accum.len > 1) {
+		if (k_msgq_put(&ipmb_target_msgq[ctx->bus], &ctx->accum, K_NO_WAIT)) {
+			LOG_ERR("ipmb target[%d]: rx queue full, dropping message", ctx->bus);
+		}
+	}
+	return 0;
+}
+
+static const struct i2c_target_callbacks ipmb_target_callbacks = {
+	.write_requested = ipmb_target_write_requested,
+	.write_received = ipmb_target_write_received,
+	.stop = ipmb_target_stop,
+};
+
+int ipmb_target_register(uint8_t bus, uint8_t addr)
+{
+	if (bus >= I2C_BUS_MAX_NUM || !dev_i2c[bus]) {
+		return -EINVAL;
+	}
+
+	k_msgq_init(&ipmb_target_msgq[bus], ipmb_target_msgq_buf[bus],
+		    sizeof(struct ipmb_target_msg), 2);
+
+	ipmb_target_ctx[bus].bus = bus;
+	ipmb_target_ctx[bus].cfg.address = addr;
+	ipmb_target_ctx[bus].cfg.callbacks = &ipmb_target_callbacks;
+
+	return i2c_target_register(dev_i2c[bus], &ipmb_target_ctx[bus].cfg);
+}
+
+int ipmb_target_read(uint8_t bus, uint8_t *buf, uint8_t *len, k_timeout_t timeout)
+{
+	struct ipmb_target_msg msg;
+
+	if (bus >= I2C_BUS_MAX_NUM || !buf || !len) {
+		return -EINVAL;
+	}
+
+	if (k_msgq_get(&ipmb_target_msgq[bus], &msg, timeout)) {
+		return -EAGAIN;
+	}
+
+	memcpy(buf, msg.data, msg.len);
+	*len = msg.len;
+	return 0;
+}
+#endif /* CONFIG_I2C_TARGET */
 #endif /* CONFIG_I2C_MCUX_LPI2C */
 
 void util_init_I2C(void)

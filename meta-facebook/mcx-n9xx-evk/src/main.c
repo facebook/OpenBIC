@@ -15,15 +15,19 @@
  *
  * Full-board-port main() for the MCX-N9XX-EVK: calls the *real*
  * common/ init pipeline (wdt_init, util_init_timer, util_init_I2C,
- * sensor_init, FRU_init) ported to mainline Zephyr, instead of the
- * bring-up branch's from-scratch stand-ins. util_init_i3c()/ipmi_init()
- * aren't called (see README.md - hal_i3c.c and IPMI transport both
- * need Aspeed-only APIs). A separate real-I3C attempt (plat_i3c.c,
- * i3c_do_daa() against mainline's own I3C API) was tried and reverted:
- * enabling CONFIG_I3C=y alone made the board hang before main() ever
- * runs (no boot banner at all) - a mainline I3C_MCUX driver-level
- * issue for this SoC, not something introduced by that new code. See
- * README.md for the full writeup.
+ * sensor_init, FRU_init, ipmi_init) ported to mainline Zephyr, instead
+ * of the bring-up branch's from-scratch stand-ins. ipmi_init() brings
+ * up a real IPMB-over-I2C channel in target/slave mode on
+ * flexcomm2_lpi2c2 (see README.md's "IPMI transport" section) -
+ * replacing the earlier standalone plat_i2c_target.c proof-of-concept
+ * on that same bus/address, now superseded. util_init_i3c() still
+ * isn't called (see README.md - hal_i3c.c needs Aspeed-only APIs). A
+ * separate real-I3C attempt (plat_i3c.c, i3c_do_daa() against
+ * mainline's own I3C API) was tried and reverted: enabling
+ * CONFIG_I3C=y alone made the board hang before main() ever runs (no
+ * boot banner at all) - a mainline I3C_MCUX driver-level issue for
+ * this SoC, not something introduced by that new code. See README.md
+ * for the full writeup.
  */
 
 #include <zephyr/kernel.h>
@@ -32,10 +36,10 @@
 #include "fru.h"
 #include "hal_i2c.h"
 #include "hal_wdt.h"
+#include "ipmi.h"
 #include "libutil.h"
 #include "plat_gpio.h"
 #include "plat_hwinfo.h"
-#include "plat_i2c_target.h"
 #include "plat_mbox.h"
 #include "plat_storage.h"
 #include "plat_version.h"
@@ -58,7 +62,7 @@ int main(void)
 	       "      |_|\n");
 	printk("Hello, welcome to OpenBIC / %s %s %x%x.%x.%x\n", PLATFORM_NAME, PROJECT_NAME,
 	       BIC_FW_YEAR_MSB, BIC_FW_YEAR_LSB, BIC_FW_WEEK, BIC_FW_VER);
-	printk("Full board port: real common/ wdt/timer/I2C/sensor/FRU init.\n");
+	printk("Full board port: real common/ wdt/timer/I2C/sensor/FRU/IPMI init.\n");
 
 	plat_hwinfo_init();
 	plat_storage_init();
@@ -68,9 +72,9 @@ int main(void)
 	wdt_init();
 	util_init_timer();
 	util_init_I2C();
-	plat_i2c_target_init();
 	sensor_init();
 	FRU_init();
+	ipmi_init();
 
 	if (!gpio_is_ready_dt(&heartbeat_led)) {
 		printk("Heartbeat LED device not ready\n");
