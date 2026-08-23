@@ -35,6 +35,7 @@
 #include "libutil.h"
 #include "plat_gpio.h"
 #include "plat_hwinfo.h"
+#include "plat_i2c_target.h"
 #include "plat_mbox.h"
 #include "plat_storage.h"
 #include "plat_version.h"
@@ -67,6 +68,7 @@ int main(void)
 	wdt_init();
 	util_init_timer();
 	util_init_I2C();
+	plat_i2c_target_init();
 	sensor_init();
 	FRU_init();
 

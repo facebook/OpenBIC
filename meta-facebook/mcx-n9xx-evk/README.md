@@ -10,15 +10,19 @@ below) and goes further: `main()` now calls the **real**
 `util_init_timer()`, `util_init_I2C()`, `sensor_init()`, `FRU_init()` -
 ported to mainline Zephyr's API surface, plus real MCTP (transport
 core) and PLDM (base protocol), instead of reusing the bring-up
-branch's stand-ins. See "What's real, what's excluded" below for
-exactly what was ported vs. left out and why - nothing is stubbed
-silently.
+branch's stand-ins. It also adds real I2C **target/slave-mode**
+support (`src/plat_i2c_target.c`, see "I2C target mode" below) -
+mainline's MCUX LPI2C driver already implements target mode natively
+for this SoC, it just needed a real consumer and a second working bus
+to test against. See "What's real, what's excluded" below for exactly
+what was ported vs. left out and why - nothing is stubbed silently.
 
 ## What's real, what's excluded, and why
 
 **Real, ported, verified on hardware:**
 - `common/hal/hal_wdt.c` - watchdog, `DEVICE_DT_GET(DT_ALIAS(watchdog0))` instead of string-name `device_get_binding()`.
-- `common/hal/hal_i2c.c` - I2C master (`I2C_MODE_CONTROLLER`, real `DEVICE_DT_GET` bindings, dead Aspeed-only `<drivers/i2c/slave/ipmb.h>` include dropped). Genuinely talks to real hardware: `i2c scan flexcomm3_lpi2c3` performs 128 real bus transactions (0 found - nothing's wired to the Arduino header, honestly).
+- `common/hal/hal_i2c.c` - I2C master (`I2C_MODE_CONTROLLER`, real `DEVICE_DT_GET` bindings, dead Aspeed-only `<drivers/i2c/slave/ipmb.h>` include dropped). Genuinely talks to real hardware on **two** independent buses: `i2c scan flexcomm3_lpi2c3` (Arduino header, controller mode) performs 128 real bus transactions (0 found - nothing's wired to the Arduino header, honestly); `flexcomm2_lpi2c2` (LCD-shield header) is the second bus, used in target mode - see "I2C target mode" below.
+- `src/plat_i2c_target.c` - a real I2C **target-mode** device (Zephyr's generic `i2c_target_register()`/`i2c_target_callbacks` API, backed natively by the MCUX LPI2C driver's target-mode IRQ handling) registered on `flexcomm2_lpi2c2` - see "I2C target mode" below.
 - `common/lib/timer.c`, `common/lib/libutil.c`, `common/lib/util_pmbus.c` - portable as-is/near-as-is (CMSIS-RTOS2 timing, generic helpers, PMBus math).
 - `common/service/sensor/sensor.c` + `sdr.c` - the real sensor framework, with an intentionally **empty** per-board table (`src/plat_sensor_table.c`/`plat_sdr_table.c` - this EVK has no sensors wired up). `sensor_init()` genuinely runs and honestly logs `Init sensor size is zero` - the real code's real behavior for a board with nothing configured, not silenced.
 - `common/dev/fru.c` + `eeprom.c` - real FRU read/write path; `src/plat_fru.c` points it at a plausible 24C-EEPROM I2C address with nothing physically there, so it fails gracefully (real I2C NACK/timeout), which is honest given the hardware.
@@ -35,16 +39,31 @@ silently.
 - **`common/lib/util_spi.c`**'s two `spi_nor_config_4byte_mode()`/`spi_nor_re_init()` calls (Aspeed-only SPI-NOR extensions) - stubbed as no-ops inline; nothing in this port exercises SPI flash updates.
 - **SPDM** - doesn't exist anywhere in upstream OpenBIC (no `spdm/` directory, no vendored library) - there is nothing to port, so nothing was attempted. Real support would mean integrating a third-party stack (e.g. DMTF's `libspdm`) from scratch, a separate project.
 
-## A real bug found and fixed on hardware
+## Two real bugs found and fixed on hardware
 
-`flexcomm2_lpi2c2` (the LCD-shield-header I2C bus - unused by this
-port; only `flexcomm3_lpi2c3`/Arduino-header does anything here)
-triggers a genuine divide-by-zero in **NXP's own MCUX LPI2C driver**
-during automatic boot-time init, on this SoC in this Zephyr version -
-confirmed via GDB + `addr2line` pointing at
+Getting `flexcomm2_lpi2c2` (the LCD-shield-header I2C bus) working at
+all - needed as a second bus for I2C target-mode testing, see below -
+took chasing down two separate, genuine bugs, not application-level
+config mistakes:
+
+**1. A devicetree conflict inherited from NXP's reference board.**
+`flexcomm2_lpi2c2` and `flexcomm2_lpuart2` were *both* enabled
+(`status = "okay"`) in the shared `mcx_nx4x_evk_cpu0.dtsi` this board
+includes - written for NXP's reference board, which has an actual
+audio-codec header populated on `flexcomm2_lpuart2`. A single
+LP_FLEXCOMM instance can only run one peripheral function at a time;
+`drivers/mfd/mfd_nxp_lp_flexcomm.c` (`nxp_lp_flexcomm_init()`) detects
+both children enabled and initializes the shared hardware block in a
+combined `LP_FLEXCOMM_PERIPH_LPI2CAndLPUART` mode instead of pure
+`LPI2C` mode. Nothing on this port uses `flexcomm2_lpuart2` (no audio
+codec is populated), so `boards/mcx_n9xx_evk_mcxn947_cpu0.overlay`
+explicitly disables it.
+
+**2. A genuine divide-by-zero in NXP's own vendored MCUX LPI2C driver.**
+Even after fixing (1), `flexcomm2_lpi2c2` still crashed on every boot
+with an identical fault, confirmed via GDB + `addr2line` pointing at
 `LPI2C_GetCyclesForWidth`/`LPI2C_MasterInit`
-(`modules/hal/nxp/.../fsl_lpi2c.c:166`), with identical PC/registers
-on every reproduction:
+(`modules/hal/nxp/.../fsl_lpi2c.c:166`):
 
 ```
 ***** USAGE FAULT *****
@@ -56,11 +75,71 @@ Faulting instruction address (r15/pc): 0x1001271c
 Current thread: 0x300026d8 (main)
 ```
 
-This bus shares FlexComm2 with an audio-codec node in the board's own
-devicetree, which may be why its clock-rate query returns near-zero.
-Since nothing in this port uses this bus, `boards/
-mcx_n9xx_evk_mcxn947_cpu0.overlay` disables it - the correct fix given
-the actual need, not a workaround for something we broke.
+A temporary `printk()` inserted right before the faulting division
+showed `sourceClock_Hz=0` for this call - `CLOCK_GetLPFlexCommClkFreq(2)`
+transiently reads back an invalid clock-mux state on this SoC when
+FLEXCOMM2 is the first FlexComm instance to attach the shared
+`FRO_HF_DIV` clock during early board init (`board.c`'s
+`CLOCK_AttachClk()` calls for FLEXCOMM2 and FLEXCOMM3 are otherwise
+symmetric). Oddly, inserting the `printk()` call itself - just as a
+side effect of the delay it added - made the race disappear, which
+ruled out a logic bug in `board.c`'s clock-attach sequence and pointed
+at a genuine timing/settling issue instead. Root-caused this far, the
+robust fix is at the point of failure rather than papering over the
+timing: `LPI2C_GetCyclesForWidth()` should never divide by an
+unvalidated, possibly-zero clock rate in the first place. Patched (see
+`patches/hal_nxp-fsl_lpi2c-divzero-fix.patch`, applied to the `hal_nxp`
+west module, *outside* this repo - see "Applying the required
+out-of-tree patch" below) to fall back to the caller's `minCycles`
+instead of dividing by zero - which also happens to be the
+mathematically correct answer for every call site actually exercised
+here (`width_ns=0`, i.e. "glitch filter unset").
+
+With both fixes applied, `flexcomm2_lpi2c2` inits cleanly with its
+real 48MHz source clock and `i2c scan flexcomm2_lpi2c2` runs a real
+bus scan (see "I2C target mode" below for why every address currently
+shows as present - the header has no pull-ups with nothing wired to
+it, not a driver bug).
+
+## I2C target mode
+
+`src/plat_i2c_target.c` registers a real I2C **target/slave-mode**
+device on `flexcomm2_lpi2c2` (address `0x50`) using Zephyr's generic
+`i2c_target_register()`/`struct i2c_target_callbacks` API. This isn't
+new driver work - mainline's MCUX LPI2C driver
+(`drivers/i2c/i2c_mcux_lpi2c.c`) already implements target mode
+natively for this SoC (`mcux_lpi2c_target_register()`, IRQ-driven
+address/RX/TX/stop handling) - it simply had no consumer or working
+second bus to exercise it against on this board before now. The device
+itself is a tiny EEPROM-style register file (256 bytes): the first
+byte of a write selects an offset (like a real EEPROM's address byte),
+further bytes write sequentially from there; a read returns bytes
+sequentially from the last-selected offset.
+
+Verified on real hardware: boots cleanly and logs
+
+```
+<inf> plat_i2c_target: I2C target registered on flexcomm2_lpi2c2, addr 0x50, 256-byte regfile
+```
+
+**To exercise a real controller<->target transaction** (not yet done
+on this specific board - needs a physical jumper wire, offered but not
+performed as of this writing): jumper the LCD-shield header's I2C
+pins (`FC2_P0`/`FC2_P1`, i.e. `PIO4_0`/`PIO4_1` - SDA/SCL) to the
+Arduino header's I2C pins (`FC3_P0`/`FC3_P1`, i.e. `PIO1_0`/`PIO1_1` -
+D15/D14, SCL/SDA), plus a shared GND, then from the shell:
+
+```
+uart:~$ i2c write flexcomm3_lpi2c3 0x50 0x00 0xde 0xad 0xbe 0xef
+uart:~$ i2c read flexcomm3_lpi2c3 0x50 0x00 4
+00000000: de ad be ef                                      |....            |
+```
+
+Without the jumper wire, the two buses are electrically independent -
+a write on `flexcomm3_lpi2c3` simply goes nowhere, and a read back
+returns whatever the target's regfile already held (zeroes, on a fresh
+boot) - which is exactly what was observed, confirming the two buses
+are correctly isolated rather than the target actually responding.
 
 ## Why this is scoped as "bring-up only", not a real board port
 
@@ -99,11 +178,14 @@ meta-facebook/mcx-n9xx-evk/
 │                    + this board's own src/*.c
 ├── prj.conf         GPIO, I2C, shell, logging, hwinfo, watchdog, NVS, mbox
 ├── boards/          Devicetree overlay: red_led, user_button_2, mbox-consumer,
-│                    disables the broken flexcomm2_lpi2c2 (see bug writeup above)
+│                    disables the conflicting flexcomm2_lpuart2 (see bug writeup above)
+├── patches/         hal_nxp-fsl_lpi2c-divzero-fix.patch - required out-of-tree
+│                    fix, see "Applying the required out-of-tree patch" below
 ├── src/main.c       Banner + shell + heartbeat LED + real wdt/timer/I2C/
 │                    sensor/FRU init calls
 ├── src/plat_version.h, plat_def.h, plat_ipmb.h   Minimal per-board glue
-├── src/plat_i2c.[h]        Board I2C bus map (real bus used by hal_i2c.c)
+├── src/plat_i2c.[h]        Board I2C bus map (both buses - see hal_i2c.c above)
+├── src/plat_i2c_target.[ch]  I2C target-mode test device (see above)
 ├── src/plat_sensor_table.[ch], plat_sdr_table.[ch]   Empty per-board tables
 ├── src/plat_fru.[ch]       FRU EEPROM config (points at real I2C, nothing wired)
 ├── src/plat_stubs.c        Link-only stubs for genuinely unportable/absent
@@ -278,11 +360,28 @@ serial console):
 [00:05:30.798] <inf> plat_gpio: mon0 (SW2) state changed: deasserted
 ```
 
+## Applying the required out-of-tree patch
+
+One of the two bugs above (the `LPI2C_GetCyclesForWidth` divide-by-zero)
+lives in NXP's vendored HAL, in the `hal_nxp` **west module** -
+`~/openbic-workspace/modules/hal/nxp/`, not this repo - so it can't be
+committed here directly, and a fresh `west update` will re-pull the
+unpatched, crashing version. After `west update`, apply it once:
+
+```sh
+cd ~/openbic-workspace/modules/hal/nxp
+git apply ~/openbic-workspace/openbic/meta-facebook/mcx-n9xx-evk/patches/hal_nxp-fsl_lpi2c-divzero-fix.patch
+```
+
+Without this patch, any build that enables `flexcomm2_lpi2c2` (as this
+board's overlay does, for I2C target-mode testing - see above) will
+crash at boot with the USAGE FAULT documented above.
+
 ## Build / flash
 
 Same toolchain as NXP's own MCXN947 Zephyr samples - see the repo-root
 `SETUP.md` (west workspace at `~/openbic-workspace`, Zephyr SDK,
-LinkServer):
+LinkServer). Apply the patch above first if you haven't already.
 
 ```sh
 source ~/openbic-workspace/.venv/bin/activate
@@ -294,19 +393,30 @@ west flash
 
 Open a serial console (115200 8N1) on the MCU-Link's VCOM port to see
 the banner, shell prompt, and real init log lines (device ID, reset
-cause, NVS boot count, GPIO monitor start, mbox ready, and the honest
-`sensor: Init sensor size is zero`); the red LED should blink every
-500ms. Try `i2c scan flexcomm3_lpi2c3` for a live 128-address real bus
-scan (0 devices - nothing's wired to the Arduino header).
+cause, NVS boot count, GPIO monitor start, mbox ready, I2C target
+registration, and the honest `sensor: Init sensor size is zero`); the
+red LED should blink every 500ms. Try `i2c scan flexcomm3_lpi2c3` for
+a live 128-address real bus scan (0 devices - nothing's wired to the
+Arduino header) - see "I2C target mode" above for exercising
+`flexcomm2_lpi2c2`.
 
 ## What's still not done
 
 The remaining gap to a real, fully-functional BIC target on this
 board:
 
+- **A real wire-level I2C target-mode test** - the software side is
+  done and verified (registers cleanly, see above); proving a genuine
+  controller<->target transaction over the wire just needs the
+  LCD-shield and Arduino headers jumper-wired together (SDA, SCL,
+  GND) - see "I2C target mode" above for the exact commands.
 - **IPMI transport** - needs a from-scratch transport design (no
   mainline equivalent to port), independent of any further hardware
-  work on this board.
+  work on this board. Note that IPMB-over-I2C specifically no longer
+  needs new *driver* work - target mode is real and working (see
+  above) - what's missing is the IPMB/IPMI protocol-layer transport
+  code itself, which upstream OpenBIC doesn't have a mainline-portable
+  version of.
 - **I3C** - blocked on a real MCXN947 `I3C_MCUX` driver issue in this
   Zephyr version (see above) - would need upstream Zephyr driver
   debugging/fixing, not application-level work.

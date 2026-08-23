@@ -14,16 +14,18 @@
  * limitations under the License.
  *
  * Board-specific I2C bus map for the MCX-N9XX-EVK. hal_i2c's bus
- * indices are firmware-internal (0-based). Only flexcomm3_lpi2c3
- * (Arduino header D14/D15) is actually enabled and used here -
- * flexcomm2_lpi2c2 (LCD-shield connector) is disabled in this board's
- * overlay because it triggers a real divide-by-zero in NXP's own
- * MCUX LPI2C driver at boot on this SoC/Zephyr combination, and
- * nothing in this port needs it anyway - see the overlay and
- * README.md for the full writeup. Nothing is physically attached to
- * the Arduino header on this EVK, so transactions will genuinely
- * NACK/timeout - see README.md for why that's still a meaningful
- * real-hardware milestone.
+ * indices are firmware-internal (0-based). Both buses are enabled and
+ * used here - flexcomm3_lpi2c3 (Arduino header D14/D15) as the
+ * controller-mode bus, and flexcomm2_lpi2c2 (LCD-shield connector) as
+ * a second bus for I2C target-mode testing. flexcomm2_lpi2c2 used to
+ * crash at boot with a real divide-by-zero in NXP's own MCUX LPI2C
+ * driver - see the overlay for the root cause (a FlexComm2 clock
+ * conflict with the unused flexcomm2_lpuart2 node) and README.md for
+ * the full writeup. Nothing is physically attached to either header
+ * by default, so a controller-mode transaction will genuinely
+ * NACK/timeout unless the two headers are jumper-wired together for a
+ * real controller<->target test - see README.md for why that's still
+ * a meaningful real-hardware milestone.
  */
 
 #ifndef PLAT_I2C_H
@@ -33,6 +35,7 @@
 
 #define I2C_BUS_MAX_NUM 4
 
-#define I2C_BUS_ARDUINO_HEADER 3 /* flexcomm3_lpi2c3 */
+#define I2C_BUS_ARDUINO_HEADER 3 /* flexcomm3_lpi2c3, controller mode */
+#define I2C_BUS_LCD_HEADER 2 /* flexcomm2_lpi2c2, target mode */
 
 #endif

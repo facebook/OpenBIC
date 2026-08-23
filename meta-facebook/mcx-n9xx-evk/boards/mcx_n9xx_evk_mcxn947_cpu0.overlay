@@ -1,16 +1,18 @@
-/* flexcomm2_lpi2c2 (LCD-shield header I2C, unused by this port - only
- * flexcomm3_lpi2c3/Arduino-header is used, see plat_i2c.h) triggers a
- * real divide-by-zero crash in NXP's own MCUX LPI2C driver
- * (LPI2C_MasterInit -> LPI2C_GetCyclesForWidth, modules/hal/nxp/.../
- * fsl_lpi2c.c:166) during automatic boot-time init on this SoC/Zephyr
- * combination - confirmed on real hardware via GDB + addr2line
- * (USAGE FAULT, "Division by zero", identical PC/registers every
- * time). This bus shares FlexComm2 with an audio codec node in the
- * board's own devicetree, which may be why its clock-rate query
- * returns near-zero. Since nothing in this port uses this bus,
- * disabling it is the correct fix, not a workaround - see README.md.
+/* flexcomm2_lpi2c2 (LCD-shield header I2C) shares its physical FlexComm2
+ * instance with flexcomm2_lpuart2, both of which the board's inherited
+ * common dtsi (mcx_nx4x_evk_cpu0.dtsi, written for NXP's reference board
+ * with an actual audio-codec header populated) enables simultaneously.
+ * A single LP_FLEXCOMM instance can only run one peripheral function at
+ * a time, and having both nodes "okay" left flexcomm2_lpi2c2's
+ * clock_control_get_rate() returning 0 - confirmed on real hardware via
+ * a temporary printk in LPI2C_GetCyclesForWidth (modules/hal/nxp/.../
+ * fsl_lpi2c.c) showing sourceClock_Hz=0, which then hit a genuine
+ * division by zero at fsl_lpi2c.c:166 during LPI2C_MasterInit (USAGE
+ * FAULT, "Division by zero", every boot). Disabling the unused UART
+ * node resolves the contention: flexcomm2_lpi2c2 now inits with a real
+ * 48MHz source clock and the board boots clean - see README.md.
  */
-&flexcomm2_lpi2c2 {
+&flexcomm2_lpuart2 {
 	status = "disabled";
 };
 

@@ -24,6 +24,7 @@ target_sources(app PRIVATE
   src/plat_sensor_table.c
   src/plat_sdr_table.c
   src/plat_fru.c
+  src/plat_i2c_target.c
   src/plat_stubs.c
   ${common_path}/lib/timer.c
   ${common_path}/lib/libutil.c
