@@ -15,16 +15,16 @@
  *
  * I2C target-mode test device for the MCX-N9XX-EVK port. Registers a
  * tiny byte-addressable register file (like a minimal I2C EEPROM) on
- * flexcomm2_lpi2c2 (the LCD-shield header, I2C_BUS_LCD_HEADER) using
- * Zephyr's generic i2c_target_* API, which the MCUX LPI2C driver
- * (i2c_mcux_lpi2c.c) implements natively for this SoC - this is real
- * target-mode hardware operation, not a software stand-in.
+ * flexcomm2_lpi2c2 (I2C_BUS_LCD_HEADER) using Zephyr's generic
+ * i2c_target_* API, which the MCUX LPI2C driver (i2c_mcux_lpi2c.c)
+ * implements natively for this SoC - this is real target-mode
+ * hardware operation, not a software stand-in.
  *
- * To exercise it against real silicon rather than just registering
- * it, jumper-wire the LCD-shield header's I2C pins (FC2_P0/FC2_P1,
- * PIO4_0/PIO4_1 - SDA/SCL) to the Arduino header's I2C pins
- * (FC3_P0/FC3_P1, PIO1_0/PIO1_1 - D15/D14, SCL/SDA), plus a shared
- * GND, then from the shell use flexcomm3_lpi2c3 (controller mode) to
+ * Both flexcomm2_lpi2c2 and flexcomm3_lpi2c3's SDA/SCL lines land on
+ * the same physical header - the Arduino-compatible header J2 (see
+ * README.md for the full, verified pin table) - so exercising this
+ * against real silicon just needs two short jumpers on that header,
+ * then from the shell use flexcomm3_lpi2c3 (controller mode) to
  * write/read this device at I2C_TARGET_TEST_ADDR:
  *
  *   i2c write flexcomm3_lpi2c3 0x50 0x00 0xde 0xad 0xbe 0xef
@@ -34,6 +34,12 @@
  * EEPROM); subsequent bytes write sequentially from there. A read
  * (with or without a preceding register-offset write) returns bytes
  * sequentially from the last-selected offset.
+ *
+ * This wire-level test has been attempted but is currently untested/
+ * inconclusive, not confirmed working or broken - see README.md's
+ * "I2C target mode" section for the full writeup. The registration
+ * and callbacks here are verified correct in isolation on real
+ * hardware.
  */
 
 #include <zephyr/kernel.h>

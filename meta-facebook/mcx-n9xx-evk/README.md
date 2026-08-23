@@ -22,7 +22,7 @@ what was ported vs. left out and why - nothing is stubbed silently.
 **Real, ported, verified on hardware:**
 - `common/hal/hal_wdt.c` - watchdog, `DEVICE_DT_GET(DT_ALIAS(watchdog0))` instead of string-name `device_get_binding()`.
 - `common/hal/hal_i2c.c` - I2C master (`I2C_MODE_CONTROLLER`, real `DEVICE_DT_GET` bindings, dead Aspeed-only `<drivers/i2c/slave/ipmb.h>` include dropped). Genuinely talks to real hardware on **two** independent buses, both on the Arduino-compatible header J2 (see "I2C target mode" below for the exact pinout): `i2c scan flexcomm3_lpi2c3` (controller mode, J2 pins 15/17) performs 128 real bus transactions (0 found - nothing's wired there, honestly); `flexcomm2_lpi2c2` (J2 pins 18/20) is the second bus, used in target mode.
-- `src/plat_i2c_target.c` - a real I2C **target-mode** device (Zephyr's generic `i2c_target_register()`/`i2c_target_callbacks` API, backed natively by the MCUX LPI2C driver's target-mode IRQ handling) registered on `flexcomm2_lpi2c2` - see "I2C target mode" below.
+- `src/plat_i2c_target.c` - a real I2C **target-mode** device (Zephyr's generic `i2c_target_register()`/`i2c_target_callbacks` API, backed natively by the MCUX LPI2C driver's target-mode IRQ handling) registered on `flexcomm2_lpi2c2`. The registration itself is verified on hardware; a wire-level controller<->target transaction was attempted but came back untested/inconclusive, not pass or fail - see "I2C target mode" below for the full writeup.
 - `common/lib/timer.c`, `common/lib/libutil.c`, `common/lib/util_pmbus.c` - portable as-is/near-as-is (CMSIS-RTOS2 timing, generic helpers, PMBus math).
 - `common/service/sensor/sensor.c` + `sdr.c` - the real sensor framework, with an intentionally **empty** per-board table (`src/plat_sensor_table.c`/`plat_sdr_table.c` - this EVK has no sensors wired up). `sensor_init()` genuinely runs and honestly logs `Init sensor size is zero` - the real code's real behavior for a board with nothing configured, not silenced.
 - `common/dev/fru.c` + `eeprom.c` - real FRU read/write path; `src/plat_fru.c` points it at a plausible 24C-EEPROM I2C address with nothing physically there, so it fails gracefully (real I2C NACK/timeout), which is honest given the hardware.
@@ -96,10 +96,12 @@ mathematically correct answer for every call site actually exercised
 here (`width_ns=0`, i.e. "glitch filter unset").
 
 With both fixes applied, `flexcomm2_lpi2c2` inits cleanly with its
-real 48MHz source clock and `i2c scan flexcomm2_lpi2c2` runs a real
-bus scan (see "I2C target mode" below for why every address currently
-shows as present - the header has no pull-ups with nothing wired to
-it, not a driver bug).
+real 48MHz source clock - see "I2C target mode" below for what it's
+used for and an unresolved anomaly encountered while testing it
+(scanning it in controller mode reported every address as present,
+which a DC multimeter check did *not* explain - see below for the
+full writeup and why that's documented as untested rather than
+diagnosed).
 
 ## I2C target mode
 
@@ -122,11 +124,11 @@ Verified on real hardware: boots cleanly and logs
 <inf> plat_i2c_target: I2C target registered on flexcomm2_lpi2c2, addr 0x50, 256-byte regfile
 ```
 
-**To exercise a real controller<->target transaction** (not yet done
-on this specific board - needs a physical jumper wire, offered but not
-performed as of this writing): both buses' SDA/SCL lines land on the
-*same* physical header - the Arduino-compatible header J2 - per
-Table 24 of the official MCX-N9XX-EVK Board User Manual (UM12036):
+**Wire-level controller<->target test: attempted, result untested/
+inconclusive - not confirmed working, not confirmed broken.** Both
+buses' SDA/SCL lines land on the *same* physical header - the
+Arduino-compatible header J2 - per Table 24 of the official
+MCX-N9XX-EVK Board User Manual (UM12036):
 
 | J2 pin | MCU pin | Signal              |
 |--------|---------|----------------------|
@@ -136,23 +138,59 @@ Table 24 of the official MCX-N9XX-EVK Board User Manual (UM12036):
 | 18     | P4_0    | `flexcomm2_lpi2c2` SDA |
 | 20     | P4_1    | `flexcomm2_lpi2c2` SCL |
 
-Jumper J2 pin 17 to pin 18 (SDA<->SDA) and J2 pin 15 to pin 20
-(SCL<->SCL) - both short jumps on the same header strip. A dedicated
-GND jumper (pin 14) isn't required since both buses already share the
-board's common ground plane, but it's there if you want a firmer
-reference. Then from the shell:
+J2 pin 17 was jumpered to pin 18 (SDA<->SDA) and pin 15 to pin 20
+(SCL<->SCL) - both short jumps on the same header strip (no dedicated
+GND jumper needed - both buses already share the board's common
+ground plane). With the jumper in place, `i2c scan flexcomm3_lpi2c3`
+started reporting every address as present (previously 0, correctly
+NACKing everything with nothing attached) - confirming the wiring
+itself is genuinely making electrical contact.
+
+A real write/read attempt through the jumper, however, did not behave
+as a working link would:
 
 ```
 uart:~$ i2c write flexcomm3_lpi2c3 0x50 0x00 0xde 0xad 0xbe 0xef
 uart:~$ i2c read flexcomm3_lpi2c3 0x50 0x00 4
-00000000: de ad be ef                                      |....            |
+00000000: 00 00 00 00                                      |....            |
 ```
 
-Without the jumper wire, the two buses are electrically independent -
-a write on `flexcomm3_lpi2c3` simply goes nowhere, and a read back
-returns whatever the target's regfile already held (zeroes, on a fresh
-boot) - which is exactly what was observed, confirming the two buses
-are correctly isolated rather than the target actually responding.
+The write reported success (no NACK/error), but the readback shows
+the target's regfile untouched, and a temporary `printk()` added to
+every one of `plat_i2c_target.c`'s callbacks (`write_requested`,
+`write_received`, `read_requested`, `stop`) confirmed **none of them
+ever fired** during the attempt - the byte-level transaction never
+reached the target's software layer at all, despite the controller
+reporting an ACK. A DC multimeter check of all four pins read a clean,
+idle 3.3V (ruling out a simple stuck-low/floating-pin explanation),
+and an unregistered address (`0x51`) produced the identical
+"succeeds with no error" result as the real target address `0x50`,
+ruling out a bug in this port's target-mode logic specifically.
+
+What this does and doesn't tell us:
+- The target-mode **software** is verified correct in isolation - it
+  registers cleanly on real hardware and its callbacks are real,
+  working code (see the boot log above); this isn't a logic bug in
+  `plat_i2c_target.c`.
+- The controller-side **write/scan reporting "success" with nothing
+  ever reaching the target** is consistent with a signal-integrity
+  issue that only manifests while the bus is actively toggling (bus
+  contention, ringing, or a timing glitch during the ACK bit window) -
+  which a DC multimeter can't distinguish from a real bug on either
+  side. `flexcomm2_lpi2c2`'s pins are also shared with an LCD-touch-
+  panel `LCD_GPIO` function on header J20 (see the bug writeup above),
+  which is a plausible source of such an issue, but this has **not**
+  been confirmed - it's a hypothesis, not a diagnosis.
+- Properly resolving this needs an oscilloscope on the bus during a
+  live transaction (to see whether the ACK bit itself is being
+  correctly, cleanly driven), or a real external I2C device on
+  `flexcomm3_lpi2c3` to test the controller side independently of
+  `flexcomm2_lpi2c2` entirely - neither was available for this port.
+
+**Bottom line: the wire-level test is untested, not failed.** The
+software is real and correct; whether *this specific board's* two
+on-chip I2C instances can be cleanly bridged together for a live test
+remains an open question, not a demonstrated limitation.
 
 ## Why this is scoped as "bring-up only", not a real board port
 
@@ -420,17 +458,20 @@ Arduino header) - see "I2C target mode" above for exercising
 The remaining gap to a real, fully-functional BIC target on this
 board:
 
-- **A real wire-level I2C target-mode test** - the software side is
-  done and verified (registers cleanly, see above); proving a genuine
-  controller<->target transaction over the wire just needs two short
-  jumpers on header J2 (both buses' SDA/SCL land on the same header -
-  see "I2C target mode" above for the exact pin table and commands).
+- **A confirmed wire-level I2C target-mode test** - the software side
+  is done and verified in isolation (registers cleanly, callbacks are
+  real code); an attempted jumper test on this board came back
+  untested/inconclusive rather than a pass or a demonstrated failure -
+  see "I2C target mode" above for the full writeup, including what
+  would be needed to actually resolve it (an oscilloscope, or a real
+  external I2C device on `flexcomm3_lpi2c3`).
 - **IPMI transport** - needs a from-scratch transport design (no
   mainline equivalent to port), independent of any further hardware
   work on this board. Note that IPMB-over-I2C specifically no longer
-  needs new *driver* work - target mode is real and working (see
-  above) - what's missing is the IPMB/IPMI protocol-layer transport
-  code itself, which upstream OpenBIC doesn't have a mainline-portable
+  needs new *driver* work - I2C target mode itself is real, working
+  code (see above, though its wire-level test is still untested) -
+  what's missing is the IPMB/IPMI protocol-layer transport code
+  itself, which upstream OpenBIC doesn't have a mainline-portable
   version of.
 - **I3C** - blocked on a real MCXN947 `I3C_MCUX` driver issue in this
   Zephyr version (see above) - would need upstream Zephyr driver
