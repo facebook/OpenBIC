@@ -379,7 +379,9 @@ One of the two bugs above (the `LPI2C_GetCyclesForWidth` divide-by-zero)
 lives in NXP's vendored HAL, in the `hal_nxp` **west module** -
 `~/openbic-workspace/modules/hal/nxp/`, not this repo - so it can't be
 committed here directly, and a fresh `west update` will re-pull the
-unpatched, crashing version. After `west update`, apply it once:
+unpatched, crashing version. Submitted upstream as
+[zephyrproject-rtos/hal_nxp#799](https://github.com/zephyrproject-rtos/hal_nxp/pull/799);
+until that merges, apply it locally after `west update`:
 
 ```sh
 cd ~/openbic-workspace/modules/hal/nxp
