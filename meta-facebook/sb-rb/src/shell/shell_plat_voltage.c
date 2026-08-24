@@ -56,6 +56,16 @@ static int cmd_voltage_get_all(const struct shell *shell, size_t argc, char **ar
 			continue;
 		}
 
+		if (get_svs_flag() == 1) {
+			if (i == VR_RAIL_E_ASIC_P0V85_MEDHA0_VDD ||
+			    i == VR_RAIL_E_ASIC_P0V85_MEDHA1_VDD) {
+				// if svs is enable, vout need to - vout ofset
+				uint16_t offset = 0;
+				voltage_offset_get(i, &offset);
+				vout -= offset;
+			}
+		}
+
 		shell_print(shell, "%4d|%-40s|%4d", i, rail_name, vout);
 	}
 
@@ -120,9 +130,8 @@ static int cmd_voltage_set(const struct shell *shell, size_t argc, char **argv)
 
 static void voltage_rname_get(size_t idx, struct shell_static_entry *entry)
 {
-	if ((get_asic_board_id() == ASIC_BOARD_ID_EVB))
+	if (((get_asic_board_id() != ASIC_BOARD_ID_EVB)) && (idx == VR_RAIL_E_P3V3_OSFP_VOLT_V))
 		idx++;
-
 	uint8_t *name = NULL;
 	vr_rail_name_get((uint8_t)idx, &name);
 
@@ -135,24 +144,42 @@ static void voltage_rname_get(size_t idx, struct shell_static_entry *entry)
 static void cmd_svs_flag_get(const struct shell *shell, size_t argc, char **argv)
 {
 	uint8_t svs_flag = get_svs_flag();
-	shell_print(shell, "Current SVS flag: %d", svs_flag);
+	shell_print(shell, "voltage offset(1:enable, 0:disable) : %d", svs_flag);
 }
 
 static void cmd_svs_flag_set(const struct shell *shell, size_t argc, char **argv)
 {
 	if (argc < 2) {
-		shell_error(shell, "Usage: set svs flag <0/1>");
+		shell_error(shell, "Usage: set voltage offset <0/1>");
 		return;
 	}
 
 	uint8_t svs_flag = strtol(argv[1], NULL, 0);
 	//flag only support 0 or 1
 	if (svs_flag > 1) {
-		shell_error(shell, "Invalid SVS flag value: %d. Only 0 or 1 is allowed.", svs_flag);
+		shell_error(shell, "Invalid voltage offset value: %d. Only 0 or 1 is allowed.",
+			    svs_flag);
 		return;
 	}
 	set_svs_flag(svs_flag);
-	shell_print(shell, "Current SVS flag: %d", svs_flag);
+	shell_print(shell, "voltage offset(1:enable, 0:disable): %d", svs_flag);
+}
+
+void cmd_get_medha_vout_offset(const struct shell *shell, size_t argc, char **argv)
+{
+	uint16_t vout_offset_value = 0;
+	if (!voltage_offset_get(VR_RAIL_E_ASIC_P0V85_MEDHA0_VDD, &vout_offset_value)) {
+		shell_error(shell, "Failed to get medha0 vout offset");
+		return;
+	}
+	shell_print(shell, "Medha0 vout offset: %d mV", vout_offset_value);
+
+	vout_offset_value = 0;
+	if (!voltage_offset_get(VR_RAIL_E_ASIC_P0V85_MEDHA1_VDD, &vout_offset_value)) {
+		shell_error(shell, "Failed to get medha1 vout offset");
+		return;
+	}
+	shell_print(shell, "Medha1 vout offset: %d mV", vout_offset_value);
 }
 
 SHELL_DYNAMIC_CMD_CREATE(voltage_rname, voltage_rname_get);
@@ -166,15 +193,14 @@ SHELL_STATIC_SUBCMD_SET_CREATE(sub_voltage_get_cmds,
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_svs_cmds, SHELL_CMD(get, NULL, "get svs flag", cmd_svs_flag_get),
 			       SHELL_CMD(set, NULL, "set svs flag <0/1>", cmd_svs_flag_set),
 			       SHELL_SUBCMD_SET_END);
-
 /* level 1 */
-SHELL_STATIC_SUBCMD_SET_CREATE(sub_voltage_cmds,
-			       SHELL_CMD(get, &sub_voltage_get_cmds, "get voltage all", NULL),
-			       SHELL_CMD_ARG(set, &voltage_rname,
-					     "set <voltage-rail> <new-voltage>|default [perm]",
-					     cmd_voltage_set, 3, 1),
-			       SHELL_CMD(svs_flag, &sub_svs_cmds, "svs flag commands", NULL),
-			       SHELL_SUBCMD_SET_END);
+SHELL_STATIC_SUBCMD_SET_CREATE(
+	sub_voltage_cmds, SHELL_CMD(get, &sub_voltage_get_cmds, "get voltage all", NULL),
+	SHELL_CMD_ARG(set, &voltage_rname, "set <voltage-rail> <new-voltage>|default [perm]",
+		      cmd_voltage_set, 3, 1),
+	SHELL_CMD(svs_apply_offset, &sub_svs_cmds, "svs apply commands", NULL),
+	SHELL_CMD(get_medha_vout_offset, NULL, "get medha vout offset", cmd_get_medha_vout_offset),
+	SHELL_SUBCMD_SET_END);
 
 /* Root of command test */
 SHELL_CMD_REGISTER(voltage, &sub_voltage_cmds, "voltage set/get commands", NULL);

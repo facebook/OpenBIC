@@ -31,11 +31,13 @@
 #define ASIC_MONITOR_HBM_TEMP_REG 0x8F // Max of 8 HBM temperature sensors in history
 #define ASIC_MONITOR_TEMP_REG 0x70
 #define ASIC_VERSION_REG 0x68
+#define ASIC_SVS_CORE_VOLT_REG 0x9B
 //asic reg len
 #define ASIC_STATUS_REG_LEN 8
 #define ASIC_VERSION_REG_LEN 10
 #define ASIC_MONITOR_TEMP_REG_LEN 10
 #define ASIC_MONITOR_HBM_TEMP_REG_LEN 10
+#define ASIC_SVS_CORE_VOLT_REG_LEN 6
 
 int asic_read_cmd(const struct shell *shell, uint8_t reg, uint8_t *data, uint8_t len)
 {
@@ -189,7 +191,32 @@ void asic_read_all_cmd(const struct shell *shell, size_t argc, char **argv)
 
 	shell_print(shell, "\n=== Asic Dump Complete ===");
 }
-
+void asic_read_svs_core_voltage_cmd(const struct shell *shell, size_t argc, char **argv)
+{
+	if (argc > 1) {
+		shell_error(shell, "Usage: svs_core_voltage_get");
+		return;
+	}
+	// read 0x9B
+	/*
+	0:length
+	1-2: cip0 mv
+	3-4: cip1 mv
+	5: pec
+	*/
+	uint8_t data[ASIC_SVS_CORE_VOLT_REG_LEN] = { 0 };
+	if (asic_read_cmd(shell, ASIC_SVS_CORE_VOLT_REG, (uint8_t *)data,
+			  ASIC_SVS_CORE_VOLT_REG_LEN) != 0) {
+		shell_warn(shell, "Can't get SVS core voltage data from ASIC, reg: 0x%02x",
+			   ASIC_SVS_CORE_VOLT_REG);
+		return;
+	}
+	uint16_t cip0_mv = (data[2] << 8) | data[1];
+	uint16_t cip1_mv = (data[4] << 8) | data[3];
+	shell_print(shell, "SVS Core Voltage:");
+	shell_print(shell, "  cip0: raw: 0x%02X%02X -> %d mV", data[2], data[1], cip0_mv);
+	shell_print(shell, "  cip1: raw: 0x%02X%02X -> %d mV", data[4], data[3], cip1_mv);
+}
 /**
  * @brief Display help information for all Asic commands
  * @param shell Shell instance
@@ -200,11 +227,14 @@ void asic_help_cmd(const struct shell *shell, size_t argc, char **argv)
 {
 	shell_info(shell, "Usage: Asic help");
 	shell_info(shell, "       Asic read_all");
+	shell_info(shell, "       svs_core_voltage_get");
 }
 
 /* Sub-command Level 1 of  commands */
 SHELL_STATIC_SUBCMD_SET_CREATE(
 	sub_asic_cmds, SHELL_CMD(read_all, NULL, "read all Asic system data", asic_read_all_cmd),
+	SHELL_CMD(svs_core_voltage_get, NULL, "get SVS core voltage from asic",
+		  asic_read_svs_core_voltage_cmd),
 	SHELL_CMD(help, NULL, "display help information for Asic commands", asic_help_cmd),
 	SHELL_SUBCMD_SET_END);
 
