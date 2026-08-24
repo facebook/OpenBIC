@@ -25,11 +25,11 @@
 
 #if defined(CONFIG_GPIO_ASPEED)
 #define FOREACH_GPIO(APPLY)                                                                        \
-	APPLY(GPIO0_A_D)                                                                            \
-	APPLY(GPIO0_E_H)                                                                            \
-	APPLY(GPIO0_I_L)                                                                            \
-	APPLY(GPIO0_M_P)                                                                            \
-	APPLY(GPIO0_Q_T)                                                                            \
+	APPLY(GPIO0_A_D)                                                                           \
+	APPLY(GPIO0_E_H)                                                                           \
+	APPLY(GPIO0_I_L)                                                                           \
+	APPLY(GPIO0_M_P)                                                                           \
+	APPLY(GPIO0_Q_T)                                                                           \
 	APPLY(GPIO0_U_V)
 
 #define TOTAL_GPIO_NUM 168
@@ -64,6 +64,42 @@
 #endif /* CONFIG_GPIO_ASPEED */
 
 enum GPIO_GROUP { FOREACH_GPIO(GEN_ENUM) };
+
+#if (CONFIG_SGPIO_NPCM4XX)
+/*
+ * SGPIO: 2 controllers (SGPIO0/SGPIO1, a.k.a IOX1/IOX2 on schematics), each split
+ * into 16 devicetree "bank" nodes of 8 pins (see nuvoton,npcm4xx-sgpio.yaml).
+ * Direction is fixed by which bank a pin belongs to (gpio_npcm4xx_sgpio.c):
+ * bank _0~_7 are output-only, bank _8~_f are input-only. This mirrors
+ * GPIO_GROUP_SIZE/GPIO_GROUP_NUM above but for the SGPIO device set.
+ */
+// clang-format off
+#define FOREACH_SGPIO(APPLY)                                                                       \
+	APPLY(SGPIO0_0) APPLY(SGPIO0_1) APPLY(SGPIO0_2) APPLY(SGPIO0_3)                            \
+	APPLY(SGPIO0_4) APPLY(SGPIO0_5) APPLY(SGPIO0_6) APPLY(SGPIO0_7)                            \
+	APPLY(SGPIO0_8) APPLY(SGPIO0_9) APPLY(SGPIO0_a) APPLY(SGPIO0_b)                            \
+	APPLY(SGPIO0_c) APPLY(SGPIO0_d) APPLY(SGPIO0_e) APPLY(SGPIO0_f)                            \
+	APPLY(SGPIO1_0) APPLY(SGPIO1_1) APPLY(SGPIO1_2) APPLY(SGPIO1_3)                            \
+	APPLY(SGPIO1_4) APPLY(SGPIO1_5) APPLY(SGPIO1_6) APPLY(SGPIO1_7)                            \
+	APPLY(SGPIO1_8) APPLY(SGPIO1_9) APPLY(SGPIO1_a) APPLY(SGPIO1_b)                            \
+	APPLY(SGPIO1_c) APPLY(SGPIO1_d) APPLY(SGPIO1_e) APPLY(SGPIO1_f)
+// clang-format on
+
+#define SGPIO_GROUP_NUM 32
+#define SGPIO_GROUP_SIZE 8
+#define SGPIO_CFG_SIZE (SGPIO_GROUP_NUM * SGPIO_GROUP_SIZE)
+
+/*
+ * Flat sgpio number helpers: unlike CHIP_GPIO, sgpio "number" isn't meant to be
+ * enumerated pin-by-pin in plat_gpio.h (SGPIO pins don't have per-pin fixed
+ * functions until wired on a specific board). Compute it with these instead.
+ * pin is 0~63 for every helper.
+ */
+#define SGPIO0_OUT(pin) (pin)
+#define SGPIO0_IN(pin) (64 + (pin))
+#define SGPIO1_OUT(pin) (128 + (pin))
+#define SGPIO1_IN(pin) (192 + (pin))
+#endif /* CONFIG_SGPIO_NPCM4XX */
 
 #define ENABLE 1
 #define DISABLE 0
@@ -152,5 +188,16 @@ uint8_t gpio_get_reg_value(uint8_t gpio_num, uint8_t reg_offset);
 int gpio_conf(uint8_t gpio_num, int dir);
 int gpio_get_direction(uint8_t gpio_num);
 void scu_init(SCU_CFG cfg[], size_t size);
+
+#if (CONFIG_SGPIO_NPCM4XX)
+extern GPIO_CFG sgpio_cfg[];
+extern char *sgpio_name[];
+int sgpio_get(uint8_t sgpio_num);
+int sgpio_set(uint8_t sgpio_num, uint8_t status);
+int sgpio_conf(uint8_t sgpio_num, int dir);
+int sgpio_interrupt_conf(uint8_t sgpio_num, gpio_flags_t flags);
+int sgpio_init(const struct device *args);
+bool pal_load_sgpio_config(void);
+#endif /* CONFIG_SGPIO_NPCM4XX */
 
 #endif
