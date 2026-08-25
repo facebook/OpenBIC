@@ -8,9 +8,18 @@ manifest:
   # Please add items below based on alphabetical order.
   # These dependencies may need updating if new features are added to the firmware.
   projects:
+    # Override the zephyr revision: it carries a real controller/target
+    # I2C hang fix (LPI2C_MasterInit() never restored on target
+    # unregister, see meta-facebook/mcx-n9xx-evk/README.md) needed for
+    # this board's IPMB channel to ever send a response on the same
+    # bus it listens on. Not yet submitted upstream - once it is (and
+    # a release picks it up), this override (and the fork branch it
+    # points at) can be dropped in favor of upstream's own pinned
+    # v4.4.0 tag.
     - name: zephyr
-      remote: zephyr
-      revision: v4.4.0
+      remote: wrouwet
+      repo-path: zephyr
+      revision: fix/lpi2c-controller-target-hang
       import:
         name-allowlist:
           - cmsis
