@@ -67,6 +67,23 @@ mctp_port *plat_get_mctp_port(uint8_t index)
 	return &bic_mctp_port;
 }
 
+/* mctp_ctrl.c's Get Message Type Support handler needs this board-level
+ * hook (__weak in mctp_ctrl.c, defaults to returning -1 - an honest
+ * "not implemented" completion code, not a crash, but not a real answer
+ * either). Both types this board actually handles in
+ * plat_mctp_msg_recv() below are genuinely supported. */
+int load_mctp_support_types(uint8_t *type_len, uint8_t *types)
+{
+	if (!type_len || !types) {
+		return -1;
+	}
+
+	types[0] = TYPE_MCTP_CONTROL;
+	types[1] = TYPE_PLDM;
+	*type_len = 2;
+	return 0;
+}
+
 static uint8_t plat_mctp_resolve_endpoint(uint8_t dest_endpoint, void **mctp_inst,
 					   mctp_ext_params *ext_params)
 {
