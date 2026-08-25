@@ -24,6 +24,7 @@ target_sources(app PRIVATE
   src/plat_sdr_table.c
   src/plat_fru.c
   src/plat_ipmb.c
+  src/plat_mctp.c
   src/plat_stubs.c
   ${common_path}/lib/timer.c
   ${common_path}/lib/libutil.c
@@ -34,9 +35,12 @@ target_sources(app PRIVATE
   ${common_path}/service/sensor/sdr.c
   ${common_path}/service/mctp/mctp.c
   ${common_path}/service/mctp/mctp_ctrl.c
+  ${common_path}/service/mctp/mctp_smbus.c
   ${common_path}/service/pldm/pldm.c
   ${common_path}/service/pldm/pldm_base.c
   ${common_path}/service/pldm/pldm_oem.c
+  ${common_path}/service/pldm/pldm_smbios.c
+  ${common_path}/service/pldm/pldm_firmware_update.c
   ${common_path}/service/ipmb/ipmb.c
   ${common_path}/service/ipmi/ipmi.c
   ${common_path}/service/ipmi/app_handler.c

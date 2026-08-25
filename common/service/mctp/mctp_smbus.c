@@ -15,7 +15,7 @@
  */
 
 #include "mctp.h"
-#include "hal_i2c_target.h"
+#include "hal_i2c.h"
 #include <zephyr/logging/log.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -139,9 +139,9 @@ static uint16_t mctp_smbus_read(void *mctp_p, uint8_t *buf, uint32_t len,
 	uint16_t rlen = 0;
 
 	uint8_t ret = 0;
-	ret = i2c_target_read(mctp_inst->medium_conf.smbus_conf.bus, rdata, 256, &rlen);
+	ret = mctp_i2c_target_read(mctp_inst->medium_conf.smbus_conf.bus, rdata, 256, &rlen);
 	if (ret) {
-		LOG_ERR("i2c_target_read fail, ret %d", ret);
+		LOG_ERR("mctp_i2c_target_read fail, ret %d", ret);
 		return 0;
 	}
 	if (rlen < sizeof(smbus_hdr)) {
@@ -149,11 +149,11 @@ static uint16_t mctp_smbus_read(void *mctp_p, uint8_t *buf, uint32_t len,
 		return 0;
 	}
 
-	/**
-   * Since the i2c driver provided by ASPEED may read redundant duplicates data,
-   * use this temporary function to workaround and wait for the ASPEED to solve
-   * this issue then remove it.
-   */
+	/* Originally an ASPEED driver duplicate-byte workaround; kept as a
+	 * defensive no-op on mainline's LPI2C target driver (it only
+	 * triggers on an actual byte_count mismatch, which this driver
+	 * hasn't been observed to produce) rather than assuming it's safe
+	 * to delete outright. */
 	mctp_smbus_read_hook(rdata, &rlen);
 
 	smbus_hdr const *hdr = (smbus_hdr *)rdata;

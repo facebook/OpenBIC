@@ -421,18 +421,7 @@ void IPMB_TXTask(void *pvParameters, void *arvg0, void *arvg1)
 				i2c_msg->tx_len = resp_tx_size;
 				memcpy(&i2c_msg->data[0], &ipmb_buffer_tx[1], resp_tx_size);
 
-#if defined(CONFIG_I2C_MCUX_LPI2C) && defined(CONFIG_I2C_TARGET)
-				/* This bus doubles as an IPMB target - the LPI2C HW
-				 * can only be controller or target at once, and target
-				 * registration tears the controller side down. Drop
-				 * out of target mode for the duration of this write,
-				 * or it hangs forever instead of completing. */
-				ipmb_target_pause(i2c_msg->bus);
-#endif
 				ret = i2c_master_write(i2c_msg, I2C_RETRY_TIME);
-#if defined(CONFIG_I2C_MCUX_LPI2C) && defined(CONFIG_I2C_TARGET)
-				ipmb_target_resume(i2c_msg->bus);
-#endif
 				SAFE_FREE(i2c_msg);
 			} else {
 				LOG_ERR("Unsupported interface(%d) for index(%d)",
@@ -511,15 +500,7 @@ void IPMB_TXTask(void *pvParameters, void *arvg0, void *arvg1)
 					LOG_DBG(")");
 				}
 
-#if defined(CONFIG_I2C_MCUX_LPI2C) && defined(CONFIG_I2C_TARGET)
-				/* See the response branch above - same HW limitation
-				 * applies here for a locally-initiated request. */
-				ipmb_target_pause(i2c_msg->bus);
-#endif
 				ret = i2c_master_write(i2c_msg, I2C_RETRY_TIME);
-#if defined(CONFIG_I2C_MCUX_LPI2C) && defined(CONFIG_I2C_TARGET)
-				ipmb_target_resume(i2c_msg->bus);
-#endif
 				SAFE_FREE(i2c_msg);
 			} else {
 				LOG_ERR("Unsupported interface(%d) for index(%d)",

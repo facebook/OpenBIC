@@ -210,15 +210,23 @@ int i2c_master_read_without_error_log(I2C_MSG *msg, uint8_t retry);
 int ipmb_target_register(uint8_t bus, uint8_t addr);
 int ipmb_target_read(uint8_t bus, uint8_t *buf, uint8_t *len, k_timeout_t timeout);
 
-/* The LPI2C hardware can only be in controller or target mode at once -
- * registering an I2C target tears the controller side down. Call these
- * around any i2c_master_write()/i2c_master_read() on a bus that also has
- * an IPMB target registered, so the transfer doesn't hang forever with
- * the controller side never re-enabled. No-ops if the bus was never
- * registered as a target (e.g. controller-only buses).
+/* MCTP-over-SMBus equivalent - see common/hal/hal_i2c.c for why this
+ * can't reuse the IPMB target above (one registered target address per
+ * bus on this driver, and no shared framing convention). Drop-in
+ * replacement for the old hal_i2c_target.c i2c_target_read() that
+ * common/service/mctp/mctp_smbus.c calls.
+ *
+ * Neither this nor the IPMB target above needs an explicit pause/resume
+ * around controller-mode transfers on the same bus - the LPI2C hardware
+ * can only be in controller or target mode at once, but the driver
+ * itself (zephyr/drivers/i2c/i2c_mcux_lpi2c.c, see the mcx-n9xx-evk
+ * fork override in west.yml) now handles the teardown/restore
+ * transparently inside mcux_lpi2c_transfer(), so every caller is
+ * protected automatically - including ones outside this codebase, like
+ * the I2C shell's `i2c write`/`scan` commands.
  */
-int ipmb_target_pause(uint8_t bus);
-int ipmb_target_resume(uint8_t bus);
+int mctp_i2c_target_register(uint8_t bus, uint8_t addr);
+uint8_t mctp_i2c_target_read(uint8_t bus, uint8_t *buf, uint16_t max_len, uint16_t *out_len);
 #endif
 
 #endif
