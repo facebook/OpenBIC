@@ -25,9 +25,11 @@
  */
 #define PLAT_MCTP_I2C_TARGET_ADDR 0x10
 
-/* Arbitrary placeholder for the same reason - not yet assigned by any
- * real bus owner (this board has no external MCTP bus master to assign
- * one via Set Endpoint ID yet).
+/* Arbitrary placeholder starting EID, reported until a real bus owner
+ * reassigns one via MCTP Control's Set Endpoint ID (see
+ * plat_get_eid()/plat_get_mctp_port_count()/plat_get_mctp_port() in
+ * plat_mctp.c - the board-level hooks that make that actually work,
+ * instead of both Get and Set Endpoint ID failing/no-oping).
  */
 #define PLAT_MCTP_EID 0x09
 

@@ -33,7 +33,39 @@
 
 LOG_MODULE_REGISTER(plat_mctp);
 
-static mctp *bic_mctp_inst;
+/* mctp.c/mctp_ctrl.c call plat_get_eid()/plat_get_mctp_port_count()/
+ * plat_get_mctp_port() as __weak-overridable board hooks - without
+ * these, MCTP Control's Set Endpoint ID always fails (needs the port
+ * table to know which mctp_port to update) and Get Endpoint ID always
+ * reports a fixed default instead of whatever was actually assigned.
+ */
+static mctp_port bic_mctp_port;
+static bool bic_mctp_port_ready;
+
+uint8_t plat_get_eid(void)
+{
+	/* mctp_init() calls this before bic_mctp_port.mctp_inst exists, to
+	 * pick the instance's starting EID - fall back to the static
+	 * default then. Once up, report the live (possibly since
+	 * reassigned by Set Endpoint ID) value instead. */
+	if (!bic_mctp_port_ready) {
+		return PLAT_MCTP_EID;
+	}
+	return bic_mctp_port.mctp_inst->endpoint;
+}
+
+uint8_t plat_get_mctp_port_count(void)
+{
+	return bic_mctp_port_ready ? 1 : 0;
+}
+
+mctp_port *plat_get_mctp_port(uint8_t index)
+{
+	if (!bic_mctp_port_ready || index != 0) {
+		return NULL;
+	}
+	return &bic_mctp_port;
+}
 
 static uint8_t plat_mctp_resolve_endpoint(uint8_t dest_endpoint, void **mctp_inst,
 					   mctp_ext_params *ext_params)
@@ -81,8 +113,9 @@ void plat_mctp_init(void)
 		return;
 	}
 
-	bic_mctp_inst = mctp_init();
-	if (!bic_mctp_inst) {
+	mctp *mctp_inst = mctp_init();
+
+	if (!mctp_inst) {
 		LOG_ERR("mctp_init failed");
 		return;
 	}
@@ -94,19 +127,27 @@ void plat_mctp_init(void)
 		},
 	};
 
-	if (mctp_set_medium_configure(bic_mctp_inst, MCTP_MEDIUM_TYPE_SMBUS, conf) !=
-	    MCTP_SUCCESS) {
+	if (mctp_set_medium_configure(mctp_inst, MCTP_MEDIUM_TYPE_SMBUS, conf) != MCTP_SUCCESS) {
 		LOG_ERR("mctp_set_medium_configure failed");
 		return;
 	}
 
-	mctp_reg_endpoint_resolve_func(bic_mctp_inst, plat_mctp_resolve_endpoint);
-	mctp_reg_msg_rx_func(bic_mctp_inst, plat_mctp_msg_recv);
+	mctp_reg_endpoint_resolve_func(mctp_inst, plat_mctp_resolve_endpoint);
+	mctp_reg_msg_rx_func(mctp_inst, plat_mctp_msg_recv);
 
-	if (mctp_start(bic_mctp_inst) != MCTP_SUCCESS) {
+	if (mctp_start(mctp_inst) != MCTP_SUCCESS) {
 		LOG_ERR("mctp_start failed");
 		return;
 	}
 
-	LOG_INF("MCTP endpoint up on flexcomm3_lpi2c3, addr 0x%x", PLAT_MCTP_I2C_TARGET_ADDR);
+	bic_mctp_port.mctp_inst = mctp_inst;
+	bic_mctp_port.medium_type = MCTP_MEDIUM_TYPE_SMBUS;
+	bic_mctp_port.conf = conf;
+	/* Publish the port table (plat_get_mctp_port_count()/port() above)
+	 * only now that mctp_inst is fully live - Set Endpoint ID can
+	 * reach it from this point on. */
+	bic_mctp_port_ready = true;
+
+	LOG_INF("MCTP endpoint up on flexcomm3_lpi2c3, addr 0x%x, eid 0x%x",
+		PLAT_MCTP_I2C_TARGET_ADDR, mctp_inst->endpoint);
 }
