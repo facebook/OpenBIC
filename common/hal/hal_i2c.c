@@ -457,6 +457,7 @@ struct ipmb_target_msg {
 struct ipmb_target_ctx {
 	struct i2c_target_config cfg;
 	uint8_t bus;
+	bool is_ipmb_bus;
 	struct ipmb_target_msg accum;
 };
 
@@ -515,6 +516,29 @@ int ipmb_target_register(uint8_t bus, uint8_t addr)
 	ipmb_target_ctx[bus].bus = bus;
 	ipmb_target_ctx[bus].cfg.address = addr;
 	ipmb_target_ctx[bus].cfg.callbacks = &ipmb_target_callbacks;
+
+	int ret = i2c_target_register(dev_i2c[bus], &ipmb_target_ctx[bus].cfg);
+
+	if (!ret) {
+		ipmb_target_ctx[bus].is_ipmb_bus = true;
+	}
+	return ret;
+}
+
+int ipmb_target_pause(uint8_t bus)
+{
+	if (bus >= I2C_BUS_MAX_NUM || !dev_i2c[bus] || !ipmb_target_ctx[bus].is_ipmb_bus) {
+		return 0;
+	}
+
+	return i2c_target_unregister(dev_i2c[bus], &ipmb_target_ctx[bus].cfg);
+}
+
+int ipmb_target_resume(uint8_t bus)
+{
+	if (bus >= I2C_BUS_MAX_NUM || !dev_i2c[bus] || !ipmb_target_ctx[bus].is_ipmb_bus) {
+		return 0;
+	}
 
 	return i2c_target_register(dev_i2c[bus], &ipmb_target_ctx[bus].cfg);
 }

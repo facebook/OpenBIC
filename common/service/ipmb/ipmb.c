@@ -392,8 +392,6 @@ void IPMB_TXTask(void *pvParameters, void *arvg0, void *arvg1)
 				goto cleanup;
 			}
 
-			// Fix IPMB target address
-			current_msg_tx->buffer.dest_addr = ipmb_cfg.channel_target_address;
 			// Encode the IPMB message
 			ipmb_encode(&ipmb_buffer_tx[0], &current_msg_tx->buffer);
 			uint8_t resp_tx_size =
@@ -415,11 +413,26 @@ void IPMB_TXTask(void *pvParameters, void *arvg0, void *arvg1)
 				}
 
 				i2c_msg->bus = ipmb_cfg.bus;
-				i2c_msg->target_addr = ipmb_cfg.channel_target_address;
+				/* dest_addr was already resolved to the real
+				 * requester's address in ipmb_send_response() -
+				 * use it for the actual bus write instead of the
+				 * single configured channel peer. */
+				i2c_msg->target_addr = current_msg_tx->buffer.dest_addr;
 				i2c_msg->tx_len = resp_tx_size;
 				memcpy(&i2c_msg->data[0], &ipmb_buffer_tx[1], resp_tx_size);
 
+#if defined(CONFIG_I2C_MCUX_LPI2C) && defined(CONFIG_I2C_TARGET)
+				/* This bus doubles as an IPMB target - the LPI2C HW
+				 * can only be controller or target at once, and target
+				 * registration tears the controller side down. Drop
+				 * out of target mode for the duration of this write,
+				 * or it hangs forever instead of completing. */
+				ipmb_target_pause(i2c_msg->bus);
+#endif
 				ret = i2c_master_write(i2c_msg, I2C_RETRY_TIME);
+#if defined(CONFIG_I2C_MCUX_LPI2C) && defined(CONFIG_I2C_TARGET)
+				ipmb_target_resume(i2c_msg->bus);
+#endif
 				SAFE_FREE(i2c_msg);
 			} else {
 				LOG_ERR("Unsupported interface(%d) for index(%d)",
@@ -498,7 +511,15 @@ void IPMB_TXTask(void *pvParameters, void *arvg0, void *arvg1)
 					LOG_DBG(")");
 				}
 
+#if defined(CONFIG_I2C_MCUX_LPI2C) && defined(CONFIG_I2C_TARGET)
+				/* See the response branch above - same HW limitation
+				 * applies here for a locally-initiated request. */
+				ipmb_target_pause(i2c_msg->bus);
+#endif
 				ret = i2c_master_write(i2c_msg, I2C_RETRY_TIME);
+#if defined(CONFIG_I2C_MCUX_LPI2C) && defined(CONFIG_I2C_TARGET)
+				ipmb_target_resume(i2c_msg->bus);
+#endif
 				SAFE_FREE(i2c_msg);
 			} else {
 				LOG_ERR("Unsupported interface(%d) for index(%d)",
@@ -1021,7 +1042,17 @@ ipmb_error ipmb_send_response(ipmi_msg *resp, uint8_t index)
 	resp_cfg.buffer.InF_source = resp->InF_source;
 	resp_cfg.buffer.InF_target = resp->InF_target;
 	resp_cfg.buffer.completion_code = resp->completion_code;
-	resp_cfg.buffer.dest_addr = IPMB_config_table[index].channel_target_address;
+	/* Route the response back to whoever actually sent the request -
+	 * resp->src_addr still holds the original request's rqSA (8-bit
+	 * wire form) at this point, before it gets overwritten below to
+	 * our own address. A real IPMB channel can have more than one
+	 * legitimate requester, so this can't be a single static peer.
+	 * Falls back to the configured channel peer only if the caller
+	 * never populated src_addr (e.g. a synthetic response not built
+	 * from a decoded wire request). */
+	resp_cfg.buffer.dest_addr = resp->src_addr ?
+					     (resp->src_addr >> 1) :
+					     IPMB_config_table[index].channel_target_address;
 	resp_cfg.buffer.netfn = resp->netfn + 1;
 	resp_cfg.buffer.dest_LUN = resp->src_LUN;
 	resp_cfg.buffer.src_addr = IPMB_config_table[index].self_address << 1;

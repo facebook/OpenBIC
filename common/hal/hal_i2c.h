@@ -209,6 +209,16 @@ int i2c_master_read_without_error_log(I2C_MSG *msg, uint8_t retry);
  */
 int ipmb_target_register(uint8_t bus, uint8_t addr);
 int ipmb_target_read(uint8_t bus, uint8_t *buf, uint8_t *len, k_timeout_t timeout);
+
+/* The LPI2C hardware can only be in controller or target mode at once -
+ * registering an I2C target tears the controller side down. Call these
+ * around any i2c_master_write()/i2c_master_read() on a bus that also has
+ * an IPMB target registered, so the transfer doesn't hang forever with
+ * the controller side never re-enabled. No-ops if the bus was never
+ * registered as a target (e.g. controller-only buses).
+ */
+int ipmb_target_pause(uint8_t bus);
+int ipmb_target_resume(uint8_t bus);
 #endif
 
 #endif
