@@ -74,6 +74,15 @@ extern "C" {
 
 #define MCTP_POLL_TIME_MS 1
 
+/* If a multi-packet message's EOM never arrives (sender died mid-
+ * transfer, a packet got lost with no retransmit, etc.), its
+ * reassembly buffer used to leak forever - see mctp_rx_task()'s
+ * periodic sweep. Idle timeout (time since the *last accepted packet*
+ * for that message, not total transfer time), so a slow-but-still-
+ * progressing multi-packet transfer isn't killed early. */
+#define MCTP_REASSEMBLY_TIMEOUT_MS 3000
+#define MCTP_REASSEMBLY_SWEEP_INTERVAL_MS 500
+
 #define MCTP_MSG_TYPE_SHIFT 0
 #define MCTP_MSG_TYPE_MASK 0x7F
 
@@ -197,6 +206,15 @@ typedef struct _mctp {
 	struct {
 		uint8_t *buf;
 		uint16_t offset;
+		/* Expected pkt_seq of the *next* packet for this in-progress
+		 * message (DSP0236: starts at 0 on SOM, +1 mod 4 per packet).
+		 * See mctp_pkt_assembling(). */
+		uint8_t expected_pkt_seq;
+		/* k_uptime_get() at the last packet accepted into this slot -
+		 * used to reclaim a message whose EOM never arrives (see
+		 * mctp_rx_task()'s periodic sweep) rather than leaking the
+		 * buffer forever. */
+		int64_t last_activity_ms;
 	} temp_msg_buf[MCTP_MAX_MSG_TAG_NUM][2];
 
 	/* the callback when recevie mctp data */

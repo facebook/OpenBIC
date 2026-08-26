@@ -172,6 +172,15 @@ static uint8_t mctp_pkt_assembling(mctp *mctp_inst, uint8_t *buf, uint16_t len)
 	mctp_hdr *hdr = (mctp_hdr *)buf;
 	uint8_t **buf_p = &mctp_inst->temp_msg_buf[hdr->msg_tag][hdr->to].buf;
 	uint16_t *offset_p = &mctp_inst->temp_msg_buf[hdr->msg_tag][hdr->to].offset;
+	uint8_t *expected_seq_p = &mctp_inst->temp_msg_buf[hdr->msg_tag][hdr->to].expected_pkt_seq;
+
+	/* DSP0236: pkt_seq starts at 0 on the first packet of a message
+	 * (SOM), regardless of whether it's also the last (single-packet
+	 * case, previously unchecked here). */
+	if (hdr->som && hdr->pkt_seq != 0) {
+		LOG_WRN("SOM packet with non-zero pkt_seq %d", hdr->pkt_seq);
+		return MCTP_ERROR;
+	}
 
 	/* one packet message, do nothing */
 	if (hdr->som && hdr->eom)
@@ -183,6 +192,7 @@ static uint8_t mctp_pkt_assembling(mctp *mctp_inst, uint8_t *buf, uint16_t len)
 			free(*buf_p);
 		}
 		*offset_p = 0;
+		*expected_seq_p = 1;
 
 		*buf_p = (uint8_t *)malloc(MSG_ASSEMBLY_BUF_SIZE);
 		if (!*buf_p) {
@@ -190,6 +200,20 @@ static uint8_t mctp_pkt_assembling(mctp *mctp_inst, uint8_t *buf, uint16_t len)
 			return MCTP_ERROR;
 		}
 		memset(*buf_p, 0, MSG_ASSEMBLY_BUF_SIZE);
+	} else {
+		/* Middle or final (EOM) packet of an in-progress message -
+		 * previously accepted blindly regardless of pkt_seq, so a
+		 * duplicate/out-of-order/corrupted-sequence packet would
+		 * silently get appended in arrival order instead of being
+		 * rejected. */
+		if (hdr->pkt_seq != *expected_seq_p) {
+			LOG_WRN("pkt_seq %d != expected %d, dropping message", hdr->pkt_seq,
+				*expected_seq_p);
+			free(*buf_p);
+			*buf_p = NULL;
+			*offset_p = 0;
+			return MCTP_ERROR;
+		}
 	}
 
 	if (!(*buf_p)) {
@@ -205,6 +229,8 @@ static uint8_t mctp_pkt_assembling(mctp *mctp_inst, uint8_t *buf, uint16_t len)
 	/* Appending other packet after the first packet */
 	memcpy(*buf_p + *offset_p, buf + sizeof(mctp_hdr), len - sizeof(mctp_hdr));
 	*offset_p = offset_new;
+	*expected_seq_p = (*expected_seq_p + 1) & MCTP_HDR_SEQ_MASK;
+	mctp_inst->temp_msg_buf[hdr->msg_tag][hdr->to].last_activity_ms = k_uptime_get();
 	return MCTP_SUCCESS;
 }
 
@@ -223,8 +249,35 @@ static void mctp_rx_task(void *arg, void *dummy0, void *dummy1)
 
 	LOG_INF("mctp_rx_task start %p", mctp_inst);
 
+	int64_t last_reassembly_sweep_ms = k_uptime_get();
+
 	while (1) {
 		k_msleep(MCTP_POLL_TIME_MS);
+
+		/* Reclaim any in-progress reassembly whose EOM never arrived -
+		 * see the temp_msg_buf struct comment in mctp.h for why this
+		 * exists (it used to leak forever). Rate-limited so this
+		 * O(MCTP_MAX_MSG_TAG_NUM * 2) scan doesn't run on every 1ms
+		 * poll iteration. */
+		int64_t now_ms = k_uptime_get();
+		if ((now_ms - last_reassembly_sweep_ms) >= MCTP_REASSEMBLY_SWEEP_INTERVAL_MS) {
+			for (uint8_t tag = 0; tag < MCTP_MAX_MSG_TAG_NUM; tag++) {
+				for (uint8_t to = 0; to < 2; to++) {
+					if (mctp_inst->temp_msg_buf[tag][to].buf &&
+					    (now_ms -
+					     mctp_inst->temp_msg_buf[tag][to].last_activity_ms) >=
+						    MCTP_REASSEMBLY_TIMEOUT_MS) {
+						LOG_WRN("reassembly for msg_tag %d/to %d timed out, freeing",
+							tag, to);
+						free(mctp_inst->temp_msg_buf[tag][to].buf);
+						mctp_inst->temp_msg_buf[tag][to].buf = NULL;
+						mctp_inst->temp_msg_buf[tag][to].offset = 0;
+					}
+				}
+			}
+			last_reassembly_sweep_ms = now_ms;
+		}
+
 		uint8_t read_buf[256] = { 0 };
 		mctp_ext_params ext_params;
 		uint8_t ret = MCTP_ERROR;
