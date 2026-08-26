@@ -27,6 +27,7 @@
 #include "mctp_ctrl.h"
 #include "pldm.h"
 #include "hal_i2c.h"
+#include "plat_hwinfo.h"
 #include "plat_i2c.h"
 #include "plat_mctp.h"
 #include <zephyr/logging/log.h>
@@ -82,6 +83,15 @@ int load_mctp_support_types(uint8_t *type_len, uint8_t *types)
 	types[1] = TYPE_PLDM;
 	*type_len = 2;
 	return 0;
+}
+
+/* MCTP Control's Get Endpoint UUID hook - a real, genuinely unique
+ * per-chip hardware ID (read once at boot by plat_hwinfo_init(), the
+ * same value logged as this board's "device id"), not a fabricated
+ * placeholder. */
+bool plat_get_endpoint_uuid(uint8_t *uuid_buf)
+{
+	return plat_get_device_id(uuid_buf, MCTP_UUID_LEN);
 }
 
 static uint8_t plat_mctp_resolve_endpoint(uint8_t dest_endpoint, void **mctp_inst,

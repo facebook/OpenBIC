@@ -22,6 +22,7 @@ extern "C" {
 #endif
 
 #include "mctp.h"
+#include <stdbool.h>
 #include <stdint.h>
 #include <zephyr/kernel.h>
 
@@ -36,6 +37,7 @@ typedef struct _mctp_ctrl_cmd_handler {
 
 #define MCTP_CTRL_CMD_SET_ENDPOINT_ID 0x01
 #define MCTP_CTRL_CMD_GET_ENDPOINT_ID 0x02
+#define MCTP_CTRL_CMD_GET_ENDPOINT_UUID 0x03
 
 #define MCTP_CTRL_CMD_GET_VERSION_SUPPORT 0x04
 #define MCTP_CTRL_CMD_GET_MESSAGE_TYPE_SUPPORT 0x05
@@ -128,6 +130,20 @@ struct _get_version_support_resp {
 	uint8_t version_number_entry_count;
 	uint8_t version_number_entry[0];
 } __attribute__((packed));
+
+#define MCTP_UUID_LEN 16
+
+struct _get_uuid_resp {
+	uint8_t completion_code;
+	uint8_t uuid[MCTP_UUID_LEN];
+} __attribute__((packed));
+
+/* Board-level hook (mirrors plat_get_eid()'s pattern): supplies this
+ * device's real, unique-per-device UUID/GUID (RFC4122 byte order, MSB
+ * first). Default returns false ("not really available") rather than
+ * fabricating one - see mcx-n9xx-evk's plat_mctp.c for a real
+ * implementation backed by an actual per-chip hardware ID. */
+bool plat_get_endpoint_uuid(uint8_t *uuid_buf);
 
 struct _get_eid_resp {
 	uint8_t completion_code;

@@ -101,6 +101,42 @@ uint8_t mctp_ctrl_cmd_set_endpoint_id(void *mctp_inst, uint8_t *buf, uint16_t le
 	return MCTP_SUCCESS;
 }
 
+__weak bool plat_get_endpoint_uuid(uint8_t *uuid_buf)
+{
+	ARG_UNUSED(uuid_buf);
+	return false;
+}
+
+uint8_t mctp_ctrl_cmd_get_endpoint_uuid(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t *resp,
+					uint16_t *resp_len, void *ext_params)
+{
+	ARG_UNUSED(mctp_inst);
+	ARG_UNUSED(buf);
+	ARG_UNUSED(ext_params);
+	CHECK_NULL_ARG_WITH_RETURN(resp, MCTP_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp_len, MCTP_ERROR);
+
+	if (len != 0) {
+		resp[0] = MCTP_CTRL_CC_ERROR_INVALID_LENGTH;
+		*resp_len = 1;
+		return MCTP_SUCCESS;
+	}
+
+	struct _get_uuid_resp *p = (struct _get_uuid_resp *)resp;
+
+	if (!plat_get_endpoint_uuid(p->uuid)) {
+		/* Board doesn't have a real UUID to report - honest failure,
+		 * not a fabricated one (see plat_get_endpoint_uuid()'s doc). */
+		resp[0] = MCTP_CTRL_CC_ERROR;
+		*resp_len = 1;
+		return MCTP_SUCCESS;
+	}
+
+	p->completion_code = MCTP_CTRL_CC_SUCCESS;
+	*resp_len = sizeof(*p);
+	return MCTP_SUCCESS;
+}
+
 uint8_t mctp_ctrl_cmd_get_endpoint_id(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t *resp,
 				      uint16_t *resp_len, void *ext_params)
 {
@@ -325,6 +361,7 @@ static uint8_t mctp_ctrl_cmd_resp_process(mctp *mctp_inst, uint8_t *buf, uint32_
 static mctp_ctrl_cmd_handler_t mctp_ctrl_cmd_tbl[] = {
 	{ MCTP_CTRL_CMD_SET_ENDPOINT_ID, mctp_ctrl_cmd_set_endpoint_id },
 	{ MCTP_CTRL_CMD_GET_ENDPOINT_ID, mctp_ctrl_cmd_get_endpoint_id },
+	{ MCTP_CTRL_CMD_GET_ENDPOINT_UUID, mctp_ctrl_cmd_get_endpoint_uuid },
 	{ MCTP_CTRL_CMD_GET_VERSION_SUPPORT, mctp_ctrl_cmd_get_version_support },
 	{ MCTP_CTRL_CMD_GET_MESSAGE_TYPE_SUPPORT, mctp_ctrl_cmd_get_message_type_support }
 };

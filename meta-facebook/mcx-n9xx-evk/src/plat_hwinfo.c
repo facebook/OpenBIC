@@ -17,6 +17,8 @@
 #include <zephyr/kernel.h>
 #include <zephyr/drivers/hwinfo.h>
 #include <zephyr/logging/log.h>
+#include <stdbool.h>
+#include <string.h>
 
 #include "plat_hwinfo.h"
 
@@ -69,4 +71,20 @@ void plat_hwinfo_init(void)
 	} else {
 		LOG_ERR("hwinfo_get_reset_cause failed");
 	}
+}
+
+bool plat_get_device_id(uint8_t *out, size_t out_len)
+{
+	if (!out || out_len < sizeof(device_id) || device_id_len == 0) {
+		return false;
+	}
+
+	memcpy(out, device_id, device_id_len);
+	if (device_id_len < sizeof(device_id)) {
+		/* Shouldn't happen on this SoC (always returns a full 16
+		 * bytes), but zero-pad rather than leave the tail
+		 * uninitialized if hwinfo ever returns fewer. */
+		memset(out + device_id_len, 0, sizeof(device_id) - device_id_len);
+	}
+	return true;
 }
