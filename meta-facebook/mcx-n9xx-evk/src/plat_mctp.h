@@ -33,6 +33,26 @@
  */
 #define PLAT_MCTP_EID 0x09
 
+/* Test-only Vendor Defined (PCI) message type (DSP0236 0x7E), used
+ * purely to exercise multi-packet fragmentation/reassembly in the
+ * OpenBIC->peer direction (the peer side already has a real command
+ * - Get Endpoint ID - large enough to force fragmentation the other
+ * way). Not a real vendor protocol - "vendor ID" here is just a
+ * fixed marker distinguishing this test command from anything else
+ * that might show up as a VDM in the future.
+ *
+ * Request: [type_byte][vendor_id hi][vendor_id lo][cmd][len hi][len lo]
+ * Response (cmd == ECHO only): [type_byte][vendor_id hi][vendor_id lo]
+ *                               [cmd][status][data x len]
+ * `data[i] = i & 0xFF` - a fixed, checkable pattern so the receiver
+ * can verify byte-for-byte correctness of reassembly, not just length.
+ */
+#define PLAT_MCTP_TEST_VENDOR_ID 0xFFFF
+#define PLAT_MCTP_TEST_CMD_ECHO 0x01
+#define PLAT_MCTP_TEST_MAX_ECHO_LEN 512
+#define PLAT_MCTP_TEST_STATUS_SUCCESS 0x00
+#define PLAT_MCTP_TEST_STATUS_ERROR 0x01
+
 void plat_mctp_init(void);
 
 #endif

@@ -81,7 +81,8 @@ int load_mctp_support_types(uint8_t *type_len, uint8_t *types)
 
 	types[0] = TYPE_MCTP_CONTROL;
 	types[1] = TYPE_PLDM;
-	*type_len = 2;
+	types[2] = MCTP_MSG_TYPE_VEN_DEF_PCI;
+	*type_len = 3;
 	return 0;
 }
 
@@ -107,6 +108,53 @@ static uint8_t plat_mctp_resolve_endpoint(uint8_t dest_endpoint, void **mctp_ins
 	return MCTP_ERROR;
 }
 
+/* Test-only VDM echo handler - see plat_mctp.h for the wire format.
+ * Not a real vendor protocol: exists purely so a peer can request an
+ * N-byte reply and confirm our outbound multi-packet fragmentation
+ * (mctp_tx_task()'s chunking at MCTP_DEFAULT_MSG_MAX_SIZE) works,
+ * mirroring the inbound direction already exercised by real commands
+ * like Get Endpoint ID. */
+static void plat_mctp_vdm_handler(void *mctp_p, uint8_t *buf, uint32_t len,
+				   mctp_ext_params ext_params)
+{
+	mctp *mctp_inst = (mctp *)mctp_p;
+
+	if (len < 6) {
+		LOG_WRN("vdm test msg too short (%d)", len);
+		return;
+	}
+
+	uint16_t vendor_id = ((uint16_t)buf[1] << 8) | buf[2];
+	uint8_t cmd = buf[3];
+
+	if (vendor_id != PLAT_MCTP_TEST_VENDOR_ID || cmd != PLAT_MCTP_TEST_CMD_ECHO) {
+		LOG_WRN("unhandled vdm test vendor_id 0x%x cmd 0x%x", vendor_id, cmd);
+		return;
+	}
+
+	uint16_t req_len = ((uint16_t)buf[4] << 8) | buf[5];
+	uint8_t status = PLAT_MCTP_TEST_STATUS_SUCCESS;
+
+	if (req_len > PLAT_MCTP_TEST_MAX_ECHO_LEN) {
+		req_len = PLAT_MCTP_TEST_MAX_ECHO_LEN;
+		status = PLAT_MCTP_TEST_STATUS_ERROR;
+	}
+
+	uint8_t resp_buf[5 + PLAT_MCTP_TEST_MAX_ECHO_LEN];
+	resp_buf[0] = buf[0];
+	resp_buf[1] = buf[1];
+	resp_buf[2] = buf[2];
+	resp_buf[3] = cmd;
+	resp_buf[4] = status;
+	for (uint16_t i = 0; i < req_len; i++) {
+		resp_buf[5 + i] = (uint8_t)(i & 0xFF);
+	}
+
+	if (mctp_send_msg(mctp_inst, resp_buf, 5 + req_len, ext_params) != MCTP_SUCCESS) {
+		LOG_ERR("vdm test echo reply send failed");
+	}
+}
+
 static uint8_t plat_mctp_msg_recv(void *mctp_p, uint8_t *buf, uint32_t len,
 				   mctp_ext_params ext_params)
 {
@@ -122,6 +170,9 @@ static uint8_t plat_mctp_msg_recv(void *mctp_p, uint8_t *buf, uint32_t len,
 		break;
 	case MCTP_MSG_TYPE_PLDM:
 		mctp_pldm_cmd_handler(mctp_p, buf, len, ext_params);
+		break;
+	case MCTP_MSG_TYPE_VEN_DEF_PCI:
+		plat_mctp_vdm_handler(mctp_p, buf, len, ext_params);
 		break;
 	default:
 		LOG_WRN("unhandled mctp msg_type 0x%x", msg_type);
