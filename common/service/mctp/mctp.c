@@ -192,7 +192,6 @@ static uint8_t mctp_pkt_assembling(mctp *mctp_inst, uint8_t *buf, uint16_t len)
 			free(*buf_p);
 		}
 		*offset_p = 0;
-		*expected_seq_p = 1;
 
 		*buf_p = (uint8_t *)malloc(MSG_ASSEMBLY_BUF_SIZE);
 		if (!*buf_p) {
@@ -229,7 +228,15 @@ static uint8_t mctp_pkt_assembling(mctp *mctp_inst, uint8_t *buf, uint16_t len)
 	/* Appending other packet after the first packet */
 	memcpy(*buf_p + *offset_p, buf + sizeof(mctp_hdr), len - sizeof(mctp_hdr));
 	*offset_p = offset_new;
-	*expected_seq_p = (*expected_seq_p + 1) & MCTP_HDR_SEQ_MASK;
+	/* Derived from this packet's own (already-validated) pkt_seq rather
+	 * than incrementing the old *expected_seq_p - that old code
+	 * double-counted the SOM packet (which also assigned
+	 * *expected_seq_p = 1 above), so the packet right after SOM was
+	 * always rejected as "pkt_seq 1 != expected 2". This form gives the
+	 * same result as before for non-SOM packets (pkt_seq was just
+	 * checked equal to the old expected value) and is also correct for
+	 * SOM (pkt_seq is 0, validated earlier in this function). */
+	*expected_seq_p = (hdr->pkt_seq + 1) & MCTP_HDR_SEQ_MASK;
 	mctp_inst->temp_msg_buf[hdr->msg_tag][hdr->to].last_activity_ms = k_uptime_get();
 	return MCTP_SUCCESS;
 }
@@ -294,6 +301,8 @@ static void mctp_rx_task(void *arg, void *dummy0, void *dummy1)
 		mctp_hdr *hdr = (mctp_hdr *)read_buf;
 		LOG_DBG("dest_ep(0x%x), src_ep(0x%x), flags(0x%x)", hdr->dest_ep, hdr->src_ep,
 			hdr->flags_seq_to_tag);
+		LOG_DBG("rx_task: read_len=%d tag=%d to=%d som=%d eom=%d seq=%d dest=0x%x", read_len,
+			hdr->msg_tag, hdr->to, hdr->som, hdr->eom, hdr->pkt_seq, hdr->dest_ep);
 
 		/* Set the tranport layer extra parameters */
 		ext_params.msg_tag = hdr->msg_tag;
