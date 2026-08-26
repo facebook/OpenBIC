@@ -564,10 +564,20 @@ struct mctp_target_ctx {
 	struct mctp_target_msg accum;
 };
 
+/* Depth needs enough headroom to hold every raw fragment of a
+ * multi-packet message the I2C target hardware ACKs before
+ * mctp_rx_task() gets scheduled to drain the queue - a burst of
+ * writes arrives back-to-back with no gap for the consumer to run
+ * between them. Was 2: fine for the 1-2 packet messages this got
+ * verified against first, but a real 4-fragment message dropped
+ * fragments 3 and 4 here (silent "rx queue full" - see below) even
+ * though every I2C write itself succeeded. */
+#define MCTP_TARGET_MSGQ_DEPTH 8
+
 static struct mctp_target_ctx mctp_target_ctx[I2C_BUS_MAX_NUM];
 static struct k_msgq mctp_target_msgq[I2C_BUS_MAX_NUM];
-static char __aligned(4)
-	mctp_target_msgq_buf[I2C_BUS_MAX_NUM][2 * sizeof(struct mctp_target_msg)];
+static char __aligned(4) mctp_target_msgq_buf[I2C_BUS_MAX_NUM][MCTP_TARGET_MSGQ_DEPTH *
+								 sizeof(struct mctp_target_msg)];
 
 static int mctp_i2c_target_write_requested(struct i2c_target_config *config)
 {
@@ -614,7 +624,7 @@ int mctp_i2c_target_register(uint8_t bus, uint8_t addr)
 	}
 
 	k_msgq_init(&mctp_target_msgq[bus], mctp_target_msgq_buf[bus],
-		    sizeof(struct mctp_target_msg), 2);
+		    sizeof(struct mctp_target_msg), MCTP_TARGET_MSGQ_DEPTH);
 
 	mctp_target_ctx[bus].bus = bus;
 	mctp_target_ctx[bus].cfg.address = addr;
