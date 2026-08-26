@@ -50,6 +50,17 @@ extern "C" {
 #else
 #define MCTP_DEFAULT_MSG_MAX_SIZE 244
 #endif
+/* mctp_tx_task() had no message-level retry at all on a transient
+ * write_data() failure (e.g. bus contention from another in-flight
+ * message) - it just gave up and dropped the packet permanently,
+ * unlike IPMB's TX task which retries. This is the message-level retry
+ * budget on top of whatever the medium's own write_data() (e.g.
+ * mctp_smbus_write()'s MCTP_SMBUS_WRITE_MAX_RETRY) already does
+ * internally. Found via cross-session hardware testing: a back-to-back
+ * request pair reliably lost the first response to exactly this gap. */
+#define MCTP_TX_MSG_RETRY_TIME 3
+#define MCTP_TX_RETRY_DELAY_MS 20
+
 #define MCTP_TRANSPORT_HEADER_SIZE 4
 #define MCTP_MEDIUM_META_SIZE_SMBUS 3
 #define MCTP_PEC_SIZE 1 /* SMBUS/I3C */

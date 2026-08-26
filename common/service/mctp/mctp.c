@@ -347,6 +347,17 @@ static void mctp_tx_task(void *arg, void *dummy0, void *dummy1)
 		if (mctp_msg.is_bridge_packet) {
 			ret = mctp_inst->write_data(mctp_inst, mctp_msg.buf, mctp_msg.len,
 						    mctp_msg.ext_params);
+
+			/* Same bounded retry as the non-bridge path below - see
+			 * the comment there for why this doesn't need a
+			 * re-queue. */
+			for (uint8_t retry = 0;
+			     ret != MCTP_SUCCESS && retry < MCTP_TX_MSG_RETRY_TIME; retry++) {
+				k_msleep(MCTP_TX_RETRY_DELAY_MS);
+				ret = mctp_inst->write_data(mctp_inst, mctp_msg.buf, mctp_msg.len,
+							    mctp_msg.ext_params);
+			}
+
 			free(mctp_msg.buf);
 			mctp_tx_task_response(mctp_msg.evt_msgq, ret);
 			if (pal_is_need_mctp_interval(mctp_inst)) {
@@ -404,8 +415,26 @@ static void mctp_tx_task(void *arg, void *dummy0, void *dummy1)
 						    cp_msg_size + MCTP_TRANSPORT_HEADER_SIZE,
 						    mctp_msg.ext_params);
 
+			/* write_data() (e.g. mctp_smbus_write()) already has its
+			 * own short internal retry, but a transient failure there
+			 * (e.g. bus contention from another in-flight message)
+			 * used to just drop this packet permanently. Retry the
+			 * same packet a bounded number of times before giving up -
+			 * mctp_pass_tx_task()'s caller is blocked on this exact
+			 * message's own evt_msgq the whole time regardless, so
+			 * there's nothing to re-queue - just don't give up early.
+			 */
+			for (uint8_t retry = 0;
+			     ret != MCTP_SUCCESS && retry < MCTP_TX_MSG_RETRY_TIME; retry++) {
+				k_msleep(MCTP_TX_RETRY_DELAY_MS);
+				ret = mctp_inst->write_data(mctp_inst, buf,
+							    cp_msg_size + MCTP_TRANSPORT_HEADER_SIZE,
+							    mctp_msg.ext_params);
+			}
+
 			if (ret != MCTP_SUCCESS) {
-				LOG_WRN("mctp write data failed");
+				LOG_WRN("mctp write data failed after %d retries",
+					MCTP_TX_MSG_RETRY_TIME);
 				break;
 			}
 		}
