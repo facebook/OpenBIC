@@ -109,6 +109,14 @@ enum message_type {
 	TYPE_MAX_SIZE,
 };
 
+/* Scratch buffer size for mctp_ctrl_cmd_get_message_type_support()'s
+ * load_mctp_support_types() call - a board hook can report any real
+ * DSP0239 message type (not just the two named above; e.g. this
+ * board's Vendor Defined - PCI test type), so this isn't sized off
+ * `enum message_type`. Generous headroom over what any real board
+ * hook here reports (2-3 types). */
+#define MCTP_SUPPORTED_MSG_TYPE_MAX 8
+
 struct _get_message_type_resp {
 	uint8_t completion_code;
 	uint8_t type_count;

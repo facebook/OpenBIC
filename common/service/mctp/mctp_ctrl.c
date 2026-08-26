@@ -241,7 +241,12 @@ uint8_t mctp_ctrl_cmd_get_message_type_support(void *mctp_inst, uint8_t *buf, ui
 	struct _get_message_type_resp *p = (struct _get_message_type_resp *)resp;
 
 	uint8_t type_len = 0;
-	uint8_t *types = malloc(sizeof(TYPE_MAX_SIZE));
+	/* Was malloc(sizeof(TYPE_MAX_SIZE)) - TYPE_MAX_SIZE is an enum
+	 * constant, so sizeof() gave sizeof(int) (4), not the intended
+	 * type-count cap. Harmless today by luck (4 >= the 2-3 types any
+	 * board hook here reports), but a board hook reporting more than
+	 * that would overflow this buffer. */
+	uint8_t *types = malloc(MCTP_SUPPORTED_MSG_TYPE_MAX);
 	int ret = 0;
 
 	ret = load_mctp_support_types(&type_len, types);
