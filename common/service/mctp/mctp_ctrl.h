@@ -37,6 +37,7 @@ typedef struct _mctp_ctrl_cmd_handler {
 #define MCTP_CTRL_CMD_SET_ENDPOINT_ID 0x01
 #define MCTP_CTRL_CMD_GET_ENDPOINT_ID 0x02
 
+#define MCTP_CTRL_CMD_GET_VERSION_SUPPORT 0x04
 #define MCTP_CTRL_CMD_GET_MESSAGE_TYPE_SUPPORT 0x05
 
 #define MCTP_CTRL_CMD_GET_ENDPOINT_ID_REQ_LEN 0x00
@@ -55,6 +56,22 @@ typedef struct _mctp_ctrl_cmd_handler {
 #define MCTP_CTRL_CC_ERROR_INVALID_LENGTH 0x03
 #define MCTP_CTRL_CC_ERROR_NOT_READY 0x04
 #define MCTP_CTRL_CC_ERROR_UNSUPPORTED_CMD 0x05
+/* DSP0236 Table 18 - Get MCTP Version Support response, not the generic
+ * completion code table above (this one's command-specific). */
+#define MCTP_CTRL_CC_ERROR_MSG_TYPE_NOT_SUPPORTED 0x80
+
+/* DSP0236 Table 18's "Message Type Number" request selector - distinct
+ * from (though numerically overlapping) the runtime `enum message_type`
+ * above. 0xFF/0x00/0x01 are the ones this board can honestly answer for:
+ * the MCTP base spec itself, the MCTP control protocol, and DSP0241
+ * (PLDM over MCTP Binding Specification) respectively - see
+ * mctp_ctrl_cmd_get_version_support(). Everything else this command
+ * defines (0x7E/0x7F vendor-defined, 0x02/0x03 DSP0261) isn't
+ * implemented on this board.
+ */
+#define MCTP_VERSION_SUPPORT_SEL_BASE_SPEC 0xFF
+#define MCTP_VERSION_SUPPORT_SEL_CONTROL_PROTOCOL 0x00
+#define MCTP_VERSION_SUPPORT_SEL_PLDM_BINDING 0x01
 
 #define SET_EID_REQ_OP_SET_EID 0x00
 #define SET_EID_REQ_OP_FORCE_EID 0x01
@@ -94,6 +111,22 @@ struct _get_message_type_resp {
 	uint8_t completion_code;
 	uint8_t type_count;
 	uint8_t type_number[0];
+} __attribute__((packed));
+
+/* DSP0236 Table 18: each 4-byte version entry is
+ * [major][minor][update][alpha] in that wire order (matches the
+ * spec's worked examples, e.g. version "1.1.0" = 0xF1 0xF1 0xF0 0x00) -
+ * written as explicit bytes here rather than a packed uint32_t so the
+ * wire order can't get silently flipped by this target's endianness.
+ * Single-digit BCD fields are padded with an 0xF nibble (e.g. major=1
+ * is encoded 0xF1, not 0x01 - see the spec examples); update=0xFF
+ * conventionally means "any/unspecified update version". */
+#define MCTP_VERSION_ENTRY_LEN 4
+
+struct _get_version_support_resp {
+	uint8_t completion_code;
+	uint8_t version_number_entry_count;
+	uint8_t version_number_entry[0];
 } __attribute__((packed));
 
 struct _get_eid_resp {

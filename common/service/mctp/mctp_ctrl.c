@@ -125,6 +125,70 @@ uint8_t mctp_ctrl_cmd_get_endpoint_id(void *mctp_inst, uint8_t *buf, uint16_t le
 	return MCTP_SUCCESS;
 }
 
+/* DSP0236 Table 18: entries must be numerically lowest-first, so a
+ * single "conservative" entry per selector (no historical backward-
+ * compatible chain) is written as one call each - see
+ * mctp_ctrl.h's MCTP_VERSION_ENTRY_LEN comment for the wire format. */
+static void encode_version_entry(uint8_t *entry, uint8_t major, uint8_t minor, uint8_t update,
+				 uint8_t alpha)
+{
+	entry[0] = major;
+	entry[1] = minor;
+	entry[2] = update;
+	entry[3] = alpha;
+}
+
+uint8_t mctp_ctrl_cmd_get_version_support(void *mctp_inst, uint8_t *buf, uint16_t len,
+					  uint8_t *resp, uint16_t *resp_len, void *ext_params)
+{
+	ARG_UNUSED(mctp_inst);
+	ARG_UNUSED(ext_params);
+	CHECK_NULL_ARG_WITH_RETURN(buf, MCTP_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp, MCTP_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp_len, MCTP_ERROR);
+
+	struct _get_version_support_resp *p = (struct _get_version_support_resp *)resp;
+
+	if (len != 1) {
+		p->completion_code = MCTP_CTRL_CC_ERROR_INVALID_LENGTH;
+		*resp_len = 1;
+		return MCTP_SUCCESS;
+	}
+
+	uint8_t msg_type_number = buf[0];
+
+	switch (msg_type_number) {
+	case MCTP_VERSION_SUPPORT_SEL_BASE_SPEC:
+	case MCTP_VERSION_SUPPORT_SEL_CONTROL_PROTOCOL:
+		/* One conservative entry: MCTP 1.3, update version
+		 * unspecified (0xFF) rather than claiming a specific
+		 * patch-level audit this port hasn't done. */
+		p->completion_code = MCTP_CTRL_CC_SUCCESS;
+		p->version_number_entry_count = 1;
+		encode_version_entry(p->version_number_entry, 0xF1, 0xF3, 0xFF, 0x00);
+		*resp_len = sizeof(*p) + MCTP_VERSION_ENTRY_LEN;
+		break;
+	case MCTP_VERSION_SUPPORT_SEL_PLDM_BINDING:
+		/* DSP0241 (PLDM over MCTP Binding Specification) has only
+		 * ever been published as 1.0.0. */
+		p->completion_code = MCTP_CTRL_CC_SUCCESS;
+		p->version_number_entry_count = 1;
+		encode_version_entry(p->version_number_entry, 0xF1, 0xF0, 0xF0, 0x00);
+		*resp_len = sizeof(*p) + MCTP_VERSION_ENTRY_LEN;
+		break;
+	default:
+		/* Vendor-defined (0x7E/0x7F), DSP0261 (0x02/0x03), or any
+		 * other message type - genuinely not implemented on this
+		 * board, so say so honestly instead of fabricating a
+		 * version for something that isn't there. */
+		p->completion_code = MCTP_CTRL_CC_ERROR_MSG_TYPE_NOT_SUPPORTED;
+		*resp_len = 1;
+		break;
+	}
+
+	return MCTP_SUCCESS;
+}
+
 uint8_t mctp_ctrl_cmd_get_message_type_support(void *mctp_inst, uint8_t *buf, uint16_t len,
 					       uint8_t *resp, uint16_t *resp_len, void *ext_params)
 {
@@ -261,6 +325,7 @@ static uint8_t mctp_ctrl_cmd_resp_process(mctp *mctp_inst, uint8_t *buf, uint32_
 static mctp_ctrl_cmd_handler_t mctp_ctrl_cmd_tbl[] = {
 	{ MCTP_CTRL_CMD_SET_ENDPOINT_ID, mctp_ctrl_cmd_set_endpoint_id },
 	{ MCTP_CTRL_CMD_GET_ENDPOINT_ID, mctp_ctrl_cmd_get_endpoint_id },
+	{ MCTP_CTRL_CMD_GET_VERSION_SUPPORT, mctp_ctrl_cmd_get_version_support },
 	{ MCTP_CTRL_CMD_GET_MESSAGE_TYPE_SUPPORT, mctp_ctrl_cmd_get_message_type_support }
 };
 
