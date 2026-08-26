@@ -591,6 +591,8 @@ static int mctp_i2c_target_stop(struct i2c_target_config *config)
 {
 	struct mctp_target_ctx *ctx = CONTAINER_OF(config, struct mctp_target_ctx, cfg);
 
+	LOG_DBG("mctp target[%d]: stop, accum.len=%d", ctx->bus, ctx->accum.len);
+
 	if (ctx->accum.len > 0) {
 		if (k_msgq_put(&mctp_target_msgq[ctx->bus], &ctx->accum, K_NO_WAIT)) {
 			LOG_ERR("mctp target[%d]: rx queue full, dropping message", ctx->bus);
