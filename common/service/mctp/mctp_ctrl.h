@@ -41,6 +41,7 @@ typedef struct _mctp_ctrl_cmd_handler {
 
 #define MCTP_CTRL_CMD_GET_VERSION_SUPPORT 0x04
 #define MCTP_CTRL_CMD_GET_MESSAGE_TYPE_SUPPORT 0x05
+#define MCTP_CTRL_CMD_RESOLVE_ENDPOINT_ID 0x07
 
 #define MCTP_CTRL_CMD_GET_ENDPOINT_ID_REQ_LEN 0x00
 
@@ -152,6 +153,25 @@ struct _get_uuid_resp {
  * fabricating one - see mcx-n9xx-evk's plat_mctp.c for a real
  * implementation backed by an actual per-chip hardware ID. */
 bool plat_get_endpoint_uuid(uint8_t *uuid_buf);
+
+/* DSP0236 Table 22 - Resolve Endpoint ID. This stack has no routing
+ * table (see mctp_ctrl_cmd_resolve_endpoint_id()'s doc comment), so
+ * the only EID this can ever honestly resolve is this endpoint's own
+ * - there's nothing behind us to bridge to. */
+struct _resolve_endpoint_id_req {
+	uint8_t target_eid;
+} __attribute__((packed));
+
+struct _resolve_endpoint_id_resp {
+	uint8_t completion_code;
+	/* Matches target_eid when (as here) no bridging is required to
+	 * reach it - DSP0236 12.10. */
+	uint8_t bridge_eid;
+	/* Medium-specific physical address (DSP0236: format defined by
+	 * the physical transport binding) - one byte for this board's
+	 * SMBus/I2C binding. */
+	uint8_t phys_addr;
+} __attribute__((packed));
 
 struct _get_eid_resp {
 	uint8_t completion_code;

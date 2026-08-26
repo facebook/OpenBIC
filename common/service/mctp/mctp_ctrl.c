@@ -137,6 +137,61 @@ uint8_t mctp_ctrl_cmd_get_endpoint_uuid(void *mctp_inst, uint8_t *buf, uint16_t 
 	return MCTP_SUCCESS;
 }
 
+/* DSP0236 12.10 - normally answered by the bus owner, resolving a
+ * target EID to the physical address that should be used to reach it
+ * (directly, or via a bridge). This stack has no routing table (see
+ * plat_mctp.c: no downstream endpoints on this board's MCTP bus to
+ * route to), so the only EID this can ever honestly resolve is our
+ * own - there's nothing behind us to bridge to. Any other target_eid
+ * gets a genuine "can't resolve" error, not a fabricated address. */
+uint8_t mctp_ctrl_cmd_resolve_endpoint_id(void *mctp_p, uint8_t *buf, uint16_t len, uint8_t *resp,
+					  uint16_t *resp_len, void *ext_params)
+{
+	ARG_UNUSED(ext_params);
+	CHECK_NULL_ARG_WITH_RETURN(mctp_p, MCTP_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(buf, MCTP_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp, MCTP_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp_len, MCTP_ERROR);
+
+	if (len != sizeof(struct _resolve_endpoint_id_req)) {
+		resp[0] = MCTP_CTRL_CC_ERROR_INVALID_LENGTH;
+		*resp_len = 1;
+		return MCTP_SUCCESS;
+	}
+
+	mctp *mctp_inst = (mctp *)mctp_p;
+	struct _resolve_endpoint_id_req *req = (struct _resolve_endpoint_id_req *)buf;
+
+	if (req->target_eid != plat_get_eid()) {
+		resp[0] = MCTP_CTRL_CC_ERROR;
+		*resp_len = 1;
+		return MCTP_SUCCESS;
+	}
+
+	uint8_t phys_addr;
+
+	switch (mctp_inst->medium_type) {
+	case MCTP_MEDIUM_TYPE_SMBUS:
+		phys_addr = mctp_inst->medium_conf.smbus_conf.addr;
+		break;
+	case MCTP_MEDIUM_TYPE_CONTROLLER_I3C:
+	case MCTP_MEDIUM_TYPE_TARGET_I3C:
+		phys_addr = mctp_inst->medium_conf.i3c_conf.addr;
+		break;
+	default:
+		resp[0] = MCTP_CTRL_CC_ERROR;
+		*resp_len = 1;
+		return MCTP_SUCCESS;
+	}
+
+	struct _resolve_endpoint_id_resp *p = (struct _resolve_endpoint_id_resp *)resp;
+	p->completion_code = MCTP_CTRL_CC_SUCCESS;
+	p->bridge_eid = req->target_eid;
+	p->phys_addr = phys_addr;
+	*resp_len = sizeof(*p);
+	return MCTP_SUCCESS;
+}
+
 uint8_t mctp_ctrl_cmd_get_endpoint_id(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t *resp,
 				      uint16_t *resp_len, void *ext_params)
 {
@@ -368,7 +423,8 @@ static mctp_ctrl_cmd_handler_t mctp_ctrl_cmd_tbl[] = {
 	{ MCTP_CTRL_CMD_GET_ENDPOINT_ID, mctp_ctrl_cmd_get_endpoint_id },
 	{ MCTP_CTRL_CMD_GET_ENDPOINT_UUID, mctp_ctrl_cmd_get_endpoint_uuid },
 	{ MCTP_CTRL_CMD_GET_VERSION_SUPPORT, mctp_ctrl_cmd_get_version_support },
-	{ MCTP_CTRL_CMD_GET_MESSAGE_TYPE_SUPPORT, mctp_ctrl_cmd_get_message_type_support }
+	{ MCTP_CTRL_CMD_GET_MESSAGE_TYPE_SUPPORT, mctp_ctrl_cmd_get_message_type_support },
+	{ MCTP_CTRL_CMD_RESOLVE_ENDPOINT_ID, mctp_ctrl_cmd_resolve_endpoint_id }
 };
 
 uint8_t mctp_ctrl_cmd_handler(void *mctp_p, uint8_t *buf, uint32_t len, mctp_ext_params ext_params)
