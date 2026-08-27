@@ -10,6 +10,16 @@ if("${SB_CONFIG_REMOTE_BOARD}" STREQUAL "")
     "in Kconfig.sysbuild - dual-core build is only wired up for mcx_n9xx_evk/mcxn947/cpu0.")
 endif()
 
+# cpu0's SoC init (soc/nxp/mcx/mcxn/soc.c: second_core_boot(), a
+# PRE_KERNEL_2 SYS_INIT) sets cpu1's boot address to slot1_partition and
+# releases cpu1 from reset. That must happen ONLY when a cpu1 image
+# actually exists there - i.e. this dual-core sysbuild. Enabling it via
+# the plain cpu0 boards/*.conf instead released cpu1 into an empty
+# slot1 on every single-core build too: cpu1 wild-branches through
+# blank flash and wedges the system (dead / garbled console) before
+# cpu0 finishes booting. So it is set here, scoped to sysbuild.
+set_config_bool(${DEFAULT_IMAGE} CONFIG_SECOND_CORE_MCUX y)
+
 set(REMOTE_APP remote)
 
 ExternalZephyrProject_Add(
