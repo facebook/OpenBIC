@@ -408,7 +408,29 @@ uint8_t detect_vr_module_via_pmbus(void)
 		msg.bus = I2C_BUS5;
 		msg.target_addr = PVCCD_HV_ADDR;
 		msg.tx_len = 1;
-		msg.rx_len = 7;
+		msg.rx_len = 1;
+		msg.data[0] = PMBUS_IC_DEVICE_ID;
+
+		if (i2c_master_read(&msg, retry) != 0) {
+			LOG_ERR("Failed to read VR IC_DEVICE_ID, attempt %d", attempt);
+			k_sleep(K_MSEC(50));
+			continue;
+		}
+
+		uint8_t block_count = msg.data[0];
+
+		if ((block_count < VR_DEVID_LEN_MIN) || (block_count > VR_DEVID_LEN_MAX)) {
+			LOG_ERR("Invalid VR IC_DEVICE_ID length: 0x%x, attempt %d", block_count,
+				attempt);
+			k_sleep(K_MSEC(50));
+			continue;
+		}
+
+		memset(&msg, 0, sizeof(msg));
+		msg.bus = I2C_BUS5;
+		msg.target_addr = PVCCD_HV_ADDR;
+		msg.tx_len = 1;
+		msg.rx_len = block_count + 1;
 		msg.data[0] = PMBUS_IC_DEVICE_ID;
 
 		if (i2c_master_read(&msg, retry) != 0) {

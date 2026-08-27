@@ -686,7 +686,26 @@ void check_vr_type(uint8_t index)
 	msg.bus = sensor_config[index].port;
 	msg.target_addr = sensor_config[index].target_addr;
 	msg.tx_len = 1;
-	msg.rx_len = 7;
+	msg.rx_len = 1;
+	msg.data[0] = PMBUS_IC_DEVICE_ID;
+
+	if (i2c_master_read(&msg, retry)) {
+		printf("Failed to read VR IC_DEVICE_ID: register(0x%x)\n", PMBUS_IC_DEVICE_ID);
+		return;
+	}
+
+	uint8_t block_count = msg.data[0];
+
+	if ((block_count < VR_DEVID_LEN_MIN) || (block_count > VR_DEVID_LEN_MAX)) {
+		printf("Invalid VR IC_DEVICE_ID length: 0x%x\n", block_count);
+		return;
+	}
+
+	memset(&msg, 0, sizeof(msg));
+	msg.bus = sensor_config[index].port;
+	msg.target_addr = sensor_config[index].target_addr;
+	msg.tx_len = 1;
+	msg.rx_len = block_count + 1;
 	msg.data[0] = PMBUS_IC_DEVICE_ID;
 
 	if (i2c_master_read(&msg, retry)) {
