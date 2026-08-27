@@ -16,11 +16,18 @@
 
 /*
  * =============================================================================
- * MP29526 - Dual Loop Digital Multi-Phase Controller
+ * MP29526 - Digital Multi-Phase Controller (MPS MP2952x/MP294x family)
  * =============================================================================
  *
  * Datasheet    : MP29526 Rev. 0.1, 2/26/2026 (preliminary)
- * Register map : MP29526 Register Map Rev 1.0.0.196 / 2.0.0.233, 2026-07-28
+ * Register map : MP29526 Register Map Rev 1.0.0.196 / 2.0.0.233, 2026-07-28.
+ *                Cross-checked against the MP29529 Register Map Rev
+ *                1.0.0.179 / 2.0.0.231 (2026-08): identical command codes,
+ *                widths and bit fields for every register this file touches
+ *                (excluding firmware update) - the two parts share one
+ *                register map, differing only in IC_DEVICE_ID and rail
+ *                count. This file is therefore written as a family driver;
+ *                see mp29526.h and point 12 below.
  * Modeled on   : mp29816a.c
  *
  * Everything below is taken from the register map. The preliminary datasheet
@@ -49,11 +56,22 @@
  *  9. NVM store is STORE_USER (15h), page 0, write-only, zero data bytes.
  *     The MP29816 unlock dance (page1@CCh / page0@17h / page2@1Ah / page3@81h)
  *     has no counterpart here and is deliberately not carried over.
- * 10. IC_DEVICE_ID (ADh) gives a real identity check:
- *     0x2020323935323620 ("  29526 ").
+ * 10. IC_DEVICE_ID (ADh) gives a real identity check: this driver accepts
+ *     any of the family's published IDs (MP29426 0x2020323934323620,
+ *     MP29529 0x2020323935323920, MP29526 0x2020323935323620 - all
+ *     "  <part> "). It intentionally does not narrow to one part number;
+ *     see mp29526_check_device_id() and MP29526_IC_DEVICE_ID_* below.
  * 11. Expected user CRC (B8h, page 0) is a PMBus block read (1B length + 4B
  *     data), not a plain 2-byte register. Confirmed against hardware
  *     readback: 04 c7 35 ae b3 -> CRC 0x35C7B3AE. See mp29526_get_fw_version().
+ * 12. Rail selection is Rail N (0-indexed) -> Page N / Page (5+N), a fixed
+ *     arithmetic relationship across the family (up to MP29526_RAIL_MAX = 4
+ *     rails). This board only wires up 2 rails, but that is a platform
+ *     fact carried in cfg->arg0 by the caller, not a limit this driver
+ *     imposes - the getters/setters that used to hardcode MP29526_RAIL_1
+ *     (OVP/UVP/OCP limits, VOUT offset) now take an explicit rail argument
+ *     like the rest of the API. Firmware update is out of scope for this
+ *     generalisation and still assumes this board's 2-rail NVM layout.
  * =============================================================================
  */
 
@@ -75,11 +93,13 @@ LOG_MODULE_REGISTER(mp29526);
  * Pages
  * ========================================================================== */
 
+/*
+ * Base pages for rail 0 (MP29526_RAIL_1); mp29526_select_rail() /
+ * mp29526_select_mfr_page() add the rail index directly, since Rail N maps
+ * to Page N / Page (5+N) across the whole family - see mp29526.h.
+ */
 #define MP29526_PAGE_RAIL1 0x00 /* Rail 1 operating registers      */
-#define MP29526_PAGE_RAIL2 0x01 /* Rail 2 operating registers      */
-#define MP29526_PAGE_MULTICFG 0x02 /* multi-config, saved by STORE_USER */
 #define MP29526_PAGE_MFR_R1 0x05 /* MPS registers affecting Rail 1  */
-#define MP29526_PAGE_MFR_R2 0x06 /* MPS registers affecting Rail 2  */
 #define MP29526_PAGE_MFR_ALL 0x09 /* MPS registers, all rails       */
 
 /* =============================================================================
@@ -163,10 +183,17 @@ LOG_MODULE_REGISTER(mp29526);
 
 /*
  * IC_DEVICE_ID (ADh) is a block read: byte 0 is the length, then 8 ID bytes
- * MSB-first. 0x2020323935323620 is ASCII "  29526 ".
- * (MP29426 is 0x2020323934323620, MP29529 is 0x2020323935323920.)
+ * MSB-first, ASCII. This driver is written against the register map shared
+ * by the whole MP2952x/MP294x family, not against one part number, so any
+ * of the family's published IDs is accepted here - the check only answers
+ * "is this driver applicable to what's on the bus", not "which exact part
+ * is this". Add new IDs to this list as the family grows; do not narrow it
+ * to a single value again, or every non-MP29526 board using this driver
+ * would fail identity check on an otherwise fully compatible part.
  */
-#define MP29526_IC_DEVICE_ID_VALUE 0x2020323935323620ULL
+#define MP29526_IC_DEVICE_ID_MP29426 0x2020323934323620ULL /* "  29426 " */
+#define MP29526_IC_DEVICE_ID_MP29529 0x2020323935323920ULL /* "  29529 " */
+#define MP29526_IC_DEVICE_ID_MP29526 0x2020323935323620ULL /* "  29526 " */
 #define MP29526_IC_DEVICE_ID_LEN 8
 
 /* Field masks - all confirmed against the register map */
@@ -267,32 +294,38 @@ bool mp29526_set_page(uint8_t bus, uint8_t addr, uint8_t page)
 	return true;
 }
 
-/* Rail 1 -> page 0, Rail 2 -> page 1 */
+/*
+ * Rail N (0-indexed) -> Page N. This is a fixed arithmetic relationship
+ * across the whole MP2952x/MP294x family (Page 0-3 = Rail 1-4 operating
+ * registers); how many rails a given board actually has is a platform
+ * fact, not something this driver enforces beyond the family's own ceiling
+ * of 4 (MP29526_RAIL_MAX).
+ */
 static bool mp29526_select_rail(sensor_cfg *cfg, uint8_t rail)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 
 	if (rail >= MP29526_RAIL_MAX) {
-		LOG_ERR("VR[0x%x] invalid rail %d (MP29526 has 2 loops)", cfg->num, rail);
+		LOG_ERR("VR[0x%x] invalid rail %d (family supports up to %d rails)", cfg->num, rail,
+			MP29526_RAIL_MAX);
 		return false;
 	}
 
-	uint8_t page = (rail == MP29526_RAIL_1) ? MP29526_PAGE_RAIL1 : MP29526_PAGE_RAIL2;
-	return mp29526_set_page(cfg->port, cfg->target_addr, page);
+	return mp29526_set_page(cfg->port, cfg->target_addr, MP29526_PAGE_RAIL1 + rail);
 }
 
-/* Rail 1 -> page 5, Rail 2 -> page 6 */
+/* Rail N (0-indexed) -> Page (5+N): the MPS-defined registers for that rail. */
 static bool mp29526_select_mfr_page(sensor_cfg *cfg, uint8_t rail)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 
 	if (rail >= MP29526_RAIL_MAX) {
-		LOG_ERR("VR[0x%x] invalid rail %d", cfg->num, rail);
+		LOG_ERR("VR[0x%x] invalid rail %d (family supports up to %d rails)", cfg->num, rail,
+			MP29526_RAIL_MAX);
 		return false;
 	}
 
-	uint8_t page = (rail == MP29526_RAIL_1) ? MP29526_PAGE_MFR_R1 : MP29526_PAGE_MFR_R2;
-	return mp29526_set_page(cfg->port, cfg->target_addr, page);
+	return mp29526_set_page(cfg->port, cfg->target_addr, MP29526_PAGE_MFR_R1 + rail);
 }
 
 static uint16_t le16(const uint8_t *d)
@@ -610,12 +643,12 @@ bool mp29526_set_vout_command(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt
 	return true;
 }
 
-bool mp29526_get_vout_offset(sensor_cfg *cfg, uint16_t *vout_offset)
+bool mp29526_get_vout_offset(sensor_cfg *cfg, uint8_t rail, uint16_t *vout_offset)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	CHECK_NULL_ARG_WITH_RETURN(vout_offset, false);
 
-	if (!mp29526_select_rail(cfg, MP29526_RAIL_1))
+	if (!mp29526_select_rail(cfg, rail))
 		return false;
 
 	float trim_mv = 0;
@@ -626,12 +659,12 @@ bool mp29526_get_vout_offset(sensor_cfg *cfg, uint16_t *vout_offset)
 	return true;
 }
 
-bool mp29526_set_vout_offset(sensor_cfg *cfg, uint16_t *write_vout_offset)
+bool mp29526_set_vout_offset(sensor_cfg *cfg, uint8_t rail, uint16_t *write_vout_offset)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	CHECK_NULL_ARG_WITH_RETURN(write_vout_offset, false);
 
-	if (!mp29526_select_rail(cfg, MP29526_RAIL_1))
+	if (!mp29526_select_rail(cfg, rail))
 		return false;
 
 	float code_f = (float)(*write_vout_offset) / MP29526_VOUT_TRIM_LSB_MV;
@@ -652,12 +685,12 @@ bool mp29526_set_vout_offset(sensor_cfg *cfg, uint16_t *write_vout_offset)
  * IOUT limits - linear11, in amperes
  * ========================================================================== */
 
-static bool mp29526_get_iout_limit(sensor_cfg *cfg, uint8_t reg, uint16_t *amps)
+static bool mp29526_get_iout_limit(sensor_cfg *cfg, uint8_t rail, uint8_t reg, uint16_t *amps)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	CHECK_NULL_ARG_WITH_RETURN(amps, false);
 
-	if (!mp29526_select_rail(cfg, MP29526_RAIL_1))
+	if (!mp29526_select_rail(cfg, rail))
 		return false;
 
 	uint8_t data[2] = { 0 };
@@ -674,7 +707,7 @@ static bool mp29526_get_iout_limit(sensor_cfg *cfg, uint8_t reg, uint16_t *amps)
 	return true;
 }
 
-static bool mp29526_set_iout_limit(sensor_cfg *cfg, uint8_t reg, uint16_t amps)
+static bool mp29526_set_iout_limit(sensor_cfg *cfg, uint8_t rail, uint8_t reg, uint16_t amps)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 
@@ -682,7 +715,7 @@ static bool mp29526_set_iout_limit(sensor_cfg *cfg, uint8_t reg, uint16_t amps)
 	if (!mp29526_float_to_linear11((float)amps, &encoded))
 		return false;
 
-	if (!mp29526_select_rail(cfg, MP29526_RAIL_1))
+	if (!mp29526_select_rail(cfg, rail))
 		return false;
 
 	uint8_t data[2] = { 0 };
@@ -713,64 +746,64 @@ static bool mp29526_set_iout_limit(sensor_cfg *cfg, uint8_t reg, uint16_t amps)
 	return true;
 }
 
-bool mp29526_get_iout_oc_warn_limit(sensor_cfg *cfg, uint16_t *value)
+bool mp29526_get_iout_oc_warn_limit(sensor_cfg *cfg, uint8_t rail, uint16_t *value)
 {
-	return mp29526_get_iout_limit(cfg, MP29526_REG_IOUT_OC_WARN_LIMIT, value);
+	return mp29526_get_iout_limit(cfg, rail, MP29526_REG_IOUT_OC_WARN_LIMIT, value);
 }
 
-bool mp29526_set_iout_oc_warn_limit(sensor_cfg *cfg, uint16_t value)
+bool mp29526_set_iout_oc_warn_limit(sensor_cfg *cfg, uint8_t rail, uint16_t value)
 {
-	return mp29526_set_iout_limit(cfg, MP29526_REG_IOUT_OC_WARN_LIMIT, value);
+	return mp29526_set_iout_limit(cfg, rail, MP29526_REG_IOUT_OC_WARN_LIMIT, value);
 }
 
-bool mp29526_get_total_ocp(sensor_cfg *cfg, uint16_t *total_ocp)
+bool mp29526_get_total_ocp(sensor_cfg *cfg, uint8_t rail, uint16_t *total_ocp)
 {
-	return mp29526_get_iout_limit(cfg, MP29526_REG_IOUT_OC_FAULT_LIMIT, total_ocp);
+	return mp29526_get_iout_limit(cfg, rail, MP29526_REG_IOUT_OC_FAULT_LIMIT, total_ocp);
 }
 
-bool mp29526_set_total_ocp(sensor_cfg *cfg, uint16_t *write_total_ocp)
+bool mp29526_set_total_ocp(sensor_cfg *cfg, uint8_t rail, uint16_t *write_total_ocp)
 {
 	CHECK_NULL_ARG_WITH_RETURN(write_total_ocp, false);
-	return mp29526_set_iout_limit(cfg, MP29526_REG_IOUT_OC_FAULT_LIMIT, *write_total_ocp);
+	return mp29526_set_iout_limit(cfg, rail, MP29526_REG_IOUT_OC_FAULT_LIMIT, *write_total_ocp);
 }
 
 /* =============================================================================
  * OVP / UVP
  *
- * MP29526 has two independent OV mechanisms and two UV mechanisms:
- *   ABS : VOUT_OV_FAULT_LIMIT (40h) / VOUT_UV_FAULT_LIMIT (44h) on page 0/1,
- *         absolute thresholds in VOUT_MODE format.
- *   VID : OV_VID_THR (06h) / UV_VID_THR (07h) on page 5/6, 1 mV/LSB.
+ * The family has two independent OV mechanisms and two UV mechanisms per
+ * rail:
+ *   ABS : VOUT_OV_FAULT_LIMIT (40h) / VOUT_UV_FAULT_LIMIT (44h) on the
+ *         rail's own page (0-3), absolute thresholds in VOUT_MODE format.
+ *   VID : OV_VID_THR (06h) / UV_VID_THR (07h) on the rail's MFR page (5-8),
+ *         1 mV/LSB.
  * The existing API maps ovp_1 -> ABS and ovp_2 -> VID, matching mp29816a's
  * OVP1/OVP2 naming.
  * ========================================================================== */
 
-bool mp29526_get_ovp_1(sensor_cfg *cfg, uint16_t *ovp_1)
+bool mp29526_get_ovp_1(sensor_cfg *cfg, uint8_t rail, uint16_t *ovp_1)
 {
-	return mp29526_get_vid_reg(cfg, MP29526_RAIL_1, MP29526_REG_VOUT_OV_FAULT_LIMIT, ovp_1);
+	return mp29526_get_vid_reg(cfg, rail, MP29526_REG_VOUT_OV_FAULT_LIMIT, ovp_1);
 }
 
-bool mp29526_set_ovp_1(sensor_cfg *cfg, uint16_t *write_ovp_1)
+bool mp29526_set_ovp_1(sensor_cfg *cfg, uint8_t rail, uint16_t *write_ovp_1)
 {
 	CHECK_NULL_ARG_WITH_RETURN(write_ovp_1, false);
-	return mp29526_set_vid_reg(cfg, MP29526_RAIL_1, MP29526_REG_VOUT_OV_FAULT_LIMIT,
-				   *write_ovp_1);
+	return mp29526_set_vid_reg(cfg, rail, MP29526_REG_VOUT_OV_FAULT_LIMIT, *write_ovp_1);
 }
 
-bool mp29526_get_uvp(sensor_cfg *cfg, uint16_t *uvp_threshold)
+bool mp29526_get_uvp(sensor_cfg *cfg, uint8_t rail, uint16_t *uvp_threshold)
 {
-	return mp29526_get_vid_reg(cfg, MP29526_RAIL_1, MP29526_REG_VOUT_UV_FAULT_LIMIT,
-				   uvp_threshold);
+	return mp29526_get_vid_reg(cfg, rail, MP29526_REG_VOUT_UV_FAULT_LIMIT, uvp_threshold);
 }
 
-bool mp29526_set_uvp_threshold(sensor_cfg *cfg, uint16_t *write_uvp_threshold)
+bool mp29526_set_uvp_threshold(sensor_cfg *cfg, uint8_t rail, uint16_t *write_uvp_threshold)
 {
 	CHECK_NULL_ARG_WITH_RETURN(write_uvp_threshold, false);
-	return mp29526_set_vid_reg(cfg, MP29526_RAIL_1, MP29526_REG_VOUT_UV_FAULT_LIMIT,
+	return mp29526_set_vid_reg(cfg, rail, MP29526_REG_VOUT_UV_FAULT_LIMIT,
 				   *write_uvp_threshold);
 }
 
-/* VID_OVP / VID_UVP, page 5/6, plain 1 mV/LSB */
+/* VID_OVP / VID_UVP, rail's MFR page (5-8), plain 1 mV/LSB */
 static bool mp29526_get_vid_thr(sensor_cfg *cfg, uint8_t rail, uint8_t reg, uint16_t *millivolt)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
@@ -820,9 +853,9 @@ bool mp29526_set_uv_vid_threshold(sensor_cfg *cfg, uint8_t rail, uint16_t milliv
 	return mp29526_set_vid_thr(cfg, rail, MP29526_REG_UV_VID_THR, millivolt);
 }
 
-bool mp29526_get_ovp_2(sensor_cfg *cfg, uint16_t *ovp_2)
+bool mp29526_get_ovp_2(sensor_cfg *cfg, uint8_t rail, uint16_t *ovp_2)
 {
-	return mp29526_get_ov_vid_threshold(cfg, MP29526_RAIL_1, ovp_2);
+	return mp29526_get_ov_vid_threshold(cfg, rail, ovp_2);
 }
 
 /*
@@ -834,12 +867,12 @@ bool mp29526_get_ovp_2(sensor_cfg *cfg, uint16_t *ovp_2)
  * Note this is a different encoding from mp29816a, where 0/1 meant
  * "No action"/"Latch off". Bits[5:3] and [2:0] are preserved on write.
  */
-bool mp29526_get_ovp_2_action(sensor_cfg *cfg, uint16_t *ovp_2_action)
+bool mp29526_get_ovp_2_action(sensor_cfg *cfg, uint8_t rail, uint16_t *ovp_2_action)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	CHECK_NULL_ARG_WITH_RETURN(ovp_2_action, false);
 
-	if (!mp29526_select_rail(cfg, MP29526_RAIL_1))
+	if (!mp29526_select_rail(cfg, rail))
 		return false;
 
 	uint8_t data[1] = { 0 };
@@ -852,7 +885,7 @@ bool mp29526_get_ovp_2_action(sensor_cfg *cfg, uint16_t *ovp_2_action)
 	return true;
 }
 
-bool mp29526_set_ovp_2_action(sensor_cfg *cfg, uint16_t *write_ovp_2_action)
+bool mp29526_set_ovp_2_action(sensor_cfg *cfg, uint8_t rail, uint16_t *write_ovp_2_action)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	CHECK_NULL_ARG_WITH_RETURN(write_ovp_2_action, false);
@@ -864,7 +897,7 @@ bool mp29526_set_ovp_2_action(sensor_cfg *cfg, uint16_t *write_ovp_2_action)
 		return false;
 	}
 
-	if (!mp29526_select_rail(cfg, MP29526_RAIL_1))
+	if (!mp29526_select_rail(cfg, rail))
 		return false;
 
 	uint8_t data[1] = { 0 };
@@ -1016,11 +1049,11 @@ bool mp29526_check_device_id(uint8_t bus, uint8_t addr)
 
 	/*
 	 * Block read: byte 0 is the length, then 8 ID bytes - confirmed against
-	 * hardware that they arrive LSB-first, i.e. reversed relative to
-	 * MP29526_IC_DEVICE_ID_VALUE's natural MSB-first byte order. On the
-	 * wire: 20 36 32 35 39 32 20 20 (reads as "  62592 " in transmission
-	 * order); read back data[8]..data[1] and it's "  29526 ", matching
-	 * MP29526_IC_DEVICE_ID_VALUE.
+	 * hardware (an MP29526 part) that they arrive LSB-first, i.e. reversed
+	 * relative to the MP29526_IC_DEVICE_ID_* constants' natural MSB-first
+	 * byte order. On the wire: 20 36 32 35 39 32 20 20 (reads as "  62592 "
+	 * in transmission order); read back data[8]..data[1] and it's
+	 * "  29526 ", matching MP29526_IC_DEVICE_ID_MP29526.
 	 */
 	uint8_t data[MP29526_IC_DEVICE_ID_LEN + 1] = { 0 };
 	if (!mp29526_i2c_read(bus, addr, MP29526_REG_IC_DEVICE_ID, data, sizeof(data))) {
@@ -1038,16 +1071,23 @@ bool mp29526_check_device_id(uint8_t bus, uint8_t addr)
 	for (int i = MP29526_IC_DEVICE_ID_LEN; i >= 1; i--)
 		id = (id << 8) | data[i];
 
-	if (id != MP29526_IC_DEVICE_ID_VALUE) {
-		LOG_ERR("IC_DEVICE_ID 0x%08x%08x is not MP29526 (expected 0x%08x%08x) - wrong "
-			"part or wrong address",
-			(uint32_t)(id >> 32), (uint32_t)id,
-			(uint32_t)(MP29526_IC_DEVICE_ID_VALUE >> 32),
-			(uint32_t)MP29526_IC_DEVICE_ID_VALUE);
-		return false;
+	/* accept any ID from the family this driver is written against - see
+	 * the MP29526_IC_DEVICE_ID_* comment above */
+	static const uint64_t family_ids[] = {
+		MP29526_IC_DEVICE_ID_MP29426,
+		MP29526_IC_DEVICE_ID_MP29529,
+		MP29526_IC_DEVICE_ID_MP29526,
+	};
+
+	for (size_t i = 0; i < ARRAY_SIZE(family_ids); i++) {
+		if (id == family_ids[i])
+			return true;
 	}
 
-	return true;
+	LOG_ERR("IC_DEVICE_ID 0x%08x%08x is not a recognised MP2952x/MP294x part - wrong part "
+		"or wrong address",
+		(uint32_t)(id >> 32), (uint32_t)id);
+	return false;
 }
 
 bool mp29526_get_write_protect(uint8_t bus, uint8_t addr, uint8_t *wp)
@@ -1670,9 +1710,9 @@ static bool mp29526_stream_flush_block(void)
 	for (uint8_t i = 0; i < mp29526_stream.block_want; i++)
 		payload[1 + i] = mp29526_stream.block_data[mp29526_stream.block_want - 1 - i];
 
-	bool ok = mp29526_i2c_write(mp29526_stream.bus, mp29526_stream.addr,
-				    mp29526_stream.block_cmd, payload,
-				    mp29526_stream.block_want + 1);
+	bool ok =
+		mp29526_i2c_write(mp29526_stream.bus, mp29526_stream.addr, mp29526_stream.block_cmd,
+				  payload, mp29526_stream.block_want + 1);
 	if (!ok)
 		LOG_ERR("Block write failed (reg 0x%02x, %d bytes)", mp29526_stream.block_cmd,
 			mp29526_stream.block_want);
@@ -1686,7 +1726,8 @@ static bool mp29526_stream_flush_block(void)
 
 static bool mp29526_stream_apply_row(const struct mp29526_row *row)
 {
-	if (!strncmp(row->name, "CRC", strlen("CRC")) || !strncmp(row->name, "TRIM", strlen("TRIM")))
+	if (!strncmp(row->name, "CRC", strlen("CRC")) ||
+	    !strncmp(row->name, "TRIM", strlen("TRIM")))
 		return true;
 
 	if (row->group != mp29526_stream.group) {
@@ -1726,8 +1767,7 @@ static bool mp29526_stream_apply_row(const struct mp29526_row *row)
 		/* PMBus write-word sends the low byte first on the wire */
 		uint8_t data[2] = { addr_low, value_byte };
 		if (!mp29526_i2c_write(mp29526_stream.bus, mp29526_stream.addr, cmd, data, 2)) {
-			LOG_ERR("Process-call write failed (page 0x%x reg 0x%02x)", row->page,
-				cmd);
+			LOG_ERR("Process-call write failed (page 0x%x reg 0x%02x)", row->page, cmd);
 			return false;
 		}
 		mp29526_stream.applied_cnt++;
@@ -1736,8 +1776,8 @@ static bool mp29526_stream_apply_row(const struct mp29526_row *row)
 		uint8_t n = (uint8_t)atoi(row->tag + 1);
 		uint8_t cmd = (uint8_t)row->addr_field;
 		if (!n || n > MP29526_STREAM_BLOCK_MAX_LEN) {
-			LOG_ERR("Unsupported block length in tag '%s' for %s",
-				log_strdup(row->tag), log_strdup(row->name));
+			LOG_ERR("Unsupported block length in tag '%s' for %s", log_strdup(row->tag),
+				log_strdup(row->name));
 			return false;
 		}
 
@@ -1762,8 +1802,8 @@ static bool mp29526_stream_apply_row(const struct mp29526_row *row)
 			}
 			mp29526_stream.applied_cnt++;
 		} else {
-			if (mp29526_stream.block_want && (mp29526_stream.block_cmd != cmd ||
-							  mp29526_stream.block_want != n)) {
+			if (mp29526_stream.block_want &&
+			    (mp29526_stream.block_cmd != cmd || mp29526_stream.block_want != n)) {
 				LOG_WRN("Block run for reg 0x%02x changed mid-sequence, restarting",
 					cmd);
 				mp29526_stream.block_want = 0;

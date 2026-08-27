@@ -15,23 +15,33 @@
  */
 
 /*
- * MP29526 - Dual Loop Digital Multi-Phase Controller (MPS)
+ * MP29526 - Digital Multi-Phase Controller (MPS)
  *
  * Datasheet    : MP29526 Rev. 0.1, 2/26/2026 (preliminary)
- * Register map : MP29526 Register Map Rev 1.0.0.196 / 2.0.0.233, 2026-07-28
+ * Register map : MP29526/MP29529/MP29426 Register Map Rev 1.0.0.196+ /
+ *                2.0.0.233+ - one PMBus map shared by the whole family,
+ *                distinguished only by IC_DEVICE_ID (ADh) and by how many
+ *                rails are physically present on a given part.
  * Reference    : mp29816a.c / mp29816a.h
  *
- * The register map resolves everything the preliminary datasheet left TBD.
- * All command codes, widths, and bit fields below are taken from it.
+ * This file is written against the shared family register map, not against
+ * any one project's rail count. Command codes, widths, bit fields and the
+ * per-rail page arithmetic below apply to MP29426/MP29529/MP29526 alike;
+ * mp29526_check_device_id() accepts an IC_DEVICE_ID from any of the three.
+ * How many of the up to 4 rails a specific board actually wires up (and
+ * which sensor/page each rail maps to) is a per-project fact that belongs
+ * in the platform layer (cfg->arg0 / vr_pre_read_args), not in this driver.
  *
  * PAGE MAP (PAGE 00h bits[5:0]):
  *   0 = Rail 1 operating registers      5 = MPS registers affecting Rail 1
  *   1 = Rail 2 operating registers      6 = MPS registers affecting Rail 2
- *   2 = Rail 3 (unused on MP29526)      7 = MPS Rail 3 (unused)
- *   3 = Rail 4 (unused on MP29526)      8 = MPS Rail 4 (unused)
+ *   2 = Rail 3 operating registers      7 = MPS registers affecting Rail 3
+ *   3 = Rail 4 operating registers      8 = MPS registers affecting Rail 4
  *   4 = SVID psys                       9,10 = MPS all-rail, 11 = debug
  *
- * MP29526 is dual loop, so only rails 1 and 2 exist: pages 0/5 and 1/6.
+ * Rail N (0-indexed, MP29526_RAIL_1..4) selects Page N / Page (5+N); a part
+ * with fewer physical rails simply never has the platform ask for the
+ * pages beyond its rail count.
  */
 
 #ifndef MP29526_H
@@ -47,6 +57,8 @@ struct pldm_fw_update_param;
 enum mp29526_rail {
 	MP29526_RAIL_1 = 0,
 	MP29526_RAIL_2 = 1,
+	MP29526_RAIL_3 = 2,
+	MP29526_RAIL_4 = 3,
 	MP29526_RAIL_MAX,
 };
 
@@ -66,7 +78,7 @@ enum mp29526_rail {
 #define MP29526_WP_EXCEPT_WP_OP_PAGE 0x40
 #define MP29526_WP_EXCEPT_WP_OP_PAGE_ONOFF_VOUT 0x20
 
-/* STATUS_MFR_PROTECT (80h on page 5/6), 2 bytes, read only */
+/* STATUS_MFR_PROTECT (80h on the rail's MFR page, 5-8), 2 bytes, read only */
 #define MP29526_PROTECT_LINE_FLOAT BIT(0)
 #define MP29526_PROTECT_PWM_SELF_CHECK BIT(1)
 #define MP29526_PROTECT_VAUX_FAULT BIT(2)
@@ -91,8 +103,8 @@ bool mp29526_get_vout_max(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt);
 bool mp29526_get_vout_min(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt);
 bool mp29526_set_vout_max(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt);
 bool mp29526_set_vout_min(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt);
-bool mp29526_get_iout_oc_warn_limit(sensor_cfg *cfg, uint16_t *value);
-bool mp29526_set_iout_oc_warn_limit(sensor_cfg *cfg, uint16_t value);
+bool mp29526_get_iout_oc_warn_limit(sensor_cfg *cfg, uint8_t rail, uint16_t *value);
+bool mp29526_set_iout_oc_warn_limit(sensor_cfg *cfg, uint8_t rail, uint16_t value);
 bool mp29526_fwupdate(uint8_t bus, uint8_t addr, uint8_t *img_buff, uint32_t img_size);
 /*
  * Line-streaming variant of mp29526_fwupdate(): applies the tab-separated
@@ -111,17 +123,17 @@ bool mp29526_set_vout_command(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt
 bool mp29526_get_vr_status(sensor_cfg *cfg, uint8_t rail, uint8_t vr_status_rail,
 			   uint16_t *vr_status);
 bool mp29526_clear_vr_status(sensor_cfg *cfg, uint8_t rail);
-bool mp29526_get_uvp(sensor_cfg *cfg, uint16_t *uvp_threshold);
-bool mp29526_set_uvp_threshold(sensor_cfg *cfg, uint16_t *write_uvp_threshold);
-bool mp29526_get_vout_offset(sensor_cfg *cfg, uint16_t *vout_offset);
-bool mp29526_set_vout_offset(sensor_cfg *cfg, uint16_t *write_vout_offset);
-bool mp29526_get_total_ocp(sensor_cfg *cfg, uint16_t *total_ocp);
-bool mp29526_set_total_ocp(sensor_cfg *cfg, uint16_t *write_total_ocp);
-bool mp29526_get_ovp_1(sensor_cfg *cfg, uint16_t *ovp_1);
-bool mp29526_set_ovp_1(sensor_cfg *cfg, uint16_t *write_ovp_1);
-bool mp29526_get_ovp_2(sensor_cfg *cfg, uint16_t *ovp_2);
-bool mp29526_get_ovp_2_action(sensor_cfg *cfg, uint16_t *ovp_2_action);
-bool mp29526_set_ovp_2_action(sensor_cfg *cfg, uint16_t *write_ovp_2_action);
+bool mp29526_get_uvp(sensor_cfg *cfg, uint8_t rail, uint16_t *uvp_threshold);
+bool mp29526_set_uvp_threshold(sensor_cfg *cfg, uint8_t rail, uint16_t *write_uvp_threshold);
+bool mp29526_get_vout_offset(sensor_cfg *cfg, uint8_t rail, uint16_t *vout_offset);
+bool mp29526_set_vout_offset(sensor_cfg *cfg, uint8_t rail, uint16_t *write_vout_offset);
+bool mp29526_get_total_ocp(sensor_cfg *cfg, uint8_t rail, uint16_t *total_ocp);
+bool mp29526_set_total_ocp(sensor_cfg *cfg, uint8_t rail, uint16_t *write_total_ocp);
+bool mp29526_get_ovp_1(sensor_cfg *cfg, uint8_t rail, uint16_t *ovp_1);
+bool mp29526_set_ovp_1(sensor_cfg *cfg, uint8_t rail, uint16_t *write_ovp_1);
+bool mp29526_get_ovp_2(sensor_cfg *cfg, uint8_t rail, uint16_t *ovp_2);
+bool mp29526_get_ovp_2_action(sensor_cfg *cfg, uint8_t rail, uint16_t *ovp_2_action);
+bool mp29526_set_ovp_2_action(sensor_cfg *cfg, uint8_t rail, uint16_t *write_ovp_2_action);
 
 /* ---------------- MP29526 specific --------------------------------------- */
 
@@ -131,20 +143,28 @@ float mp29526_get_vid_step(sensor_cfg *cfg, uint8_t rail);
 /* Raw VOUT_MODE byte for the rail. */
 bool mp29526_get_vout_mode(sensor_cfg *cfg, uint8_t rail, uint8_t *mode);
 
-/* VID_OVP / VID_UVP thresholds, page 5/6 06h and 07h, 1 mV/LSB. */
+/* VID_OVP / VID_UVP thresholds, rail's MFR page (5-8) 06h and 07h, 1 mV/LSB. */
 bool mp29526_get_ov_vid_threshold(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt);
 bool mp29526_set_ov_vid_threshold(sensor_cfg *cfg, uint8_t rail, uint16_t millivolt);
 bool mp29526_get_uv_vid_threshold(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt);
 bool mp29526_set_uv_vid_threshold(sensor_cfg *cfg, uint8_t rail, uint16_t millivolt);
 
-/* STATUS_MFR_PROTECT (80h page 5/6). Mask with MP29526_PROTECT_* above. */
+/* STATUS_MFR_PROTECT (80h, rail's MFR page 5-8). Mask with MP29526_PROTECT_* above. */
 bool mp29526_get_mfr_protect(sensor_cfg *cfg, uint8_t rail, uint16_t *status);
 bool mp29526_get_line_float_fault(sensor_cfg *cfg, uint8_t rail, bool *is_faulted);
 
-/* PHASE_NUM (01h page 5/6): 0 = off, 1..16 = active phase count. */
+/* PHASE_NUM (01h, rail's MFR page 5-8): 0 = off, 1..16 = active phase count. */
 bool mp29526_get_phase_count(sensor_cfg *cfg, uint8_t rail, uint8_t *phase_cnt);
 
-/* IC_DEVICE_ID (ADh) check - confirms the part really is an MP29526. */
+/*
+ * IC_DEVICE_ID (ADh) check - confirms the part is one of the MP2952x/MP294x
+ * family this driver is written against (currently MP29426, MP29529,
+ * MP29526; see MP29526_IC_DEVICE_ID_* in mp29526.c). It intentionally does
+ * NOT pin down which exact part number is on the bus - it only answers "is
+ * this driver applicable here at all" - because within the family the
+ * register map, not the marketing part number, is what this code depends
+ * on. Rail count still has to come from the platform.
+ */
 bool mp29526_check_device_id(uint8_t bus, uint8_t addr);
 
 /* WRITE_PROTECT (10h) */
