@@ -197,51 +197,6 @@ ina233_init_arg ina233_init_args[] = {
 	},
 };
 
-bool init_vr_write_protect(uint8_t bus, uint8_t addr, uint8_t default_val)
-{
-	int ret = 0;
-	uint8_t page = 0;
-	uint8_t reg_val = 0;
-
-	xdpe15284_set_write_protect_default_val(default_val);
-	ret = pmbus_read_command(bus, addr, PMBUS_PAGE, &reg_val, 1);
-	if (ret != 0) {
-		LOG_ERR("Get bus: 0x%x, addr: 0x%x, page fail", bus, addr);
-		return false;
-	}
-
-	page = reg_val;
-	if (xdpe15284_set_write_protect(bus, addr, XDPE15284_ENABLE_WRITE_PROTECT) != true) {
-		LOG_ERR("Initialize page: 0x%x write protect to 0x%x fail", page, default_val);
-		return false;
-	}
-
-	page = (page == PMBUS_PAGE_0 ? PMBUS_PAGE_1 : PMBUS_PAGE_0);
-	ret = pmbus_set_page(bus, addr, page);
-	if (ret != 0) {
-		LOG_ERR("Set bus: 0x%x, addr: 0x%x to page: 0x%x fail", bus, addr, page);
-		return false;
-	}
-
-	ret = pmbus_read_command(bus, addr, PMBUS_PAGE, &reg_val, 1);
-	if (ret != 0) {
-		LOG_ERR("Get bus: 0x%x, addr: 0x%x, page fail", bus, addr);
-		return false;
-	}
-
-	if (reg_val != page) {
-		LOG_ERR("Set page to 0x%x fail", page);
-		return false;
-	}
-
-	if (xdpe15284_set_write_protect(bus, addr, XDPE15284_ENABLE_WRITE_PROTECT) != true) {
-		LOG_ERR("Initialize page: 0x%x write protect to 0x%x fail", page, default_val);
-		return false;
-	}
-
-	return true;
-}
-
 /**************************************************************************************************
  *  PRE-HOOK/POST-HOOK FUNC
  **************************************************************************************************/
@@ -280,29 +235,6 @@ bool pre_isl69259_read(sensor_cfg *cfg, void *args)
 K_MUTEX_DEFINE(xdpe15284_mutex);
 extern vr_page_cfg xdpe15284_page[];
 
-/* Initialization state of each XDPE VR chip's WP (unique bus+addr) */
-typedef struct {
-	uint8_t bus;
-	uint8_t addr;
-	bool wp_initialized;
-} xdpe_vr_state;
-
-static xdpe_vr_state xdpe_wp_states[] = {
-	{ I2C_BUS5, PVCCD_HV_ADDR, false }, // 0x62
-	{ I2C_BUS5, PVCCINFAON_ADDR, false }, // 0x76
-	{ I2C_BUS5, PVCCIN_ADDR, false }, // 0x60
-};
-
-static inline xdpe_vr_state *get_xdpe_vr_state(uint8_t bus, uint8_t addr)
-{
-	for (size_t i = 0; i < ARRAY_SIZE(xdpe_wp_states); ++i) {
-		if (xdpe_wp_states[i].bus == bus && xdpe_wp_states[i].addr == addr) {
-			return &xdpe_wp_states[i];
-		}
-	}
-	return NULL;
-}
-
 /* TPS53689 pre read function
  *
  * Sets the PMBus PAGE register before reading.
@@ -340,26 +272,10 @@ bool pre_tps53689_read(sensor_cfg *cfg, void *args)
 	return true;
 }
 
-/* All WP initialization states reset after a 12V cycle (DC power off/on). */
-void xdpe_reset_wp_states_after_power_cycle(void)
-{
-	for (size_t i = 0; i < ARRAY_SIZE(xdpe_wp_states); ++i) {
-		xdpe_wp_states[i].wp_initialized = false;
-	}
-}
-
 /* XDPE15284 pre read function
  *
  * Purpose:
- *   - Some XDPE parts enable write-protect by default and reject PAGE command.
- *   - This hook first configures write-protect per VR device (once per device),
- *     then sets the PMBus PAGE. It also locks a mutex to serialize page switching.
- *
- * Behavior:
- *   1) For the current VR (bus+addr), if write-protect is not initialized yet,
- *      call init_vr_write_protect() to allow PAGE command, then mark initialized.
- *   2) Lock the xdpe15284_mutex to avoid concurrent PAGE changes.
- *   3) Send PMBUS_PAGE (0x00) with the page value provided in args.
+ *   - Set the PMBus PAGE before reading. Locks a mutex to serialize page switching.
  *
  * @param cfg   pointer to sensor_cfg of this VR sensor (must not be NULL)
  * @param args  pointer to vr_page_cfg, where args->vr_page is PAGE value
@@ -374,20 +290,6 @@ bool pre_xdpe15284_read(sensor_cfg *cfg, void *args)
 	const vr_page_cfg *xdpe15284_vr_page = (const vr_page_cfg *)args;
 	I2C_MSG msg = { 0 };
 	int retry = 3;
-
-	/* Per-device write-protect init (once per device) */
-	xdpe_vr_state *st = get_xdpe_vr_state(cfg->port, cfg->target_addr);
-	if (st != NULL && st->wp_initialized == false) {
-		bool wp_ok = init_vr_write_protect(
-			cfg->port, cfg->target_addr,
-			XDPE15284_DISABLE_ALL_WRITE_EXCEPT_THREE_COMMANDS_VAL);
-		if (wp_ok != true) {
-			LOG_WRN("XDPE: init write protect fail, try PAGE anyway, sensor: 0x%x",
-				cfg->num);
-		} else {
-			st->wp_initialized = true;
-		}
-	}
 
 	/* Serialize page switching with a mutex */
 	int mret = k_mutex_lock(&xdpe15284_mutex, K_MSEC(MUTEX_LOCK_INTERVAL_MS));
