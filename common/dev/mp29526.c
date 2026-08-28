@@ -352,8 +352,7 @@ static bool mp29526_float_to_linear11(float value, uint16_t *out)
 		if (mantissa > MP29526_LINEAR11_MANTISSA_MASK)
 			continue;
 
-		*out = ((uint16_t)(exp & 0x1F) << 11) |
-		       (mantissa & MP29526_LINEAR11_MANTISSA_MASK);
+		*out = ((uint16_t)(exp & 0x1F) << 11) | (mantissa & MP29526_LINEAR11_MANTISSA_MASK);
 		return true;
 	}
 
@@ -848,8 +847,8 @@ bool mp29526_get_ovp_2_action(sensor_cfg *cfg, uint16_t *ovp_2_action)
 		return false;
 
 	uint8_t data[1] = { 0 };
-	if (!mp29526_i2c_read(cfg->port, cfg->target_addr, MP29526_REG_VOUT_OV_FAULT_RESPONSE,
-			      data, sizeof(data))) {
+	if (!mp29526_i2c_read(cfg->port, cfg->target_addr, MP29526_REG_VOUT_OV_FAULT_RESPONSE, data,
+			      sizeof(data))) {
 		return false;
 	}
 
@@ -873,8 +872,8 @@ bool mp29526_set_ovp_2_action(sensor_cfg *cfg, uint16_t *write_ovp_2_action)
 		return false;
 
 	uint8_t data[1] = { 0 };
-	if (!mp29526_i2c_read(cfg->port, cfg->target_addr, MP29526_REG_VOUT_OV_FAULT_RESPONSE,
-			      data, sizeof(data))) {
+	if (!mp29526_i2c_read(cfg->port, cfg->target_addr, MP29526_REG_VOUT_OV_FAULT_RESPONSE, data,
+			      sizeof(data))) {
 		return false;
 	}
 
@@ -904,7 +903,8 @@ bool mp29526_get_vr_status(sensor_cfg *cfg, uint8_t rail, uint8_t vr_status_rail
 
 	switch (vr_status_rail) {
 	case MP29526_REG_STATUS_WORD:
-		if (!mp29526_i2c_read(cfg->port, cfg->target_addr, MP29526_REG_STATUS_WORD, data, 2))
+		if (!mp29526_i2c_read(cfg->port, cfg->target_addr, MP29526_REG_STATUS_WORD, data,
+				      2))
 			return false;
 		val = le16(data);
 		break;
@@ -1495,8 +1495,8 @@ static bool mp29526_stream_apply_line(void)
 			memcpy(data, &cfg.reg_val, cfg.reg_len);
 			if (!mp29526_i2c_write(mp29526_stream.bus, mp29526_stream.addr,
 					       cfg.reg_addr, data, cfg.reg_len)) {
-				LOG_ERR("Config write failed (page 0x%x reg 0x%02x)",
-					cfg.cfg_page, cfg.reg_addr);
+				LOG_ERR("Config write failed (page 0x%x reg 0x%02x)", cfg.cfg_page,
+					cfg.reg_addr);
 				return false;
 			}
 
