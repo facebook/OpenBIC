@@ -57,4 +57,8 @@
 
 void plat_mctp_init(void);
 
+/* The live mctp instance (for sending outbound PLDM, e.g. async
+ * platform events). NULL until plat_mctp_init() has finished. */
+void *plat_mctp_get_inst(void);
+
 #endif

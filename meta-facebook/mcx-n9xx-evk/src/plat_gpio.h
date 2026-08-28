@@ -27,4 +27,8 @@ void plat_gpio_init(void);
 /* Current debounced level of the monitored GPIO: 1 = asserted, 0 = not. */
 int plat_gpio_mon0_get(void);
 
+/* Called once per debounced mon0 (SW2) transition, from the system
+ * workqueue. __weak no-op by default; override to react. */
+void plat_gpio_mon0_changed(int level);
+
 #endif

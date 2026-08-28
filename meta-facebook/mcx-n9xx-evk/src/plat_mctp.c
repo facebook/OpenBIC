@@ -28,10 +28,12 @@
 #include "mctp.h"
 #include "mctp_ctrl.h"
 #include "pldm.h"
+#include "pldm_base.h"
 #include "hal_i2c.h"
 #include "plat_hwinfo.h"
 #include "plat_i2c.h"
 #include "plat_mctp.h"
+#include "plat_storage.h"
 #include <zephyr/logging/log.h>
 
 LOG_MODULE_REGISTER(plat_mctp);
@@ -45,16 +47,61 @@ LOG_MODULE_REGISTER(plat_mctp);
 static mctp_port bic_mctp_port;
 static bool bic_mctp_port_ready;
 
+/* Starting EID: the assigned value persisted from a previous session
+ * (Set Endpoint ID -> plat_update_mctp_routing_table -> NVS), or the
+ * placeholder default. Loaded once in plat_mctp_init(). A valid MCTP
+ * EID is 0x08..0xFE (0x00 null, 0xFF broadcast). */
+static uint8_t start_eid = PLAT_MCTP_EID;
+
+static bool eid_is_valid(uint8_t eid)
+{
+	return eid >= 0x08 && eid <= 0xFE;
+}
+
 uint8_t plat_get_eid(void)
 {
 	/* mctp_init() calls this before bic_mctp_port.mctp_inst exists, to
-	 * pick the instance's starting EID - fall back to the static
-	 * default then. Once up, report the live (possibly since
-	 * reassigned by Set Endpoint ID) value instead. */
+	 * pick the instance's starting EID - use the persisted/default
+	 * then. Once up, report the live (possibly since reassigned by
+	 * Set Endpoint ID) value instead. */
 	if (!bic_mctp_port_ready) {
-		return PLAT_MCTP_EID;
+		return start_eid;
 	}
 	return bic_mctp_port.mctp_inst->endpoint;
+}
+
+void *plat_mctp_get_inst(void)
+{
+	return bic_mctp_port_ready ? bic_mctp_port.mctp_inst : NULL;
+}
+
+/* mctp_ctrl.c's Set Endpoint ID handler calls this (__weak) after
+ * updating the live EID. Persist it so it survives a reset. */
+void plat_update_mctp_routing_table(uint8_t eid)
+{
+	if (!eid_is_valid(eid)) {
+		return;
+	}
+	if (plat_storage_write(PLAT_STORAGE_ID_MCTP_EID, &eid, sizeof(eid)) == 0) {
+		LOG_INF("MCTP EID 0x%02x persisted", eid);
+	}
+}
+
+/* PLDM SetTID persistence hook (pldm_base.c, __weak). */
+void plat_pldm_save_tid(uint8_t tid)
+{
+	(void)plat_storage_write(PLAT_STORAGE_ID_PLDM_TID, &tid, sizeof(tid));
+}
+
+uint8_t plat_pldm_get_tid(void)
+{
+	uint8_t tid;
+
+	if (plat_storage_read(PLAT_STORAGE_ID_PLDM_TID, &tid, sizeof(tid)) == 0 && tid != 0x00 &&
+	    tid != 0xFF) {
+		return tid;
+	}
+	return DEFAULT_TID;
 }
 
 uint8_t plat_get_mctp_port_count(void)
@@ -205,6 +252,14 @@ static uint8_t plat_mctp_msg_recv(void *mctp_p, uint8_t *buf, uint32_t len,
 
 void plat_mctp_init(void)
 {
+	uint8_t stored_eid;
+
+	if (plat_storage_read(PLAT_STORAGE_ID_MCTP_EID, &stored_eid, sizeof(stored_eid)) == 0 &&
+	    eid_is_valid(stored_eid)) {
+		start_eid = stored_eid;
+		LOG_INF("restored MCTP EID 0x%02x from storage", start_eid);
+	}
+
 	int ret = mctp_i2c_target_register(I2C_BUS_SIDEBAND, PLAT_MCTP_I2C_TARGET_ADDR);
 
 	if (ret) {

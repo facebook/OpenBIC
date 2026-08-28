@@ -17,6 +17,7 @@
 #ifndef PLAT_STORAGE_H
 #define PLAT_STORAGE_H
 
+#include <stddef.h>
 #include <stdint.h>
 
 /* Mounts NVS on the "storage" partition (on the on-board W25Q64 QSPI
@@ -28,5 +29,16 @@ void plat_storage_init(void);
 
 /* Current boot counter value (as last read/written by plat_storage_init). */
 uint32_t plat_storage_boot_count(void);
+
+/* NVS entry-id allocation for plat_storage_read/write(). id 1 is the
+ * boot counter (internal). Keep every user distinct. */
+#define PLAT_STORAGE_ID_MCTP_EID 2
+#define PLAT_STORAGE_ID_PLDM_TID 3
+
+/* Generic persistent key/value store (NVS on the QSPI "storage"
+ * partition). Return 0 on success, -errno otherwise. A read of a
+ * never-written id returns -ENOENT. */
+int plat_storage_write(uint16_t id, const void *data, size_t len);
+int plat_storage_read(uint16_t id, void *data, size_t len);
 
 #endif

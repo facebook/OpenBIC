@@ -30,12 +30,15 @@
 
 /* PLDM for Platform Monitoring and Control (DSP0248, type 0x02 - see
  * src/plat_pldm_monitor.c) needs at least one real sensor to be a
- * meaningful responder. This EVK has no analog sensors wired, but the
- * MCXN947 has an on-die temperature sensor readable through LPADC
- * channel 26 side A. lpadc0 and vref are already status="okay" in the
- * board's own dtsi; here we add the temp-sensor channel and the
- * nxp,lpadc-temp40 sensor device that turns its raw VBE readings into
- * a calibrated die temperature.
+ * meaningful responder. The MCXN947 has an on-die temperature sensor
+ * on LPADC channel 26A, but Zephyr's generic adc_read path doesn't
+ * drive the temp-sensor CMDL loop/scale setup that SoC needs, so the
+ * nxp,lpadc-temp40 reading came out unreliable and mis-scaled (see
+ * README.md). Instead the board's numeric sensor is a plain
+ * single-ended LPADC voltage read on ADC0_A1 (PIO4_15), one of the
+ * three analog pins this EVK's pinmux_lpadc0 routes to the J2 header,
+ * reported in millivolts. lpadc0 / vref are already status="okay" in
+ * the board's own dtsi.
  */
 #include <zephyr/dt-bindings/adc/adc.h>
 #include <zephyr/dt-bindings/adc/mcux-lpadc.h>
@@ -44,24 +47,22 @@
 	#address-cells = <1>;
 	#size-cells = <0>;
 
-	channel@0 {
-		reg = <0>;
+	channel@1 {
+		reg = <1>;
 		zephyr,gain = "ADC_GAIN_1";
 		/* MCUX LPADC driver only accepts ADC_REF_EXTERNAL0/1;
-		 * EXTERNAL0 = use the ADC's already-configured reference
-		 * (the board's vref node, status="okay" in the dtsi).
-		 */
+		 * EXTERNAL0 = use the ADC's already-configured reference. */
 		zephyr,reference = "ADC_REF_EXTERNAL0";
+		zephyr,vref-mv = <1800>;
 		zephyr,acquisition-time = <ADC_ACQ_TIME_DEFAULT>;
-		zephyr,resolution = <16>;
-		zephyr,input-positive = <MCUX_LPADC_CH26A>;
+		zephyr,resolution = <12>;
+		zephyr,input-positive = <MCUX_LPADC_CH1A>;
 	};
 };
 
 / {
-	die_temp: die_temp {
-		compatible = "nxp,lpadc-temp40";
-		io-channels = <&lpadc0 0>;
+	zephyr,user {
+		io-channels = <&lpadc0 1>;
 	};
 };
 

@@ -124,21 +124,20 @@ static int cmd_ipmi_selftest(const struct shell *sh, size_t argc, char **argv)
  * src/plat_pldm_monitor.c's MCTP-facing GetSensorReading / GetPDRInfo
  * handlers use, without needing a BMC on the wire.
  */
-static int cmd_pldm2_temp(const struct shell *sh, size_t argc, char **argv)
+static int cmd_pldm2_vmon(const struct shell *sh, size_t argc, char **argv)
 {
 	ARG_UNUSED(argc);
 	ARG_UNUSED(argv);
 
-	int32_t mdegc = 0;
-	int ret = plat_pldm_monitor_read_die_temp_mdegc(&mdegc);
+	int32_t mv = 0;
+	int ret = plat_pldm_monitor_read_vmon_mv(&mv);
 
 	if (ret) {
-		shell_error(sh, "die-temp sensor unavailable (%d)", ret);
+		shell_error(sh, "vmon numeric sensor unavailable (%d)", ret);
 		return ret;
 	}
 
-	shell_print(sh, "die temp (sensor id 0x0001): %d.%03d C", mdegc / 1000,
-		    (mdegc < 0 ? -mdegc : mdegc) % 1000);
+	shell_print(sh, "vmon (sensor id 0x0001): %d mV", mv);
 	return 0;
 }
 
@@ -149,7 +148,7 @@ static int cmd_pldm2_pdr(const struct shell *sh, size_t argc, char **argv)
 
 	shell_print(sh, "PDR repository: %u record(s)", plat_pldm_monitor_pdr_count());
 	shell_print(sh, "  handle 1  Terminus Locator PDR");
-	shell_print(sh, "  handle 2  Numeric Sensor PDR    sensor 0x0001  die temp");
+	shell_print(sh, "  handle 2  Numeric Sensor PDR    sensor 0x0001  vmon (LPADC mV)");
 	shell_print(sh, "  handle 3  State Sensor PDR      sensor 0x0002  SW2 (Presence)");
 	shell_print(sh, "  handle 4  State Effecter PDR    effecter 0x0003  LED");
 	return 0;
@@ -187,12 +186,39 @@ static int cmd_pldm2_led(const struct shell *sh, size_t argc, char **argv)
 	return 0;
 }
 
+static int cmd_pldm2_evt(const struct shell *sh, size_t argc, char **argv)
+{
+	uint8_t eid = 0;
+	bool en = plat_pldm_monitor_event_receiver(&eid);
+
+	if (argc == 2 && strcmp(argv[1], "fire") == 0) {
+		int ret = plat_pldm_monitor_fire_sw2_event();
+
+		if (ret) {
+			shell_error(sh, "fire failed (%d)%s", ret,
+				    ret == -ENOTCONN ? " - no event receiver registered" : "");
+			return ret;
+		}
+		shell_print(sh, "SW2 stateSensorEvent pushed to EID 0x%02x", eid);
+		return 0;
+	}
+
+	shell_print(sh, "PLDM event receiver: %s%s", en ? "registered" : "none",
+		    en ? "" : " (bus owner must SetEventReceiver first)");
+	if (en) {
+		shell_print(sh, "  receiver EID 0x%02x; 'plat pldm2 evt fire' to push one now", eid);
+	}
+	return 0;
+}
+
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_plat_pldm2,
-				SHELL_CMD(temp, NULL, "Read the die-temp numeric sensor (PLDM type 2)",
-					  cmd_pldm2_temp),
+				SHELL_CMD(vmon, NULL, "Read the vmon numeric sensor (LPADC mV, PLDM type 2)",
+					  cmd_pldm2_vmon),
 				SHELL_CMD(button, NULL, "Read the SW2 state sensor", cmd_pldm2_button),
 				SHELL_CMD(led, NULL, "Drive the LED effecter: plat pldm2 led <on|off>",
 					  cmd_pldm2_led),
+				SHELL_CMD(evt, NULL, "Async event receiver status / 'evt fire'",
+					  cmd_pldm2_evt),
 				SHELL_CMD(pdr, NULL, "Summarise the board PDR repository",
 					  cmd_pldm2_pdr),
 				SHELL_SUBCMD_SET_END);

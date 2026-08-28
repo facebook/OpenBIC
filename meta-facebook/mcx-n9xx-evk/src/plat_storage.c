@@ -39,6 +39,7 @@ LOG_MODULE_REGISTER(plat_storage, LOG_LEVEL_INF);
 #define BOOT_COUNT_ID 1
 
 static struct nvs_fs fs;
+static bool fs_ready;
 static uint32_t boot_count;
 
 void plat_storage_init(void)
@@ -67,6 +68,7 @@ void plat_storage_init(void)
 		LOG_ERR("nvs_mount failed: %d", ret);
 		return;
 	}
+	fs_ready = true;
 
 	ret = nvs_read(&fs, BOOT_COUNT_ID, &boot_count, sizeof(boot_count));
 	if (ret < 0) {
@@ -87,4 +89,32 @@ void plat_storage_init(void)
 uint32_t plat_storage_boot_count(void)
 {
 	return boot_count;
+}
+
+/* Generic key/value access for other subsystems that need a few bytes
+ * to survive a reset (e.g. an assigned MCTP EID / PLDM TID). `id` must
+ * be an NVS entry id distinct from every other user - see the
+ * PLAT_STORAGE_ID_* allocation in plat_storage.h. */
+int plat_storage_write(uint16_t id, const void *data, size_t len)
+{
+	if (!fs_ready) {
+		return -ENODEV;
+	}
+
+	int ret = nvs_write(&fs, id, data, len);
+
+	/* nvs_write returns the byte count on success, 0 when the value is
+	 * unchanged - both are fine. */
+	return (ret < 0) ? ret : 0;
+}
+
+int plat_storage_read(uint16_t id, void *data, size_t len)
+{
+	if (!fs_ready) {
+		return -ENODEV;
+	}
+
+	int ret = nvs_read(&fs, id, data, len);
+
+	return (ret < 0) ? ret : 0;
 }

@@ -39,6 +39,15 @@ static struct gpio_callback mon0_cb_data;
 static struct k_work_delayable mon0_debounce_work;
 static atomic_t mon0_state;
 
+/* Board hook, __weak so subsystems that care about SW2 transitions
+ * (e.g. plat_pldm_monitor.c, which turns them into PLDM state-sensor
+ * events) can observe them without this file depending on them.
+ * Runs in the system workqueue, after debounce. */
+__weak void plat_gpio_mon0_changed(int level)
+{
+	ARG_UNUSED(level);
+}
+
 static void mon0_debounce_handler(struct k_work *work)
 {
 	ARG_UNUSED(work);
@@ -52,6 +61,7 @@ static void mon0_debounce_handler(struct k_work *work)
 
 	if (atomic_set(&mon0_state, level) != level) {
 		LOG_INF("mon0 (SW2) state changed: %s", level ? "asserted" : "deasserted");
+		plat_gpio_mon0_changed(level);
 	}
 }
 
