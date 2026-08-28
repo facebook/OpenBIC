@@ -233,7 +233,7 @@ static int cmd_spdm_status(const struct shell *sh, size_t argc, char **argv)
 	bool seen = plat_spdm_last_request(&code);
 
 	shell_print(sh, "SPDM responder: libspdm 3.8.2, MCTP msg type 0x05. Caps CERT|CHAL|MEAS(SIG); "
-			"ECDSA P-256/P-384, SHA-256/384; embedded EC dev cert chain");
+			"ECDSA P-256, SHA-384 base hash; embedded EC dev cert chain (slot 0)");
 	if (seen) {
 		shell_print(sh, "  last SPDM request seen: 0x%02x", code);
 	} else {

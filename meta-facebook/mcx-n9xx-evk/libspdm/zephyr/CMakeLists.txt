@@ -60,6 +60,11 @@ file(GLOB _spdm_responder   ${LIBSPDM_DIR}/library/spdm_responder_lib/*.c)
 file(GLOB _spdm_transport   ${LIBSPDM_DIR}/library/spdm_transport_mctp_lib/*.c)
 file(GLOB_RECURSE _cryptlib ${LIBSPDM_DIR}/os_stub/cryptlib_mbedtls/*.c)
 
+# spdm_crypt_ext_lib: libspdm_measurement_hash_all() (maps the
+# measurement_hash_algo bit values - shifted from base_hash_algo's - to
+# a real hash). Used by plat_spdm_secret.c.
+file(GLOB _spdm_crypt_ext ${LIBSPDM_DIR}/os_stub/spdm_crypt_ext_lib/*.c)
+
 set(_osstub
   ${LIBSPDM_DIR}/os_stub/memlib/compare_mem.c
   ${LIBSPDM_DIR}/os_stub/memlib/copy_mem.c
@@ -82,6 +87,7 @@ zephyr_library_sources(
   ${_spdm_responder}
   ${_spdm_transport}
   ${_cryptlib}
+  ${_spdm_crypt_ext}
   ${_osstub}
 )
 

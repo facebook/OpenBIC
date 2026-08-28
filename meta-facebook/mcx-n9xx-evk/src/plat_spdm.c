@@ -40,6 +40,7 @@
 
 #include "hal/base.h"
 #include "library/spdm_common_lib.h"
+#include "library/spdm_crypt_lib.h"
 #include "library/spdm_responder_lib.h"
 #include "library/spdm_transport_mctp_lib.h"
 #include "industry_standard/spdm.h"
@@ -56,6 +57,22 @@ LOG_MODULE_REGISTER(plat_spdm);
 static void *spdm_context;
 static void *spdm_scratch;
 static bool spdm_ready;
+
+/* This responder negotiates a single base hash (SHA-384) so the
+ * DSP0274 certificate-chain buffer below can carry one fixed root
+ * hash. A requester that only offers SHA-256 for the base hash will
+ * fail NEGOTIATE_ALGORITHMS - acceptable for this bring-up responder. */
+#define PLAT_SPDM_BASE_HASH_ALGO  SPDM_ALGORITHMS_BASE_HASH_ALGO_TPM_ALG_SHA_384
+#define PLAT_SPDM_ROOT_HASH_SIZE  48
+
+/* Full DSP0274 cert chain handed to LIBSPDM_DATA_LOCAL_PUBLIC_CERT_CHAIN:
+ * libspdm stores this pointer verbatim and slices it for
+ * GET_CERTIFICATE, so it must already be
+ *   length(2 LE) | reserved(2) | root_hash[H] | DER cert(s)
+ * not raw DER. Built once in plat_spdm_init(); must stay resident. */
+#define PLAT_SPDM_CERT_CHAIN_SIZE (sizeof(spdm_cert_chain_t) + PLAT_SPDM_ROOT_HASH_SIZE + \
+				   sizeof(plat_spdm_dev_cert_der))
+static uint8_t spdm_cert_chain[PLAT_SPDM_CERT_CHAIN_SIZE] __aligned(4);
 
 static uint8_t sender_buf[SPDM_BUF_SIZE] __aligned(8);
 static uint8_t receiver_buf[SPDM_BUF_SIZE] __aligned(8);
@@ -211,31 +228,46 @@ void plat_spdm_init(void)
 			SPDM_GET_CAPABILITIES_RESPONSE_FLAGS_CHAL_CAP |
 			SPDM_GET_CAPABILITIES_RESPONSE_FLAGS_MEAS_CAP_SIG);
 
-	/* algorithms: DMTF measurements, ECDSA P-256/P-384, SHA-256/384 */
+	/* algorithms: DMTF measurements; ECDSA P-256 only (that is the
+	 * embedded dev key - advertising P-384 too made libspdm negotiate
+	 * a curve we have no key for, so CHALLENGE/signed MEASUREMENTS
+	 * failed); SHA-384 base hash only (see PLAT_SPDM_BASE_HASH_ALGO);
+	 * measurement digests may be SHA-256 or SHA-384. */
 	set_u8(LIBSPDM_DATA_MEASUREMENT_SPEC, SPDM_MEASUREMENT_SPECIFICATION_DMTF);
 	set_u32(LIBSPDM_DATA_MEASUREMENT_HASH_ALGO,
 		SPDM_ALGORITHMS_MEASUREMENT_HASH_ALGO_TPM_ALG_SHA_384 |
 			SPDM_ALGORITHMS_MEASUREMENT_HASH_ALGO_TPM_ALG_SHA_256);
 	set_u32(LIBSPDM_DATA_BASE_ASYM_ALGO,
-		SPDM_ALGORITHMS_BASE_ASYM_ALGO_TPM_ALG_ECDSA_ECC_NIST_P384 |
-			SPDM_ALGORITHMS_BASE_ASYM_ALGO_TPM_ALG_ECDSA_ECC_NIST_P256);
-	set_u32(LIBSPDM_DATA_BASE_HASH_ALGO,
-		SPDM_ALGORITHMS_BASE_HASH_ALGO_TPM_ALG_SHA_384 |
-			SPDM_ALGORITHMS_BASE_HASH_ALGO_TPM_ALG_SHA_256);
+		SPDM_ALGORITHMS_BASE_ASYM_ALGO_TPM_ALG_ECDSA_ECC_NIST_P256);
+	set_u32(LIBSPDM_DATA_BASE_HASH_ALGO, PLAT_SPDM_BASE_HASH_ALGO);
 
-	/* identity: embedded EC P-256 self-signed dev cert in slot 0 */
+	/* identity: build the DSP0274 cert chain (header + root hash + DER)
+	 * around the embedded EC P-256 self-signed dev cert, slot 0. */
+	spdm_cert_chain_t *cc = (spdm_cert_chain_t *)spdm_cert_chain;
+
+	cc->length = (uint16_t)PLAT_SPDM_CERT_CHAIN_SIZE;
+	cc->reserved = 0;
+	if (!libspdm_hash_all(PLAT_SPDM_BASE_HASH_ALGO, plat_spdm_dev_cert_der,
+			      sizeof(plat_spdm_dev_cert_der),
+			      spdm_cert_chain + sizeof(spdm_cert_chain_t))) {
+		LOG_ERR("SPDM cert-chain root hash failed");
+		return;
+	}
+	memcpy(spdm_cert_chain + sizeof(spdm_cert_chain_t) + PLAT_SPDM_ROOT_HASH_SIZE,
+	       plat_spdm_dev_cert_der, sizeof(plat_spdm_dev_cert_der));
+
 	libspdm_data_parameter_t cp = { 0 };
 
 	cp.location = LIBSPDM_DATA_LOCATION_LOCAL;
 	cp.additional_data[0] = 0; /* slot id */
 	if (libspdm_set_data(spdm_context, LIBSPDM_DATA_LOCAL_PUBLIC_CERT_CHAIN, &cp,
-			     plat_spdm_dev_cert_der,
-			     plat_spdm_dev_cert_der_len) != LIBSPDM_STATUS_SUCCESS) {
+			     spdm_cert_chain,
+			     PLAT_SPDM_CERT_CHAIN_SIZE) != LIBSPDM_STATUS_SUCCESS) {
 		LOG_WRN("SPDM cert chain set failed - CERT_CAP will be degraded");
 	}
 
 	spdm_ready = true;
-	LOG_INF("SPDM responder up (libspdm): CERT+CHAL+MEAS, ECDSA P-256/384, SHA-256/384");
+	LOG_INF("SPDM responder up (libspdm): CERT+CHAL+MEAS, ECDSA P-256, SHA-384");
 }
 
 /* ---- inbound message from plat_mctp_msg_recv() -------------------- */

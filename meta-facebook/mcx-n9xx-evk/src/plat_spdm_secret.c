@@ -47,6 +47,7 @@
 #include "hal/library/cryptlib.h"
 #include "hal/library/responder/asymsignlib.h"
 #include "hal/library/responder/measlib.h"
+#include "spdm_crypt_ext_lib/spdm_crypt_ext_lib.h" /* libspdm_measurement_hash_all */
 
 #include "plat_spdm_certs.h"
 
@@ -95,7 +96,7 @@ static void *plat_new_dev_ec_context(uint32_t base_asym_algo)
  * digest form unless use_raw. Returns block size, or 0 on failure.
  */
 static size_t plat_build_meas_block(uint32_t measurement_hash_algo, bool use_raw,
-				    uint8_t *out, size_t out_cap, uint32_t base_hash_algo)
+				    uint8_t *out, size_t out_cap)
 {
 	spdm_measurement_block_dmtf_t *blk = (spdm_measurement_block_dmtf_t *)out;
 	uint8_t *value = out + sizeof(spdm_measurement_block_dmtf_t);
@@ -130,7 +131,11 @@ static size_t plat_build_meas_block(uint32_t measurement_hash_algo, bool use_raw
 
 	if (use_raw) {
 		memcpy(value, plat_meas_raw_id, PLAT_MEAS_RAW_SIZE);
-	} else if (!libspdm_hash_all(base_hash_algo, PLAT_FW_MEAS_BASE, PLAT_FW_MEAS_LEN, value)) {
+	} else if (!libspdm_measurement_hash_all(measurement_hash_algo, PLAT_FW_MEAS_BASE,
+						PLAT_FW_MEAS_LEN, value)) {
+		/* NB: measurement_hash_algo bit values are shifted from
+		 * base_hash_algo's - must use the measurement-specific
+		 * hash helper, not libspdm_hash_all(). */
 		return 0;
 	}
 
@@ -210,11 +215,8 @@ libspdm_return_t libspdm_measurement_collection(
 		  ((request_attribute &
 		    SPDM_GET_MEASUREMENTS_REQUEST_ATTRIBUTES_RAW_BIT_STREAM_REQUESTED) != 0);
 
-	/* base_hash_algo for the digest: measurement_hash_algo shares the
-	 * SPDM hash-algo bit values, so it doubles as the base_hash_algo
-	 * arg to libspdm_hash_all() for the non-raw case. */
 	block_size = plat_build_meas_block(measurement_hash_algo, use_raw,
-					  measurements, *measurements_size, measurement_hash_algo);
+					  measurements, *measurements_size);
 	if (block_size == 0) {
 		return LIBSPDM_STATUS_BUFFER_TOO_SMALL;
 	}
@@ -273,9 +275,9 @@ bool libspdm_generate_measurement_summary_hash(
 	}
 
 	/* summary = base_hash over the concatenation of all measurement
-	 * blocks; this board has exactly one. */
-	block_size = plat_build_meas_block(measurement_hash_algo, false,
-					  block, sizeof(block), base_hash_algo);
+	 * blocks; this board has exactly one. The block's own digest uses
+	 * measurement_hash_algo; the summary over it uses base_hash_algo. */
+	block_size = plat_build_meas_block(measurement_hash_algo, false, block, sizeof(block));
 	if (block_size == 0) {
 		return false;
 	}
