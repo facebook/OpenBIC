@@ -111,6 +111,8 @@ struct _get_pldm_commands_resp {
 uint8_t pldm_base_handler_query(uint8_t code, void **ret_fn);
 
 uint8_t plat_pldm_get_tid();
+/* __weak: persist a bus-owner-assigned TID across resets (default: no-op). */
+void plat_pldm_save_tid(uint8_t tid);
 
 #ifdef __cplusplus
 }

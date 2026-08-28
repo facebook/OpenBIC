@@ -31,8 +31,17 @@ __weak uint8_t plat_pldm_get_tid()
 	return DEFAULT_TID;
 }
 
-/* TID assigned by a bus owner via SetTID. 0 (and 0xFF) mean "unassigned"
- * per DSP0240 - until then GetTID reports the board default. */
+/* __weak persistence hook: a board can store the TID a bus owner
+ * assigned so it survives a reset (default: nothing). GetTID then
+ * reports it via the board's plat_pldm_get_tid() override. */
+__weak void plat_pldm_save_tid(uint8_t tid)
+{
+	ARG_UNUSED(tid);
+}
+
+/* TID assigned by a bus owner via SetTID this session. 0 (and 0xFF)
+ * mean "unassigned" per DSP0240 - until then GetTID reports the board
+ * default (which a board may back with persisted storage). */
 static uint8_t assigned_tid;
 
 uint8_t set_tid(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t instance_id, uint8_t *resp,
@@ -54,6 +63,7 @@ uint8_t set_tid(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t instance_id
 	/* Persist so GetTID reflects it. 0x00/0xFF are the reserved
 	 * "null" values - accept but treat as clearing the assignment. */
 	assigned_tid = (req_p->tid == 0x00 || req_p->tid == 0xFF) ? 0 : req_p->tid;
+	plat_pldm_save_tid(req_p->tid);
 	resp_p->completion_code = PLDM_SUCCESS;
 	return PLDM_SUCCESS;
 }
