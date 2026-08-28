@@ -148,13 +148,51 @@ static int cmd_pldm2_pdr(const struct shell *sh, size_t argc, char **argv)
 	ARG_UNUSED(argv);
 
 	shell_print(sh, "PDR repository: %u record(s)", plat_pldm_monitor_pdr_count());
-	shell_print(sh, "  handle 0x00000001  type 2 (Numeric Sensor)  sensor id 0x0001  \"die temp\"");
+	shell_print(sh, "  handle 1  Terminus Locator PDR");
+	shell_print(sh, "  handle 2  Numeric Sensor PDR    sensor 0x0001  die temp");
+	shell_print(sh, "  handle 3  State Sensor PDR      sensor 0x0002  SW2 (Presence)");
+	shell_print(sh, "  handle 4  State Effecter PDR    effecter 0x0003  LED");
+	return 0;
+}
+
+static int cmd_pldm2_button(const struct shell *sh, size_t argc, char **argv)
+{
+	ARG_UNUSED(argc);
+	ARG_UNUSED(argv);
+
+	uint8_t st = plat_pldm_monitor_sw2_state();
+
+	shell_print(sh, "SW2 state sensor (id 0x0002): %s (Presence state %u)",
+		    st == 1 ? "present/pressed" : "not-present/released", st);
+	return 0;
+}
+
+static int cmd_pldm2_led(const struct shell *sh, size_t argc, char **argv)
+{
+	if (argc != 2 || (strcmp(argv[1], "on") != 0 && strcmp(argv[1], "off") != 0)) {
+		shell_error(sh, "usage: plat pldm2 led <on|off>");
+		return -EINVAL;
+	}
+
+	bool on = (strcmp(argv[1], "on") == 0);
+	int ret = plat_pldm_monitor_set_led(on);
+
+	if (ret) {
+		shell_error(sh, "LED effecter set failed (%d)", ret);
+		return ret;
+	}
+
+	shell_print(sh, "LED effecter (id 0x0003) -> %s (OEM device-status state %u)", on ? "on" : "off",
+		    plat_pldm_monitor_led_state());
 	return 0;
 }
 
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_plat_pldm2,
 				SHELL_CMD(temp, NULL, "Read the die-temp numeric sensor (PLDM type 2)",
 					  cmd_pldm2_temp),
+				SHELL_CMD(button, NULL, "Read the SW2 state sensor", cmd_pldm2_button),
+				SHELL_CMD(led, NULL, "Drive the LED effecter: plat pldm2 led <on|off>",
+					  cmd_pldm2_led),
 				SHELL_CMD(pdr, NULL, "Summarise the board PDR repository",
 					  cmd_pldm2_pdr),
 				SHELL_SUBCMD_SET_END);

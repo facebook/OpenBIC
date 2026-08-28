@@ -97,6 +97,25 @@ bool plat_get_endpoint_uuid(uint8_t *uuid_buf)
 	return plat_get_device_id(uuid_buf, MCTP_UUID_LEN);
 }
 
+/* MCTP Control's Get Vendor Defined Message Support hook. This board
+ * advertises MCTP message type 0x7E (Vendor Defined - PCI) in
+ * load_mctp_support_types(); the one vendor ID behind it is the test
+ * VDM echo command (see plat_mctp_vdm_handler / plat_mctp.h). Exactly
+ * one entry, selector 0. */
+int plat_mctp_get_vdm_support(uint8_t selector, uint8_t *vendor_id_format, uint16_t *pci_vendor_id,
+			     uint16_t *cmd_set_version, uint8_t *next_selector)
+{
+	if (selector != 0) {
+		return -1;
+	}
+
+	*vendor_id_format = MCTP_VENDOR_ID_FORMAT_PCI;
+	*pci_vendor_id = PLAT_MCTP_TEST_VENDOR_ID;
+	*cmd_set_version = 0;
+	*next_selector = MCTP_VENDOR_ID_SELECTOR_NONE;
+	return 0;
+}
+
 static uint8_t plat_mctp_resolve_endpoint(uint8_t dest_endpoint, void **mctp_inst,
 					   mctp_ext_params *ext_params)
 {

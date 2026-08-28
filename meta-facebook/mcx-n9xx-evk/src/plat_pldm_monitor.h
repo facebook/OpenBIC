@@ -17,19 +17,31 @@
 #ifndef PLAT_PLDM_MONITOR_H
 #define PLAT_PLDM_MONITOR_H
 
+#include <stdbool.h>
 #include <stdint.h>
 
-/* Build the PDR repository and probe the die-temp sensor. Call once at
- * boot, after the sensor subsystem is up. Safe to call even if the
- * die_temp devicetree node is absent (sensor then reports UNAVAILABLE).
+/* Build the PDR repository and probe the backing hardware (die-temp
+ * sensor, SW2 button, LED effecter). Call once at boot, after the
+ * sensor subsystem is up. Safe to call if any backing node is absent.
  */
 void plat_pldm_monitor_init(void);
 
-/* Local (no MCTP) read of the SoC die temperature in milli-degrees C,
- * for the "plat pldm2 temp" shell command. Returns 0 / -errno. */
+/* Local (no MCTP) accessors for the `plat pldm2 ...` shell commands -
+ * they read/drive the same board state the MCTP-facing handlers use. */
+
+/* Die temperature in milli-degrees C. Returns 0 / -errno. */
 int plat_pldm_monitor_read_die_temp_mdegc(int32_t *out_mdegc);
 
-/* Number of records currently in the board PDR repository. */
+/* SW2 as a DSP0249 Presence state: PLDM_STATE_SET_PRESENT / _NOT_PRESENT. */
+uint8_t plat_pldm_monitor_sw2_state(void);
+
+/* Drive the LED effecter. Returns 0 / -errno. */
+int plat_pldm_monitor_set_led(bool on);
+
+/* Current LED effecter state (OEM device-status set: 1=off, 2=on). */
+uint8_t plat_pldm_monitor_led_state(void);
+
+/* Number of records in the board PDR repository. */
 uint32_t plat_pldm_monitor_pdr_count(void);
 
 #endif /* PLAT_PLDM_MONITOR_H */
