@@ -14,7 +14,9 @@
  * limitations under the License.
  *
  * Minimal MCTP bring-up for this board: one local endpoint on
- * flexcomm3_lpi2c3, responding to MCTP Control and PLDM messages
+ * flexcomm2_lpi2c2 - the same physical bus that carries IPMB, as a
+ * second I2C target address (0x10 vs IPMB's 0x20) - responding to
+ * MCTP Control and PLDM messages
  * addressed to it. Unlike a real product board (see
  * meta-facebook/gt-cc/src/platform/plat_mctp.c for what that looks
  * like with real downstream NICs to route to and detect), this EVK has
@@ -184,7 +186,7 @@ static uint8_t plat_mctp_msg_recv(void *mctp_p, uint8_t *buf, uint32_t len,
 
 void plat_mctp_init(void)
 {
-	int ret = mctp_i2c_target_register(I2C_BUS_ARDUINO_HEADER, PLAT_MCTP_I2C_TARGET_ADDR);
+	int ret = mctp_i2c_target_register(I2C_BUS_SIDEBAND, PLAT_MCTP_I2C_TARGET_ADDR);
 
 	if (ret) {
 		LOG_ERR("mctp_i2c_target_register failed, ret %d", ret);
@@ -200,7 +202,7 @@ void plat_mctp_init(void)
 
 	mctp_medium_conf conf = {
 		.smbus_conf = {
-			.bus = I2C_BUS_ARDUINO_HEADER,
+			.bus = I2C_BUS_SIDEBAND,
 			.addr = PLAT_MCTP_I2C_TARGET_ADDR << 1,
 		},
 	};
@@ -226,6 +228,6 @@ void plat_mctp_init(void)
 	 * reach it from this point on. */
 	bic_mctp_port_ready = true;
 
-	LOG_INF("MCTP endpoint up on flexcomm3_lpi2c3, addr 0x%x, eid 0x%x",
+	LOG_INF("MCTP endpoint up on flexcomm2_lpi2c2 (shared with IPMB), addr 0x%x, eid 0x%x",
 		PLAT_MCTP_I2C_TARGET_ADDR, mctp_inst->endpoint);
 }

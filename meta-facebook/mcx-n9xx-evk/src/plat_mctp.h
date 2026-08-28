@@ -17,11 +17,13 @@
 #ifndef PLAT_MCTP_H
 #define PLAT_MCTP_H
 
-/* This EVK's own MCTP endpoint address on flexcomm3_lpi2c3, 7-bit form.
- * Arbitrary placeholder - unlike IPMB's 0x20 BMC convention, MCTP-over-
- * SMBus has no single universal "well-known" endpoint address; this
- * needs a real value once this board is wired to an actual MCTP bus
- * master/other endpoints instead of standing alone. See README.md.
+/* This EVK's own MCTP endpoint address, 7-bit form. Shares the sideband
+ * bus (flexcomm2_lpi2c2) with IPMB: IPMB answers at 0x20, this MCTP
+ * endpoint at 0x10, as two slave-address matches on the one LPI2C
+ * instance (see plat_i2c.h). Arbitrary placeholder - unlike IPMB's 0x20
+ * BMC convention, MCTP-over-SMBus has no single universal "well-known"
+ * endpoint address; a real bus owner can reassign the EID via Set
+ * Endpoint ID regardless. See README.md.
  */
 #define PLAT_MCTP_I2C_TARGET_ADDR 0x10
 

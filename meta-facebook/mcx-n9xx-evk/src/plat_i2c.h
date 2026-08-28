@@ -18,21 +18,23 @@
  * on the same Arduino-compatible header, J2 - see README.md for the
  * verified pin table.
  *
- * flexcomm2_lpi2c2 carries the real IPMB-over-I2C channel in target
- * mode (see plat_ipmb.h, common/hal/hal_i2c.c's
- * ipmb_target_register()/ipmb_target_read(), and README.md's "IPMI
- * transport" section). Used to crash at boot with a real divide-by-
- * zero in NXP's own MCUX LPI2C driver - see the overlay for the root
- * cause (a FlexComm2 clock conflict with the unused flexcomm2_lpuart2
- * node) and README.md for the full writeup.
+ * flexcomm2_lpi2c2 is the single sideband bus: it carries *both* the
+ * IPMB-over-I2C channel (target mode, 7-bit addr 0x20 - see
+ * plat_ipmb.h) *and* the MCTP-over-SMBus endpoint (target mode, 7-bit
+ * addr 0x10 - see plat_mctp.c), as two independent slave-address
+ * matches on the one LPI2C instance. This is the "one physical bus
+ * carries IPMI + MCTP/PLDM (+ SPDM)" arrangement. It relies on the
+ * LPI2C driver patch that programs address0/address1 and demuxes the
+ * slave IRQ by matched address (drivers/i2c/i2c_mcux_lpi2c.c in the
+ * wrouwet/zephyr fork) - mainline only matched one address per
+ * instance. Used to crash at boot with a real divide-by-zero in NXP's
+ * own MCUX LPI2C driver - see the overlay for that root cause (a
+ * FlexComm2 clock conflict with the unused flexcomm2_lpuart2 node)
+ * and README.md for the full writeup.
  *
- * flexcomm3_lpi2c3 is dual-role: general controller-mode I2C (i2c
- * scan/read/write) *and* the MCTP-over-SMBus target endpoint (see
- * plat_mctp.c, common/hal/hal_i2c.c's mctp_i2c_target_register()/
- * mctp_i2c_target_read()). It can't share flexcomm2_lpi2c2 with IPMB -
- * the mainline i2c_target driver only supports one registered target
- * address per bus/device instance, unlike the old Aspeed driver's
- * three - so MCTP gets its own bus here instead.
+ * flexcomm3_lpi2c3 is now controller-mode only (i2c scan/read/write);
+ * it no longer hosts an MCTP target. Kept enabled as a spare
+ * controller bus on J2 pins 15/17.
  */
 
 #ifndef PLAT_I2C_H
@@ -42,7 +44,10 @@
 
 #define I2C_BUS_MAX_NUM 4
 
-#define I2C_BUS_ARDUINO_HEADER 3 /* flexcomm3_lpi2c3, controller mode */
-#define I2C_BUS_LCD_HEADER 2 /* flexcomm2_lpi2c2, target mode */
+#define I2C_BUS_ARDUINO_HEADER 3 /* flexcomm3_lpi2c3, controller mode only */
+#define I2C_BUS_LCD_HEADER 2 /* flexcomm2_lpi2c2 */
+
+/* Canonical name for the shared sideband bus (IPMB 0x20 + MCTP 0x10). */
+#define I2C_BUS_SIDEBAND I2C_BUS_LCD_HEADER
 
 #endif
