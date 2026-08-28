@@ -23,6 +23,7 @@
 #include <string.h>
 #include <zephyr/sys/printk.h>
 #include <zephyr/kernel.h>
+#include <zephyr/sys/byteorder.h>
 #include "libutil.h"
 
 LOG_MODULE_DECLARE(mctp);
@@ -47,6 +48,59 @@ static sys_slist_t wait_recv_resp_list = SYS_SLIST_STATIC_INIT(&wait_recv_resp_l
 __weak int load_mctp_support_types(uint8_t *type_len, uint8_t *types)
 {
 	return -1;
+}
+
+__weak int plat_mctp_get_vdm_support(uint8_t selector, uint8_t *vendor_id_format,
+				     uint16_t *pci_vendor_id, uint16_t *cmd_set_version,
+				     uint8_t *next_selector)
+{
+	ARG_UNUSED(selector);
+	ARG_UNUSED(vendor_id_format);
+	ARG_UNUSED(pci_vendor_id);
+	ARG_UNUSED(cmd_set_version);
+	ARG_UNUSED(next_selector);
+	return -1;
+}
+
+uint8_t mctp_ctrl_cmd_get_vendor_message_support(void *mctp_inst, uint8_t *buf, uint16_t len,
+						uint8_t *resp, uint16_t *resp_len, void *ext_params)
+{
+	ARG_UNUSED(ext_params);
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, MCTP_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(buf, MCTP_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp, MCTP_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp_len, MCTP_ERROR);
+
+	struct _get_vendor_message_support_req *req = (struct _get_vendor_message_support_req *)buf;
+	struct _get_vendor_message_support_resp *p = (struct _get_vendor_message_support_resp *)resp;
+
+	if (len != sizeof(*req)) {
+		p->completion_code = MCTP_CTRL_CC_ERROR_INVALID_LENGTH;
+		*resp_len = 1;
+		return MCTP_SUCCESS;
+	}
+
+	uint8_t fmt = MCTP_VENDOR_ID_FORMAT_PCI;
+	uint16_t vid = 0;
+	uint16_t cmd_set = 0;
+	uint8_t next = MCTP_VENDOR_ID_SELECTOR_NONE;
+
+	int ret = plat_mctp_get_vdm_support(req->vendor_id_selector, &fmt, &vid, &cmd_set, &next);
+
+	if (ret < 0) {
+		/* No vendor-defined messages / selector out of range. */
+		p->completion_code = MCTP_CTRL_CC_ERROR_INVALID_DATA;
+		*resp_len = 1;
+		return MCTP_SUCCESS;
+	}
+
+	p->completion_code = MCTP_CTRL_CC_SUCCESS;
+	p->next_vendor_id_selector = next;
+	p->vendor_id_format = fmt;
+	p->pci_vendor_id = sys_cpu_to_be16(vid);
+	p->cmd_set_version = sys_cpu_to_be16(cmd_set);
+	*resp_len = sizeof(*p);
+	return MCTP_SUCCESS;
 }
 
 __weak void plat_update_mctp_routing_table(uint8_t eid)
@@ -424,6 +478,7 @@ static mctp_ctrl_cmd_handler_t mctp_ctrl_cmd_tbl[] = {
 	{ MCTP_CTRL_CMD_GET_ENDPOINT_UUID, mctp_ctrl_cmd_get_endpoint_uuid },
 	{ MCTP_CTRL_CMD_GET_VERSION_SUPPORT, mctp_ctrl_cmd_get_version_support },
 	{ MCTP_CTRL_CMD_GET_MESSAGE_TYPE_SUPPORT, mctp_ctrl_cmd_get_message_type_support },
+	{ MCTP_CTRL_CMD_GET_VENDOR_MESSAGE_SUPPORT, mctp_ctrl_cmd_get_vendor_message_support },
 	{ MCTP_CTRL_CMD_RESOLVE_ENDPOINT_ID, mctp_ctrl_cmd_resolve_endpoint_id }
 };
 

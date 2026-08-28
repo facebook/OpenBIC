@@ -41,6 +41,7 @@ typedef struct _mctp_ctrl_cmd_handler {
 
 #define MCTP_CTRL_CMD_GET_VERSION_SUPPORT 0x04
 #define MCTP_CTRL_CMD_GET_MESSAGE_TYPE_SUPPORT 0x05
+#define MCTP_CTRL_CMD_GET_VENDOR_MESSAGE_SUPPORT 0x06
 #define MCTP_CTRL_CMD_RESOLVE_ENDPOINT_ID 0x07
 
 #define MCTP_CTRL_CMD_GET_ENDPOINT_ID_REQ_LEN 0x00
@@ -123,6 +124,31 @@ struct _get_message_type_resp {
 	uint8_t type_count;
 	uint8_t type_number[0];
 } __attribute__((packed));
+
+/* DSP0236 12.10 Get Vendor Defined Message Support */
+#define MCTP_VENDOR_ID_FORMAT_PCI 0x00
+#define MCTP_VENDOR_ID_FORMAT_IANA 0x01
+#define MCTP_VENDOR_ID_SELECTOR_NONE 0xFF
+
+struct _get_vendor_message_support_req {
+	uint8_t vendor_id_selector;
+} __attribute__((packed));
+
+/* PCI-format entry (the only format this codebase emits). */
+struct _get_vendor_message_support_resp {
+	uint8_t completion_code;
+	uint8_t next_vendor_id_selector; /* 0xFF = no more entries */
+	uint8_t vendor_id_format; /* MCTP_VENDOR_ID_FORMAT_PCI */
+	uint16_t pci_vendor_id; /* big-endian on the wire */
+	uint16_t cmd_set_version; /* vendor-defined; 0 if unused */
+} __attribute__((packed));
+
+/* Board hook: fill one vendor-defined-message-support entry for the
+ * given zero-based selector. Return 0 and set *next (0xFF if this was
+ * the last), or negative if the selector is out of range / the board
+ * has no vendor-defined messages. */
+int plat_mctp_get_vdm_support(uint8_t selector, uint8_t *vendor_id_format, uint16_t *pci_vendor_id,
+			     uint16_t *cmd_set_version, uint8_t *next_selector);
 
 /* DSP0236 Table 18: each 4-byte version entry is
  * [major][minor][update][alpha] in that wire order (matches the
