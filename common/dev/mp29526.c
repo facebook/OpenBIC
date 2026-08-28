@@ -525,7 +525,7 @@ bool mp29526_set_vout_min(sensor_cfg *cfg, uint8_t rail, uint16_t *millivolt)
  * its trim register as a signed count of VID steps; copying that here would
  * mis-scale by up to 25x at the 10mV VID setting.
  */
-static bool mp29526_read_trim_mv(sensor_cfg *cfg, float *trim_mv)
+static bool mp29526_read_trim_mv(const sensor_cfg *cfg, float *trim_mv)
 {
 	uint8_t data[2] = { 0 };
 	if (!mp29526_i2c_read(cfg->port, cfg->target_addr, MP29526_REG_VOUT_TRIM, data,
@@ -1557,7 +1557,7 @@ static bool mp29526_hex_to_bytes_msb_first(const char *hex, uint8_t *out, uint8_
 		return false;
 
 	for (uint8_t i = 0; i < n; i++) {
-		char byte_str[3] = { hex[i * 2], hex[i * 2 + 1], '\0' };
+		const char byte_str[3] = { hex[i * 2], hex[i * 2 + 1], '\0' };
 		out[i] = (uint8_t)strtol(byte_str, NULL, 16);
 	}
 	return true;
@@ -1568,7 +1568,7 @@ static bool mp29526_parse_row(char *line, struct mp29526_row *row)
 	memset(row, 0, sizeof(*row));
 
 	char *save_ptr;
-	char *tok = strtok_r(line, "\t", &save_ptr);
+	const char *tok = strtok_r(line, "\t", &save_ptr);
 	int idx = 0;
 
 	while (tok) {
