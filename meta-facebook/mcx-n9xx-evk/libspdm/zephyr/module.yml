@@ -1,0 +1,9 @@
+# Makes DMTF libspdm (the west project at modules/lib/libspdm) linkable
+# as a Zephyr library. libspdm ships no Zephyr module support of its
+# own, and this glue is board-specific (capability/algorithm trim,
+# mbedTLS platform hooks for a no-RTC target), so it lives here in the
+# platform port rather than upstream. Pulled in via ZEPHYR_EXTRA_MODULES
+# from meta-facebook/mcx-n9xx-evk/CMakeLists.txt.
+name: libspdm
+build:
+  cmake: zephyr

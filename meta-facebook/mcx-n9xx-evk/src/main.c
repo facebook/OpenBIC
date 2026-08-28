@@ -43,6 +43,7 @@
 #include "plat_mbox.h"
 #include "plat_mctp.h"
 #include "plat_pldm_monitor.h"
+#include "plat_spdm.h"
 #include "plat_storage.h"
 #include "plat_version.h"
 #include "sensor.h"
@@ -79,6 +80,7 @@ int main(void)
 	ipmi_init();
 	plat_mctp_init();
 	plat_pldm_monitor_init();
+	plat_spdm_init();
 
 	if (!gpio_is_ready_dt(&heartbeat_led)) {
 		printk("Heartbeat LED device not ready\n");

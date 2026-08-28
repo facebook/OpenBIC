@@ -8,6 +8,11 @@
 
 cmake_minimum_required(VERSION 3.20.0)
 
+# DMTF libspdm (SPDM attestation responder, see src/plat_spdm.c) is
+# pulled in as an extra Zephyr module so its zephyr_library() registers
+# before find_package(Zephyr) finalises ZEPHYR_LIBS. Must precede it.
+list(APPEND ZEPHYR_EXTRA_MODULES ${CMAKE_CURRENT_SOURCE_DIR}/libspdm)
+
 find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 project(mcx-n9xx-evk)
 
@@ -26,6 +31,8 @@ target_sources(app PRIVATE
   src/plat_ipmb.c
   src/plat_mctp.c
   src/plat_pldm_monitor.c
+  src/plat_spdm.c
+  src/plat_spdm_platform.c
   src/plat_stubs.c
   ${common_path}/lib/timer.c
   ${common_path}/lib/libutil.c
@@ -93,6 +100,7 @@ target_sources(app PRIVATE ${dev_sources})
 
 target_include_directories(app PRIVATE
   src
+  ${CMAKE_CURRENT_LIST_DIR}/include
   ${common_path}
   ${common_path}/hal
   ${common_path}/lib

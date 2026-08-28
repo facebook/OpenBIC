@@ -25,6 +25,11 @@ manifest:
           - cmsis
           - cmsis_6
           - hal_nxp
+          # NB: the SPDM responder's crypto backend is libspdm's own
+          # bundled mbedTLS (built from source in
+          # meta-facebook/mcx-n9xx-evk/libspdm/zephyr/CMakeLists.txt),
+          # NOT Zephyr's mbedtls module - so it is deliberately absent
+          # from this allowlist.
     # Override the hal_nxp revision imported above: it carries a real
     # divide-by-zero fix (LPI2C_GetCyclesForWidth, see
     # meta-facebook/mcx-n9xx-evk/README.md) needed for this board's
@@ -38,6 +43,20 @@ manifest:
       repo-path: hal_nxp
       revision: fix/lpi2c-divzero-guard
       path: modules/hal/nxp
+    # DMTF libspdm - the SPDM (DSP0274) protocol library backing the
+    # attestation responder on meta-facebook/mcx-n9xx-evk. Not a Zephyr
+    # module upstream; a small glue module at
+    # meta-facebook/mcx-n9xx-evk/libspdm/ compiles the needed protocol
+    # libs + libspdm's bundled mbedTLS into one zephyr_library.
+    # Only the mbedTLS submodule is pulled (pinned to 107ea89 by
+    # libspdm 3.8.2); libspdm's openssl / cmocka submodules are large
+    # and unused here.
+    - name: libspdm
+      url: https://github.com/DMTF/libspdm
+      revision: "3.8.2"
+      path: modules/lib/libspdm
+      submodules:
+        - path: os_stub/mbedtlslib/mbedtls
 
   self:
     path: openbic

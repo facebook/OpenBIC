@@ -26,6 +26,7 @@
 #include "plat_gpio.h"
 #include "plat_mbox.h"
 #include "plat_pldm_monitor.h"
+#include "plat_spdm.h"
 #include "plat_storage.h"
 #include "plat_version.h"
 
@@ -223,6 +224,24 @@ SHELL_STATIC_SUBCMD_SET_CREATE(sub_plat_pldm2,
 					  cmd_pldm2_pdr),
 				SHELL_SUBCMD_SET_END);
 
+static int cmd_spdm_status(const struct shell *sh, size_t argc, char **argv)
+{
+	ARG_UNUSED(argc);
+	ARG_UNUSED(argv);
+
+	uint8_t code = 0;
+	bool seen = plat_spdm_last_request(&code);
+
+	shell_print(sh, "SPDM responder: libspdm 3.8.2, MCTP msg type 0x05. Caps CERT|CHAL|MEAS(SIG); "
+			"ECDSA P-256/P-384, SHA-256/384; embedded EC dev cert chain");
+	if (seen) {
+		shell_print(sh, "  last SPDM request seen: 0x%02x", code);
+	} else {
+		shell_print(sh, "  no SPDM request received yet");
+	}
+	return 0;
+}
+
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_plat_gpio, SHELL_CMD(mon0, NULL, "Read mon0 (SW2) live state",
 							 cmd_gpio_mon0),
 				SHELL_SUBCMD_SET_END);
@@ -254,6 +273,7 @@ SHELL_STATIC_SUBCMD_SET_CREATE(sub_plat,
 				SHELL_CMD(mbox, &sub_plat_mbox, "Inter-core mailbox commands", NULL),
 				SHELL_CMD(pldm2, &sub_plat_pldm2,
 					  "PLDM platform-monitoring (type 2) commands", NULL),
+				SHELL_CMD(spdm, NULL, "SPDM-over-MCTP responder status", cmd_spdm_status),
 				SHELL_CMD(ipmi_selftest, NULL,
 					  "Round-trip an IPMI Get Device ID through the real "
 					  "dispatch pipeline via the SELF interface",

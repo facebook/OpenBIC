@@ -16,7 +16,7 @@
  * Minimal MCTP bring-up for this board: one local endpoint on
  * flexcomm2_lpi2c2 - the same physical bus that carries IPMB, as a
  * second I2C target address (0x10 vs IPMB's 0x20) - responding to
- * MCTP Control and PLDM messages
+ * MCTP Control, PLDM, a libspdm-backed SPDM responder, and a test VDM
  * addressed to it. Unlike a real product board (see
  * meta-facebook/gt-cc/src/platform/plat_mctp.c for what that looks
  * like with real downstream NICs to route to and detect), this EVK has
@@ -33,6 +33,7 @@
 #include "plat_hwinfo.h"
 #include "plat_i2c.h"
 #include "plat_mctp.h"
+#include "plat_spdm.h"
 #include "plat_storage.h"
 #include <zephyr/logging/log.h>
 
@@ -120,8 +121,8 @@ mctp_port *plat_get_mctp_port(uint8_t index)
 /* mctp_ctrl.c's Get Message Type Support handler needs this board-level
  * hook (__weak in mctp_ctrl.c, defaults to returning -1 - an honest
  * "not implemented" completion code, not a crash, but not a real answer
- * either). Both types this board actually handles in
- * plat_mctp_msg_recv() below are genuinely supported. */
+ * either). Every type this board handles in plat_mctp_msg_recv()
+ * below is genuinely supported. */
 int load_mctp_support_types(uint8_t *type_len, uint8_t *types)
 {
 	if (!type_len || !types) {
@@ -130,8 +131,9 @@ int load_mctp_support_types(uint8_t *type_len, uint8_t *types)
 
 	types[0] = TYPE_MCTP_CONTROL;
 	types[1] = TYPE_PLDM;
-	types[2] = MCTP_MSG_TYPE_VEN_DEF_PCI;
-	*type_len = 3;
+	types[2] = MCTP_MSG_TYPE_SPDM;
+	types[3] = MCTP_MSG_TYPE_VEN_DEF_PCI;
+	*type_len = 4;
 	return 0;
 }
 
@@ -238,6 +240,9 @@ static uint8_t plat_mctp_msg_recv(void *mctp_p, uint8_t *buf, uint32_t len,
 		break;
 	case MCTP_MSG_TYPE_PLDM:
 		mctp_pldm_cmd_handler(mctp_p, buf, len, ext_params);
+		break;
+	case MCTP_MSG_TYPE_SPDM:
+		plat_spdm_handler(mctp_p, buf, len, ext_params);
 		break;
 	case MCTP_MSG_TYPE_VEN_DEF_PCI:
 		plat_mctp_vdm_handler(mctp_p, buf, len, ext_params);
