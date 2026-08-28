@@ -18,12 +18,14 @@
  * top-level README).
  */
 
+#include <stdlib.h>
 #include <zephyr/shell/shell.h>
 
 #include "hal_wdt.h"
 #include "ipmi.h"
 #include "plat_gpio.h"
 #include "plat_mbox.h"
+#include "plat_pldm_monitor.h"
 #include "plat_storage.h"
 #include "plat_version.h"
 
@@ -117,6 +119,46 @@ static int cmd_ipmi_selftest(const struct shell *sh, size_t argc, char **argv)
 	return 0;
 }
 
+/* PLDM for Platform Monitoring and Control (DSP0248, type 0x02) local
+ * exercise - reads through the same board code paths that
+ * src/plat_pldm_monitor.c's MCTP-facing GetSensorReading / GetPDRInfo
+ * handlers use, without needing a BMC on the wire.
+ */
+static int cmd_pldm2_temp(const struct shell *sh, size_t argc, char **argv)
+{
+	ARG_UNUSED(argc);
+	ARG_UNUSED(argv);
+
+	int32_t mdegc = 0;
+	int ret = plat_pldm_monitor_read_die_temp_mdegc(&mdegc);
+
+	if (ret) {
+		shell_error(sh, "die-temp sensor unavailable (%d)", ret);
+		return ret;
+	}
+
+	shell_print(sh, "die temp (sensor id 0x0001): %d.%03d C", mdegc / 1000,
+		    (mdegc < 0 ? -mdegc : mdegc) % 1000);
+	return 0;
+}
+
+static int cmd_pldm2_pdr(const struct shell *sh, size_t argc, char **argv)
+{
+	ARG_UNUSED(argc);
+	ARG_UNUSED(argv);
+
+	shell_print(sh, "PDR repository: %u record(s)", plat_pldm_monitor_pdr_count());
+	shell_print(sh, "  handle 0x00000001  type 2 (Numeric Sensor)  sensor id 0x0001  \"die temp\"");
+	return 0;
+}
+
+SHELL_STATIC_SUBCMD_SET_CREATE(sub_plat_pldm2,
+				SHELL_CMD(temp, NULL, "Read the die-temp numeric sensor (PLDM type 2)",
+					  cmd_pldm2_temp),
+				SHELL_CMD(pdr, NULL, "Summarise the board PDR repository",
+					  cmd_pldm2_pdr),
+				SHELL_SUBCMD_SET_END);
+
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_plat_gpio, SHELL_CMD(mon0, NULL, "Read mon0 (SW2) live state",
 							 cmd_gpio_mon0),
 				SHELL_SUBCMD_SET_END);
@@ -146,6 +188,8 @@ SHELL_STATIC_SUBCMD_SET_CREATE(sub_plat,
 				SHELL_CMD(storage, &sub_plat_storage, "Persistent storage commands",
 					  NULL),
 				SHELL_CMD(mbox, &sub_plat_mbox, "Inter-core mailbox commands", NULL),
+				SHELL_CMD(pldm2, &sub_plat_pldm2,
+					  "PLDM platform-monitoring (type 2) commands", NULL),
 				SHELL_CMD(ipmi_selftest, NULL,
 					  "Round-trip an IPMI Get Device ID through the real "
 					  "dispatch pipeline via the SELF interface",

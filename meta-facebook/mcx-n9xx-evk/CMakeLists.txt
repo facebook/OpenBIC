@@ -25,6 +25,7 @@ target_sources(app PRIVATE
   src/plat_fru.c
   src/plat_ipmb.c
   src/plat_mctp.c
+  src/plat_pldm_monitor.c
   src/plat_stubs.c
   ${common_path}/lib/timer.c
   ${common_path}/lib/libutil.c

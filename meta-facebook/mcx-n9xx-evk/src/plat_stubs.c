@@ -48,26 +48,12 @@ uint8_t cx7_init(sensor_cfg *cfg)
 	return SENSOR_INIT_UNSPECIFIED_ERROR;
 }
 
-/* Same hal_gpio.c gap as above, hit from the other direction: pldm.c's
- * PLDM-type dispatch table (query_tbl) unconditionally references
- * pldm_monitor_handler_query() for PLDM_TYPE_PLAT_MON_CTRL, regardless
- * of whether this board uses PLDM platform monitoring at all - so
- * pldm_monitor.c must resolve at link time even though it can't be
- * compiled here. Mirrors pldm_oem_handler_query()'s own "not found"
- * contract (see common/service/pldm/pldm_oem.c): *ret_fn = NULL,
- * PLDM_ERROR, for every command code.
- */
-uint8_t pldm_monitor_handler_query(uint8_t code, void **ret_fn)
-{
-	(void)code;
-
-	if (!ret_fn) {
-		return PLDM_ERROR;
-	}
-
-	*ret_fn = NULL;
-	return PLDM_ERROR;
-}
+/* pldm_monitor_handler_query() (the PLDM_TYPE_PLAT_MON_CTRL entry in
+ * pldm.c's query_tbl) is no longer stubbed here - src/plat_pldm_monitor.c
+ * provides a real board-local implementation backed by the MCXN947
+ * on-die temperature sensor (and, in later phases, the SW2 button and
+ * an on-board LED). common/service/pldm/pldm_monitor.c stays excluded
+ * from the build (it needs the unportable hal_gpio.c). */
 
 /* intel_peci.c's peci_read()/peci_init() are OpenBIC/Aspeed-fork
  * convenience wrappers (distinct from mainline Zephyr's own
