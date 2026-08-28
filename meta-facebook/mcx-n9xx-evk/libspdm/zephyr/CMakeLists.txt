@@ -67,17 +67,14 @@ set(_osstub
   ${LIBSPDM_DIR}/os_stub/memlib/zero_mem.c
   ${LIBSPDM_DIR}/os_stub/malloclib/malloclib.c
   ${LIBSPDM_DIR}/os_stub/debuglib_null/debuglib.c
-  # device-secret hooks: the _null impl satisfies the link for the
-  # signing/measurement/PSK/CSR/event API. CERT_CAP + GET_CERTIFICATE +
-  # GET_DIGESTS work with just the app-provided cert chain
-  # (libspdm_set_data); CHALLENGE and signed MEASUREMENTS need a real
-  # sign hook, added later in plat_spdm_secret.c which then replaces
-  # this file in the source list.
-  ${LIBSPDM_DIR}/os_stub/spdm_device_secret_lib_null/lib.c
+  # device-secret hooks: real ECDSA sign + firmware-region measurement
+  # (src/plat_spdm_secret.c below) replaces the upstream _null lib for
+  # the 6 symbols this board's CERT|CHAL|MEAS capability set pulls in.
 )
 
 zephyr_library_sources(
   ${PLAT_DIR}/src/plat_mbedtls_platform.c
+  ${PLAT_DIR}/src/plat_spdm_secret.c
   ${_mbedtls_c}
   ${_spdm_common}
   ${_spdm_crypt}

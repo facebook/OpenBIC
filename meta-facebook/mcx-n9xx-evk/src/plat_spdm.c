@@ -26,10 +26,10 @@
  * forwards libspdm's transport-encoded reply back out over MCTP.
  *
  * Capabilities: CERT_CAP + CHAL_CAP + MEAS_CAP(SIG). Identity is an
- * embedded EC P-256 self-signed dev cert (plat_spdm_certs.h). CHALLENGE
- * and signed MEASUREMENTS additionally need a real signing hook - see
- * plat_spdm_secret.c (added in a later step; until then the _null
- * device-secret lib is linked and those two fail gracefully).
+ * embedded EC P-256 self-signed dev cert (plat_spdm_certs.h). The
+ * responder device-secret hooks (ECDSA sign for CHALLENGE_AUTH /
+ * signed MEASUREMENTS, and the firmware-region measurement itself)
+ * live in plat_spdm_secret.c.
  */
 
 #include <stdint.h>
