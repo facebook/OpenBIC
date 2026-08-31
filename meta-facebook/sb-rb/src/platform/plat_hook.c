@@ -230,7 +230,7 @@ bool post_iris_sensor_read(sensor_cfg *cfg, void *args, int *reading)
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	ARG_UNUSED(args);
 
-	iris_priv_data_t *priv = (iris_priv_data_t *)cfg->priv_data;
+	const iris_priv_data_t *priv = (iris_priv_data_t *)cfg->priv_data;
 
 	if (!priv) {
 		return false;
@@ -2112,12 +2112,12 @@ bool plat_ubc_otw_otp_init(void)
 			SENSOR_NUM_UBC2_P12V_TEMP_C,
 		};
 
-
 		for (int i = 0; i < ARRAY_SIZE(sensor_ids); i++) {
 			uint8_t id = sensor_ids[i];
-			sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(id);
+			const sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(id);
 			if (!cfg) {
-				LOG_ERR("UBC otp init: sensor cfg not found (sensor_id=0x%02X)", id);
+				LOG_ERR("UBC otp init: sensor cfg not found (sensor_id=0x%02X)",
+					id);
 				continue;
 			}
 
@@ -2130,8 +2130,8 @@ bool plat_ubc_otw_otp_init(void)
 			write_data[0] = 0x00;
 
 			if (!plat_i2c_write(bus, addr, 0x10, &write_data[0], 1)) {
-				LOG_ERR("UBC(id=0x%02X bus=%u addr=0x%02X): write 0x10 failed",
-					id, bus, addr);
+				LOG_ERR("UBC(id=0x%02X bus=%u addr=0x%02X): write 0x10 failed", id,
+					bus, addr);
 				continue;
 			}
 
@@ -2140,8 +2140,8 @@ bool plat_ubc_otw_otp_init(void)
 			write_data[1] = 0x00;
 
 			if (!plat_i2c_write(bus, addr, 0x51, write_data, 2)) {
-				LOG_ERR("UBC(id=0x%02X bus=%u addr=0x%02X): write 0x51 failed",
-					id, bus, addr);
+				LOG_ERR("UBC(id=0x%02X bus=%u addr=0x%02X): write 0x51 failed", id,
+					bus, addr);
 				continue;
 			}
 
@@ -2150,11 +2150,10 @@ bool plat_ubc_otw_otp_init(void)
 			write_data[1] = 0x00;
 
 			if (!plat_i2c_write(bus, addr, 0x4F, write_data, 2)) {
-				LOG_ERR("UBC(id=0x%02X bus=%u addr=0x%02X): write 0x4F failed",
-					id, bus, addr);
+				LOG_ERR("UBC(id=0x%02X bus=%u addr=0x%02X): write 0x4F failed", id,
+					bus, addr);
 				continue;
 			}
-
 		}
 		break;
 	}
