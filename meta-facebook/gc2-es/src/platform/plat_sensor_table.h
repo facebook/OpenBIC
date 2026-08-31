@@ -44,6 +44,9 @@
 #define VR_CUR_CMD 0x8C
 #define VR_TEMP_CMD 0x8D
 #define VR_PWR_CMD 0x96
+/* VR IC_DEVICE_ID block read length, 2 for XDPE15284 and 6 for TPS53689 */
+#define VR_DEVID_LEN_MIN 0x2
+#define VR_DEVID_LEN_MAX 0x6
 #define SSD0_MUX_ADDR (0xE2 >> 1)
 #define SSD0_CHANNEL 2
 #define CPU_PECI_ADDR 0x30
