@@ -394,8 +394,11 @@ void IPMB_TXTask(void *pvParameters, void *arvg0, void *arvg1)
 				goto cleanup;
 			}
 
-			// Fix IPMB target address
-			current_msg_tx->buffer.dest_addr = ipmb_cfg.channel_target_address;
+			/* dest_addr was already resolved to the real requester's
+			 * address in ipmb_send_response() - don't stomp it back
+			 * to the single configured channel peer here, or every
+			 * response loops back to whichever address that is
+			 * instead of the actual requester. */
 			// Encode the IPMB message
 			ipmb_encode(&ipmb_buffer_tx[0], &current_msg_tx->buffer);
 			uint8_t resp_tx_size =
@@ -417,7 +420,7 @@ void IPMB_TXTask(void *pvParameters, void *arvg0, void *arvg1)
 				}
 
 				i2c_msg->bus = ipmb_cfg.bus;
-				i2c_msg->target_addr = ipmb_cfg.channel_target_address;
+				i2c_msg->target_addr = current_msg_tx->buffer.dest_addr;
 				i2c_msg->tx_len = resp_tx_size;
 				memcpy(&i2c_msg->data[0], &ipmb_buffer_tx[1], resp_tx_size);
 
@@ -1012,7 +1015,17 @@ ipmb_error ipmb_send_response(ipmi_msg *resp, uint8_t index)
 	resp_cfg.buffer.InF_source = resp->InF_source;
 	resp_cfg.buffer.InF_target = resp->InF_target;
 	resp_cfg.buffer.completion_code = resp->completion_code;
-	resp_cfg.buffer.dest_addr = IPMB_config_table[index].channel_target_address;
+	/* Route the response back to whoever actually sent the request -
+	 * resp->src_addr still holds the original request's rqSA (8-bit
+	 * wire form) at this point, before it gets overwritten below to
+	 * our own address. A real IPMB channel can have more than one
+	 * legitimate requester, so this can't be a single static peer.
+	 * Falls back to the configured channel peer only if the caller
+	 * never populated src_addr (e.g. a synthetic response not built
+	 * from a decoded wire request). */
+	resp_cfg.buffer.dest_addr = resp->src_addr ?
+					     (resp->src_addr >> 1) :
+					     IPMB_config_table[index].channel_target_address;
 	resp_cfg.buffer.netfn = resp->netfn + 1;
 	resp_cfg.buffer.dest_LUN = resp->src_LUN;
 	resp_cfg.buffer.src_addr = IPMB_config_table[index].self_address << 1;
