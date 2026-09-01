@@ -97,7 +97,7 @@ sq52205_init_arg sq52205_init_args[] = {
 			.operating_mode =0b111,
 			.shunt_volt_time = 0b100,
 			.bus_volt_time = 0b100,
-			.aver_mode = 0b011, //set 64 average times
+			.aver_mode = 0b000, //set 1 average time
 			.rsvd = 0b000,
 			.reset_bit = 0b0,
 	},
@@ -109,7 +109,7 @@ sq52205_init_arg sq52205_init_args[] = {
 			.operating_mode =0b111,
 			.shunt_volt_time = 0b100,
 			.bus_volt_time = 0b100,
-			.aver_mode = 0b011, //set 64 average times
+			.aver_mode = 0b000, //set 1 average time
 			.rsvd = 0b000,
 			.reset_bit = 0b0,
 	},
