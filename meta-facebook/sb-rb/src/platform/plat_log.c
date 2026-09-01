@@ -34,6 +34,7 @@
 #include "plat_thermal.h"
 #include "shell_plat_power_sequence.h"
 #include "pmbus.h"
+#include "plat_util.h"
 
 LOG_MODULE_REGISTER(plat_log);
 
@@ -642,6 +643,7 @@ bool get_error_data(uint16_t error_code, uint8_t *data)
 	}
 	case CPLD_UNEXPECTED_VAL_TRIGGER_CAUSE: {
 		uint16_t extend_case = error_code & 0xFF00;
+		uint8_t write_data = 0;
 		switch (extend_case) {
 		case BOOTSTRAP_EVENT_CAUSE:
 			for (int i = 0; i < 8; i++) {
@@ -658,8 +660,18 @@ bool get_error_data(uint16_t error_code, uint8_t *data)
 		case CLOCK_APLL_UNLOCK_EVENT_CAUSE:
 			switch (clk_idx) {
 			case CLK_100MHZ_ERR_IDX:
+				//write to two-byte mode
+				write_data = 0x05;
+				if (!plat_i2c_write(I2C_BUS3, 0x9, 0x26, &write_data, 1)) {
+					LOG_ERR("Failed to write 100MHz clock SSI 2-Byte address register");
+				}
 				lock_status = clk_100mhz_get_lock_status();
 				data[0] = lock_status;
+				//write back to 1-byte mode
+				write_data = 0x01;
+				if (!plat_i2c_write(I2C_BUS3, 0x9, 0x26, &write_data, 1)) {
+					LOG_ERR("Failed to write 100MHz clock SSI 1-Byte address register");
+				}
 				return true;
 				break;
 			case CLK_312_5MHZ_ERR_IDX:

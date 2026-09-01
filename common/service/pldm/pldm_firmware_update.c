@@ -685,7 +685,7 @@ uint16_t pldm_fw_update_read(void *mctp_p, enum pldm_firmware_update_commands cm
 	CHECK_NULL_ARG_WITH_RETURN(ext_params, 0);
 
 	pldm_msg msg = { 0 };
-	mctp_ext_params *extra_data = (mctp_ext_params *)ext_params;
+	const mctp_ext_params *extra_data = (mctp_ext_params *)ext_params;
 
 	msg.ext_params = *extra_data;
 
@@ -1276,7 +1276,7 @@ static uint8_t activate_firmware(void *mctp_inst, uint8_t *buf, uint16_t len, ui
 	CHECK_NULL_ARG_WITH_RETURN(resp_len, PLDM_ERROR);
 	CHECK_NULL_ARG_WITH_RETURN(ext_params, PLDM_ERROR);
 
-	struct pldm_activate_firmware_req *req_p = (struct pldm_activate_firmware_req *)buf;
+	const struct pldm_activate_firmware_req *req_p = (struct pldm_activate_firmware_req *)buf;
 	struct pldm_activate_firmware_resp *resp_p = (struct pldm_activate_firmware_resp *)resp;
 
 	*resp_len = 1;
@@ -1337,7 +1337,9 @@ static uint8_t get_status(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t i
 		goto exit;
 	}
 
+#ifndef PLDM_UPDATE_NOT_SHOW_GET_STATUS_LOG
 	LOG_INF("Get status");
+#endif
 	resp_p->completion_code = PLDM_SUCCESS;
 	resp_p->cur_state = current_state;
 	resp_p->pre_state = previous_state;
@@ -1440,7 +1442,7 @@ static uint8_t get_firmware_parameter(void *mctp_inst, uint8_t *buf, uint16_t le
 		(struct pldm_get_firmware_parameters_resp *)resp;
 
 	*resp_len = 1;
-	uint8_t *resp_end = resp + PLDM_MAX_DATA_SIZE;
+	const uint8_t *resp_end = resp + PLDM_MAX_DATA_SIZE;
 	if (len != 0) {
 		resp_p->completion_code = PLDM_ERROR_INVALID_LENGTH;
 		return PLDM_SUCCESS;
