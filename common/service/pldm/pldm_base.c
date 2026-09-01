@@ -15,12 +15,13 @@
  */
 
 #include "pldm.h"
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 #include <string.h>
-#include <sys/printk.h>
-#include <sys/slist.h>
-#include <sys/util.h>
-#include <zephyr.h>
+#include <zephyr/sys/printk.h>
+#include <zephyr/sys/slist.h>
+#include <zephyr/sys/util.h>
+#include <zephyr/sys/crc.h>
+#include <zephyr/kernel.h>
 #include "libutil.h"
 
 LOG_MODULE_DECLARE(pldm);
@@ -29,6 +30,19 @@ __weak uint8_t plat_pldm_get_tid()
 {
 	return DEFAULT_TID;
 }
+
+/* __weak persistence hook: a board can store the TID a bus owner
+ * assigned so it survives a reset (default: nothing). GetTID then
+ * reports it via the board's plat_pldm_get_tid() override. */
+__weak void plat_pldm_save_tid(uint8_t tid)
+{
+	ARG_UNUSED(tid);
+}
+
+/* TID assigned by a bus owner via SetTID this session. 0 (and 0xFF)
+ * mean "unassigned" per DSP0240 - until then GetTID reports the board
+ * default (which a board may back with persisted storage). */
+static uint8_t assigned_tid;
 
 uint8_t set_tid(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t instance_id, uint8_t *resp,
 		uint16_t *resp_len, void *ext_params)
@@ -40,8 +54,17 @@ uint8_t set_tid(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t instance_id
 	struct _set_tid_resp *resp_p = (struct _set_tid_resp *)resp;
 
 	*resp_len = 1;
-	resp_p->completion_code =
-		(sizeof(*req_p) != len) ? PLDM_ERROR_INVALID_LENGTH : PLDM_SUCCESS;
+
+	if (sizeof(*req_p) != len) {
+		resp_p->completion_code = PLDM_ERROR_INVALID_LENGTH;
+		return PLDM_SUCCESS;
+	}
+
+	/* Persist so GetTID reflects it. 0x00/0xFF are the reserved
+	 * "null" values - accept but treat as clearing the assignment. */
+	assigned_tid = (req_p->tid == 0x00 || req_p->tid == 0xFF) ? 0 : req_p->tid;
+	plat_pldm_save_tid(req_p->tid);
+	resp_p->completion_code = PLDM_SUCCESS;
 	return PLDM_SUCCESS;
 }
 
@@ -53,8 +76,47 @@ uint8_t get_tid(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t instance_id
 
 	struct _get_tid_resp *p = (struct _get_tid_resp *)resp;
 	p->completion_code = PLDM_SUCCESS;
-	p->tid = plat_pldm_get_tid();
+	p->tid = assigned_tid ? assigned_tid : plat_pldm_get_tid();
 	*resp_len = sizeof(*p);
+	return PLDM_SUCCESS;
+}
+
+/* GetPLDMVersion (DSP0240 0x03). Single-part response: this terminus
+ * implements PLDM 1.0.0 for every type it advertises in GetPLDMTypes.
+ * transferCRC is CRC-32 over the version data. */
+uint8_t get_pldm_version(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t instance_id,
+			 uint8_t *resp, uint16_t *resp_len, void *ext_params)
+{
+	if (!mctp_inst || !buf || !resp || !resp_len)
+		return PLDM_ERROR;
+
+	struct _get_pldm_version_req *req = (struct _get_pldm_version_req *)buf;
+	struct _get_pldm_version_resp *r = (struct _get_pldm_version_resp *)resp;
+
+	if (len != sizeof(*req)) {
+		resp[0] = PLDM_ERROR_INVALID_LENGTH;
+		*resp_len = 1;
+		return PLDM_SUCCESS;
+	}
+
+	/* Is this type one we actually support? Reuse the GetPLDMTypes
+	 * bitmap so the two answers can never disagree. */
+	uint8_t types[GET_PLDM_TYPE_BUF_SIZE] = { 0 };
+
+	(void)get_supported_pldm_type(types, sizeof(types));
+	if (req->pldm_type >= (GET_PLDM_TYPE_BUF_SIZE * 8) ||
+	    !(types[req->pldm_type / 8] & BIT(req->pldm_type % 8))) {
+		resp[0] = INVALID_PLDM_TYPE_IN_REQUEST_DATA;
+		*resp_len = 1;
+		return PLDM_SUCCESS;
+	}
+
+	r->completion_code = PLDM_SUCCESS;
+	r->next_data_transfer_handle = 0;
+	r->transfer_flag = PLDM_START_AND_END;
+	r->version = 0xF1F0F000; /* 1.0.0 */
+	r->crc = crc32_ieee((const uint8_t *)&r->version, sizeof(r->version));
+	*resp_len = sizeof(*r);
 	return PLDM_SUCCESS;
 }
 
@@ -129,6 +191,7 @@ uint8_t get_pldm_commands(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t i
 static pldm_cmd_handler pldm_base_cmd_tbl[] = {
 	{ PLDM_BASE_CMD_CODE_SETTID, set_tid },
 	{ PLDM_BASE_CMD_CODE_GETTID, get_tid },
+	{ PLDM_BASE_CMD_CODE_GET_PLDM_VER, get_pldm_version },
 	{ PLDM_BASE_CMD_CODE_GET_PLDM_TYPE, get_pldm_types },
 	{ PLDM_BASE_CMD_CODE_GET_PLDM_CMDS, get_pldm_commands },
 };

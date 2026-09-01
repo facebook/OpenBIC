@@ -19,7 +19,7 @@
 #include "sensor.h"
 #include "hal_i2c.h"
 #include "isl28022.h"
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 
 LOG_MODULE_REGISTER(dev_isl28022);
 

@@ -20,9 +20,9 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <zephyr.h>
-#include <sys/crc.h>
-#include <logging/log.h>
+#include <zephyr/kernel.h>
+#include <zephyr/sys/crc.h>
+#include <zephyr/logging/log.h>
 #include "libutil.h"
 #include "hal_i3c.h"
 

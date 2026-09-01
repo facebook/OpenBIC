@@ -17,10 +17,18 @@
 #ifndef UTIL_SPI_H
 #define UTIL_SPI_H
 
-#include <zephyr.h>
+#include <zephyr/kernel.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <drivers/spi_nor.h>
+#include <sys/types.h>
+/* <drivers/spi_nor.h> (Aspeed-fork-only multi-byte-address-mode SPI
+ * NOR extensions) has no mainline equivalent - the 3 call sites in
+ * util_spi.c are stubbed with clear no-op fallbacks instead (see
+ * meta-facebook/mcx-n9xx-evk/README.md). None of util_spi.c's actual
+ * SPI-device-update functionality is exercised on this board (no
+ * sensor_config entries reference SPI-updatable chips), so this only
+ * affects link-time completeness, not runtime behavior here.
+ */
 
 #define NUM_SPI_DEV 3
 #define SECTOR_SZ_64K 0x10000

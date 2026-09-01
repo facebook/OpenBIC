@@ -17,7 +17,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 #include "util_spi.h"
 #include "util_sys.h"
 #include "libutil.h"
@@ -338,7 +338,7 @@ uint8_t pldm_vr_update(void *fw_update_param)
 #endif
 	else {
 		LOG_ERR("Non-support VR detected with component string %s!",
-			log_strdup(p->comp_version_str));
+			p->comp_version_str);
 		goto exit;
 	}
 
@@ -374,7 +374,7 @@ uint8_t pldm_cpld_update(void *fw_update_param)
 		p->next_ofs = cpld_update_cfg.next_ofs;
 	} else {
 		LOG_ERR("Component version string %s not contains support device's keyword",
-			log_strdup(p->comp_version_str));
+			p->comp_version_str);
 		return 1;
 	}
 
@@ -438,7 +438,7 @@ uint8_t pldm_retimer_update(void *fw_update_param)
 #endif
 	} else {
 		LOG_ERR("Non-support retimer detected with component string %s!",
-			log_strdup(p->comp_version_str));
+			p->comp_version_str);
 		return 1;
 	}
 
@@ -519,7 +519,7 @@ uint8_t pldm_retimer_recovery(void *fw_update_param)
 		}
 	} else {
 		LOG_ERR("Non-support retimer detected with component string %s!",
-			log_strdup(p->comp_version_str));
+			p->comp_version_str);
 		return 1;
 	}
 

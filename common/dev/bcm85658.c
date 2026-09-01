@@ -19,7 +19,7 @@
 #include "sensor.h"
 #include "hal_i2c.h"
 #include "bcm85658.h"
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 
 LOG_MODULE_REGISTER(bcm85658);
 

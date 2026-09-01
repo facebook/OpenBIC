@@ -16,7 +16,7 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 #include <stdlib.h>
 
 #include "libutil.h"

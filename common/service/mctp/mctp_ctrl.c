@@ -16,13 +16,14 @@
 
 #include "mctp.h"
 #include "mctp_ctrl.h"
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/printk.h>
-#include <zephyr.h>
+#include <zephyr/sys/printk.h>
+#include <zephyr/kernel.h>
+#include <zephyr/sys/byteorder.h>
 #include "libutil.h"
 
 LOG_MODULE_DECLARE(mctp);
@@ -47,6 +48,59 @@ static sys_slist_t wait_recv_resp_list = SYS_SLIST_STATIC_INIT(&wait_recv_resp_l
 __weak int load_mctp_support_types(uint8_t *type_len, uint8_t *types)
 {
 	return -1;
+}
+
+__weak int plat_mctp_get_vdm_support(uint8_t selector, uint8_t *vendor_id_format,
+				     uint16_t *pci_vendor_id, uint16_t *cmd_set_version,
+				     uint8_t *next_selector)
+{
+	ARG_UNUSED(selector);
+	ARG_UNUSED(vendor_id_format);
+	ARG_UNUSED(pci_vendor_id);
+	ARG_UNUSED(cmd_set_version);
+	ARG_UNUSED(next_selector);
+	return -1;
+}
+
+uint8_t mctp_ctrl_cmd_get_vendor_message_support(void *mctp_inst, uint8_t *buf, uint16_t len,
+						uint8_t *resp, uint16_t *resp_len, void *ext_params)
+{
+	ARG_UNUSED(ext_params);
+	CHECK_NULL_ARG_WITH_RETURN(mctp_inst, MCTP_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(buf, MCTP_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp, MCTP_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp_len, MCTP_ERROR);
+
+	struct _get_vendor_message_support_req *req = (struct _get_vendor_message_support_req *)buf;
+	struct _get_vendor_message_support_resp *p = (struct _get_vendor_message_support_resp *)resp;
+
+	if (len != sizeof(*req)) {
+		p->completion_code = MCTP_CTRL_CC_ERROR_INVALID_LENGTH;
+		*resp_len = 1;
+		return MCTP_SUCCESS;
+	}
+
+	uint8_t fmt = MCTP_VENDOR_ID_FORMAT_PCI;
+	uint16_t vid = 0;
+	uint16_t cmd_set = 0;
+	uint8_t next = MCTP_VENDOR_ID_SELECTOR_NONE;
+
+	int ret = plat_mctp_get_vdm_support(req->vendor_id_selector, &fmt, &vid, &cmd_set, &next);
+
+	if (ret < 0) {
+		/* No vendor-defined messages / selector out of range. */
+		p->completion_code = MCTP_CTRL_CC_ERROR_INVALID_DATA;
+		*resp_len = 1;
+		return MCTP_SUCCESS;
+	}
+
+	p->completion_code = MCTP_CTRL_CC_SUCCESS;
+	p->next_vendor_id_selector = next;
+	p->vendor_id_format = fmt;
+	p->pci_vendor_id = sys_cpu_to_be16(vid);
+	p->cmd_set_version = sys_cpu_to_be16(cmd_set);
+	*resp_len = sizeof(*p);
+	return MCTP_SUCCESS;
 }
 
 __weak void plat_update_mctp_routing_table(uint8_t eid)
@@ -101,6 +155,97 @@ uint8_t mctp_ctrl_cmd_set_endpoint_id(void *mctp_inst, uint8_t *buf, uint16_t le
 	return MCTP_SUCCESS;
 }
 
+__weak bool plat_get_endpoint_uuid(uint8_t *uuid_buf)
+{
+	ARG_UNUSED(uuid_buf);
+	return false;
+}
+
+uint8_t mctp_ctrl_cmd_get_endpoint_uuid(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t *resp,
+					uint16_t *resp_len, void *ext_params)
+{
+	ARG_UNUSED(mctp_inst);
+	ARG_UNUSED(buf);
+	ARG_UNUSED(ext_params);
+	CHECK_NULL_ARG_WITH_RETURN(resp, MCTP_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp_len, MCTP_ERROR);
+
+	if (len != 0) {
+		resp[0] = MCTP_CTRL_CC_ERROR_INVALID_LENGTH;
+		*resp_len = 1;
+		return MCTP_SUCCESS;
+	}
+
+	struct _get_uuid_resp *p = (struct _get_uuid_resp *)resp;
+
+	if (!plat_get_endpoint_uuid(p->uuid)) {
+		/* Board doesn't have a real UUID to report - honest failure,
+		 * not a fabricated one (see plat_get_endpoint_uuid()'s doc). */
+		resp[0] = MCTP_CTRL_CC_ERROR;
+		*resp_len = 1;
+		return MCTP_SUCCESS;
+	}
+
+	p->completion_code = MCTP_CTRL_CC_SUCCESS;
+	*resp_len = sizeof(*p);
+	return MCTP_SUCCESS;
+}
+
+/* DSP0236 12.10 - normally answered by the bus owner, resolving a
+ * target EID to the physical address that should be used to reach it
+ * (directly, or via a bridge). This stack has no routing table (see
+ * plat_mctp.c: no downstream endpoints on this board's MCTP bus to
+ * route to), so the only EID this can ever honestly resolve is our
+ * own - there's nothing behind us to bridge to. Any other target_eid
+ * gets a genuine "can't resolve" error, not a fabricated address. */
+uint8_t mctp_ctrl_cmd_resolve_endpoint_id(void *mctp_p, uint8_t *buf, uint16_t len, uint8_t *resp,
+					  uint16_t *resp_len, void *ext_params)
+{
+	ARG_UNUSED(ext_params);
+	CHECK_NULL_ARG_WITH_RETURN(mctp_p, MCTP_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(buf, MCTP_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp, MCTP_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp_len, MCTP_ERROR);
+
+	if (len != sizeof(struct _resolve_endpoint_id_req)) {
+		resp[0] = MCTP_CTRL_CC_ERROR_INVALID_LENGTH;
+		*resp_len = 1;
+		return MCTP_SUCCESS;
+	}
+
+	mctp *mctp_inst = (mctp *)mctp_p;
+	struct _resolve_endpoint_id_req *req = (struct _resolve_endpoint_id_req *)buf;
+
+	if (req->target_eid != plat_get_eid()) {
+		resp[0] = MCTP_CTRL_CC_ERROR;
+		*resp_len = 1;
+		return MCTP_SUCCESS;
+	}
+
+	uint8_t phys_addr;
+
+	switch (mctp_inst->medium_type) {
+	case MCTP_MEDIUM_TYPE_SMBUS:
+		phys_addr = mctp_inst->medium_conf.smbus_conf.addr;
+		break;
+	case MCTP_MEDIUM_TYPE_CONTROLLER_I3C:
+	case MCTP_MEDIUM_TYPE_TARGET_I3C:
+		phys_addr = mctp_inst->medium_conf.i3c_conf.addr;
+		break;
+	default:
+		resp[0] = MCTP_CTRL_CC_ERROR;
+		*resp_len = 1;
+		return MCTP_SUCCESS;
+	}
+
+	struct _resolve_endpoint_id_resp *p = (struct _resolve_endpoint_id_resp *)resp;
+	p->completion_code = MCTP_CTRL_CC_SUCCESS;
+	p->bridge_eid = req->target_eid;
+	p->phys_addr = phys_addr;
+	*resp_len = sizeof(*p);
+	return MCTP_SUCCESS;
+}
+
 uint8_t mctp_ctrl_cmd_get_endpoint_id(void *mctp_inst, uint8_t *buf, uint16_t len, uint8_t *resp,
 				      uint16_t *resp_len, void *ext_params)
 {
@@ -125,6 +270,70 @@ uint8_t mctp_ctrl_cmd_get_endpoint_id(void *mctp_inst, uint8_t *buf, uint16_t le
 	return MCTP_SUCCESS;
 }
 
+/* DSP0236 Table 18: entries must be numerically lowest-first, so a
+ * single "conservative" entry per selector (no historical backward-
+ * compatible chain) is written as one call each - see
+ * mctp_ctrl.h's MCTP_VERSION_ENTRY_LEN comment for the wire format. */
+static void encode_version_entry(uint8_t *entry, uint8_t major, uint8_t minor, uint8_t update,
+				 uint8_t alpha)
+{
+	entry[0] = major;
+	entry[1] = minor;
+	entry[2] = update;
+	entry[3] = alpha;
+}
+
+uint8_t mctp_ctrl_cmd_get_version_support(void *mctp_inst, uint8_t *buf, uint16_t len,
+					  uint8_t *resp, uint16_t *resp_len, void *ext_params)
+{
+	ARG_UNUSED(mctp_inst);
+	ARG_UNUSED(ext_params);
+	CHECK_NULL_ARG_WITH_RETURN(buf, MCTP_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp, MCTP_ERROR);
+	CHECK_NULL_ARG_WITH_RETURN(resp_len, MCTP_ERROR);
+
+	struct _get_version_support_resp *p = (struct _get_version_support_resp *)resp;
+
+	if (len != 1) {
+		p->completion_code = MCTP_CTRL_CC_ERROR_INVALID_LENGTH;
+		*resp_len = 1;
+		return MCTP_SUCCESS;
+	}
+
+	uint8_t msg_type_number = buf[0];
+
+	switch (msg_type_number) {
+	case MCTP_VERSION_SUPPORT_SEL_BASE_SPEC:
+	case MCTP_VERSION_SUPPORT_SEL_CONTROL_PROTOCOL:
+		/* One conservative entry: MCTP 1.3, update version
+		 * unspecified (0xFF) rather than claiming a specific
+		 * patch-level audit this port hasn't done. */
+		p->completion_code = MCTP_CTRL_CC_SUCCESS;
+		p->version_number_entry_count = 1;
+		encode_version_entry(p->version_number_entry, 0xF1, 0xF3, 0xFF, 0x00);
+		*resp_len = sizeof(*p) + MCTP_VERSION_ENTRY_LEN;
+		break;
+	case MCTP_VERSION_SUPPORT_SEL_PLDM_BINDING:
+		/* DSP0241 (PLDM over MCTP Binding Specification) has only
+		 * ever been published as 1.0.0. */
+		p->completion_code = MCTP_CTRL_CC_SUCCESS;
+		p->version_number_entry_count = 1;
+		encode_version_entry(p->version_number_entry, 0xF1, 0xF0, 0xF0, 0x00);
+		*resp_len = sizeof(*p) + MCTP_VERSION_ENTRY_LEN;
+		break;
+	default:
+		/* Vendor-defined (0x7E/0x7F), DSP0261 (0x02/0x03), or any
+		 * other message type - genuinely not implemented on this
+		 * board, so say so honestly instead of fabricating a
+		 * version for something that isn't there. */
+		p->completion_code = MCTP_CTRL_CC_ERROR_MSG_TYPE_NOT_SUPPORTED;
+		*resp_len = 1;
+		break;
+	}
+
+	return MCTP_SUCCESS;
+}
+
 uint8_t mctp_ctrl_cmd_get_message_type_support(void *mctp_inst, uint8_t *buf, uint16_t len,
 					       uint8_t *resp, uint16_t *resp_len, void *ext_params)
 {
@@ -141,7 +350,12 @@ uint8_t mctp_ctrl_cmd_get_message_type_support(void *mctp_inst, uint8_t *buf, ui
 	struct _get_message_type_resp *p = (struct _get_message_type_resp *)resp;
 
 	uint8_t type_len = 0;
-	uint8_t *types = malloc(sizeof(TYPE_MAX_SIZE));
+	/* Was malloc(sizeof(TYPE_MAX_SIZE)) - TYPE_MAX_SIZE is an enum
+	 * constant, so sizeof() gave sizeof(int) (4), not the intended
+	 * type-count cap. Harmless today by luck (4 >= the 2-3 types any
+	 * board hook here reports), but a board hook reporting more than
+	 * that would overflow this buffer. */
+	uint8_t *types = malloc(MCTP_SUPPORTED_MSG_TYPE_MAX);
 	int ret = 0;
 
 	ret = load_mctp_support_types(&type_len, types);
@@ -261,7 +475,11 @@ static uint8_t mctp_ctrl_cmd_resp_process(mctp *mctp_inst, uint8_t *buf, uint32_
 static mctp_ctrl_cmd_handler_t mctp_ctrl_cmd_tbl[] = {
 	{ MCTP_CTRL_CMD_SET_ENDPOINT_ID, mctp_ctrl_cmd_set_endpoint_id },
 	{ MCTP_CTRL_CMD_GET_ENDPOINT_ID, mctp_ctrl_cmd_get_endpoint_id },
-	{ MCTP_CTRL_CMD_GET_MESSAGE_TYPE_SUPPORT, mctp_ctrl_cmd_get_message_type_support }
+	{ MCTP_CTRL_CMD_GET_ENDPOINT_UUID, mctp_ctrl_cmd_get_endpoint_uuid },
+	{ MCTP_CTRL_CMD_GET_VERSION_SUPPORT, mctp_ctrl_cmd_get_version_support },
+	{ MCTP_CTRL_CMD_GET_MESSAGE_TYPE_SUPPORT, mctp_ctrl_cmd_get_message_type_support },
+	{ MCTP_CTRL_CMD_GET_VENDOR_MESSAGE_SUPPORT, mctp_ctrl_cmd_get_vendor_message_support },
+	{ MCTP_CTRL_CMD_RESOLVE_ENDPOINT_ID, mctp_ctrl_cmd_resolve_endpoint_id }
 };
 
 uint8_t mctp_ctrl_cmd_handler(void *mctp_p, uint8_t *buf, uint32_t len, mctp_ext_params ext_params)

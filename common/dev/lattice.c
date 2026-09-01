@@ -17,7 +17,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 #include "hal_i2c.h"
 #include "pldm_firmware_update.h"
 #include "libutil.h"
@@ -619,7 +619,7 @@ static bool x02x03_i2c_update(lattice_update_config_t *config)
 
 	/* Step1. Before update */
 	if (config->data_ofs == 0) {
-		LOG_INF("update lattice type %s", log_strdup(LATTICE_CFG_TABLE[config->type].name));
+		LOG_INF("update lattice type %s", LATTICE_CFG_TABLE[config->type].name);
 
 		uint32_t dev_id;
 		if (cpld_i2c_get_id(config->bus, config->addr, &dev_id) == false) {

@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-#include <zephyr.h>
+#include <zephyr/kernel.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 #include "util_worker.h"
-#include "cmsis_os2.h"
+#include <zephyr/portability/cmsis_os2.h>
 #include "libutil.h"
 #include "plat_def.h"
 
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 
 LOG_MODULE_REGISTER(util_worker);
 

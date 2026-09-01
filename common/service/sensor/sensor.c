@@ -19,7 +19,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 #include "power_status.h"
 #include "sdr.h"
 #include "pdr.h"
@@ -33,7 +33,7 @@
 #include "plat_def.h"
 #include "libutil.h"
 
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 
 LOG_MODULE_REGISTER(sensor);
 
@@ -1496,7 +1496,7 @@ bool sensor_init(void)
 	drive_init();
 
 	if (DEBUG_SENSOR) {
-		LOG_ERR("Sensor name: %s", log_strdup(full_sdr_table[sdr_index_map[1]].ID_str));
+		LOG_ERR("Sensor name: %s", full_sdr_table[sdr_index_map[1]].ID_str);
 	}
 
 	if (enable_sensor_poll_thread) {

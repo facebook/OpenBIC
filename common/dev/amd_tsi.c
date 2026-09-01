@@ -18,7 +18,7 @@
 #include <string.h>
 #include "sensor.h"
 #include "plat_def.h"
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 #ifdef ENABLE_APML
 #include "apml.h"
 

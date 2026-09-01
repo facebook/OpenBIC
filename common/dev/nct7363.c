@@ -18,11 +18,11 @@
 #include "sensor.h"
 #include "hal_i2c.h"
 #include "libutil.h"
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 #include <nct7363.h>
 #include <string.h>
 #include <math.h>
-#include <sys/util.h>
+#include <zephyr/sys/util.h>
 
 LOG_MODULE_REGISTER(dev_nct7363);
 

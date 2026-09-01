@@ -17,7 +17,7 @@
 #ifndef PMBUS_H
 #define PMBUS_H
 
-#include "../../zephyr/include/sys/util.h"
+#include <zephyr/sys/util.h>
 
 enum PMBUS_PAGE_NUM {
 	PMBUS_PAGE_0,
