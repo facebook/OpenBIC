@@ -162,6 +162,8 @@ const char *const sensor_type_name[] = {
 	sensor_name_to_num(tps25990)
 	sensor_name_to_num(raa229140a)
 	sensor_name_to_num(mp29526)
+	sensor_name_to_num(iris_smbus)
+	sensor_name_to_num(rsm3514e)
 };
 // clang-format on
 
@@ -409,6 +411,12 @@ SENSOR_DRIVE_INIT_DECLARE(raa229140a);
 #endif
 #ifdef ENABLE_MP29526
 SENSOR_DRIVE_INIT_DECLARE(mp29526);
+#endif
+#ifdef ENABLE_IRIS_SMBUS
+SENSOR_DRIVE_INIT_DECLARE(iris_smbus);
+#endif
+#ifdef ENABLE_RSM3514E
+SENSOR_DRIVE_INIT_DECLARE(rsm3514e);
 #endif
 
 // The sequence needs to same with SENSOR_DEV ID
@@ -827,7 +835,16 @@ sensor_drive_api sensor_drive_tbl[] = {
 #else
 	SENSOR_DRIVE_TYPE_UNUSE(mp29526),
 #endif
-
+#ifdef ENABLE_IRIS_SMBUS
+	SENSOR_DRIVE_TYPE_INIT_MAP(iris_smbus),
+#else
+	SENSOR_DRIVE_TYPE_UNUSE(iris_smbus),
+#endif
+#ifdef ENABLE_RSM3514E
+	SENSOR_DRIVE_TYPE_INIT_MAP(rsm3514e),
+#else
+	SENSOR_DRIVE_TYPE_UNUSE(rsm3514e),
+#endif
 };
 
 static void init_sensor_num(void)
