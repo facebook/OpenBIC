@@ -1050,6 +1050,72 @@ __weak void plat_sensor_poll_post()
 	return;
 }
 
+#ifdef ENABLE_SENSOR_POLL_SEL
+__weak void plat_sensor_poll_state_changed(uint8_t sensor_num, bool enabled)
+{
+	ARG_UNUSED(sensor_num);
+	ARG_UNUSED(enabled);
+	return;
+}
+
+static void check_sensor_poll_state_change(void)
+{
+	static bool is_state_recorded = false;
+	static bool last_poll_enable_flag;
+	uint8_t changed_count = 0;
+	uint8_t changed_to_enabled_count = 0;
+
+	if ((sensor_config == NULL) || (sensor_config_count == 0)) {
+		return;
+	}
+
+	if (is_state_recorded == false) {
+		last_poll_enable_flag = sensor_poll_enable_flag;
+		for (uint8_t i = 0; i < sensor_config_count; i++) {
+			sensor_config[i].last_is_enable_polling =
+				sensor_config[i].is_enable_polling;
+		}
+		is_state_recorded = true;
+		return;
+	}
+
+	if (sensor_poll_enable_flag != last_poll_enable_flag) {
+		plat_sensor_poll_state_changed(SENSOR_POLL_GLOBAL_FLAG, sensor_poll_enable_flag);
+		last_poll_enable_flag = sensor_poll_enable_flag;
+	}
+
+	uint8_t changed_num[sensor_config_count];
+	bool changed_state[sensor_config_count];
+
+	for (uint8_t i = 0; i < sensor_config_count; i++) {
+		bool cur_state = sensor_config[i].is_enable_polling;
+		if (cur_state != sensor_config[i].last_is_enable_polling) {
+			changed_num[changed_count] = sensor_config[i].num;
+			changed_state[changed_count] = cur_state;
+			changed_count++;
+			if (cur_state) {
+				changed_to_enabled_count++;
+			}
+			sensor_config[i].last_is_enable_polling = cur_state;
+		}
+	}
+
+	bool is_all_changed = (changed_count == sensor_config_count) &&
+			      ((changed_to_enabled_count == 0) ||
+			       (changed_to_enabled_count == sensor_config_count));
+
+	if (is_all_changed) {
+		plat_sensor_poll_state_changed(SENSOR_POLL_ALL_SENSORS,
+					       changed_to_enabled_count == sensor_config_count);
+		return;
+	}
+
+	for (uint8_t i = 0; i < changed_count; i++) {
+		plat_sensor_poll_state_changed(changed_num[i], changed_state[i]);
+	}
+}
+#endif
+
 void sensor_poll_handler(void *arug0, void *arug1, void *arug2)
 {
 	uint16_t table_index = 0;
@@ -1064,6 +1130,9 @@ void sensor_poll_handler(void *arug0, void *arug1, void *arug2)
 	pal_set_sensor_poll_interval(&sensor_poll_interval_ms);
 
 	while (1) {
+#ifdef ENABLE_SENSOR_POLL_SEL
+		check_sensor_poll_state_change();
+#endif
 		for (table_index = 0; table_index < sensor_monitor_count; ++table_index) {
 			sensor_monitor_table_info *table_info = &sensor_monitor_table[table_index];
 
