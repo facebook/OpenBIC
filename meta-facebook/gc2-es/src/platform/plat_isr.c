@@ -767,6 +767,33 @@ static bool is_cpld_reg_bit_set(uint8_t bus, uint8_t addr, uint8_t reg, uint8_t 
 	return !!(msg.data[0] & bit_mask);
 }
 
+void plat_sensor_poll_state_changed(uint8_t sensor_num, bool enabled)
+{
+	common_addsel_msg_t sel_msg = { 0 };
+	sel_msg.InF_target = BMC_IPMB;
+	sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
+	sel_msg.sensor_number = SENSOR_NUM_SENSOR_POLL;
+	sel_msg.event_type = IPMI_EVENT_TYPE_SENSOR_SPECIFIC;
+	sel_msg.event_data1 = enabled ? 0x01 : 0x00;
+
+	/* event_data2: 0xFF if this is the global flag, else 0x00.
+	 * event_data3: 0x00 when global, 0xFF when every sensor changed at once,
+	 * else the sensor number that changed.
+	 */
+	if (sensor_num == SENSOR_POLL_GLOBAL_FLAG) {
+		sel_msg.event_data2 = 0xFF;
+		sel_msg.event_data3 = 0x00;
+	} else {
+		sel_msg.event_data2 = 0x00;
+		sel_msg.event_data3 = sensor_num;
+	}
+
+	if (!common_add_sel_evt_record(&sel_msg)) {
+		LOG_ERR("[%s] Failed to send sensor poll %s SEL, sensor_num: 0x%x", __func__,
+			enabled ? "enable" : "disable", sensor_num);
+	}
+}
+
 void process_vr_power_fault_sel(struct k_work *work_item)
 {
 	struct k_work_delayable *dwork = k_work_delayable_from_work(work_item);

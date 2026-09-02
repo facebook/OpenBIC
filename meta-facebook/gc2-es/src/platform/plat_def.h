@@ -20,6 +20,7 @@
 #define ENABLE_ASD
 #define ENABLE_ISL69260
 #define ENABLE_FIX_SENSOR
+#define ENABLE_SENSOR_POLL_SEL
 
 #define BMC_USB_PORT "CDC_ACM_0"
 
