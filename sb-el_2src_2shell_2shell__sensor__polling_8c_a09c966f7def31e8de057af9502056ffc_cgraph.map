@@ -1,0 +1,9 @@
+<map id="cmd_set_plat_cpld_polling" name="cmd_set_plat_cpld_polling">
+<area shape="rect" id="node1" title=" " alt="" coords="5,163,180,189"/>
+<area shape="rect" id="node2" href="$minerva-ag_2src_2platform_2plat__event_8c.html#a9257b00585fe9955b1ecacd805d104d3" title=" " alt="" coords="228,5,415,32"/>
+<area shape="rect" id="node3" href="$minerva-ag_2src_2platform_2plat__pldm__sensor_8c.html#af612fa91659722bb5ba98e3752572ced" title=" " alt="" coords="242,57,401,98"/>
+<area shape="rect" id="node4" href="$minerva-ag_2src_2platform_2plat__pldm__sensor_8c.html#ab9563efddd6de9d2ccf6ad3ff5b44125" title=" " alt="" coords="246,122,397,163"/>
+<area shape="rect" id="node5" href="$minerva-ag_2src_2platform_2plat__pldm__sensor_8c.html#a71b07fcd20cdcdc2e1ab724c99f677ff" title=" " alt="" coords="250,187,393,229"/>
+<area shape="rect" id="node6" href="$minerva-ag_2src_2platform_2plat__pldm__sensor_8c.html#a0710df5cdccb6b9db2eaf11cf0b6a389" title=" " alt="" coords="252,253,391,294"/>
+<area shape="rect" id="node7" href="$minerva-ag_2src_2platform_2plat__event_8c.html#aac8fcc9af9565291a11afcc58fcbf874" title=" " alt="" coords="228,319,415,345"/>
+</map>

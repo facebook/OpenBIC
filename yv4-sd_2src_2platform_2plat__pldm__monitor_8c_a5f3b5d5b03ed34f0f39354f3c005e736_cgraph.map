@@ -1,0 +1,7 @@
+<map id="plat_pldm_power_cycle" name="plat_pldm_power_cycle">
+<area shape="rect" id="node1" title=" " alt="" coords="5,56,163,83"/>
+<area shape="rect" id="node2" href="$power__status_8c.html#a647e7f9c1247d6a1785d9b9502e7fd29" title=" " alt="" coords="247,5,355,32"/>
+<area shape="rect" id="node3" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="240,56,361,83"/>
+<area shape="rect" id="node5" href="$power__status_8c.html#aa46adc78342af010475cd5e1ee5132f6" title=" " alt="" coords="211,107,391,149"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="439,56,581,83"/>
+</map>

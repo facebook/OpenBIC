@@ -1,0 +1,13 @@
+<map id="_wait_msg" name="_wait_msg">
+<area shape="rect" id="node1" title=" " alt="" coords="388,317,473,344"/>
+<area shape="rect" id="node2" href="$struct__mctp.html" title=" " alt="" coords="229,228,288,255"/>
+<area shape="rect" id="node3" href="$unionmctp__medium__conf.html" title=" " alt="" coords="119,95,255,121"/>
+<area shape="rect" id="node4" href="$struct__mctp__smbus__conf.html" title=" " alt="" coords="5,5,141,32"/>
+<area shape="rect" id="node5" href="$struct__mctp__i3c__conf.html" title=" " alt="" coords="165,5,280,32"/>
+<area shape="rect" id="node6" href="$struct__mctp__ext__params.html" title=" " alt="" coords="381,95,513,121"/>
+<area shape="rect" id="node9" href="$structmctp__cci__msg.html" title=" " alt="" coords="312,228,419,255"/>
+<area shape="rect" id="node10" href="$structmctp__ctrl__msg.html" title=" " alt="" coords="443,228,551,255"/>
+<area shape="rect" id="node11" href="$struct__pldm__msg.html" title=" " alt="" coords="575,228,665,255"/>
+<area shape="rect" id="node7" href="$struct__mctp__smbus__ext__params.html" title=" " alt="" coords="323,5,501,32"/>
+<area shape="rect" id="node8" href="$struct__mctp__i3c__ext__params.html" title=" " alt="" coords="526,5,682,32"/>
+</map>

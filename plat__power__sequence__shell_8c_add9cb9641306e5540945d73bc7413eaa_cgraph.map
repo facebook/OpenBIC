@@ -1,0 +1,7 @@
+<map id="cmd_power_sequence" name="cmd_power_sequence">
+<area shape="rect" id="node1" title=" " alt="" coords="5,42,157,69"/>
+<area shape="rect" id="node2" href="$plat__power__sequence__shell_8c.html#ac147a67a1f430d660ac228a2f261aaf3" title=" " alt="" coords="205,5,400,47"/>
+<area shape="rect" id="node3" href="$minerva-ag_2src_2platform_2plat__isr_8c.html#ad8887b1d0c4bbc7a6f1c25870a6d9051" title=" " alt="" coords="253,71,352,98"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="448,71,567,98"/>
+<area shape="rect" id="node5" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="615,71,757,98"/>
+</map>

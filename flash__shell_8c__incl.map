@@ -1,0 +1,18 @@
+<map id="common/shell/commands/flash_shell.c" name="common/shell/commands/flash_shell.c">
+<area shape="rect" id="node1" title=" " alt="" coords="489,5,659,47"/>
+<area shape="rect" id="node2" href="$flash__shell_8h.html" title=" " alt="" coords="218,95,311,121"/>
+<area shape="rect" id="node7" title=" " alt="" coords="452,244,544,271"/>
+<area shape="rect" id="node8" title=" " alt="" coords="664,95,735,121"/>
+<area shape="rect" id="node9" title=" " alt="" coords="572,244,632,271"/>
+<area shape="rect" id="node10" href="$libutil_8h.html" title=" " alt="" coords="577,95,640,121"/>
+<area shape="rect" id="node16" title=" " alt="" coords="759,95,853,121"/>
+<area shape="rect" id="node3" title=" " alt="" coords="132,169,195,196"/>
+<area shape="rect" id="node4" title=" " alt="" coords="219,169,310,196"/>
+<area shape="rect" id="node5" title=" " alt="" coords="334,169,451,196"/>
+<area shape="rect" id="node6" title=" " alt="" coords="5,169,108,196"/>
+<area shape="rect" id="node11" title=" " alt="" coords="662,169,726,196"/>
+<area shape="rect" id="node12" href="$ipmb_8h.html" title=" " alt="" coords="577,169,637,196"/>
+<area shape="rect" id="node13" href="$hal__i2c_8h.html" title=" " alt="" coords="751,169,824,196"/>
+<area shape="rect" id="node14" title=" " alt="" coords="699,244,791,271"/>
+<area shape="rect" id="node15" title=" " alt="" coords="815,244,973,271"/>
+</map>

@@ -1,0 +1,9 @@
+<map id="bmr351_init" name="bmr351_init">
+<area shape="rect" id="node1" title=" " alt="" coords="5,56,95,83"/>
+<area shape="rect" id="node2" href="$bmr351_8c.html#a5f1daace5ea0eefbbb19d2bbf006a158" title=" " alt="" coords="143,56,240,83"/>
+<area shape="rect" id="node3" href="$util__pmbus_8c.html#a5d5a3d8b0c9d712b51c1680397a7f042" title=" " alt="" coords="288,5,491,32"/>
+<area shape="rect" id="node6" href="$util__pmbus_8c.html#a31a6cab55c9aa2f88ed96bc201e483dd" title=" " alt="" coords="311,56,468,83"/>
+<area shape="rect" id="node7" href="$util__pmbus_8c.html#a7c60131c7ed95a5b56650f7ece49104d" title=" " alt="" coords="328,107,451,133"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="539,31,657,57"/>
+<area shape="rect" id="node5" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="705,31,848,57"/>
+</map>

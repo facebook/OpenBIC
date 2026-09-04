@@ -1,0 +1,6 @@
+<map id="emc1413_set_comparator_mode" name="emc1413_set_comparator_mode">
+<area shape="rect" id="node1" title=" " alt="" coords="5,31,216,57"/>
+<area shape="rect" id="node2" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="265,5,384,32"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="264,56,385,83"/>
+<area shape="rect" id="node3" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="433,31,576,57"/>
+</map>

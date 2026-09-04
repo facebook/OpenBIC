@@ -1,0 +1,7 @@
+<map id="pldm_bios_update" name="pldm_bios_update">
+<area shape="rect" id="node1" title=" " alt="" coords="5,42,132,69"/>
+<area shape="rect" id="node2" href="$util__spi_8c.html#a97dc0465ff90d3a3e8672c0cca62788a" title=" " alt="" coords="180,5,309,47"/>
+<area shape="rect" id="node3" href="$pldm__firmware__update_8c.html#aa1c173eebda7b7929c56484586cfff85" title=" " alt="" coords="186,71,303,98"/>
+<area shape="rect" id="node4" href="$util__spi_8c.html#a42cdb23aad6b4c12e78b0a30ac3d9f5c" title=" " alt="" coords="395,46,477,73"/>
+<area shape="rect" id="node5" href="$util__spi_8c.html#aaffd1b8dea43265280cd76ae120d71f9" title=" " alt="" coords="357,97,515,123"/>
+</map>

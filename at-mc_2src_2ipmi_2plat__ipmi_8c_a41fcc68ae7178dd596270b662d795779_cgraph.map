@@ -1,0 +1,7 @@
+<map id="pal_get_pcie_card_sensor_reading" name="pal_get_pcie_card_sensor_reading">
+<area shape="rect" id="node1" title=" " alt="" coords="5,23,179,65"/>
+<area shape="rect" id="node2" href="$at-mc_2src_2platform_2plat__sensor__table_8c.html#abca79192d53ada449e39ef0de50a52f4" title=" " alt="" coords="227,5,389,32"/>
+<area shape="rect" id="node3" href="$sensor_8c.html#acac7def53ddb6b158196583bb8f36bb1" title=" " alt="" coords="241,56,375,83"/>
+<area shape="rect" id="node4" href="$sensor_8c.html#a5cd747a23585d471e06a129bb055b75c" title=" " alt="" coords="439,15,573,57"/>
+<area shape="rect" id="node5" href="$sensor_8c.html#ae224ad26413eb100f2abef7a1907a547" title=" " alt="" coords="437,81,575,122"/>
+</map>

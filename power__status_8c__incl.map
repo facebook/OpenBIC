@@ -1,0 +1,12 @@
+<map id="common/lib/power_status.c" name="common/lib/power_status.c">
+<area shape="rect" id="node1" title=" " alt="" coords="209,5,391,32"/>
+<area shape="rect" id="node2" href="$power__status_8h.html" title=" " alt="" coords="34,80,145,107"/>
+<area shape="rect" id="node5" title=" " alt="" coords="169,80,229,107"/>
+<area shape="rect" id="node6" title=" " alt="" coords="253,80,347,107"/>
+<area shape="rect" id="node7" href="$hal__gpio_8h.html" title=" " alt="" coords="372,80,452,107"/>
+<area shape="rect" id="node10" href="$snoop_8h.html" title=" " alt="" coords="476,80,543,107"/>
+<area shape="rect" id="node3" title=" " alt="" coords="5,155,80,181"/>
+<area shape="rect" id="node4" title=" " alt="" coords="104,155,168,181"/>
+<area shape="rect" id="node8" title=" " alt="" coords="303,155,401,181"/>
+<area shape="rect" id="node9" title=" " alt="" coords="426,155,518,181"/>
+</map>

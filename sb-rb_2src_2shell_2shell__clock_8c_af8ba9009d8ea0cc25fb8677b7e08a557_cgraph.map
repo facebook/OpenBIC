@@ -1,0 +1,11 @@
+<map id="cmd_get_clock_status" name="cmd_get_clock_status">
+<area shape="rect" id="node1" title=" " alt="" coords="5,97,159,123"/>
+<area shape="rect" id="node2" href="$sb-rb_2src_2platform_2plat__log_8c.html#a1230b74be0742821f0035f2cb3247b90" title=" " alt="" coords="207,5,368,47"/>
+<area shape="rect" id="node5" href="$sb-el_2src_2shell_2shell__clock_8c.html#a75bcf4ac351fff2c86b2510989920401" title=" " alt="" coords="229,71,346,98"/>
+<area shape="rect" id="node6" href="$sb-el_2src_2shell_2shell__clock_8c.html#af3a970f3878c24d99008a6889338f74c" title=" " alt="" coords="229,122,346,149"/>
+<area shape="rect" id="node7" href="$sb-el_2src_2shell_2shell__clock_8c.html#a1ed2a7fc29aba557748bfa0fbece87ec" title=" " alt="" coords="218,173,357,215"/>
+<area shape="rect" id="node3" href="$hal__i2c_8c.html#a129beb22fde8deaaaed57af95c31eb16" title=" " alt="" coords="439,28,605,69"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="676,119,819,146"/>
+<area shape="rect" id="node8" href="$sb-el_2src_2shell_2shell__clock_8c.html#ab7b1bedad1cf85f39ef0b17ce1f133ac" title=" " alt="" coords="416,115,628,156"/>
+<area shape="rect" id="node9" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="463,181,581,207"/>
+</map>

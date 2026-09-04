@@ -1,0 +1,8 @@
+<map id="pal_pldm_send_ipmi_request" name="pal_pldm_send_ipmi_request">
+<area shape="rect" id="node1" title=" " alt="" coords="5,49,145,90"/>
+<area shape="rect" id="node2" href="$at-mc_2src_2platform_2plat__mctp_8c.html#aa8ad5c8b3a321fb78ddb49529dc4f863" title=" " alt="" coords="201,5,305,32"/>
+<area shape="rect" id="node4" href="$pldm_8c.html#a90114495fe7507fbfbdcd388f02911aa" title=" " alt="" coords="193,56,312,83"/>
+<area shape="rect" id="node6" href="$pldm__oem_8c.html#acdcd72cd46e1f10b7be19781bb1b9866" title=" " alt="" coords="217,107,288,133"/>
+<area shape="rect" id="node3" href="$at-cb_2src_2platform_2plat__mctp_8c.html#aa91b2fdee8959aa54116d3b9b3b6c031" title=" " alt="" coords="369,5,513,32"/>
+<area shape="rect" id="node5" href="$pldm_8c.html#a41d615349cd666a0f5372f4f4f0c9507" title=" " alt="" coords="360,56,523,83"/>
+</map>

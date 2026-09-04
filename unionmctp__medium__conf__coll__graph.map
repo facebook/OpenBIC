@@ -1,0 +1,5 @@
+<map id="mctp_medium_conf" name="mctp_medium_conf">
+<area shape="rect" id="node1" title=" " alt="" coords="80,95,216,121"/>
+<area shape="rect" id="node2" href="$struct__mctp__smbus__conf.html" title=" " alt="" coords="5,5,141,32"/>
+<area shape="rect" id="node3" href="$struct__mctp__i3c__conf.html" title=" " alt="" coords="165,5,280,32"/>
+</map>

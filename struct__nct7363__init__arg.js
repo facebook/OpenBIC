@@ -1,0 +1,28 @@
+var struct__nct7363__init__arg =
+[
+    [ "duty", "struct__nct7363__init__arg.html#acd62390e9f090481639afaa3a7c63775", null ],
+    [ "fan_frequency", "struct__nct7363__init__arg.html#ac60722dc41d6a270b68217d667860fbd", null ],
+    [ "fan_poles", "struct__nct7363__init__arg.html#a4236d39a07ecbc984278460e89b8cf25", null ],
+    [ "gpio_00", "struct__nct7363__init__arg.html#a1db06486f6bcd2370396476c7eb483fe", null ],
+    [ "gpio_01", "struct__nct7363__init__arg.html#ab39b4d90da83d9ba1eb1e60b64056b00", null ],
+    [ "gpio_02", "struct__nct7363__init__arg.html#aed1a220d9af58c6fa9a3f5b7242c45db", null ],
+    [ "gpio_03", "struct__nct7363__init__arg.html#a1a7ba5c1e95687a87ed625d2b1bcfcf1", null ],
+    [ "gpio_04", "struct__nct7363__init__arg.html#a8891522124256ac7a04b3e28ae9cbaee", null ],
+    [ "gpio_05", "struct__nct7363__init__arg.html#af04e8de56f8638102ceb478a6990e1c9", null ],
+    [ "gpio_06", "struct__nct7363__init__arg.html#aae9710792cb5449abeb1fa6f659d3027", null ],
+    [ "gpio_07", "struct__nct7363__init__arg.html#a81e28c77706dfc06a98927e7482ac800", null ],
+    [ "gpio_10", "struct__nct7363__init__arg.html#af0d829bd504cdc0b4a2f57223cb12991", null ],
+    [ "gpio_11", "struct__nct7363__init__arg.html#a9cd697443d93446e7e14b63fb9da1c65", null ],
+    [ "gpio_12", "struct__nct7363__init__arg.html#ad873a955783eda9e7b19f358436d376f", null ],
+    [ "gpio_13", "struct__nct7363__init__arg.html#afa7a65df72d7b8ae171aba8e121ab84f", null ],
+    [ "gpio_14", "struct__nct7363__init__arg.html#a3dafc9be267bb5fc258a13dd4767869b", null ],
+    [ "gpio_15", "struct__nct7363__init__arg.html#ae525811b2ea0e211721b84df9998274d", null ],
+    [ "gpio_16", "struct__nct7363__init__arg.html#a12726c8967409428ab49d00cecf28518", null ],
+    [ "gpio_17", "struct__nct7363__init__arg.html#a34538701d2a39999ea19d63b1355aa03", null ],
+    [ "gpio_out_default_val", "struct__nct7363__init__arg.html#ab68f4914a1ad22f54a3f0cba1b562606", null ],
+    [ "is_init", "struct__nct7363__init__arg.html#a72287a1f3753766d38023d27e5f70544", null ],
+    [ "pin_type", "struct__nct7363__init__arg.html#a839e3e839335e389cf63b4d0cffd3611", null ],
+    [ "threshold", "struct__nct7363__init__arg.html#ad8fd77d69dd92ce96d021611651120e9", null ],
+    [ "value", "struct__nct7363__init__arg.html#a29aebed873d7f2f1551f589bb398e4c6", null ],
+    [ "wdt_cfg", "struct__nct7363__init__arg.html#a27ff0b1e2613eec21ca33bbcd0549923", null ]
+];

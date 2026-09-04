@@ -1,0 +1,10 @@
+<map id="OEM_CABLE_DETECTION" name="OEM_CABLE_DETECTION">
+<area shape="rect" id="node1" title=" " alt="" coords="5,67,188,94"/>
+<area shape="rect" id="node2" href="$ipmi_8c.html#a40681786f36bd1836cdb473b7050dda1" title=" " alt="" coords="445,5,595,47"/>
+<area shape="rect" id="node4" href="$hal__gpio_8c.html#af700ee50de3d113e223c2b011c41f966" title=" " alt="" coords="485,122,555,149"/>
+<area shape="rect" id="node5" href="$yv35-bb_2src_2platform_2plat__isr_8c.html#a5149261708cb29a6b8eeb94e39853833" title=" " alt="" coords="236,42,397,69"/>
+<area shape="rect" id="node8" href="$yv35-bb_2src_2platform_2plat__isr_8c.html#a951c1ffca5b923e6ca647a12184273e0" title=" " alt="" coords="236,93,397,119"/>
+<area shape="rect" id="node3" href="$ipmb_8h.html#a260c07ba372e6648a635b20dbb790fa9" title=" " alt="" coords="673,13,755,39"/>
+<area shape="rect" id="node6" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="461,71,579,98"/>
+<area shape="rect" id="node7" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="643,71,785,98"/>
+</map>

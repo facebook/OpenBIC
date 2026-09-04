@@ -1,0 +1,10 @@
+<map id="modbus_get_sticky_sensor_status" name="modbus_get_sticky_sensor_status">
+<area shape="rect" id="node1" title=" " alt="" coords="5,23,185,65"/>
+<area shape="rect" id="node2" href="$plat__status_8c.html#a3ee9e48f0334992a20eada9aa76ab826" title=" " alt="" coords="233,31,404,57"/>
+<area shape="rect" id="node3" href="$aalc-rpu_2src_2platform_2plat__fru_8c.html#a84caf23c50d29935801d48317ea8ace8" title=" " alt="" coords="452,31,577,57"/>
+<area shape="rect" id="node4" href="$eeprom_8c.html#af84d506534770494cca55b2db24730ba" title=" " alt="" coords="625,5,723,32"/>
+<area shape="rect" id="node8" href="$fru_8c.html#a4694b8ef2f5e4e98917fc28fe989a2d9" title=" " alt="" coords="626,56,722,83"/>
+<area shape="rect" id="node5" href="$eeprom_8c.html#ac470cc411f066d8f6bc2c1d7a74c8a5a" title=" " alt="" coords="771,5,909,32"/>
+<area shape="rect" id="node6" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="957,5,1079,32"/>
+<area shape="rect" id="node7" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="1127,5,1269,32"/>
+</map>

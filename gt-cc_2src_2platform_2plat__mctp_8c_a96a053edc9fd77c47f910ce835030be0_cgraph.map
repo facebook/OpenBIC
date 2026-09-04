@@ -1,0 +1,12 @@
+<map id="check_nic_config" name="check_nic_config">
+<area shape="rect" id="node1" title=" " alt="" coords="5,64,128,91"/>
+<area shape="rect" id="node2" href="$gt-cc_2src_2platform_2plat__fru_8c.html#ad955dd406fb18687559f105ebfb2e95a" title=" " alt="" coords="176,5,351,32"/>
+<area shape="rect" id="node4" href="$gt-cc_2src_2platform_2plat__mctp_8c.html#a38a3b88735322f58dc0a74f8855f2f8e" title=" " alt="" coords="185,57,341,98"/>
+<area shape="rect" id="node10" href="$gt-cc_2src_2platform_2plat__hook_8c.html#a490088fd950ea2ab19c7abe6c6d49a48" title=" " alt="" coords="196,122,331,163"/>
+<area shape="rect" id="node3" href="$hal__gpio_8c.html#af700ee50de3d113e223c2b011c41f966" title=" " alt="" coords="457,5,527,32"/>
+<area shape="rect" id="node5" href="$plat__ncsi_8c.html#ae0a5cc0bee833f21c9a64ef6c47171b5" title=" " alt="" coords="425,57,559,98"/>
+<area shape="rect" id="node9" href="$plat__ncsi_8c.html#ae7c0da1448f26d6128e7eda8b30c7eff" title=" " alt="" coords="399,122,585,163"/>
+<area shape="rect" id="node6" href="$mctp_8c.html#a05f81c72bec1cc54f3bd224dee05b039" title=" " alt="" coords="633,68,781,95"/>
+<area shape="rect" id="node8" href="$ncsi_8h.html#a073346198f3db551f2824e45e3f34a2b" title=" " alt="" coords="650,123,765,149"/>
+<area shape="rect" id="node7" href="$mctp_8c.html#a7ebba2970b56d4df4c0ff1eabed7d9a3" title=" " alt="" coords="829,68,933,95"/>
+</map>

@@ -1,0 +1,10 @@
+<map id="init_vr_write_protect" name="init_vr_write_protect">
+<area shape="rect" id="node1" title=" " alt="" coords="5,85,144,112"/>
+<area shape="rect" id="node2" href="$util__pmbus_8c.html#a31a6cab55c9aa2f88ed96bc201e483dd" title=" " alt="" coords="192,5,349,32"/>
+<area shape="rect" id="node5" href="$util__pmbus_8c.html#ad75fb62ca838939edf30c5b10656c03e" title=" " alt="" coords="210,56,331,83"/>
+<area shape="rect" id="node7" href="$xdpe15284_8c.html#a25710eb8e138e1562da00c6996af481e" title=" " alt="" coords="199,107,343,149"/>
+<area shape="rect" id="node8" href="$xdpe15284_8c.html#a96925ffa7482b1464b57ae4e40df4937" title=" " alt="" coords="199,173,343,214"/>
+<area shape="rect" id="node3" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="399,5,517,32"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="567,31,709,57"/>
+<area shape="rect" id="node6" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="397,56,519,83"/>
+</map>

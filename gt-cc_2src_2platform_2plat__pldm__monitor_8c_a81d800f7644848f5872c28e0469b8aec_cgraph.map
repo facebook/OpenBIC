@@ -1,0 +1,7 @@
+<map id="ssd_alert_check_isl28022" name="ssd_alert_check_isl28022">
+<area shape="rect" id="node1" title=" " alt="" coords="5,56,177,83"/>
+<area shape="rect" id="node2" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="235,5,354,32"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="234,56,355,83"/>
+<area shape="rect" id="node5" href="$pldm__monitor_8c.html#aee425d655113020d7d424cc5b86d756c" title=" " alt="" coords="225,107,364,149"/>
+<area shape="rect" id="node3" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="412,31,555,57"/>
+</map>
