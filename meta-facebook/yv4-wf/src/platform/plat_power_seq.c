@@ -1097,6 +1097,26 @@ bool cxl2_vr_access(uint8_t sensor_num)
 	return is_cxl_vr_accessible[CXL_ID_2];
 }
 
+static uint32_t e1s_pwrgd_time_ms = 0;
+
+// record when both E1S rails are good, so E1S accesses can be held off
+void e1s_pwrgd_guard_update(void)
+{
+	if (P3V3_E1S_power_good() && P12V_E1S_power_good()) {
+		e1s_pwrgd_time_ms = k_uptime_get_32();
+	}
+}
+
+// hold off an E1S access until E1S_PWRGD_ACCESS_DELAY_MSEC has passed
+void e1s_pwrgd_guard_wait(void)
+{
+	uint32_t elapsed = k_uptime_get_32() - e1s_pwrgd_time_ms;
+
+	if (elapsed < E1S_PWRGD_ACCESS_DELAY_MSEC) {
+		k_msleep(E1S_PWRGD_ACCESS_DELAY_MSEC - elapsed);
+	}
+}
+
 bool get_cxl_vr_access_status(uint8_t cxl_id)
 {
 	return is_cxl_vr_accessible[cxl_id];

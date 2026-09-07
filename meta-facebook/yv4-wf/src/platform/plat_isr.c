@@ -496,6 +496,7 @@ void ISR_P3V3_E1S_PWR_CHANGE()
 	} else {
 		set_P3V3_E1S_power_status(PWRGD_P3V3_E1S_0_R);
 	}
+	e1s_pwrgd_guard_update();
 
 	if (gpio_get(PWRGD_P3V3_E1S_0_R) == GPIO_LOW) {
 		LOG_ERR("PWRGD_P3V3_E1S_0_R event triggered");
@@ -508,6 +509,7 @@ void ISR_P3V3_E1S_PWR_CHANGE()
 void ISR_P12V_E1S_PWR_CHANGE()
 {
 	set_P12V_E1S_power_status(PWRGD_P12V_E1S_0_R);
+	e1s_pwrgd_guard_update();
 
 	if (gpio_get(PWRGD_P12V_E1S_0_R) == GPIO_LOW) {
 		LOG_ERR("PWRGD_P12V_E1S_0_R event triggered");

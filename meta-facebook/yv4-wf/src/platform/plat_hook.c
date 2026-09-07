@@ -183,6 +183,15 @@ bool pre_vr_read(sensor_cfg *cfg, void *args)
 	return true;
 }
 
+bool pre_e1s_read(sensor_cfg *cfg, void *args)
+{
+	ARG_UNUSED(args);
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+
+	e1s_pwrgd_guard_wait();
+	return true;
+}
+
 bool post_vr_read(sensor_cfg *cfg, void *args, int *const reading)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
@@ -250,8 +259,7 @@ bool pre_dimm_read(sensor_cfg *cfg, void *args)
 		return true; // Do not stop sensor polling
 	}
 
-	uint8_t dimm_id = cfg->target_addr;
-	dimm_id = cxl_id * MAX_DIMM_PER_CXL + dimm_idx;
+	uint8_t dimm_id = cxl_id * MAX_DIMM_PER_CXL + dimm_idx;
 	if (get_dimm_present(dimm_id) ==
 	    DIMM_NOT_PRSNT) { // Stop monitoring DIMM when it is not present.
 		LOG_ERR("CXL%d DIMM_%d not present", cxl_id + 1, dimm_id);

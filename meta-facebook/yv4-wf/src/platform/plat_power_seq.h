@@ -31,6 +31,7 @@
 #define SYS_CLK_STABLE_DELAY_MSEC 25
 #define PWR_RST_DELAY_MSEC 25
 #define P1V8_POWER_OFF_DELAY_MSEC 3500
+#define E1S_PWRGD_ACCESS_DELAY_MSEC 50
 
 #define POWER_SEQ_CTRL_STACK_SIZE 1000
 #define MONITOR_INTERVAL_SECONDS 10
@@ -131,4 +132,6 @@ void init_cxl_heartbeat_monitor_work();
 void plat_pldm_sensor_clear_vr_fault(uint8_t vr_addr, uint8_t vr_bus, uint8_t page_cnt);
 void switch_mux_to_bic(uint8_t value_to_write);
 bool get_cxl_vr_access_status(uint8_t cxl_id);
+void e1s_pwrgd_guard_update(void);
+void e1s_pwrgd_guard_wait(void);
 #endif
