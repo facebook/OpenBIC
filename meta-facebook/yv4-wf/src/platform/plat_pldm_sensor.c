@@ -1663,6 +1663,7 @@ pldm_sensor_info plat_pldm_sensor_tmp_table[] = {
 			.sample_count = SAMPLE_COUNT_DEFAULT,
 			.cache = 0,
 			.cache_status = PLDM_SENSOR_INITIALIZING,
+			.pre_sensor_read_hook = pre_e1s_read,
 		},
 	},
 };
