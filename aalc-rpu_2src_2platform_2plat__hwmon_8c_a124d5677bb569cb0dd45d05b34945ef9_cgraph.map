@@ -1,0 +1,8 @@
+<map id="set_all_pump_power" name="set_all_pump_power">
+<area shape="rect" id="node1" title=" " alt="" coords="5,35,147,61"/>
+<area shape="rect" id="node2" href="$adm1272_8c.html#a3bf1c93e8dd2e712410f2ebe20b60698" title=" " alt="" coords="219,8,367,35"/>
+<area shape="rect" id="node5" href="$sensor_8c.html#a52fcbd96358bec7eff3e368a4da4a292" title=" " alt="" coords="195,60,391,87"/>
+<area shape="rect" id="node3" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="447,5,568,32"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="624,5,767,32"/>
+<area shape="rect" id="node6" href="$sensor_8c.html#ae224ad26413eb100f2abef7a1907a547" title=" " alt="" coords="439,57,576,98"/>
+</map>

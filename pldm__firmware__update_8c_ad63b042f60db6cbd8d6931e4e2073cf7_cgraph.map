@@ -1,0 +1,7 @@
+<map id="pldm_pcie_switch_update" name="pldm_pcie_switch_update">
+<area shape="rect" id="node1" title=" " alt="" coords="5,42,177,69"/>
+<area shape="rect" id="node2" href="$util__spi_8c.html#a4c7fbe44d28cb32831cd6ae4600d6dd1" title=" " alt="" coords="225,5,365,47"/>
+<area shape="rect" id="node3" href="$pldm__firmware__update_8c.html#aa1c173eebda7b7929c56484586cfff85" title=" " alt="" coords="237,71,354,98"/>
+<area shape="rect" id="node4" href="$util__spi_8c.html#a42cdb23aad6b4c12e78b0a30ac3d9f5c" title=" " alt="" coords="451,46,533,73"/>
+<area shape="rect" id="node5" href="$util__spi_8c.html#aaffd1b8dea43265280cd76ae120d71f9" title=" " alt="" coords="413,97,571,123"/>
+</map>

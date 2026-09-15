@@ -1,0 +1,9 @@
+<map id="common/hal/hal_jtag.h" name="common/hal/hal_jtag.h">
+<area shape="rect" id="node1" title=" " alt="" coords="439,5,591,32"/>
+<area shape="rect" id="node2" href="$hal__jtag_8c.html" title=" " alt="" coords="5,95,157,121"/>
+<area shape="rect" id="node3" href="$oem__1s__handler_8c.html" title=" " alt="" coords="181,87,328,129"/>
+<area shape="rect" id="node4" href="$at-cb_2src_2platform_2plat__pldm__fw__update_8c.html" title=" " alt="" coords="352,80,507,136"/>
+<area shape="rect" id="node5" href="$gt-cc_2src_2ipmi_2plat__ipmi_8c.html" title=" " alt="" coords="531,87,672,129"/>
+<area shape="rect" id="node6" href="$gt-cc_2src_2platform_2plat__pldm__fw__update_8c.html" title=" " alt="" coords="696,80,851,136"/>
+<area shape="rect" id="node7" href="$yv35-ji_2src_2platform_2plat__pldm__fw__update_8c.html" title=" " alt="" coords="875,80,1013,136"/>
+</map>

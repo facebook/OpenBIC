@@ -1,0 +1,25 @@
+var mp29816a_8h =
+[
+    [ "mp29816a_clear_vr_status", "mp29816a_8h.html#ab4bb04d3e05cb0f05048f61d6bf9635e", null ],
+    [ "mp29816a_fwupdate", "mp29816a_8h.html#a6bf51175d648054c2d9d9fe387098a04", null ],
+    [ "mp29816a_get_fw_version", "mp29816a_8h.html#ab509738683c12a366c9bf503dc11b4f9", null ],
+    [ "mp29816a_get_iout_oc_warn_limit", "mp29816a_8h.html#ab6e7dda2ca15d7de2003870f804cd78d", null ],
+    [ "mp29816a_get_ovp_1", "mp29816a_8h.html#aa7696f29c00469f2b7c625bdbdd65a7d", null ],
+    [ "mp29816a_get_ovp_2", "mp29816a_8h.html#aeec37a28dea192e2034ff7a443d62c41", null ],
+    [ "mp29816a_get_total_ocp", "mp29816a_8h.html#a8a9ae98ea96d28a78a8feb4936bb0ad8", null ],
+    [ "mp29816a_get_uvp", "mp29816a_8h.html#a82fa557582e8b068f5d3f94a1c41d48d", null ],
+    [ "mp29816a_get_vout_command", "mp29816a_8h.html#a198890c69c541fe9142676a3f4640e41", null ],
+    [ "mp29816a_get_vout_max", "mp29816a_8h.html#aa2377f00e66675cd4350c22aa67a2e44", null ],
+    [ "mp29816a_get_vout_min", "mp29816a_8h.html#a6f06e300b16212452260413efe8d1275", null ],
+    [ "mp29816a_get_vout_offset", "mp29816a_8h.html#ad70ccc8e6f5e7ac6b51a71425b669839", null ],
+    [ "mp29816a_get_vr_status", "mp29816a_8h.html#a8c4e4615726fe7b1b42e8d505ba4c616", null ],
+    [ "mp29816a_set_iout_oc_warn_limit", "mp29816a_8h.html#a48f2e9d15c59ed395683d262ccb0eafa", null ],
+    [ "mp29816a_set_ovp_1", "mp29816a_8h.html#a82cbfaabe90627df42a51b8b6a90717f", null ],
+    [ "mp29816a_set_ovp_2_action", "mp29816a_8h.html#a6f944a05b9b134b3013ede55dcf6f3dc", null ],
+    [ "mp29816a_set_total_ocp", "mp29816a_8h.html#a8a9860727dbd70731d68c6d710916cf0", null ],
+    [ "mp29816a_set_uvp_threshold", "mp29816a_8h.html#a037d100cdf56ad594831c2e1e143e6de", null ],
+    [ "mp29816a_set_vout_command", "mp29816a_8h.html#ac0997e7d4076346a8c8047a945015904", null ],
+    [ "mp29816a_set_vout_max", "mp29816a_8h.html#a99d75f3da0d92ff90bcbee136a06975d", null ],
+    [ "mp29816a_set_vout_min", "mp29816a_8h.html#afa1e20500b6d77c1db8be2e9b7117808", null ],
+    [ "mp29816a_set_vout_offset", "mp29816a_8h.html#a0c00d0ebe279d8e13482ed4322ea13f3", null ]
+];

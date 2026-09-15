@@ -1,0 +1,7 @@
+<map id="mctp_add_sel_to_ipmi" name="mctp_add_sel_to_ipmi">
+<area shape="rect" id="node1" title=" " alt="" coords="5,56,157,83"/>
+<area shape="rect" id="node2" href="$at-cb_2src_2platform_2plat__mctp_8c.html#aa91b2fdee8959aa54116d3b9b3b6c031" title=" " alt="" coords="205,5,349,32"/>
+<area shape="rect" id="node3" href="$pldm_8c.html#a90114495fe7507fbfbdcd388f02911aa" title=" " alt="" coords="218,56,337,83"/>
+<area shape="rect" id="node5" href="$pldm__oem_8c.html#acdcd72cd46e1f10b7be19781bb1b9866" title=" " alt="" coords="242,107,313,133"/>
+<area shape="rect" id="node4" href="$pldm_8c.html#a41d615349cd666a0f5372f4f4f0c9507" title=" " alt="" coords="397,56,560,83"/>
+</map>

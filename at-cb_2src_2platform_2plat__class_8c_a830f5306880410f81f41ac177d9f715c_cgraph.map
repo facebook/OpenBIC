@@ -1,0 +1,10 @@
+<map id="presence_check_handler" name="presence_check_handler">
+<area shape="rect" id="node1" title=" " alt="" coords="5,56,172,83"/>
+<area shape="rect" id="node2" href="$at-cb_2src_2platform_2plat__class_8c.html#a46acfadd7a662b366e10fcab5186f827" title=" " alt="" coords="220,5,395,32"/>
+<area shape="rect" id="node6" href="$at-cb_2src_2platform_2plat__class_8c.html#aa0344d722f0b13452fef2a5fb95acfac" title=" " alt="" coords="230,56,385,83"/>
+<area shape="rect" id="node7" href="$at-cb_2src_2platform_2plat__pldm__monitor_8c.html#a687f9468ff0cfa6629a4f10b7f9fb067" title=" " alt="" coords="228,107,387,149"/>
+<area shape="rect" id="node3" href="$at-cb_2src_2platform_2plat__class_8c.html#a6a54497033563f8d0666943817d1e92a" title=" " alt="" coords="451,5,573,32"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="629,5,748,32"/>
+<area shape="rect" id="node5" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="796,5,939,32"/>
+<area shape="rect" id="node8" href="$pldm__monitor_8c.html#aee425d655113020d7d424cc5b86d756c" title=" " alt="" coords="443,107,581,149"/>
+</map>

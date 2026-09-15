@@ -1,0 +1,12 @@
+<map id="init_temp_alert_mode" name="init_temp_alert_mode">
+<area shape="rect" id="node1" title=" " alt="" coords="5,107,152,133"/>
+<area shape="rect" id="node2" href="$emc1413_8c.html#a3184df9f6cf558532f30d786e4abf3f0" title=" " alt="" coords="200,157,411,184"/>
+<area shape="rect" id="node6" href="$emc1413_8c.html#a62bd8f574b83a3ab0d70b724021bdc66" title=" " alt="" coords="202,56,409,83"/>
+<area shape="rect" id="node7" href="$minerva-ag_2src_2platform_2plat__pldm__sensor_8c.html#acbdf6ec80f10c919325e5e571427cf6c" title=" " alt="" coords="208,208,403,235"/>
+<area shape="rect" id="node9" href="$tmp431_8c.html#a647a09399298c954780bbbabe6ce49e1" title=" " alt="" coords="207,5,403,32"/>
+<area shape="rect" id="node10" href="$tmp431_8c.html#a8425ba41ba8cfa3357f0382d478dbd4d" title=" " alt="" coords="216,107,395,133"/>
+<area shape="rect" id="node3" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="474,128,593,155"/>
+<area shape="rect" id="node5" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="473,77,594,104"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="656,103,799,129"/>
+<area shape="rect" id="node8" href="$minerva-ag_2src_2platform_2plat__pldm__sensor_8c.html#a18272dc8dce4f373b85555817c2cc6f3" title=" " alt="" coords="459,201,608,242"/>
+</map>

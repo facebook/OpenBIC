@@ -1,0 +1,5 @@
+<map id="mctp_to_ipmi_sel_resp" name="mctp_to_ipmi_sel_resp">
+<area shape="rect" id="node1" title=" " alt="" coords="118,95,274,121"/>
+<area shape="rect" id="node2" href="$structmctp__to__ipmi__header__resp.html" title=" " alt="" coords="5,5,184,32"/>
+<area shape="rect" id="node3" href="$structipmi__storage__add__sel__resp.html" title=" " alt="" coords="209,5,389,32"/>
+</map>

@@ -1,0 +1,13 @@
+<map id="execute_power_off_sequence" name="execute_power_off_sequence">
+<area shape="rect" id="node1" title=" " alt="" coords="5,233,199,260"/>
+<area shape="rect" id="node2" href="$yv4-wf_2src_2platform_2plat__class_8c.html#a22edf82f83047cb9f073697a597ba8aa" title=" " alt="" coords="257,5,416,32"/>
+<area shape="rect" id="node3" href="$at-cb_2src_2platform_2plat__class_8c.html#a177b22525ca1657da5ced816317de219" title=" " alt="" coords="475,157,605,184"/>
+<area shape="rect" id="node4" href="$power__status_8c.html#a647e7f9c1247d6a1785d9b9502e7fd29" title=" " alt="" coords="283,107,391,133"/>
+<area shape="rect" id="node5" href="$hal__gpio_8c.html#af700ee50de3d113e223c2b011c41f966" title=" " alt="" coords="301,157,372,184"/>
+<area shape="rect" id="node6" href="$hal__gpio_8c.html#ab1b576cbfd9eddaaf57a5aa5fc383dd1" title=" " alt="" coords="301,208,372,235"/>
+<area shape="rect" id="node7" href="$op2-op_2src_2platform_2plat__power__seq_8c.html#a6db1f7ddce95ee8e6726153c4f90d4a4" title=" " alt="" coords="273,259,400,285"/>
+<area shape="rect" id="node8" href="$power__status_8c.html#aa3406c25950a307fb61cec9e156605c3" title=" " alt="" coords="247,309,427,336"/>
+<area shape="rect" id="node9" href="$power__status_8c.html#a4482f69c1ee4e17e699b46c3ea5cf05e" title=" " alt="" coords="283,360,391,387"/>
+<area shape="rect" id="node10" href="$power__status_8c.html#a6d168539f3bc57902955388b4e060e4a" title=" " alt="" coords="261,411,413,453"/>
+<area shape="rect" id="node11" href="$power__status_8c.html#a4a854c545c7f9edd4323cf550ed13d39" title=" " alt="" coords="261,477,413,518"/>
+</map>

@@ -1,0 +1,7 @@
+<map id="cmd_thermaltrip_status_en" name="cmd_thermaltrip_status_en">
+<area shape="rect" id="node1" title=" " alt="" coords="5,13,184,39"/>
+<area shape="rect" id="node2" href="$minerva-ag_2src_2platform_2plat__hook_8c.html#a318ccd84b9df9d3b46db19149e7a3a08" title=" " alt="" coords="232,5,372,47"/>
+<area shape="rect" id="node3" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="661,13,783,39"/>
+<area shape="rect" id="node5" href="$minerva-ag_2src_2platform_2plat__hook_8c.html#a444eef976c04f5c54c383666b5e3cf5d" title=" " alt="" coords="420,35,613,76"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="831,13,973,39"/>
+</map>
