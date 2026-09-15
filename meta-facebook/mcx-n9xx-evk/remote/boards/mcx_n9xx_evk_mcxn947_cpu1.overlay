@@ -1,0 +1,12 @@
+/*
+ * Mirror image of ../../boards/mcx_n9xx_evk_mcxn947_cpu0.overlay's
+ * mbox-consumer node, with tx/rx channels swapped so each core's "tx"
+ * is the other's "rx".
+ */
+/ {
+	mbox-consumer {
+		compatible = "vnd,mbox-consumer";
+		mboxes = <&mbox 0>, <&mbox 1>;
+		mbox-names = "tx", "rx";
+	};
+};

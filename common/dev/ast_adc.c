@@ -18,9 +18,9 @@
 #include "sensor.h"
 #include "plat_gpio.h"
 #include "plat_def.h"
-#include <zephyr.h>
-#include <drivers/adc.h>
-#include <logging/log.h>
+#include <zephyr/kernel.h>
+#include <zephyr/drivers/adc.h>
+#include <zephyr/logging/log.h>
 
 LOG_MODULE_REGISTER(dev_ast_adc);
 
@@ -128,11 +128,14 @@ static bool adc_read_mv(sensor_cfg *cfg, uint8_t sensor_num, uint32_t index, uin
 	}
 
 	int32_t raw_value = sample_buffer[0];
-	int32_t ref_mv = adc_get_ref(dev_adc[index]);
-	if (ref_mv <= 0) {
-		LOG_ERR("ADC[%d] with sensor[0x%x] ref-mv get fail", index, sensor_num);
-		return false;
-	}
+	/* adc_get_ref() (Aspeed-fork-only) has no mainline equivalent -
+	 * this whole file is Aspeed ADC-register-specific and unreachable
+	 * on this board anyway (empty sensor table, see
+	 * meta-facebook/mcx-n9xx-evk/README.md), so this is link-only
+	 * dead code; a fixed reference voltage keeps it compiling without
+	 * pretending real calibration is happening.
+	 */
+	int32_t ref_mv = 3300;
 
 	*adc_val = raw_value;
 	adc_raw_to_millivolts(ref_mv, channel_cfg.gain, sequence.resolution, adc_val);

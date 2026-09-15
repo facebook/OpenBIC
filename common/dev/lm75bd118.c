@@ -15,7 +15,7 @@
  */
 
 #include <stdio.h>
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 #include "libutil.h"
 #include "sensor.h"
 #include "hal_i2c.h"

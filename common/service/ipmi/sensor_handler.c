@@ -17,7 +17,7 @@
 #include "sensor_handler.h"
 
 #include "sensor.h"
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 #include "libutil.h"
 
 LOG_MODULE_DECLARE(ipmi);

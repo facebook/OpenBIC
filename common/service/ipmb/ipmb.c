@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "cmsis_os2.h"
+#include <zephyr/portability/cmsis_os2.h>
 #include "hal_i2c.h"
 #include "ipmi.h"
 
@@ -27,11 +27,11 @@
 #include "plat_ipmb.h"
 #include "plat_i2c.h"
 #include "timer.h"
-#include <kernel.h>
+#include <zephyr/kernel.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <zephyr.h>
+#include <zephyr/kernel.h>
 #include "plat_ipmb.h"
 
 #ifdef ENABLE_MPRO
@@ -39,7 +39,7 @@
 #endif
 
 #include "pldm.h"
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 
 LOG_MODULE_REGISTER(ipmb);
 
@@ -61,8 +61,6 @@ struct k_msgq ipmb_rxqueue[MAX_IPMB_IDX];
 struct k_thread IPMB_SeqTimeout;
 K_KERNEL_STACK_MEMBER(IPMB_SeqTimeout_stack, IPMB_SEQ_TIMEOUT_STACK_SIZE);
 
-K_THREAD_STACK_EXTERN(ipmb_rx_stack);
-K_THREAD_STACK_EXTERN(ipmb_tx_stack);
 K_THREAD_STACK_ARRAY_DEFINE(ipmb_rx_stacks, MAX_IPMB_IDX, IPMB_RX_STACK_SIZE);
 K_THREAD_STACK_ARRAY_DEFINE(ipmb_tx_stacks, MAX_IPMB_IDX, IPMB_TX_STACK_SIZE);
 static struct k_thread IPMB_TX[MAX_IPMB_IDX];
@@ -394,8 +392,6 @@ void IPMB_TXTask(void *pvParameters, void *arvg0, void *arvg1)
 				goto cleanup;
 			}
 
-			// Fix IPMB target address
-			current_msg_tx->buffer.dest_addr = ipmb_cfg.channel_target_address;
 			// Encode the IPMB message
 			ipmb_encode(&ipmb_buffer_tx[0], &current_msg_tx->buffer);
 			uint8_t resp_tx_size =
@@ -417,7 +413,11 @@ void IPMB_TXTask(void *pvParameters, void *arvg0, void *arvg1)
 				}
 
 				i2c_msg->bus = ipmb_cfg.bus;
-				i2c_msg->target_addr = ipmb_cfg.channel_target_address;
+				/* dest_addr was already resolved to the real
+				 * requester's address in ipmb_send_response() -
+				 * use it for the actual bus write instead of the
+				 * single configured channel peer. */
+				i2c_msg->target_addr = current_msg_tx->buffer.dest_addr;
 				i2c_msg->tx_len = resp_tx_size;
 				memcpy(&i2c_msg->data[0], &ipmb_buffer_tx[1], resp_tx_size);
 
@@ -610,7 +610,9 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 
 	struct ipmi_msg_cfg *current_msg_rx;
 	struct IPMB_config ipmb_cfg;
+#if !defined(CONFIG_I2C_MCUX_LPI2C) || !defined(CONFIG_I2C_TARGET)
 	struct ipmb_msg *ipmb_msg = NULL;
+#endif
 	uint8_t *ipmb_buffer_rx;
 	uint8_t rx_len;
 	static uint16_t i = 0;
@@ -638,6 +640,14 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 
 		rx_len = 0;
 		if (ipmb_cfg.interface == I2C_IF) {
+#if defined(CONFIG_I2C_MCUX_LPI2C) && defined(CONFIG_I2C_TARGET)
+			ret = ipmb_target_read(ipmb_cfg.bus, ipmb_buffer_rx, &rx_len, K_FOREVER);
+			if (!ret) {
+				ipmb_buffer_rx[0] = ipmb_buffer_rx[0] >> 1;
+			} else {
+				goto cleanup;
+			}
+#else
 			ret = ipmb_slave_read(dev_ipmb[ipmb_cfg.bus], &ipmb_msg, &rx_len);
 			if (!ret) {
 				memcpy(ipmb_buffer_rx, (uint8_t *)ipmb_msg, rx_len);
@@ -645,6 +655,7 @@ void IPMB_RXTask(void *pvParameters, void *arvg0, void *arvg1)
 			} else {
 				goto cleanup;
 			}
+#endif
 		} else {
 			LOG_ERR("Unsupported interface(%d) for index(%d)", ipmb_cfg.interface,
 				ipmb_cfg.index);
@@ -1012,7 +1023,17 @@ ipmb_error ipmb_send_response(ipmi_msg *resp, uint8_t index)
 	resp_cfg.buffer.InF_source = resp->InF_source;
 	resp_cfg.buffer.InF_target = resp->InF_target;
 	resp_cfg.buffer.completion_code = resp->completion_code;
-	resp_cfg.buffer.dest_addr = IPMB_config_table[index].channel_target_address;
+	/* Route the response back to whoever actually sent the request -
+	 * resp->src_addr still holds the original request's rqSA (8-bit
+	 * wire form) at this point, before it gets overwritten below to
+	 * our own address. A real IPMB channel can have more than one
+	 * legitimate requester, so this can't be a single static peer.
+	 * Falls back to the configured channel peer only if the caller
+	 * never populated src_addr (e.g. a synthetic response not built
+	 * from a decoded wire request). */
+	resp_cfg.buffer.dest_addr = resp->src_addr ?
+					     (resp->src_addr >> 1) :
+					     IPMB_config_table[index].channel_target_address;
 	resp_cfg.buffer.netfn = resp->netfn + 1;
 	resp_cfg.buffer.dest_LUN = resp->src_LUN;
 	resp_cfg.buffer.src_addr = IPMB_config_table[index].self_address << 1;
@@ -1176,9 +1197,18 @@ void IPMB_SeqTimeout_handler(void *arug0, void *arug1, void *arug2)
 static void register_target_device(void)
 {
 #ifdef DEV_IPMB_0
+#if defined(CONFIG_I2C_MCUX_LPI2C) && defined(CONFIG_I2C_TARGET)
+	/* Real i2c_target_register()-based IPMB target (see hal_i2c.c) -
+	 * not the Aspeed-fork's i2c_slave_driver_register(), which has no
+	 * mainline equivalent. See meta-facebook/mcx-n9xx-evk/README.md. */
+	if (ipmb_target_register(IPMB_0_BUS, IPMB_0_SELF_ADDR)) {
+		LOG_ERR("IPMB0: Target Device driver not found.");
+	}
+#else
 	dev_ipmb[0] = device_get_binding("IPMB_0");
 	if (i2c_slave_driver_register(dev_ipmb[0]))
 		LOG_ERR("IPMB0: Target Device driver not found.");
+#endif
 #endif
 #ifdef DEV_IPMB_1
 	dev_ipmb[1] = device_get_binding("IPMB_1");
@@ -1253,8 +1283,8 @@ void create_ipmb_threads(uint8_t index)
 	}
 	if (i > retry) {
 		LOG_ERR("Failed to create threads,Tx(%s) Rx(%s) retry time(%d)",
-			log_strdup(IPMB_config_table[index].tx_thread_name),
-			log_strdup(IPMB_config_table[index].rx_thread_name), retry);
+			IPMB_config_table[index].tx_thread_name,
+			IPMB_config_table[index].rx_thread_name, retry);
 		return;
 	}
 

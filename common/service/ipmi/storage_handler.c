@@ -21,7 +21,7 @@
 #include "pldm.h"
 #include "fru.h"
 #include "sdr.h"
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 #include "libutil.h"
 
 LOG_MODULE_DECLARE(ipmi);

@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-#include <drivers/pwm.h>
-#include <drivers/sensor.h>
+#include <zephyr/drivers/pwm.h>
+#include <zephyr/drivers/sensor.h>
 #include "sensor.h"
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 
 #include "ast_tach.h"
 

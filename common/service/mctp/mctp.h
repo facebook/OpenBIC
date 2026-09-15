@@ -22,8 +22,8 @@ extern "C" {
 #endif
 
 #include <stdint.h>
-#include <sys/printk.h>
-#include <zephyr.h>
+#include <zephyr/sys/printk.h>
+#include <zephyr/kernel.h>
 #include "plat_def.h"
 
 #define MCTP_DEBUG 1
@@ -48,8 +48,29 @@ extern "C" {
 #ifdef PLAT_MCTP_MSG_MAX_SIZE
 #define MCTP_DEFAULT_MSG_MAX_SIZE PLAT_MCTP_MSG_MAX_SIZE
 #else
-#define MCTP_DEFAULT_MSG_MAX_SIZE 244
+/* DSP0236 sec 8.4: 64 bytes is the MCTP baseline transmission unit -
+ * the only per-packet payload size every conformant endpoint is
+ * guaranteed to accept without negotiation. This stack has no
+ * transmission-unit negotiation (mctp_ctrl.c's Get MCTP Version
+ * Support just reports the versions we accept, it doesn't negotiate a
+ * larger MTU), so unilaterally sending bigger packets isn't spec
+ * compliance for us to assume the peer will accept - and found in
+ * practice, hardware-level truncation on a real I2C/SMBus bridge (a
+ * 251-byte fragment reaching us as a clean, complete 128-byte write)
+ * when 244 was used. */
+#define MCTP_DEFAULT_MSG_MAX_SIZE 64
 #endif
+/* mctp_tx_task() had no message-level retry at all on a transient
+ * write_data() failure (e.g. bus contention from another in-flight
+ * message) - it just gave up and dropped the packet permanently,
+ * unlike IPMB's TX task which retries. This is the message-level retry
+ * budget on top of whatever the medium's own write_data() (e.g.
+ * mctp_smbus_write()'s MCTP_SMBUS_WRITE_MAX_RETRY) already does
+ * internally. Found via cross-session hardware testing: a back-to-back
+ * request pair reliably lost the first response to exactly this gap. */
+#define MCTP_TX_MSG_RETRY_TIME 3
+#define MCTP_TX_RETRY_DELAY_MS 20
+
 #define MCTP_TRANSPORT_HEADER_SIZE 4
 #define MCTP_MEDIUM_META_SIZE_SMBUS 3
 #define MCTP_PEC_SIZE 1 /* SMBUS/I3C */
@@ -63,6 +84,15 @@ extern "C" {
 
 #define MCTP_POLL_TIME_MS 1
 
+/* If a multi-packet message's EOM never arrives (sender died mid-
+ * transfer, a packet got lost with no retransmit, etc.), its
+ * reassembly buffer used to leak forever - see mctp_rx_task()'s
+ * periodic sweep. Idle timeout (time since the *last accepted packet*
+ * for that message, not total transfer time), so a slow-but-still-
+ * progressing multi-packet transfer isn't killed early. */
+#define MCTP_REASSEMBLY_TIMEOUT_MS 3000
+#define MCTP_REASSEMBLY_SWEEP_INTERVAL_MS 500
+
 #define MCTP_MSG_TYPE_SHIFT 0
 #define MCTP_MSG_TYPE_MASK 0x7F
 
@@ -75,6 +105,8 @@ typedef enum {
 	MCTP_MSG_TYPE_NCSI,
 	MCTP_MSG_TYPE_ETH,
 	MCTP_MSG_TYPE_NVME,
+	MCTP_MSG_TYPE_SPDM = 0x05,
+	MCTP_MSG_TYPE_SECURED = 0x06,
 	MCTP_MSG_TYPE_CCI = 0x08,
 	MCTP_MSG_TYPE_VEN_DEF_PCI = 0x7E,
 	MCTP_MSG_TYPE_VEN_DEF_IANA = 0x7F
@@ -186,6 +218,15 @@ typedef struct _mctp {
 	struct {
 		uint8_t *buf;
 		uint16_t offset;
+		/* Expected pkt_seq of the *next* packet for this in-progress
+		 * message (DSP0236: starts at 0 on SOM, +1 mod 4 per packet).
+		 * See mctp_pkt_assembling(). */
+		uint8_t expected_pkt_seq;
+		/* k_uptime_get() at the last packet accepted into this slot -
+		 * used to reclaim a message whose EOM never arrives (see
+		 * mctp_rx_task()'s periodic sweep) rather than leaking the
+		 * buffer forever. */
+		int64_t last_activity_ms;
 	} temp_msg_buf[MCTP_MAX_MSG_TAG_NUM][2];
 
 	/* the callback when recevie mctp data */

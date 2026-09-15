@@ -16,18 +16,18 @@
 
 #ifdef CONFIG_SNOOP_ASPEED
 
-#include <zephyr.h>
+#include <zephyr/kernel.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <device.h>
+#include <zephyr/device.h>
 #include <drivers/misc/aspeed/snoop_aspeed.h>
 #include "snoop.h"
 #include "libutil.h"
 #include "ipmi.h"
 #include "pldm.h"
 #include "power_status.h"
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 
 LOG_MODULE_REGISTER(dev_snoop);
 

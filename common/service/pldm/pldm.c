@@ -16,13 +16,13 @@
 
 #include "pldm.h"
 #include "mctp.h"
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/printk.h>
-#include <sys/slist.h>
-#include <zephyr.h>
+#include <zephyr/sys/printk.h>
+#include <zephyr/sys/slist.h>
+#include <zephyr/kernel.h>
 #include "libutil.h"
 #include "ipmi.h"
 #include "plat_def.h"

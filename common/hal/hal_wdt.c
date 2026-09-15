@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-#include <zephyr.h>
-#include <device.h>
+#include <zephyr/kernel.h>
+#include <zephyr/device.h>
 #include <stdio.h>
-#include <drivers/watchdog.h>
+#include <zephyr/drivers/watchdog.h>
 #include "hal_wdt.h"
 
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 
 LOG_MODULE_REGISTER(hal_wdt);
 
@@ -50,7 +50,11 @@ void wdt_init()
 	int ret = 0;
 	struct wdt_timeout_cfg wdt_config;
 
+#if defined(CONFIG_WDT_MCUX_WWDT)
+	wdt_dev = DEVICE_DT_GET(DT_ALIAS(watchdog0));
+#else
 	wdt_dev = device_get_binding(WDT_DEVICE_NAME);
+#endif
 	if (!wdt_dev) {
 		LOG_ERR("Cannot find %s device.", WDT_DEVICE_NAME);
 		return;
