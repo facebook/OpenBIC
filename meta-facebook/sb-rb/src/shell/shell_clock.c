@@ -24,6 +24,7 @@
 #include "plat_i2c.h"
 #include <shell/shell.h>
 #include "plat_log.h"
+#include "plat_util.h"
 
 LOG_MODULE_REGISTER(clock_shell);
 bool clock_name_get(uint8_t index, uint8_t **name);
@@ -337,10 +338,29 @@ void handle_single_clock_status(const struct shell *shell, enum CLOCK_COMPONENT 
 		status_reg_offset = CLK_BUF_100M_WRITE_LOCK_CLEAR_LOS_EVENT_OFFSET;
 		status_reg_name = "WRITE_LOCK_CLEAR_LOS_EVENT";
 		break;
-	case CLK_GEN_100M_U86:
-		status_reg_offset = CLK_GEN_LOSMON_EVENT_OFFSET;
-		status_reg_name = "CLK_GEN_LOSMON_EVENT_OFFSET";
-		break;
+	case CLK_GEN_100M_U86: {
+		//write to two-byte mode
+		uint8_t write_data = 0x05;
+		if (!plat_i2c_write(I2C_BUS3, 0x9, 0x26, &write_data, 1)) {
+			shell_error(shell,
+				    "Failed to write 100MHz clock SSI 2-Byte address register");
+		}
+		uint8_t lock_status = clk_100mhz_get_lock_status();
+		if (lock_status == 0xFF) {
+			shell_error(shell, "Failed to get CLK_GEN_100M_U86 APLL lock status");
+		} else if (lock_status == 0) {
+			shell_print(shell, "APLL lock status,  value = %d (unlock)", lock_status);
+		} else {
+			shell_print(shell, "APLL lock status,  value = %d (lock)", lock_status);
+		}
+		//write back to 1-byte mode
+		write_data = 0x01;
+		if (!plat_i2c_write(I2C_BUS3, 0x9, 0x26, &write_data, 1)) {
+			shell_error(shell,
+				    "Failed to write 100MHz clock SSI 1-Byte address register");
+		}
+		return;
+	}
 	default:
 		shell_error(shell, "Type wrong clock name");
 		return;
