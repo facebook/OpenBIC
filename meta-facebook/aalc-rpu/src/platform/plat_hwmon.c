@@ -786,8 +786,8 @@ bool get_pump_uptime_secs(uint8_t pump_num, uint32_t *return_uptime)
 
 	// if auto tune is on
 	if (get_status_flag(STATUS_FLAG_AUTO_TUNE))
-		*return_uptime =
-			tmp_uptime + (k_uptime_get_32() / 1000) - tmp_current_boot_unrunning_time;
+		*return_uptime = tmp_uptime + ((uint32_t)(k_uptime_get() / 1000) -
+					       tmp_current_boot_unrunning_time);
 	else
 		*return_uptime =
 			tmp_uptime + (tmp_last_switch_time - tmp_current_boot_unrunning_time);
@@ -801,28 +801,26 @@ bool set_pump_uptime_secs(uint8_t pump_1_set, uint8_t pump_2_set, uint8_t pump_3
 	if (auto_tune_flag == last_auto_tune_flag)
 		return true;
 
+	uint32_t now_sec = (uint32_t)(k_uptime_get() / 1000);
 	if (pump_1_set) {
 		if (auto_tune_flag)
-			pump1_current_boot_unrunning_time +=
-				(k_uptime_get_32() / 1000 - pump1_last_switch_time);
+			pump1_current_boot_unrunning_time += (now_sec - pump1_last_switch_time);
 
-		pump1_last_switch_time = k_uptime_get_32() / 1000;
+		pump1_last_switch_time = now_sec;
 	}
 
 	if (pump_2_set) {
 		if (auto_tune_flag)
-			pump2_current_boot_unrunning_time +=
-				(k_uptime_get_32() / 1000 - pump2_last_switch_time);
+			pump2_current_boot_unrunning_time += (now_sec - pump2_last_switch_time);
 
-		pump2_last_switch_time = k_uptime_get_32() / 1000;
+		pump2_last_switch_time = now_sec;
 	}
 
 	if (pump_3_set) {
 		if (auto_tune_flag)
-			pump3_current_boot_unrunning_time +=
-				(k_uptime_get_32() / 1000 - pump3_last_switch_time);
+			pump3_current_boot_unrunning_time += (now_sec - pump3_last_switch_time);
 
-		pump3_last_switch_time = k_uptime_get_32() / 1000;
+		pump3_last_switch_time = now_sec;
 	}
 
 	last_auto_tune_flag = auto_tune_flag;
@@ -846,12 +844,13 @@ bool modbus_clear_pump_running_time_function(pump_reset_struct *data, uint8_t bi
 		return false;
 	}
 
-	pump1_last_switch_time = k_uptime_get_32() / 1000;
-	pump2_last_switch_time = k_uptime_get_32() / 1000;
-	pump3_last_switch_time = k_uptime_get_32() / 1000;
-	pump1_current_boot_unrunning_time = k_uptime_get_32() / 1000;
-	pump2_current_boot_unrunning_time = k_uptime_get_32() / 1000;
-	pump3_current_boot_unrunning_time = k_uptime_get_32() / 1000;
+	uint32_t now_sec = (uint32_t)(k_uptime_get() / 1000);
+	pump1_last_switch_time = now_sec;
+	pump2_last_switch_time = now_sec;
+	pump3_last_switch_time = now_sec;
+	pump1_current_boot_unrunning_time = now_sec;
+	pump2_current_boot_unrunning_time = now_sec;
+	pump3_current_boot_unrunning_time = now_sec;
 
 	return true;
 }
