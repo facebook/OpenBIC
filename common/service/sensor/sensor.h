@@ -288,6 +288,9 @@ typedef struct _sensor_cfg_ {
 	uint8_t (*init)(uint8_t, int *);
 	uint8_t (*read)(struct _sensor_cfg_ *, int *);
 	bool is_initialized;
+#ifdef ENABLE_SENSOR_POLL_SEL
+	bool last_is_enable_polling;
+#endif
 } sensor_cfg;
 
 typedef struct _sensor_monitor_table_info {
@@ -867,4 +870,11 @@ sensor_cfg *get_common_sensor_cfg_info(uint8_t sensor_num);
 uint8_t common_tbl_sen_reinit(uint8_t sen_num);
 void plat_sensor_poll_post();
 bool plat_sensor_clamp_negative_reading(uint8_t pmbus_cmd);
+#ifdef ENABLE_SENSOR_POLL_SEL
+/* Reported as the sensor number when every sensor changed at once */
+#define SENSOR_POLL_ALL_SENSORS 0xFF
+/* Reported as the sensor number when the global sensor_poll_enable_flag changed */
+#define SENSOR_POLL_GLOBAL_FLAG 0xFE
+void plat_sensor_poll_state_changed(uint8_t sensor_num, bool enabled);
+#endif
 #endif
