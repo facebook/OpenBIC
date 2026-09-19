@@ -1,0 +1,13 @@
+<map id="is_nvme_temp_readable" name="is_nvme_temp_readable">
+<area shape="rect" id="node1" title=" " alt="" coords="5,107,168,133"/>
+<area shape="rect" id="node2" href="$yv3-vf_2src_2platform_2plat__power__seq_8c.html#a69c9c73fb476bf1b3150ba151dbef7aa" title=" " alt="" coords="216,5,389,32"/>
+<area shape="rect" id="node3" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="242,56,363,83"/>
+<area shape="rect" id="node5" href="$plat__m2_8c.html#a63e1468d9795e49c2bb3a55b8cbd1519" title=" " alt="" coords="232,107,373,133"/>
+<area shape="rect" id="node10" href="$plat__m2_8c.html#a4ecf3f131205ff6f47f822eed02a6dcf" title=" " alt="" coords="257,157,348,184"/>
+<area shape="rect" id="node11" href="$plat__m2_8c.html#a75a8d67356467203a94e3229f3d8030c" title=" " alt="" coords="235,208,370,235"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="437,56,580,83"/>
+<area shape="rect" id="node6" href="$yv3-vf_2src_2platform_2plat__power__seq_8c.html#a7fb1a674edf4c9a99906d5130397c666" title=" " alt="" coords="453,107,564,133"/>
+<area shape="rect" id="node7" href="$plat__m2_8c.html#a2fbae9e0c5e33358a110653971ce6998" title=" " alt="" coords="467,157,550,184"/>
+<area shape="rect" id="node8" href="$yv3-vf_2src_2platform_2plat__power__seq_8c.html#a140f8f50d3cc1540be9ec8791de2ac3a" title=" " alt="" coords="628,132,771,159"/>
+<area shape="rect" id="node9" href="$hal__gpio_8c.html#af700ee50de3d113e223c2b011c41f966" title=" " alt="" coords="819,157,889,184"/>
+</map>

@@ -1,0 +1,5 @@
+<map id="switch_i3c_dimm_mux" name="switch_i3c_dimm_mux">
+<area shape="rect" id="node1" title=" " alt="" coords="5,5,160,32"/>
+<area shape="rect" id="node2" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="208,5,329,32"/>
+<area shape="rect" id="node3" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="377,5,520,32"/>
+</map>

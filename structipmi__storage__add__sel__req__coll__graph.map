@@ -1,0 +1,5 @@
+<map id="ipmi_storage_add_sel_req" name="ipmi_storage_add_sel_req">
+<area shape="rect" id="node1" title=" " alt="" coords="59,95,233,121"/>
+<area shape="rect" id="node2" href="$structsel__event__record.html" title=" " alt="" coords="5,5,127,32"/>
+<area shape="rect" id="node3" href="$structoem__sel__event__record.html" title=" " alt="" coords="151,5,304,32"/>
+</map>

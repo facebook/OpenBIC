@@ -1,0 +1,7 @@
+<map id="i2c_bridge_command_handler" name="i2c_bridge_command_handler">
+<area shape="rect" id="node1" title=" " alt="" coords="5,49,151,90"/>
+<area shape="rect" id="node2" href="$minerva-ag_2src_2platform_2plat__i2c__target_8c.html#afa8b065569e93487ac0e4cdfbbc91408" title=" " alt="" coords="208,5,311,32"/>
+<area shape="rect" id="node3" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="200,56,319,83"/>
+<area shape="rect" id="node5" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="199,107,320,133"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="368,81,511,108"/>
+</map>
