@@ -95,31 +95,41 @@ void power_capping_syn_vr_oc_warn_limit()
 		uint16_t value = 0;
 		uint16_t voltage_value = 0;
 		float float_value = 0;
+		// set LV1 threshold = 1200A
+		uint16_t set_value = 0x04B0;
 		if (get_vr_module() == VR_MODULE_MPS) {
-			if (mp29816a_get_iout_oc_warn_limit(cfg, &value)) {
-				if (mp29816a_get_vout_command(cfg, 0, &voltage_value)) {
-					float_value = voltage_value / 1000.0;
-					power_capping_info.current_threshold[i] = value;
-					power_capping_info.threshold[i][CAPPING_LV_IDX_LV1] =
-						value * float_value;
+			if (mp29816a_set_iout_oc_warn_limit(cfg, set_value)) {
+				if (mp29816a_get_iout_oc_warn_limit(cfg, &value)) {
+					if (mp29816a_get_vout_command(cfg, 0, &voltage_value)) {
+						float_value = voltage_value / 1000.0;
+						power_capping_info.current_threshold[i] = value;
+						power_capping_info.threshold[i][CAPPING_LV_IDX_LV1] =
+							value * float_value;
+					} else {
+						LOG_ERR("Can't get VOUT_COMMAND: 0x%x", sensor_id);
+					}
 				} else {
-					LOG_ERR("Can't get VOUT_COMMAND: 0x%x", sensor_id);
+					LOG_ERR("Can't get IOUT_OC_WARN: 0x%x", sensor_id);
 				}
 			} else {
-				LOG_ERR("Can't get IOUT_OC_WARN: 0x%x", sensor_id);
+				LOG_ERR("Can't set IOUT_OC_WARN: 0x%x", sensor_id);
 			}
 		} else if (get_vr_module() == VR_MODULE_RNS) {
-			if (raa228249_get_iout_oc_warn_limit(cfg, &value)) {
-				if (raa228249_get_vout_command(cfg, 0, &voltage_value)) {
-					float_value = voltage_value / 1000.0;
-					power_capping_info.current_threshold[i] = value;
-					power_capping_info.threshold[i][CAPPING_LV_IDX_LV1] =
-						value * float_value;
+			if (raa228249_set_iout_oc_warn_limit(cfg, set_value)) {
+				if (raa228249_get_iout_oc_warn_limit(cfg, &value)) {
+					if (raa228249_get_vout_command(cfg, 0, &voltage_value)) {
+						float_value = voltage_value / 1000.0;
+						power_capping_info.current_threshold[i] = value;
+						power_capping_info.threshold[i][CAPPING_LV_IDX_LV1] =
+							value * float_value;
+					} else {
+						LOG_ERR("Can't get VOUT_COMMAND: 0x%x", sensor_id);
+					}
 				} else {
-					LOG_ERR("Can't get VOUT_COMMAND: 0x%x", sensor_id);
+					LOG_ERR("Can't get IOUT_OC_WARN: 0x%x", sensor_id);
 				}
 			} else {
-				LOG_ERR("Can't get IOUT_OC_WARN: 0x%x", sensor_id);
+				LOG_ERR("Can't set IOUT_OC_WARN: 0x%x", sensor_id);
 			}
 		} else {
 			LOG_ERR("Unknown VR module: %d", get_vr_module());
@@ -493,8 +503,14 @@ void plat_power_capping_init()
 	k_sem_init(&power_capping_sem, 0, 1);
 
 	// sync avg_times
-	uint8_t data = 0;
+	uint8_t data = 0x64;
+	LOG_INF("set cpld lv1 time 0x%02x", data);
+	// set LV1 time = 100us
+	if (!plat_write_cpld(CPLD_OFFSET_POWER_CAPPING_LV1_TIME, &data)) {
+		LOG_ERR("can't w cpld offset %d", CPLD_OFFSET_POWER_CAPPING_LV1_TIME);
+	}
 	if (plat_read_cpld(CPLD_OFFSET_POWER_CAPPING_LV1_TIME, &data, 1)) {
+		LOG_INF("read cpld lv1 time 0x%02x", data);
 		if (data >= 10 && data <= 100) {
 			power_capping_info.time_w[CAPPING_VR_IDX_MEDHA0][CAPPING_LV_IDX_LV1] = data;
 			power_capping_info.time_w[CAPPING_VR_IDX_MEDHA1][CAPPING_LV_IDX_LV1] = data;
@@ -540,7 +556,7 @@ void plat_power_capping_init()
 		set_power_capping_lv_switch_en_val(data);
 	}
 
-	set_power_capping_source(CAPPING_SOURCE_VR);
+	set_power_capping_source(CAPPING_SOURCE_ADC);
 
 	k_thread_create(&power_capping_thread, power_capping_thread_stack, POWER_CAPPING_STACK_SIZE,
 			power_capping_handler, NULL, NULL, NULL, CONFIG_MAIN_THREAD_PRIORITY, 0,
