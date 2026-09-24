@@ -17,7 +17,7 @@
 #ifndef SENSOR_SHELL_H
 #define SENSOR_SHELL_H
 
-#include <shell/shell.h>
+#include <zephyr/shell/shell.h>
 
 /* According to IPMI specification Table 43, length of sensor name maximum is 16 bytes. */
 #define MAX_SENSOR_NAME_LENGTH 32 // 31 bytes sensor name and 1 byte null character

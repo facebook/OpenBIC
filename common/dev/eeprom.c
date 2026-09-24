@@ -19,7 +19,7 @@
 #include "fru.h"
 #include "hal_i2c.h"
 #include <string.h>
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 
 LOG_MODULE_REGISTER(dev_eeprom);
 

@@ -18,7 +18,7 @@
 #include <string.h>
 #include "sensor.h"
 #include "hal_i2c.h"
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 
 LOG_MODULE_REGISTER(dev_g788p81u);
 

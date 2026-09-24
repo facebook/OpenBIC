@@ -18,7 +18,7 @@
 #include "sensor.h"
 #include "hal_i2c.h"
 #include "libutil.h"
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 #include "nct214.h"
 
 #define TEMPERATURE_RANGE_EXTENDED_VALUE 64

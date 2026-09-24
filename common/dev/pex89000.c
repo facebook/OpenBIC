@@ -24,10 +24,10 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
-#include <zephyr.h>
-#include <sys/util.h>
-#include <sys/byteorder.h>
-#include <logging/log.h>
+#include <zephyr/kernel.h>
+#include <zephyr/sys/util.h>
+#include <zephyr/sys/byteorder.h>
+#include <zephyr/logging/log.h>
 #include "libutil.h"
 
 #include "sensor.h"

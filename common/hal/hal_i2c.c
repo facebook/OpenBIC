@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-#include <zephyr.h>
+#include <zephyr/kernel.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "cmsis_os2.h"
+#include <zephyr/portability/cmsis_os2.h>
 #include "hal_i2c.h"
 #include "timer.h"
 #include "plat_i2c.h"
 #include "libutil.h"
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 
 LOG_MODULE_REGISTER(hal_i2c);
 
@@ -59,7 +59,7 @@ int i2c_freq_set(uint8_t i2c_bus, uint8_t i2c_speed_mode, uint8_t en_slave)
 	}
 
 	uint32_t dev_config_raw;
-	dev_config_raw = I2C_MODE_MASTER | I2C_SPEED_SET(i2c_speed_mode);
+	dev_config_raw = I2C_MODE_CONTROLLER | I2C_SPEED_SET(i2c_speed_mode);
 
 	if (i2c_configure(dev_i2c[i2c_bus], dev_config_raw)) {
 		LOG_ERR("i2c freq set failed");
@@ -417,7 +417,262 @@ void i2c_scan(uint8_t bus, uint8_t *target_addr, uint8_t *target_addr_len)
 	}
 }
 
+#if defined(CONFIG_I2C_MCUX_LPI2C)
+static void util_init_I2C_mcux_flexcomm(void)
+{
+	int status;
+
+#ifdef DEV_I2C_2
+	dev_i2c[I2C_BUS_LCD_HEADER] = DEVICE_DT_GET(DT_NODELABEL(flexcomm2_lpi2c2));
+	status = k_mutex_init(&i2c_mutex[I2C_BUS_LCD_HEADER]);
+	if (status)
+		LOG_ERR("i2c%d mutex init fail", I2C_BUS_LCD_HEADER);
+#endif
+#ifdef DEV_I2C_3
+	dev_i2c[I2C_BUS_ARDUINO_HEADER] = DEVICE_DT_GET(DT_NODELABEL(flexcomm3_lpi2c3));
+	status = k_mutex_init(&i2c_mutex[I2C_BUS_ARDUINO_HEADER]);
+	if (status)
+		LOG_ERR("i2c%d mutex init fail", I2C_BUS_ARDUINO_HEADER);
+#endif
+}
+
+#if defined(CONFIG_I2C_TARGET)
+/* IPMB-over-I2C target-mode glue. IPMB frames on the wire begin with
+ * the responder's own slave address (8-bit form) for checksum
+ * purposes, but real I2C carries addressing out-of-band in the
+ * address phase, not as a literal data byte - so on write_requested()
+ * we synthesize that leading byte to match what
+ * common/service/ipmb/ipmb.c's validate_checksum()/ipmb_decode()
+ * expect, exactly as a real IPMB-capable I2C slave controller would
+ * present it. IPMB is write-only in both directions (a "response" is
+ * simply a separate write from the other node back to our address),
+ * so only write_requested/write_received/stop are needed - no read
+ * callback exists in this protocol.
+ */
+struct ipmb_target_msg {
+	uint8_t len;
+	uint8_t data[I2C_BUFF_SIZE];
+};
+
+struct ipmb_target_ctx {
+	struct i2c_target_config cfg;
+	uint8_t bus;
+	bool is_ipmb_bus;
+	struct ipmb_target_msg accum;
+};
+
+static struct ipmb_target_ctx ipmb_target_ctx[I2C_BUS_MAX_NUM];
+static struct k_msgq ipmb_target_msgq[I2C_BUS_MAX_NUM];
+static char __aligned(4)
+	ipmb_target_msgq_buf[I2C_BUS_MAX_NUM][2 * sizeof(struct ipmb_target_msg)];
+
+static int ipmb_target_write_requested(struct i2c_target_config *config)
+{
+	struct ipmb_target_ctx *ctx = CONTAINER_OF(config, struct ipmb_target_ctx, cfg);
+
+	ctx->accum.data[0] = config->address << 1;
+	ctx->accum.len = 1;
+	return 0;
+}
+
+static int ipmb_target_write_received(struct i2c_target_config *config, uint8_t val)
+{
+	struct ipmb_target_ctx *ctx = CONTAINER_OF(config, struct ipmb_target_ctx, cfg);
+
+	if (ctx->accum.len < I2C_BUFF_SIZE) {
+		ctx->accum.data[ctx->accum.len++] = val;
+	}
+	return 0;
+}
+
+static int ipmb_target_stop(struct i2c_target_config *config)
+{
+	struct ipmb_target_ctx *ctx = CONTAINER_OF(config, struct ipmb_target_ctx, cfg);
+
+	/* len > 1: more than just the synthesized address byte arrived */
+	if (ctx->accum.len > 1) {
+		if (k_msgq_put(&ipmb_target_msgq[ctx->bus], &ctx->accum, K_NO_WAIT)) {
+			LOG_ERR("ipmb target[%d]: rx queue full, dropping message", ctx->bus);
+		}
+	}
+	return 0;
+}
+
+static const struct i2c_target_callbacks ipmb_target_callbacks = {
+	.write_requested = ipmb_target_write_requested,
+	.write_received = ipmb_target_write_received,
+	.stop = ipmb_target_stop,
+};
+
+int ipmb_target_register(uint8_t bus, uint8_t addr)
+{
+	if (bus >= I2C_BUS_MAX_NUM || !dev_i2c[bus]) {
+		return -EINVAL;
+	}
+
+	k_msgq_init(&ipmb_target_msgq[bus], ipmb_target_msgq_buf[bus],
+		    sizeof(struct ipmb_target_msg), 2);
+
+	ipmb_target_ctx[bus].bus = bus;
+	ipmb_target_ctx[bus].cfg.address = addr;
+	ipmb_target_ctx[bus].cfg.callbacks = &ipmb_target_callbacks;
+
+	int ret = i2c_target_register(dev_i2c[bus], &ipmb_target_ctx[bus].cfg);
+
+	if (!ret) {
+		ipmb_target_ctx[bus].is_ipmb_bus = true;
+	}
+	return ret;
+}
+
+int ipmb_target_read(uint8_t bus, uint8_t *buf, uint8_t *len, k_timeout_t timeout)
+{
+	struct ipmb_target_msg msg;
+
+	if (bus >= I2C_BUS_MAX_NUM || !buf || !len) {
+		return -EINVAL;
+	}
+
+	if (k_msgq_get(&ipmb_target_msgq[bus], &msg, timeout)) {
+		return -EAGAIN;
+	}
+
+	memcpy(buf, msg.data, msg.len);
+	*len = msg.len;
+	return 0;
+}
+
+/* MCTP-over-SMBus target-mode glue for common/service/mctp/mctp_smbus.c's
+ * i2c_target_read() dependency (the one piece of that file that isn't
+ * already portable - see meta-facebook/mcx-n9xx-evk/README.md). Unlike
+ * IPMB, MCTP frames carry no synthesized leading address byte, so this
+ * just accumulates the raw bytes as sent. It also can't share a bus with
+ * the IPMB target above: the mainline i2c_target driver only supports one
+ * registered target address per bus/device instance (unlike the old
+ * Aspeed hal_i2c_target.c's three), so MCTP needs its own bus - see
+ * plat_mctp.c for which one this board uses.
+ */
+struct mctp_target_msg {
+	uint16_t len;
+	uint8_t data[I2C_BUFF_SIZE];
+};
+
+struct mctp_target_ctx {
+	struct i2c_target_config cfg;
+	uint8_t bus;
+	bool is_mctp_bus;
+	struct mctp_target_msg accum;
+};
+
+/* Depth needs enough headroom to hold every raw fragment of a
+ * multi-packet message the I2C target hardware ACKs before
+ * mctp_rx_task() gets scheduled to drain the queue - a burst of
+ * writes arrives back-to-back with no gap for the consumer to run
+ * between them. Was 2: fine for the 1-2 packet messages this got
+ * verified against first, but a real 4-fragment message dropped
+ * fragments 3 and 4 here (silent "rx queue full" - see below) even
+ * though every I2C write itself succeeded. */
+#define MCTP_TARGET_MSGQ_DEPTH 8
+
+static struct mctp_target_ctx mctp_target_ctx[I2C_BUS_MAX_NUM];
+static struct k_msgq mctp_target_msgq[I2C_BUS_MAX_NUM];
+static char __aligned(4) mctp_target_msgq_buf[I2C_BUS_MAX_NUM][MCTP_TARGET_MSGQ_DEPTH *
+								 sizeof(struct mctp_target_msg)];
+
+static int mctp_i2c_target_write_requested(struct i2c_target_config *config)
+{
+	struct mctp_target_ctx *ctx = CONTAINER_OF(config, struct mctp_target_ctx, cfg);
+
+	ctx->accum.len = 0;
+	return 0;
+}
+
+static int mctp_i2c_target_write_received(struct i2c_target_config *config, uint8_t val)
+{
+	struct mctp_target_ctx *ctx = CONTAINER_OF(config, struct mctp_target_ctx, cfg);
+
+	if (ctx->accum.len < I2C_BUFF_SIZE) {
+		ctx->accum.data[ctx->accum.len++] = val;
+	}
+	return 0;
+}
+
+static int mctp_i2c_target_stop(struct i2c_target_config *config)
+{
+	struct mctp_target_ctx *ctx = CONTAINER_OF(config, struct mctp_target_ctx, cfg);
+
+	LOG_DBG("mctp target[%d]: stop, accum.len=%d", ctx->bus, ctx->accum.len);
+
+	if (ctx->accum.len > 0) {
+		if (k_msgq_put(&mctp_target_msgq[ctx->bus], &ctx->accum, K_NO_WAIT)) {
+			LOG_ERR("mctp target[%d]: rx queue full, dropping message", ctx->bus);
+		}
+	}
+	return 0;
+}
+
+static const struct i2c_target_callbacks mctp_i2c_target_callbacks = {
+	.write_requested = mctp_i2c_target_write_requested,
+	.write_received = mctp_i2c_target_write_received,
+	.stop = mctp_i2c_target_stop,
+};
+
+int mctp_i2c_target_register(uint8_t bus, uint8_t addr)
+{
+	if (bus >= I2C_BUS_MAX_NUM || !dev_i2c[bus]) {
+		return -EINVAL;
+	}
+
+	k_msgq_init(&mctp_target_msgq[bus], mctp_target_msgq_buf[bus],
+		    sizeof(struct mctp_target_msg), MCTP_TARGET_MSGQ_DEPTH);
+
+	mctp_target_ctx[bus].bus = bus;
+	mctp_target_ctx[bus].cfg.address = addr;
+	mctp_target_ctx[bus].cfg.callbacks = &mctp_i2c_target_callbacks;
+
+	int ret = i2c_target_register(dev_i2c[bus], &mctp_target_ctx[bus].cfg);
+
+	if (!ret) {
+		mctp_target_ctx[bus].is_mctp_bus = true;
+	}
+	return ret;
+}
+
+/* Return/argument shape matches the old hal_i2c_target.c i2c_target_read()
+ * this replaces, since mctp_smbus.c calls it directly: 0 = success,
+ * nonzero = failure, blocks until a frame arrives. */
+uint8_t mctp_i2c_target_read(uint8_t bus, uint8_t *buf, uint16_t max_len, uint16_t *out_len)
+{
+	struct mctp_target_msg msg;
+
+	if (bus >= I2C_BUS_MAX_NUM || !buf || !out_len) {
+		return 1;
+	}
+
+	if (k_msgq_get(&mctp_target_msgq[bus], &msg, K_FOREVER)) {
+		return 1;
+	}
+
+	if (msg.len > max_len) {
+		LOG_ERR("mctp target[%d]: message len %d exceeds caller buffer %d", bus, msg.len,
+			max_len);
+		return 1;
+	}
+
+	memcpy(buf, msg.data, msg.len);
+	*out_len = msg.len;
+	return 0;
+}
+#endif /* CONFIG_I2C_TARGET */
+#endif /* CONFIG_I2C_MCUX_LPI2C */
+
 void util_init_I2C(void)
+{
+#if defined(CONFIG_I2C_MCUX_LPI2C)
+	util_init_I2C_mcux_flexcomm();
+}
+#else
+static void util_init_I2C_device_get_binding(void)
 {
 	int status;
 
@@ -520,6 +775,12 @@ void util_init_I2C(void)
 #endif
 #endif /* CONFIG_I2C_ASPEED */
 }
+
+void util_init_I2C(void)
+{
+	util_init_I2C_device_get_binding();
+}
+#endif /* CONFIG_I2C_MCUX_LPI2C */
 
 int check_i2c_bus_valid(uint8_t bus)
 {

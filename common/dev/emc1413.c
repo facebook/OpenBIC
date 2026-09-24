@@ -16,7 +16,7 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 #include "sensor.h"
 #include "hal_i2c.h"
 #include "emc1413.h"

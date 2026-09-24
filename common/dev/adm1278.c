@@ -17,7 +17,7 @@
 #include "hal_i2c.h"
 #include "pmbus.h"
 #include "sensor.h"
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 #include <stdio.h>
 #include <string.h>
 

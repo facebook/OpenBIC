@@ -22,7 +22,7 @@
 #include "libutil.h"
 #include "pmbus.h"
 
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 
 LOG_MODULE_REGISTER(ltc4286);
 

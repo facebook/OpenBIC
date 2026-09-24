@@ -14,12 +14,17 @@
  * limitations under the License.
  */
 
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <drivers/spi_nor.h>
-#include <drivers/flash.h>
+/* <drivers/spi_nor.h> was an Aspeed-fork-only raw SPI-NOR driver
+ * extension header with no mainline equivalent - pldm_spi_reinit()
+ * below (the only user) is dead code repo-wide already (never called,
+ * even on Aspeed boards), so it's gated out here instead of carried
+ * forward. See meta-facebook/mcx-n9xx-evk/README.md.
+ */
+#include <zephyr/drivers/flash.h>
 #include "sensor.h"
 #include "plat_def.h"
 #ifdef ENABLE_PLDM_SENSOR
@@ -746,7 +751,12 @@ void pldm_spi_reinit(const char *spi_dev_str, const uint8_t *buf, uint16_t len, 
 
 	switch (reinit_spi_state->effecter_state) {
 	case EFFECTER_STATE_SPI_REINIT:
-		spi_nor_re_init(flash_dev_spi);
+		/* spi_nor_re_init() was an Aspeed-fork-only API with no
+		 * mainline equivalent - this handler is unreachable dead
+		 * code repo-wide (never called), so this is a no-op here.
+		 */
+		ARG_UNUSED(flash_dev_spi);
+		LOG_ERR("SPI NOR reinit not supported on this platform");
 		break;
 	default:
 		LOG_ERR("Unsupported reinit i3c hub effecter state, (%d)",

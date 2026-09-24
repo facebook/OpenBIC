@@ -19,7 +19,7 @@
 
 #ifdef ENABLE_VISTARA
 #include "cci.h"
-#include <sys/byteorder.h>
+#include <zephyr/sys/byteorder.h>
 
 #define READ_DDR_TEMP_REQ_LEN 0
 #define READ_DDR_TEMP_RESP_LEN 32
