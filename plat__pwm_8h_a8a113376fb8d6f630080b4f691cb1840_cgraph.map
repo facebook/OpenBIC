@@ -1,0 +1,14 @@
+<map id="nct7363_wdt_all_enable" name="nct7363_wdt_all_enable">
+<area shape="rect" id="node1" title=" " alt="" coords="5,97,167,123"/>
+<area shape="rect" id="node2" href="$sensor_8c.html#a52fcbd96358bec7eff3e368a4da4a292" title=" " alt="" coords="215,17,411,43"/>
+<area shape="rect" id="node4" href="$nct7363_8c.html#afa675804d29a432594d886cf877e5820" title=" " alt="" coords="241,71,384,98"/>
+<area shape="rect" id="node8" href="$aalc-rpu_2src_2platform_2plat__hook_8c.html#a53e0e4851d2e8c312a4e58efdffb52b5" title=" " alt="" coords="237,122,388,149"/>
+<area shape="rect" id="node10" href="$aalc-rpu_2src_2platform_2plat__hook_8c.html#a332648030bbf2cafa2dd1d7ca74fd5f5" title=" " alt="" coords="241,173,384,199"/>
+<area shape="rect" id="node3" href="$sensor_8c.html#ae224ad26413eb100f2abef7a1907a547" title=" " alt="" coords="459,5,596,47"/>
+<area shape="rect" id="node5" href="$nct7363_8c.html#a7c0e5ebf512357e06f24c3b5f6aa2fde" title=" " alt="" coords="476,71,579,98"/>
+<area shape="rect" id="node6" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="669,114,790,141"/>
+<area shape="rect" id="node7" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="863,143,1005,170"/>
+<area shape="rect" id="node9" href="$aalc-rpu_2src_2platform_2plat__hook_8c.html#a030290ba9bdfb95ddad14883664cf46a" title=" " alt="" coords="459,122,596,149"/>
+<area shape="rect" id="node11" href="$common__i2c__mux_8c.html#a06ee477158d07a45f98e42dc563641aa" title=" " alt="" coords="466,173,589,199"/>
+<area shape="rect" id="node12" href="$hal__i2c_8c.html#ae12ca95f786ad6cc2dfe16be7d73f862" title=" " alt="" coords="644,165,815,207"/>
+</map>

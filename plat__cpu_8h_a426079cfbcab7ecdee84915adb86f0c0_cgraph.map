@@ -1,0 +1,9 @@
+<map id="monitor_cpu_handler" name="monitor_cpu_handler">
+<area shape="rect" id="node1" title=" " alt="" coords="5,71,148,98"/>
+<area shape="rect" id="node2" href="$ipmi_8c.html#a40681786f36bd1836cdb473b7050dda1" title=" " alt="" coords="196,5,345,47"/>
+<area shape="rect" id="node4" href="$power__status_8c.html#abeff55e3cd2e8563760154b81f37f286" title=" " alt="" coords="213,71,328,98"/>
+<area shape="rect" id="node5" href="$hal__peci_8c.html#a6ffff8eba702bfb4fd26a8b057d32915" title=" " alt="" coords="231,122,310,149"/>
+<area shape="rect" id="node3" href="$ipmb_8h.html#a260c07ba372e6648a635b20dbb790fa9" title=" " alt="" coords="405,13,488,39"/>
+<area shape="rect" id="node6" href="$hal__peci_8c.html#a8e95a227994066af673414f44c4a1f61" title=" " alt="" coords="393,122,500,149"/>
+<area shape="rect" id="node7" href="$hal__peci_8c.html#a83241209febf9da926be7e30afd9cc46" title=" " alt="" coords="548,122,696,149"/>
+</map>

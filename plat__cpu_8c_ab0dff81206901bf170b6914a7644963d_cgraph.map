@@ -1,0 +1,10 @@
+<map id="start_monitor_cpu_thread" name="start_monitor_cpu_thread">
+<area shape="rect" id="node1" title=" " alt="" coords="5,71,175,98"/>
+<area shape="rect" id="node2" href="$plat__cpu_8c.html#a426079cfbcab7ecdee84915adb86f0c0" title=" " alt="" coords="223,71,365,98"/>
+<area shape="rect" id="node3" href="$ipmi_8c.html#a40681786f36bd1836cdb473b7050dda1" title=" " alt="" coords="413,5,563,47"/>
+<area shape="rect" id="node5" href="$power__status_8c.html#abeff55e3cd2e8563760154b81f37f286" title=" " alt="" coords="431,71,545,98"/>
+<area shape="rect" id="node6" href="$hal__peci_8c.html#a6ffff8eba702bfb4fd26a8b057d32915" title=" " alt="" coords="449,122,527,149"/>
+<area shape="rect" id="node4" href="$ipmb_8h.html#a260c07ba372e6648a635b20dbb790fa9" title=" " alt="" coords="623,13,705,39"/>
+<area shape="rect" id="node7" href="$hal__peci_8c.html#a8e95a227994066af673414f44c4a1f61" title=" " alt="" coords="611,122,717,149"/>
+<area shape="rect" id="node8" href="$hal__peci_8c.html#a83241209febf9da926be7e30afd9cc46" title=" " alt="" coords="765,122,913,149"/>
+</map>

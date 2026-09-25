@@ -1,0 +1,5 @@
+<map id="plat_sensor_poll_state_changed" name="plat_sensor_poll_state_changed">
+<area shape="rect" id="node1" title=" " alt="" coords="5,5,157,47"/>
+<area shape="rect" id="node2" href="$ipmi_8c.html#a40681786f36bd1836cdb473b7050dda1" title=" " alt="" coords="205,5,355,47"/>
+<area shape="rect" id="node3" href="$ipmb_8h.html#a260c07ba372e6648a635b20dbb790fa9" title=" " alt="" coords="403,13,485,39"/>
+</map>

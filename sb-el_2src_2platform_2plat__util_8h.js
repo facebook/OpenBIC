@@ -1,0 +1,6 @@
+var sb_el_2src_2platform_2plat__util_8h =
+[
+    [ "DC_ON_DELAY_TIMMING", "sb-el_2src_2platform_2plat__util_8h.html#ab080e28314d8f5d2313f3ea436b002ae", null ],
+    [ "plat_i2c_read", "sb-el_2src_2platform_2plat__util_8h.html#ad8887b1d0c4bbc7a6f1c25870a6d9051", null ],
+    [ "plat_i2c_write", "sb-el_2src_2platform_2plat__util_8h.html#a99dfe1bff0c2df0fa9632a165a6fcd3f", null ]
+];

@@ -1,0 +1,13 @@
+<map id="OEM_1S_GET_FW_VERSION" name="OEM_1S_GET_FW_VERSION">
+<area shape="rect" id="node1" title=" " alt="" coords="5,56,205,83"/>
+<area shape="rect" id="node2" href="$yv35-hda1_2src_2platform_2plat__fru_8c.html#a525264a0f9780748fd0ddcf45c10d1bc" title=" " alt="" coords="255,19,379,45"/>
+<area shape="rect" id="node7" href="$yv35-hda1_2src_2platform_2plat__fru_8c.html#a3127d2b6c5a552d897dd94adc0ef1982" title=" " alt="" coords="253,81,380,108"/>
+<area shape="rect" id="node3" href="$eeprom_8c.html#af84d506534770494cca55b2db24730ba" title=" " alt="" coords="433,5,531,32"/>
+<area shape="rect" id="node4" href="$eeprom_8c.html#ac470cc411f066d8f6bc2c1d7a74c8a5a" title=" " alt="" coords="584,56,723,83"/>
+<area shape="rect" id="node5" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="771,69,892,96"/>
+<area shape="rect" id="node6" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="940,120,1083,147"/>
+<area shape="rect" id="node8" href="$eeprom_8c.html#ab838e3d27c232117306d8611e48be202" title=" " alt="" coords="432,56,532,83"/>
+<area shape="rect" id="node9" href="$power__status_8c.html#a647e7f9c1247d6a1785d9b9502e7fd29" title=" " alt="" coords="428,107,536,133"/>
+<area shape="rect" id="node10" href="$hal__gpio_8c.html#ab1b576cbfd9eddaaf57a5aa5fc383dd1" title=" " alt="" coords="447,157,517,184"/>
+<area shape="rect" id="node11" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="594,196,713,223"/>
+</map>
