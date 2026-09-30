@@ -1248,6 +1248,18 @@ void plat_master_write_thread_handler()
 					break;
 				}
 				uint8_t rail = get_vr_rail_by_control_vol_reg(reg_offset);
+				if (reg_offset == CONTROL_VOL_VR_ASIC_P0V85_MEDHA0_VDD_REG ||
+				    reg_offset == CONTROL_VOL_VR_ASIC_P0V85_MEDHA1_VDD_REG) {
+					// check svs_asic_voltage_flag for medha0 and medha1
+					// if flag = 0, just block voltage set and end
+					uint8_t svs_asic_voltage_flag = get_svs_asic_voltage_flag();
+					if (svs_asic_voltage_flag == 0) {
+						LOG_ERR("SVS asic voltage is disabled, voltage not apply, reg_offset 0x%02x",
+							reg_offset);
+						free(sensor_data);
+						break;
+					}
+				}
 				if (svs_flag) {
 					if (reg_offset ==
 						    CONTROL_VOL_VR_ASIC_P0V85_MEDHA0_VDD_REG ||

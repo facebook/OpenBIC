@@ -176,6 +176,7 @@ void init_plat_config()
 	set_delta_ubc_time_of_vout_rise();
 	init_asic_type();
 	LOG_INF("init_plat_eid: 0x%x", init_plat_eid);
+	plat_ubc_otw_otp_init();
 }
 
 uint8_t get_vr_module()

@@ -304,8 +304,12 @@ void add_error_bootstrap_index_to_list(uint8_t index);
 uint8_t get_error_bootstrap_index_list(uint8_t index);
 uint8_t get_svs_flag();
 void set_svs_flag(uint8_t flag);
+uint8_t get_svs_asic_voltage_flag();
+void set_svs_asic_voltage_flag(uint8_t flag);
 bool vr_vout_default_settings_init(void);
 bool plat_get_get_vout_offset(uint8_t rail, uint16_t *vout_offset);
 bool vr_vout_offset_get_init(void);
 bool voltage_offset_get(uint8_t rail, uint16_t *vout_offset);
+bool post_iris_sensor_read(sensor_cfg *cfg, void *args, int *const reading);
+bool plat_ubc_otw_otp_init(void);
 #endif
