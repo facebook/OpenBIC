@@ -206,7 +206,7 @@ uint8_t raa229140a_read(sensor_cfg *cfg, int *reading)
 		val = slinear11_to_float(read_value);
 		break;
 	default:
-		LOG_ERR("Not support offset: 0x%x", offset);
+		LOG_ERR("Not supported offset: 0x%x", offset);
 		return SENSOR_FAIL_TO_ACCESS;
 	}
 

@@ -51,6 +51,7 @@ LOG_MODULE_DECLARE(pldm);
 #define PLDM_NO_SUPPORT_PROGRESS_PERCENT 0x65
 #define PLDM_FW_UPDATE_MODE_TIMEOUT 60
 #define UPDATE_REQUEST_DATA_MAX_RETRY_COUNT 3
+#define HEX_CHARS_PER_BYTE 2
 
 #define GET_EEPROM_SLAVE_MASK(offset) (((offset) >> 16) & 0xF)
 #define GET_EERPOM_OFFSET(offset) ((offset)&0xFFFF)
@@ -1779,7 +1780,7 @@ uint8_t fill_descriptor_into_buf(struct pldm_descriptor_string *descriptor, uint
 	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
 	CHECK_NULL_ARG_WITH_RETURN(fill_length, PLDM_ERROR);
 
-	char data[3] = { 0 };
+	char data[HEX_CHARS_PER_BYTE + 1] = { 0 }; // +1 for NUL terminator
 	uint8_t val = 0;
 	uint8_t index = 0;
 	uint8_t data_ptr[sizeof(struct pldm_descriptor_tlv) +
@@ -1804,8 +1805,8 @@ uint8_t fill_descriptor_into_buf(struct pldm_descriptor_string *descriptor, uint
 		}
 
 		// Two characters are represented as a uint8_t
-		if (((strlen(descriptor->descriptor_data) / 2) != type_length) ||
-		    (strlen(descriptor->descriptor_data) % 2 != 0)) {
+		if (((strlen(descriptor->descriptor_data) / HEX_CHARS_PER_BYTE) != type_length) ||
+		    (strlen(descriptor->descriptor_data) % HEX_CHARS_PER_BYTE != 0)) {
 			LOG_ERR("Invalid descriptor data length, data length: 0x%x, type length: 0x%x",
 				strlen(descriptor->descriptor_data), type_length);
 			return PLDM_ERROR;
@@ -1814,7 +1815,8 @@ uint8_t fill_descriptor_into_buf(struct pldm_descriptor_string *descriptor, uint
 		descriptor_count -= type_length;
 
 		for (index = 0; index < type_length; ++index) {
-			strncpy(data, &descriptor->descriptor_data[index * 2], 2);
+			strncpy(data, &descriptor->descriptor_data[index * HEX_CHARS_PER_BYTE],
+				HEX_CHARS_PER_BYTE);
 			val = strtol(data, NULL, 16);
 			tlv_ptr->descriptor_data[index] = val;
 		}
