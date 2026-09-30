@@ -31,6 +31,7 @@
 #include "pt5161l.h"
 #include "mp2985.h"
 #include "raa229621.h"
+#include "raa229140a.h"
 #include "mpq8746.h"
 #include "mp289x.h"
 #include "tps53689.h"
@@ -40,6 +41,7 @@
 #include "mp2988.h"
 #include "mp29816a.h"
 #include "raa228249.h"
+#include "mp29526.h"
 
 LOG_MODULE_DECLARE(pldm);
 
@@ -49,9 +51,10 @@ LOG_MODULE_DECLARE(pldm);
 #define PLDM_NO_SUPPORT_PROGRESS_PERCENT 0x65
 #define PLDM_FW_UPDATE_MODE_TIMEOUT 60
 #define UPDATE_REQUEST_DATA_MAX_RETRY_COUNT 3
+#define HEX_CHARS_PER_BYTE 2
 
 #define GET_EEPROM_SLAVE_MASK(offset) (((offset) >> 16) & 0xF)
-#define GET_EERPOM_OFFSET(offset) ((offset) & 0xFFFF)
+#define GET_EERPOM_OFFSET(offset) ((offset)&0xFFFF)
 
 #ifndef PLDM_UPDATE_DELAY_AFTER_POST_UPDATE
 #define PLDM_UPDATE_DELAY_AFTER_POST_UPDATE 3000
@@ -213,6 +216,29 @@ uint8_t pldm_pcie_switch_update(void *fw_update_param)
 	return pldm_fw_update(fw_update_param, pos);
 }
 
+/*
+ * VRs whose images are too large to buffer whole in RAM stream their PLDM
+ * data chunks incrementally instead of going through the hex_buff path
+ * below. Add new VRs here as more of them need this treatment.
+ *
+ * Sets *handled to true iff comp_version_str matched one of them, in which
+ * case the returned status is the final result for this pldm_vr_update()
+ * call (0 = ok/continue, 1 = failure) and the caller must return it as-is.
+ */
+static uint8_t pldm_vr_update_streaming(pldm_fw_update_param_t *p, bool *handled)
+{
+	*handled = false;
+
+#ifdef ENABLE_MP29526
+	if (!strncmp(p->comp_version_str, KEYWORD_VR_MP29526, ARRAY_SIZE(KEYWORD_VR_MP29526) - 1)) {
+		*handled = true;
+		return mp29526_pldm_update(p);
+	}
+#endif
+
+	return 0;
+}
+
 uint8_t pldm_vr_update(void *fw_update_param)
 {
 	CHECK_NULL_ARG_WITH_RETURN(fw_update_param, 1);
@@ -220,6 +246,11 @@ uint8_t pldm_vr_update(void *fw_update_param)
 	pldm_fw_update_param_t *p = (pldm_fw_update_param_t *)fw_update_param;
 
 	CHECK_NULL_ARG_WITH_RETURN(p->data, 1);
+
+	bool streaming_handled = false;
+	uint8_t streaming_ret = pldm_vr_update_streaming(p, &streaming_handled);
+	if (streaming_handled)
+		return streaming_ret;
 
 	uint8_t ret = 1;
 
@@ -296,8 +327,16 @@ uint8_t pldm_vr_update(void *fw_update_param)
 		if (raa229621_fwupdate(p->bus, p->addr, hex_buff, fw_update_cfg.image_size) ==
 		    false)
 			goto exit;
-	} else if (!strncmp(p->comp_version_str, KEYWORD_VR_MPQ8746,
-			    ARRAY_SIZE(KEYWORD_VR_MPQ8746) - 1)) {
+	}
+#ifdef ENABLE_RAA229140a
+	else if (!strncmp(p->comp_version_str, KEYWORD_VR_RAA229140A,
+			  ARRAY_SIZE(KEYWORD_VR_RAA229140A) - 1)) {
+		if (!raa229140a_fwupdate(p->bus, p->addr, hex_buff, fw_update_cfg.image_size))
+			goto exit;
+	}
+#endif
+	else if (!strncmp(p->comp_version_str, KEYWORD_VR_MPQ8746,
+			  ARRAY_SIZE(KEYWORD_VR_MPQ8746) - 1)) {
 		if (mpq8746_fwupdate(p->bus, p->addr, hex_buff, fw_update_cfg.image_size) == false)
 			goto exit;
 	} else if ((!strncmp(p->comp_version_str, KEYWORD_VR_MP2898,
@@ -685,7 +724,7 @@ uint16_t pldm_fw_update_read(void *mctp_p, enum pldm_firmware_update_commands cm
 	CHECK_NULL_ARG_WITH_RETURN(ext_params, 0);
 
 	pldm_msg msg = { 0 };
-	mctp_ext_params *extra_data = (mctp_ext_params *)ext_params;
+	const mctp_ext_params *extra_data = (const mctp_ext_params *)ext_params;
 
 	msg.ext_params = *extra_data;
 
@@ -1276,7 +1315,8 @@ static uint8_t activate_firmware(void *mctp_inst, uint8_t *buf, uint16_t len, ui
 	CHECK_NULL_ARG_WITH_RETURN(resp_len, PLDM_ERROR);
 	CHECK_NULL_ARG_WITH_RETURN(ext_params, PLDM_ERROR);
 
-	struct pldm_activate_firmware_req *req_p = (struct pldm_activate_firmware_req *)buf;
+	const struct pldm_activate_firmware_req *req_p =
+		(const struct pldm_activate_firmware_req *)buf;
 	struct pldm_activate_firmware_resp *resp_p = (struct pldm_activate_firmware_resp *)resp;
 
 	*resp_len = 1;
@@ -1440,7 +1480,7 @@ static uint8_t get_firmware_parameter(void *mctp_inst, uint8_t *buf, uint16_t le
 		(struct pldm_get_firmware_parameters_resp *)resp;
 
 	*resp_len = 1;
-	uint8_t *resp_end = resp + PLDM_MAX_DATA_SIZE;
+	const uint8_t *resp_end = resp + PLDM_MAX_DATA_SIZE;
 	if (len != 0) {
 		resp_p->completion_code = PLDM_ERROR_INVALID_LENGTH;
 		return PLDM_SUCCESS;
@@ -1740,7 +1780,7 @@ uint8_t fill_descriptor_into_buf(struct pldm_descriptor_string *descriptor, uint
 	CHECK_NULL_ARG_WITH_RETURN(buf, PLDM_ERROR);
 	CHECK_NULL_ARG_WITH_RETURN(fill_length, PLDM_ERROR);
 
-	char data[2];
+	char data[HEX_CHARS_PER_BYTE + 1] = { 0 }; // +1 for NUL terminator
 	uint8_t val = 0;
 	uint8_t index = 0;
 	uint8_t data_ptr[sizeof(struct pldm_descriptor_tlv) +
@@ -1765,8 +1805,8 @@ uint8_t fill_descriptor_into_buf(struct pldm_descriptor_string *descriptor, uint
 		}
 
 		// Two characters are represented as a uint8_t
-		if (((strlen(descriptor->descriptor_data) / 2) != type_length) ||
-		    (strlen(descriptor->descriptor_data) % 2 != 0)) {
+		if (((strlen(descriptor->descriptor_data) / HEX_CHARS_PER_BYTE) != type_length) ||
+		    (strlen(descriptor->descriptor_data) % HEX_CHARS_PER_BYTE != 0)) {
 			LOG_ERR("Invalid descriptor data length, data length: 0x%x, type length: 0x%x",
 				strlen(descriptor->descriptor_data), type_length);
 			return PLDM_ERROR;
@@ -1775,7 +1815,8 @@ uint8_t fill_descriptor_into_buf(struct pldm_descriptor_string *descriptor, uint
 		descriptor_count -= type_length;
 
 		for (index = 0; index < type_length; ++index) {
-			strncpy(data, &descriptor->descriptor_data[index * 2], 2);
+			strncpy(data, &descriptor->descriptor_data[index * HEX_CHARS_PER_BYTE],
+				HEX_CHARS_PER_BYTE);
 			val = strtol(data, NULL, 16);
 			tlv_ptr->descriptor_data[index] = val;
 		}
