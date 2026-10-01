@@ -580,7 +580,6 @@ int sgpio_init(const struct device *args)
 {
 	uint16_t i;
 	int ret;
-	bool all_ok = true; // TODO: remove before push, debug-only success log
 
 	pal_load_sgpio_config();
 	init_sgpio_dev();
@@ -591,7 +590,6 @@ int sgpio_init(const struct device *args)
 
 		if (!dev_sgpio[sgpio_cfg[i].number / SGPIO_GROUP_SIZE]) {
 			LOG_ERR("Invalid sgpio group %d", sgpio_cfg[i].number / SGPIO_GROUP_SIZE);
-			all_ok = false;
 			continue;
 		}
 
@@ -611,7 +609,6 @@ int sgpio_init(const struct device *args)
 		if (ret != 0) {
 			LOG_ERR("sgpio %d conf failed, direction %d, ret %d",
 				sgpio_cfg[i].number, sgpio_cfg[i].direction, ret);
-			all_ok = false;
 			continue;
 		}
 
@@ -623,10 +620,6 @@ int sgpio_init(const struct device *args)
 			break;
 		}
 	}
-
-	// TODO: remove before push, debug-only success log
-	if (all_ok)
-		LOG_INF("sgpio_init: all enabled sgpio pins initialized successfully");
 
 	return 0;
 }
