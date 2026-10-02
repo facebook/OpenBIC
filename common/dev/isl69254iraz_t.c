@@ -22,7 +22,7 @@
 #include "pmbus.h"
 #include "isl69254iraz_t.h"
 
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 
 LOG_MODULE_REGISTER(isl69254iraz_t);
 

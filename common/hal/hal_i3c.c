@@ -248,7 +248,7 @@ int i3c_brocast_ccc(I3C_MSG *msg, uint8_t ccc_id, uint8_t ccc_addr)
 	return -ret;
 }
 
-int i3c_transfer(I3C_MSG *msg)
+int i3c_hal_transfer(I3C_MSG *msg)
 {
 	CHECK_NULL_ARG_WITH_RETURN(msg, -EINVAL);
 

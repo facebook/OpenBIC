@@ -78,6 +78,21 @@ struct _get_tid_resp {
 	uint8_t tid;
 } __attribute__((packed));
 
+/* GetPLDMVersion (DSP0240 cmd 0x03) */
+struct _get_pldm_version_req {
+	uint32_t data_transfer_handle;
+	uint8_t transfer_operation_flag;
+	uint8_t pldm_type;
+} __attribute__((packed));
+
+struct _get_pldm_version_resp {
+	uint8_t completion_code;
+	uint32_t next_data_transfer_handle;
+	uint8_t transfer_flag;
+	uint32_t version; /* ver32, e.g. 0xF1F0F000 for 1.0.0 */
+	uint32_t crc; /* CRC-32 of the version data, present on End/StartAndEnd */
+} __attribute__((packed));
+
 struct _get_pldm_types_resp {
 	uint8_t completion_code;
 	uint8_t pldm_types[GET_PLDM_TYPE_BUF_SIZE];
@@ -96,6 +111,8 @@ struct _get_pldm_commands_resp {
 uint8_t pldm_base_handler_query(uint8_t code, void **ret_fn);
 
 uint8_t plat_pldm_get_tid();
+/* __weak: persist a bus-owner-assigned TID across resets (default: no-op). */
+void plat_pldm_save_tid(uint8_t tid);
 
 #ifdef __cplusplus
 }

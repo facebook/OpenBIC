@@ -16,15 +16,15 @@
 
 #ifdef CONFIG_PCC_ASPEED
 
-#include <zephyr.h>
-#include <device.h>
+#include <zephyr/kernel.h>
+#include <zephyr/device.h>
 #include <stdlib.h>
 #include <drivers/misc/aspeed/pcc_aspeed.h>
 #include "ipmb.h"
 #include "ipmi.h"
 #include "libutil.h"
 #include "pcc.h"
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 #include "libipmi.h"
 #include "plat_sensor_table.h"
 #include "plat_fru.h"

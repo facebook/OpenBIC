@@ -20,7 +20,7 @@
 #include "libutil.h"
 #include "ipmi.h"
 #include "plat_ipmb.h"
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 
 #define VALID_READING 0x40
 

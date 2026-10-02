@@ -18,7 +18,7 @@
 #define VR_FAULT_H
 
 #include <stdlib.h>
-#include <zephyr.h>
+#include <zephyr/kernel.h>
 
 #define VR_CPLD_NO_PWR_FAULT 0x00
 #define VR_TYPE_IS_UNKNOWN 0x00
