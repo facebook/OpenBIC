@@ -52,6 +52,31 @@ GPIO_CFG gpio_cfg[GPIO_CFG_SIZE] = {
 	//  Defalut              DISABLE  GPIO_INPUT    LOW         PUSH_PULL    GPIO_INT_DISABLE    NULL
 };
 
+#if (CONFIG_SGPIO_NPCM4XX)
+static const struct device *dev_sgpio[SGPIO_GROUP_NUM];
+static struct gpio_callback sgpio_callbacks[SGPIO_CFG_SIZE];
+static struct k_work sgpio_work[SGPIO_CFG_SIZE];
+
+static const char *sgpio_dev_str[] = { FOREACH_SGPIO(GEN_STR) };
+
+/*
+ * Serializes sgpio_set(): the driver updates XDOUT with a read-modify-write
+ * on a byte shared by 8 pins, and sgpio_cfg[].status (the output value cache
+ * returned by sgpio_get()) must stay in step with it.
+ */
+static struct k_spinlock sgpio_out_lock;
+
+__weak char *sgpio_name[] = {};
+GPIO_CFG sgpio_cfg[SGPIO_CFG_SIZE] = {
+	//  chip,        number,   is_init, is_latch, direction,   status,   property,  int_type,          int_cb
+};
+
+__weak bool pal_load_sgpio_config(void)
+{
+	return true;
+}
+#endif /* CONFIG_SGPIO_NPCM4XX */
+
 uint32_t GPIO_GROUP_REG_ACCESS[GPIO_GROUP_NUM] = {
 #if defined(CONFIG_GPIO_ASPEED)
 	REG_GPIO_BASE + 0x00, /* GPIO_A/B/C/D Data Value Register */
@@ -398,11 +423,204 @@ int gpio_init(const struct device *args)
 					gpio_cb_irq_init(gpio_cfg[i].number, gpio_cfg[i].int_type);
 					break;
 				}
-			} else {
-				LOG_DBG("TODO: add sgpio handler");
 			}
 		}
 	}
 
 	return true;
 }
+
+#if (CONFIG_SGPIO_NPCM4XX)
+void init_sgpio_dev(void)
+{
+	for (int i = 0; i < SGPIO_GROUP_NUM; i++)
+		dev_sgpio[i] = device_get_binding(sgpio_dev_str[i]);
+}
+
+/* Direction is fixed by bank: SGPIOx_OUT() is 0-63 / 128-191, SGPIOx_IN() is 64-127 / 192-255 */
+static bool sgpio_is_output(uint8_t sgpio_num)
+{
+	return (sgpio_num & 0x40) == 0;
+}
+
+/*
+ * Note: only called from sgpio_init(), where GPIO_OUTPUT_INIT_HIGH/LOW comes
+ * from sgpio_cfg[].status. Re-configuring an output with a different init
+ * level at runtime would leave the sgpio_get() cache stale.
+ */
+int sgpio_conf(uint8_t sgpio_num, int dir)
+{
+	if (!dev_sgpio[sgpio_num / SGPIO_GROUP_SIZE])
+		return -1;
+
+	return gpio_pin_configure(dev_sgpio[sgpio_num / SGPIO_GROUP_SIZE],
+				  (sgpio_num % SGPIO_GROUP_SIZE), dir);
+}
+
+int sgpio_get(uint8_t sgpio_num)
+{
+	if (sgpio_num >= SGPIO_CFG_SIZE) {
+		LOG_ERR("Value unavailable for invalid sgpio number %d", sgpio_num);
+		return false;
+	}
+
+	if (!dev_sgpio[sgpio_num / SGPIO_GROUP_SIZE])
+		return false;
+
+	/*
+	 * The npcm4xx sgpio driver's port_get_raw() only reads XDIN, so an
+	 * output pin can't be read back from hardware. Return the value cached
+	 * by sgpio_init()/sgpio_set() instead.
+	 */
+	if (sgpio_is_output(sgpio_num)) {
+		if (sgpio_cfg[sgpio_num].is_init != ENABLE)
+			return -ENODEV;
+		return sgpio_cfg[sgpio_num].status;
+	}
+
+	return gpio_pin_get(dev_sgpio[sgpio_num / SGPIO_GROUP_SIZE],
+			    (sgpio_num % SGPIO_GROUP_SIZE));
+}
+
+int sgpio_set(uint8_t sgpio_num, uint8_t status)
+{
+	if (sgpio_num >= SGPIO_CFG_SIZE) {
+		LOG_ERR("Unable to set invalid sgpio number %d", sgpio_num);
+		return -1;
+	}
+
+	uint8_t sgpio_group = sgpio_num / SGPIO_GROUP_SIZE;
+
+	if (!dev_sgpio[sgpio_group])
+		return -1;
+
+	k_spinlock_key_t key = k_spin_lock(&sgpio_out_lock);
+
+	int ret = gpio_pin_set(dev_sgpio[sgpio_group], sgpio_num % SGPIO_GROUP_SIZE, status);
+	if (ret == 0)
+		sgpio_cfg[sgpio_num].status = status ? GPIO_HIGH : GPIO_LOW;
+
+	k_spin_unlock(&sgpio_out_lock, key);
+
+	return ret;
+}
+
+int sgpio_interrupt_conf(uint8_t sgpio_num, gpio_flags_t flags)
+{
+	if (!dev_sgpio[sgpio_num / SGPIO_GROUP_SIZE])
+		return -1;
+
+	return gpio_pin_interrupt_configure(dev_sgpio[sgpio_num / SGPIO_GROUP_SIZE],
+					    (sgpio_num % SGPIO_GROUP_SIZE), flags);
+}
+
+static void sgpio_irq_callback(const struct device *dev, struct gpio_callback *cb, uint32_t pins)
+{
+	uint8_t index, sgpio_num;
+	uint8_t group = 0xFF;
+
+	for (int i = 0; i < ARRAY_SIZE(dev_sgpio); i++) {
+		if (dev == dev_sgpio[i]) {
+			group = i;
+			break;
+		}
+	}
+
+	if (group == 0xFF) {
+		LOG_ERR("Invalid sgpio dev for isr cb");
+		return;
+	}
+
+	for (index = 0; index < SGPIO_GROUP_SIZE; index++) {
+		if ((pins >> index) & 0x1) {
+			pins = index;
+			break;
+		}
+	}
+	if (index == SGPIO_GROUP_SIZE) {
+		LOG_ERR("sgpio_irq_callback: pin %x not found", pins);
+		return;
+	}
+	sgpio_num = (group * SGPIO_GROUP_SIZE) + pins;
+
+	if (sgpio_cfg[sgpio_num].int_cb == NULL) {
+		LOG_ERR("Callback function pointer NULL for sgpio num %d", sgpio_num);
+		return;
+	}
+
+	if (plat_gpio_immediate_int_cb(sgpio_num))
+		sgpio_cfg[sgpio_num].int_cb();
+	else
+		k_work_submit_to_queue(&gpio_work_queue, &sgpio_work[sgpio_num]);
+}
+
+static void sgpio_cb_irq_init(uint8_t sgpio_num, gpio_flags_t flags)
+{
+	int ret;
+
+	gpio_init_callback(&sgpio_callbacks[sgpio_num], sgpio_irq_callback,
+			   BIT(sgpio_num % SGPIO_GROUP_SIZE));
+
+	if (dev_sgpio[sgpio_num / SGPIO_GROUP_SIZE]) {
+		ret = gpio_add_callback(dev_sgpio[sgpio_num / SGPIO_GROUP_SIZE],
+					&sgpio_callbacks[sgpio_num]);
+		if (ret != 0)
+			LOG_ERR("sgpio %d gpio_add_callback failed, ret %d", sgpio_num, ret);
+	}
+
+	ret = sgpio_interrupt_conf(sgpio_num, flags);
+	if (ret != 0)
+		LOG_ERR("sgpio %d interrupt_conf failed, flags 0x%x, ret %d", sgpio_num, flags,
+			ret);
+
+	k_work_init(&sgpio_work[sgpio_num], sgpio_cfg[sgpio_num].int_cb);
+}
+
+int sgpio_init(const struct device *args)
+{
+	uint16_t i;
+	int ret;
+
+	pal_load_sgpio_config();
+	init_sgpio_dev();
+
+	for (i = 0; i < SGPIO_CFG_SIZE; i++) {
+		if (sgpio_cfg[i].is_init != ENABLE)
+			continue;
+
+		if (!dev_sgpio[sgpio_cfg[i].number / SGPIO_GROUP_SIZE]) {
+			LOG_ERR("Invalid sgpio group %d", sgpio_cfg[i].number / SGPIO_GROUP_SIZE);
+			continue;
+		}
+
+		/*
+		 * Direction is fixed by which bank "number" falls into (output:
+		 * _0~_7, input: _8~_f), not settable at runtime, and only push-pull
+		 * is supported (no open-drain), so init is simpler than CHIP_GPIO.
+		 */
+		if (sgpio_cfg[i].direction == GPIO_OUTPUT)
+			ret = sgpio_conf(sgpio_cfg[i].number,
+					 GPIO_OUTPUT | (sgpio_cfg[i].status == GPIO_HIGH ?
+								GPIO_OUTPUT_INIT_HIGH :
+								GPIO_OUTPUT_INIT_LOW));
+		else
+			ret = sgpio_conf(sgpio_cfg[i].number, GPIO_INPUT);
+
+		if (ret != 0) {
+			LOG_ERR("sgpio %d conf failed, direction %d, ret %d",
+				sgpio_cfg[i].number, sgpio_cfg[i].direction, ret);
+			continue;
+		}
+
+		switch (sgpio_cfg[i].int_type) {
+		case GPIO_INT_EDGE_RISING:
+		case GPIO_INT_EDGE_FALLING:
+		case GPIO_INT_EDGE_BOTH:
+			sgpio_cb_irq_init(sgpio_cfg[i].number, sgpio_cfg[i].int_type);
+			break;
+		}
+	}
+
+	return 0;
+}
+#endif /* CONFIG_SGPIO_NPCM4XX */
