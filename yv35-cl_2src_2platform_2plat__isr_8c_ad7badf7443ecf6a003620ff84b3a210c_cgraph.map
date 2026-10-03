@@ -1,0 +1,10 @@
+<map id="ISR_PCH_THMALTRIP" name="ISR_PCH_THMALTRIP">
+<area shape="rect" id="node1" title=" " alt="" coords="5,56,168,83"/>
+<area shape="rect" id="node2" href="$power__status_8c.html#abeff55e3cd2e8563760154b81f37f286" title=" " alt="" coords="235,5,349,32"/>
+<area shape="rect" id="node3" href="$hal__gpio_8c.html#af700ee50de3d113e223c2b011c41f966" title=" " alt="" coords="257,56,327,83"/>
+<area shape="rect" id="node4" href="$gt-cc_2src_2platform_2plat__mctp_8c.html#a998a1c1d667b48c6de3aef50f5dc86aa" title=" " alt="" coords="216,107,368,133"/>
+<area shape="rect" id="node5" href="$at-cb_2src_2platform_2plat__mctp_8c.html#aa91b2fdee8959aa54116d3b9b3b6c031" title=" " alt="" coords="416,56,560,83"/>
+<area shape="rect" id="node6" href="$pldm_8c.html#a90114495fe7507fbfbdcd388f02911aa" title=" " alt="" coords="429,107,547,133"/>
+<area shape="rect" id="node8" href="$pldm__oem_8c.html#acdcd72cd46e1f10b7be19781bb1b9866" title=" " alt="" coords="453,157,523,184"/>
+<area shape="rect" id="node7" href="$pldm_8c.html#a41d615349cd666a0f5372f4f4f0c9507" title=" " alt="" coords="608,107,771,133"/>
+</map>

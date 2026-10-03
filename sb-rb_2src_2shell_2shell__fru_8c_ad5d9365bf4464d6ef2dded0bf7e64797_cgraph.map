@@ -1,0 +1,13 @@
+<map id="fru_print_cmd" name="fru_print_cmd">
+<area shape="rect" id="node1" title=" " alt="" coords="5,31,107,57"/>
+<area shape="rect" id="node2" href="$aalc-rpu_2src_2platform_2plat__fru_8c.html#ac9b2979e89019e1a9e678ff54b798b9b" title=" " alt="" coords="155,31,252,57"/>
+<area shape="rect" id="node3" href="$aalc-rpu_2src_2platform_2plat__fru_8c.html#ae50e7c3f0bdca647e043c698e200da04" title=" " alt="" coords="300,31,391,57"/>
+<area shape="rect" id="node4" href="$aalc-rpu_2src_2platform_2plat__fru_8c.html#a809921be4dec51ee0fe2eb4338379964" title=" " alt="" coords="446,5,554,32"/>
+<area shape="rect" id="node5" href="$aalc-rpu_2src_2platform_2plat__fru_8c.html#ab2917d40aeec3f991c281ace339589b2" title=" " alt="" coords="439,56,561,83"/>
+<area shape="rect" id="node6" href="$aalc-rpu_2src_2platform_2plat__fru_8c.html#aaab6c54ee09d0b82492774295b854fe5" title=" " alt="" coords="609,56,707,83"/>
+<area shape="rect" id="node7" href="$eeprom_8c.html#af84d506534770494cca55b2db24730ba" title=" " alt="" coords="755,31,852,57"/>
+<area shape="rect" id="node11" href="$fru_8c.html#a4694b8ef2f5e4e98917fc28fe989a2d9" title=" " alt="" coords="755,81,851,108"/>
+<area shape="rect" id="node8" href="$eeprom_8c.html#ac470cc411f066d8f6bc2c1d7a74c8a5a" title=" " alt="" coords="900,31,1039,57"/>
+<area shape="rect" id="node9" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="1087,31,1208,57"/>
+<area shape="rect" id="node10" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="1256,31,1399,57"/>
+</map>

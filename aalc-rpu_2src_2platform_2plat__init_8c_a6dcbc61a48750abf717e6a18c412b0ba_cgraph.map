@@ -1,0 +1,12 @@
+<map id="pal_pre_init" name="pal_pre_init">
+<area shape="rect" id="node1" title=" " alt="" coords="5,132,93,159"/>
+<area shape="rect" id="node2" href="$hal__gpio_8c.html#ab1b576cbfd9eddaaf57a5aa5fc383dd1" title=" " alt="" coords="165,5,236,32"/>
+<area shape="rect" id="node3" href="$aalc-rpu_2src_2platform_2plat__class_8c.html#a46e2950c9664e63f52892f9ceca59e3e" title=" " alt="" coords="145,56,256,83"/>
+<area shape="rect" id="node4" href="$nct7363_8c.html#a44e026fa49bb6c3ab838168675db3143" title=" " alt="" coords="155,107,247,133"/>
+<area shape="rect" id="node8" href="$hal__gpio_8c.html#a1db4534c169d95721a020915d2e5fccf" title=" " alt="" coords="167,157,234,184"/>
+<area shape="rect" id="node9" href="$aalc-rpu_2src_2platform_2plat__class_8c.html#a6b195353152456570950a66274ee9bd0" title=" " alt="" coords="141,208,260,235"/>
+<area shape="rect" id="node10" href="$sensor_8c.html#acb0e1d8d6b5ebfcbd475d6d81bc6980d" title=" " alt="" coords="153,259,248,285"/>
+<area shape="rect" id="node5" href="$nct7363_8c.html#a7c0e5ebf512357e06f24c3b5f6aa2fde" title=" " alt="" coords="308,107,411,133"/>
+<area shape="rect" id="node6" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="459,107,580,133"/>
+<area shape="rect" id="node7" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="628,107,771,133"/>
+</map>

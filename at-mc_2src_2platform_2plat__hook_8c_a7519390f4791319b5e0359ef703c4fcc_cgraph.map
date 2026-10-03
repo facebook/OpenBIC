@@ -1,0 +1,11 @@
+<map id="pre_cxl_switch_mux" name="pre_cxl_switch_mux">
+<area shape="rect" id="node1" title=" " alt="" coords="5,71,144,98"/>
+<area shape="rect" id="node2" href="$aalc-rpu_2src_2platform_2plat__hook_8c.html#a030290ba9bdfb95ddad14883664cf46a" title=" " alt="" coords="211,21,348,47"/>
+<area shape="rect" id="node3" href="$at-mc_2src_2platform_2plat__sensor__table_8c.html#a85f3ff7de0988e2c5b37ad18da833c82" title=" " alt="" coords="192,71,367,98"/>
+<area shape="rect" id="node6" href="$common__i2c__mux_8c.html#a06ee477158d07a45f98e42dc563641aa" title=" " alt="" coords="218,122,341,149"/>
+<area shape="rect" id="node4" href="$sensor_8c.html#ae224ad26413eb100f2abef7a1907a547" title=" " alt="" coords="431,5,569,47"/>
+<area shape="rect" id="node5" href="$at-mc_2src_2platform_2plat__sensor__table_8c.html#abca79192d53ada449e39ef0de50a52f4" title=" " alt="" coords="419,71,581,98"/>
+<area shape="rect" id="node7" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="439,122,561,149"/>
+<area shape="rect" id="node9" href="$hal__i2c_8c.html#ae12ca95f786ad6cc2dfe16be7d73f862" title=" " alt="" coords="415,173,585,215"/>
+<area shape="rect" id="node8" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="633,151,776,178"/>
+</map>

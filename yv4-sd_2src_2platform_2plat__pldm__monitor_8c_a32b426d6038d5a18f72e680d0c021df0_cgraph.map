@@ -1,0 +1,12 @@
+<map id="plat_pldm_set_effecter_state_host_power_control" name="plat_pldm_set_effecter_state_host_power_control">
+<area shape="rect" id="node1" title=" " alt="" coords="5,125,184,166"/>
+<area shape="rect" id="node2" href="$yv4-sd_2src_2platform_2plat__pldm__monitor_8c.html#a26df8b0ca57241bf31ed8b07835522d7" title=" " alt="" coords="232,5,359,32"/>
+<area shape="rect" id="node3" href="$yv4-sd_2src_2platform_2plat__pldm__monitor_8c.html#a6e3d6f6774df39ec107b3bb78698ec02" title=" " alt="" coords="240,107,351,133"/>
+<area shape="rect" id="node5" href="$power__status_8c.html#aa46adc78342af010475cd5e1ee5132f6" title=" " alt="" coords="407,54,587,95"/>
+<area shape="rect" id="node6" href="$yv4-sd_2src_2platform_2plat__pldm__monitor_8c.html#a6c7b424d5bab17f24bc5218ff3ffa7ba" title=" " alt="" coords="240,157,351,184"/>
+<area shape="rect" id="node7" href="$yv4-sd_2src_2platform_2plat__pldm__monitor_8c.html#a989684b5d8cbd274d16f1c62c638f95c" title=" " alt="" coords="420,183,573,225"/>
+<area shape="rect" id="node10" href="$yv4-sd_2src_2platform_2plat__pldm__monitor_8c.html#a40cebc152430645539c7914934508b41" title=" " alt="" coords="233,259,358,285"/>
+<area shape="rect" id="node4" href="$power__status_8c.html#a647e7f9c1247d6a1785d9b9502e7fd29" title=" " alt="" coords="443,124,551,151"/>
+<area shape="rect" id="node8" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="635,191,756,217"/>
+<area shape="rect" id="node9" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="804,191,947,217"/>
+</map>

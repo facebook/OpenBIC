@@ -1,0 +1,5 @@
+<map id="modbus_get_pump_redundant_switch_day" name="modbus_get_pump_redundant_switch_day">
+<area shape="rect" id="node1" title=" " alt="" coords="5,39,201,80"/>
+<area shape="rect" id="node2" href="$aalc-rpu_2src_2platform_2plat__hwmon_8c.html#a3fc972041dd1d8ca14ba24b85e1410bd" title=" " alt="" coords="249,5,392,47"/>
+<area shape="rect" id="node3" href="$aalc-rpu_2src_2platform_2plat__hwmon_8c.html#a8cc4d5582ff4e1a3c97f0f5dbe851f9e" title=" " alt="" coords="249,71,392,112"/>
+</map>

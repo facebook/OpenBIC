@@ -1,0 +1,13 @@
+<map id="sw_error_event_handler" name="sw_error_event_handler">
+<area shape="rect" id="node1" title=" " alt="" coords="5,56,165,83"/>
+<area shape="rect" id="node2" href="$yv3-vf_2src_2platform_2plat__util_8c.html#abc94f67ed170b0ae5f7e4965130e2166" title=" " alt="" coords="255,5,358,32"/>
+<area shape="rect" id="node4" href="$hal__gpio_8c.html#af700ee50de3d113e223c2b011c41f966" title=" " alt="" coords="271,56,342,83"/>
+<area shape="rect" id="node5" href="$at-cb_2src_2platform_2plat__pldm__monitor_8c.html#af989f82e28a11846fec63987d28bc98e" title=" " alt="" coords="213,107,400,133"/>
+<area shape="rect" id="node3" href="$yv3-vf_2src_2platform_2plat__util_8c.html#a7200b2472d3ef5cb78c82b2a0e3fe39b" title=" " alt="" coords="488,5,555,32"/>
+<area shape="rect" id="node6" href="$at-cb_2src_2platform_2plat__mctp_8c.html#aa3e8f617a363df0ea160a41500fc6fd5" title=" " alt="" coords="451,56,591,83"/>
+<area shape="rect" id="node8" href="$pldm__monitor_8c.html#a7ce4a7767d8304008efee8ba5d394c79" title=" " alt="" coords="452,107,591,133"/>
+<area shape="rect" id="node9" href="$pldm__monitor_8c.html#a76eab7d23ca73449d93b883e709c87fb" title=" " alt="" coords="448,158,595,199"/>
+<area shape="rect" id="node7" href="$at-cb_2src_2platform_2plat__mctp_8c.html#aa91b2fdee8959aa54116d3b9b3b6c031" title=" " alt="" coords="643,56,787,83"/>
+<area shape="rect" id="node10" href="$pldm_8c.html#a90114495fe7507fbfbdcd388f02911aa" title=" " alt="" coords="655,165,774,192"/>
+<area shape="rect" id="node11" href="$pldm_8c.html#a41d615349cd666a0f5372f4f4f0c9507" title=" " alt="" coords="835,165,997,192"/>
+</map>

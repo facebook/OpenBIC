@@ -1,0 +1,15 @@
+<map id="fan_pump_pwrgd" name="fan_pump_pwrgd">
+<area shape="rect" id="node1" title=" " alt="" coords="5,137,127,164"/>
+<area shape="rect" id="node2" href="$plat__threshold_8c.html#a258311f3c14d6ddfa5b0f40ad6da019f" title=" " alt="" coords="175,137,345,164"/>
+<area shape="rect" id="node3" href="$aalc-rpu_2src_2platform_2plat__class_8c.html#a9556923a75518229aa09ba0bbda92a48" title=" " alt="" coords="432,7,551,33"/>
+<area shape="rect" id="node5" href="$sensor_8c.html#a52fcbd96358bec7eff3e368a4da4a292" title=" " alt="" coords="393,61,589,88"/>
+<area shape="rect" id="node7" href="$sensor_8c.html#a76278e0d00225596fd3c4805408ff195" title=" " alt="" coords="405,112,577,139"/>
+<area shape="rect" id="node8" href="$sensor_8c.html#ab9a824489ded146dddedddfb3d2b5a5c" title=" " alt="" coords="399,163,584,189"/>
+<area shape="rect" id="node9" href="$nct7363_8c.html#a33d1b854149a2acac4ef2e214fa60bf5" title=" " alt="" coords="408,213,575,240"/>
+<area shape="rect" id="node12" href="$nct7363_8c.html#a7c0e5ebf512357e06f24c3b5f6aa2fde" title=" " alt="" coords="440,264,543,291"/>
+<area shape="rect" id="node4" href="$hal__gpio_8c.html#af700ee50de3d113e223c2b011c41f966" title=" " alt="" coords="671,5,741,32"/>
+<area shape="rect" id="node6" href="$sensor_8c.html#ae224ad26413eb100f2abef7a1907a547" title=" " alt="" coords="637,57,775,98"/>
+<area shape="rect" id="node10" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="647,213,765,240"/>
+<area shape="rect" id="node11" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="823,239,965,265"/>
+<area shape="rect" id="node13" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="645,264,767,291"/>
+</map>

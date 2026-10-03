@@ -1,0 +1,16 @@
+<map id="pal_post_init" name="pal_post_init">
+<area shape="rect" id="node1" title=" " alt="" coords="5,56,100,83"/>
+<area shape="rect" id="node2" href="$gc2-es_2src_2platform_2plat__kcs_8c.html#ac31848c296f005f2380adaa07a086b4e" title=" " alt="" coords="198,5,265,32"/>
+<area shape="rect" id="node3" href="$at-cb_2src_2platform_2plat__mctp_8c.html#af17d4e2997613e6dcb53131ba8ed0f65" title=" " alt="" coords="180,56,283,83"/>
+<area shape="rect" id="node4" href="$yv35-cl_2src_2platform_2plat__gpio_8c.html#a1924ce56e6e734f2b13605021041710e" title=" " alt="" coords="148,107,315,133"/>
+<area shape="rect" id="node5" href="$gc2-es_2src_2platform_2plat__class_8c.html#a80de806742117599c089f713db573b5b" title=" " alt="" coords="383,81,500,108"/>
+<area shape="rect" id="node6" href="$yv35-cl_2src_2platform_2plat__gpio_8c.html#a4c54fcbbfcb6f9a458febefbfad6f6f1" title=" " alt="" coords="363,132,520,159"/>
+<area shape="rect" id="node7" href="$libutil_8c.html#a143d81b4bb1c57a0fbba65823e309d11" title=" " alt="" coords="568,81,728,108"/>
+<area shape="rect" id="node8" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="589,132,707,159"/>
+<area shape="rect" id="node10" href="$gt-cc_2src_2platform_2plat__mctp_8c.html#a998a1c1d667b48c6de3aef50f5dc86aa" title=" " alt="" coords="572,195,724,221"/>
+<area shape="rect" id="node9" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="777,119,919,145"/>
+<area shape="rect" id="node11" href="$at-cb_2src_2platform_2plat__mctp_8c.html#aa91b2fdee8959aa54116d3b9b3b6c031" title=" " alt="" coords="776,169,920,196"/>
+<area shape="rect" id="node12" href="$pldm_8c.html#a90114495fe7507fbfbdcd388f02911aa" title=" " alt="" coords="789,220,907,247"/>
+<area shape="rect" id="node14" href="$pldm__oem_8c.html#acdcd72cd46e1f10b7be19781bb1b9866" title=" " alt="" coords="813,271,883,297"/>
+<area shape="rect" id="node13" href="$pldm_8c.html#a41d615349cd666a0f5372f4f4f0c9507" title=" " alt="" coords="968,220,1131,247"/>
+</map>
