@@ -30,29 +30,6 @@
 
 LOG_MODULE_REGISTER(rsm3514e);
 
-bool rsm3514e_i2c_read(uint8_t bus, uint8_t addr, uint8_t reg, uint8_t *data, uint8_t len)
-{
-	CHECK_NULL_ARG_WITH_RETURN(data, false);
-
-	memset(data, 0, len);
-
-	I2C_MSG i2c_msg = { 0 };
-	uint8_t retry = 5;
-	i2c_msg.bus = bus;
-	i2c_msg.target_addr = addr;
-	i2c_msg.tx_len = 1;
-	i2c_msg.rx_len = len;
-	i2c_msg.data[0] = reg;
-
-	if (i2c_master_read(&i2c_msg, retry)) {
-		LOG_ERR("Failed to read mp29816a, bus: %d, addr: 0x%x, reg: 0x%x", bus, addr, reg);
-		return false;
-	}
-
-	memcpy(data, i2c_msg.data, len);
-	return true;
-}
-
 uint8_t rsm3514e_read(sensor_cfg *cfg, int *reading)
 {
 	CHECK_NULL_ARG_WITH_RETURN(cfg, SENSOR_UNSPECIFIED_ERROR);
