@@ -382,7 +382,7 @@ static bool get_vr_ot_warning_sensor_num_by_index(uint8_t rail_index, uint8_t *s
 	if (rail_index >= vr_temp_monitor_sensors_count)
 		return false;
 
-	sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(vr_temp_monitor_sensors[rail_index]);
+	const sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(vr_temp_monitor_sensors[rail_index]);
 	if (cfg == NULL)
 		return false;
 
@@ -430,7 +430,6 @@ bool plat_get_extend_error_data(uint16_t error_code, uint8_t *data)
 		data[0] = reg_val;
 		data[1] = sensor_num;
 		return true;
-		break;
 	}
 	default:
 		LOG_ERR("Unsupported extended error code: 0x%04x", error_code);

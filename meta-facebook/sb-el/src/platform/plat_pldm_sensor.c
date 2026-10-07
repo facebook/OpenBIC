@@ -217,16 +217,15 @@ uint8_t check_sensor_type(uint8_t sensor_num)
 		return UBC_SENSOR_THREAD_ID;
 
 	/* EVB OSFP sensors */
-	if (sensor_num <= SENSOR_NUM_P3V3_OSFP_INPUT_VOLT_V)
+	if (sensor_num <= SENSOR_NUM_P3V3_OSFP_PWR_W)
 		return EVB_SENSOR_THREAD_ID;
 
 	/* VR input-voltage sensors */
-	if (sensor_num >= SENSOR_NUM_ASIC_P0V75_NUWA0_VDD_INPUT_VOLT_V &&
-	    sensor_num <= SENSOR_NUM_P3V3_OSFP_INPUT_VOLT_V) {
+	if (sensor_num <= SENSOR_NUM_ASIC_P0V75_OWL_W_TRVDD_INPUT_VOLT_V)
 		return VR_SENSOR_THREAD_ID;
-	}
 
-	return MAX_SENSOR_THREAD_ID;
+	/* EVB OSFP input-voltage sensor */
+	return EVB_SENSOR_THREAD_ID;
 }
 
 // clang-format off
@@ -13800,7 +13799,7 @@ bool is_ina238_access(uint8_t sensor_num)
 	if (!polling_access)
 		return false;
 
-	sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_num);
+	const sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_num);
 	if (cfg == NULL || cfg->target_addr == 0)
 		return false;
 
@@ -14111,7 +14110,7 @@ static void init_ot_warning_table(void)
 	ot_warning_table_count = 0;
 
 	for (uint8_t i = 0; i < ARRAY_SIZE(vr_temp_monitor_sensors); i++) {
-		sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(vr_temp_monitor_sensors[i]);
+		const sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(vr_temp_monitor_sensors[i]);
 
 		if (cfg == NULL)
 			continue;

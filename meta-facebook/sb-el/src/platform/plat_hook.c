@@ -1181,11 +1181,12 @@ bool plat_get_get_vout_offset(uint8_t rail, uint16_t *vout_offset)
 	bool ret = false;
 	uint8_t sensor_id = vr_rail_table[rail].sensor_id;
 	sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
-	vr_pre_proc_arg *pre_proc_args = (vr_pre_proc_arg *)cfg->pre_sensor_read_args;
 	if (cfg == NULL) {
 		LOG_ERR("Failed to get sensor config for sensor 0x%x", sensor_id);
 		return false;
 	}
+
+	vr_pre_proc_arg *pre_proc_args = (vr_pre_proc_arg *)cfg->pre_sensor_read_args;
 
 	if (cfg->pre_sensor_read_hook) {
 		if (!cfg->pre_sensor_read_hook(cfg, cfg->pre_sensor_read_args)) {
@@ -1710,7 +1711,7 @@ bool plat_set_voffset_mmc_command(uint8_t rail, int16_t *millivolt, bool is_perm
 
 	bool ret = false;
 	uint8_t sensor_id = vr_rail_table[rail].sensor_id;
-	sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
+	const sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
 	if (cfg == NULL) {
 		LOG_ERR("Failed to get sensor config for sensor 0x%x", sensor_id);
 		return false;

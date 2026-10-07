@@ -257,7 +257,7 @@ void check_thermal_handler(void *arg1, void *arg2, void *arg3)
 		// check temp_alert_index_table all temperature status
 		// only for TPM432
 		for (int i = 0; i < ARRAY_SIZE(temp_alert_index_table); i++) {
-			sensor_cfg *temp_cfg =
+			const sensor_cfg *temp_cfg =
 				get_sensor_cfg_by_sensor_id(temp_alert_index_table[i].sensor_id);
 			if (temp_cfg == NULL) {
 				LOG_ERR("sensor id %d not found",

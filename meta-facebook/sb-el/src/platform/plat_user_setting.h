@@ -149,7 +149,7 @@ bool get_user_settings_vr_vout_from_eeprom(void *user_settings, uint8_t data_len
 
 //svs
 bool set_user_settings_svs_flag_to_eeprom(void *user_settings, uint8_t data_length);
-bool get_user_settings_svs_flag_from_eeprom(void *thermaltrip_user_settings, uint8_t data_length);
+bool get_user_settings_svs_flag_from_eeprom(void *svs_flag_user_settings, uint8_t data_length);
 
 //vout offset
 bool set_user_settings_vr_voffset_mmc_to_eeprom(void *user_settings, uint8_t data_length);
