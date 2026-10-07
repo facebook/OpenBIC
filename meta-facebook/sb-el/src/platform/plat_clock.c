@@ -29,18 +29,18 @@ LOG_MODULE_REGISTER(plat_clock);
 /* function to read APLL lock status for CLK_GEN_100M_U86 */
 uint8_t clk_100mhz_get_lock_status_u86(void)
 {
-    /* Switch to 2-byte address mode */
-    #define SSI_GLOBAL_CNFG_REG 0x26
-    #define SET_TWO_BYTE_ADDRESS 0x05
-    uint8_t write_data = SET_TWO_BYTE_ADDRESS;
-    if (!plat_i2c_write(I2C_BUS3, CLK_GEN_100M_U86_ADDR, SSI_GLOBAL_CNFG_REG, &write_data, 1)) {
-        LOG_ERR("Failed to write 100MHz clock(U86) SSI 2-Byte address register");
-        return 0xFF;
-    }
+/* Switch to 2-byte address mode */
+#define SSI_GLOBAL_CNFG_REG 0x26
+#define SET_TWO_BYTE_ADDRESS 0x05
+	uint8_t write_data = SET_TWO_BYTE_ADDRESS;
+	if (!plat_i2c_write(I2C_BUS3, CLK_GEN_100M_U86_ADDR, SSI_GLOBAL_CNFG_REG, &write_data, 1)) {
+		LOG_ERR("Failed to write 100MHz clock(U86) SSI 2-Byte address register");
+		return 0xFF;
+	}
 
-    /* Read APLL lock status */
-    #define U86_APLL_STS_REG_HSB 0x01
-    #define U86_APLL_STS_REG_LSB 0x3F
+/* Read APLL lock status */
+#define U86_APLL_STS_REG_HSB 0x01
+#define U86_APLL_STS_REG_LSB 0x3F
 	I2C_MSG i2c_msg = { 0 };
 	uint8_t retry = 5;
 	i2c_msg.bus = I2C_BUS3;
@@ -51,17 +51,17 @@ uint8_t clk_100mhz_get_lock_status_u86(void)
 	i2c_msg.data[1] = U86_APLL_STS_REG_LSB; //offset LSB
 
 	if (i2c_master_read_without_error_log(&i2c_msg, retry)) {
-        LOG_ERR("Failed to read 100MHz clock(U86) APLL lock status");
+		LOG_ERR("Failed to read 100MHz clock(U86) APLL lock status");
 		return 0xFF;
 	}
 
-    /* Switch back to 1-byte address mode */
-    #define SET_ONE_BYTE_ADDRESS 0x01
-    write_data = SET_ONE_BYTE_ADDRESS;
-    if (!plat_i2c_write(I2C_BUS3, CLK_GEN_100M_U86_ADDR, SSI_GLOBAL_CNFG_REG, &write_data, 1)) {
-        LOG_ERR("Failed to write 100MHz clock(U86) SSI 1-Byte address register");
-        return 0xFF;
-    }
+/* Switch back to 1-byte address mode */
+#define SET_ONE_BYTE_ADDRESS 0x01
+	write_data = SET_ONE_BYTE_ADDRESS;
+	if (!plat_i2c_write(I2C_BUS3, CLK_GEN_100M_U86_ADDR, SSI_GLOBAL_CNFG_REG, &write_data, 1)) {
+		LOG_ERR("Failed to write 100MHz clock(U86) SSI 1-Byte address register");
+		return 0xFF;
+	}
 
 	return i2c_msg.data[0] & 0x01; //bit0 is the APLL lock status
 }
@@ -101,8 +101,8 @@ void check_clk_buf_loss_status(void)
 /* function to read APLL lock status for CLK_GEN_312_5M_U618 */
 uint8_t clk_312_5mhz_get_lock_status_u618(void)
 {
-    #define U618_APLL_STS_REG_HSB 0x00
-    #define U618_APLL_STS_REG_LSB 0xbd
+#define U618_APLL_STS_REG_HSB 0x00
+#define U618_APLL_STS_REG_LSB 0xbd
 	I2C_MSG i2c_msg = { 0 };
 	uint8_t retry = 5;
 	i2c_msg.bus = I2C_BUS3;
@@ -112,8 +112,8 @@ uint8_t clk_312_5mhz_get_lock_status_u618(void)
 	i2c_msg.data[0] = U618_APLL_STS_REG_HSB; //offset HSB
 	i2c_msg.data[1] = U618_APLL_STS_REG_LSB; //offset LSB
 	if (i2c_master_read_without_error_log(&i2c_msg, retry)) {
-        LOG_ERR("Failed to read 312.5MHz clock(U618) APLL lock status");
-		return 0xFF; 
+		LOG_ERR("Failed to read 312.5MHz clock(U618) APLL lock status");
+		return 0xFF;
 	}
 	return i2c_msg.data[0] & 0x01; //bit 0 is the APLL lock status
 }
@@ -128,42 +128,42 @@ bool clock_get_error_data(uint16_t error_code, uint8_t *data)
 	uint8_t bmc_err_type = 0;
 	bool ret = true;
 	switch (clk_idx) {
-		case CLK_100MHZ_ERR_IDX:
-			lock_status = clk_100mhz_get_lock_status_u86();
-			if (lock_status == 0xFF) {
-				LOG_ERR("Failed to get 100MHz clock(U86) lock status");
-				ret = false;
-			}
-			data[0] = lock_status;
-			bmc_err_type = CLOCK_APLL_UNLOCK_EVENT;
-			break;
-		case CLK_312_5MHZ_ERR_IDX:
-			lock_status = clk_312_5mhz_get_lock_status_u618();
-			if (lock_status == 0xFF) {
-				LOG_ERR("Failed to get 312.5MHz clock(U618) lock status");
-				ret = false;
-			}
-			data[0] = lock_status;
-			bmc_err_type = CLK_312_5M_APLL_UNLOCK_EVENT;
-			break;
-		case CLK_BUF0_100M_LOSB_PLD:
-			bmc_err_type = CLK_BUF0_100M_LOSB_PLD_EVENT;
-			if (!plat_read_cpld(CLK_100MHZ_BUF_LOSS_REG, &data[0], 1))
-				ret = false;
-			break;
-		case CLK_BUF1_100M_LOSB_PLD:
-			bmc_err_type = CLK_BUF1_100M_LOSB_PLD_EVENT;
-			if (!plat_read_cpld(CLK_100MHZ_BUF_LOSS_REG, &data[0], 1))
-				ret = false;
-			break;
-		case CLK_BUF2_100M_LOSB_PLD:
-			bmc_err_type = CLK_BUF2_100M_LOSB_PLD_EVENT;
-			if (!plat_read_cpld(CLK_100MHZ_BUF_LOSS_REG, &data[0], 1))
-				ret = false;
-			break;
-		default:
-			LOG_ERR("Unsupported clock error code: 0x%04x", error_code);
-			return false;
+	case CLK_100MHZ_ERR_IDX:
+		lock_status = clk_100mhz_get_lock_status_u86();
+		if (lock_status == 0xFF) {
+			LOG_ERR("Failed to get 100MHz clock(U86) lock status");
+			ret = false;
+		}
+		data[0] = lock_status;
+		bmc_err_type = CLOCK_APLL_UNLOCK_EVENT;
+		break;
+	case CLK_312_5MHZ_ERR_IDX:
+		lock_status = clk_312_5mhz_get_lock_status_u618();
+		if (lock_status == 0xFF) {
+			LOG_ERR("Failed to get 312.5MHz clock(U618) lock status");
+			ret = false;
+		}
+		data[0] = lock_status;
+		bmc_err_type = CLK_312_5M_APLL_UNLOCK_EVENT;
+		break;
+	case CLK_BUF0_100M_LOSB_PLD:
+		bmc_err_type = CLK_BUF0_100M_LOSB_PLD_EVENT;
+		if (!plat_read_cpld(CLK_100MHZ_BUF_LOSS_REG, &data[0], 1))
+			ret = false;
+		break;
+	case CLK_BUF1_100M_LOSB_PLD:
+		bmc_err_type = CLK_BUF1_100M_LOSB_PLD_EVENT;
+		if (!plat_read_cpld(CLK_100MHZ_BUF_LOSS_REG, &data[0], 1))
+			ret = false;
+		break;
+	case CLK_BUF2_100M_LOSB_PLD:
+		bmc_err_type = CLK_BUF2_100M_LOSB_PLD_EVENT;
+		if (!plat_read_cpld(CLK_100MHZ_BUF_LOSS_REG, &data[0], 1))
+			ret = false;
+		break;
+	default:
+		LOG_ERR("Unsupported clock error code: 0x%04x", error_code);
+		return false;
 	}
 	packaged_bmc_log(ARKE_FAULT, bmc_err_type, data[0], 0);
 

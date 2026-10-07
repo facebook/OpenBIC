@@ -34,7 +34,6 @@ static struct k_sem cpld_polling_sem; // "all_vr_pm_alert_sem" in rainbow
 /* mutex for pwrlevel */
 static struct k_mutex pwrlevel_mutex;
 
-
 void plat_ragular_cpld_polling_sem_handler(struct k_timer *timer)
 {
 	k_sem_give(&cpld_polling_sem);
