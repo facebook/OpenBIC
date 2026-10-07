@@ -57,7 +57,7 @@ LOG_MODULE_DECLARE(pldm);
 #define HEX_CHARS_PER_BYTE 2
 
 #define GET_EEPROM_SLAVE_MASK(offset) (((offset) >> 16) & 0xF)
-#define GET_EERPOM_OFFSET(offset) ((offset)&0xFFFF)
+#define GET_EERPOM_OFFSET(offset) ((offset) & 0xFFFF)
 
 #ifndef PLDM_UPDATE_DELAY_AFTER_POST_UPDATE
 #define PLDM_UPDATE_DELAY_AFTER_POST_UPDATE 3000
