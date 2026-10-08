@@ -1141,7 +1141,10 @@ static uint8_t pass_component_table(void *mctp_inst, uint8_t *buf, uint16_t len,
 	uint8_t check_result = plat_pldm_pass_component_table_check(
 		req_p->comp_identifier, buf + sizeof(struct pldm_pass_component_table_req),
 		req_p->comp_ver_str_len);
-	if (check_result != PLDM_SUCCESS) {
+	switch (check_result) {
+	case PLDM_SUCCESS:
+		break;
+	default:
 		resp_p->completion_code = check_result;
 		goto exit;
 	}
