@@ -17,10 +17,10 @@
 #include "plat_def.h"
 #ifdef ENABLE_MPRO
 
-#include <zephyr.h>
+#include <zephyr/kernel.h>
 #include <stdlib.h>
 #include "libutil.h"
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 #include "ipmi.h"
 #include "ipmb.h"
 #include "sensor.h"

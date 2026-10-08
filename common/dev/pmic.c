@@ -22,7 +22,7 @@
 #include "sensor.h"
 #include "libutil.h"
 #include "plat_ipmb.h"
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 
 LOG_MODULE_REGISTER(pmic);
 

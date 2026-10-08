@@ -21,6 +21,14 @@
 #define WDT_DEVICE_NAME "wdt2"
 #elif (CONFIG_WDT_NPCM4XX)
 #define WDT_DEVICE_NAME "TWD_0"
+#elif defined(CONFIG_WDT_MCUX_WWDT)
+/* NXP MCX-N9XX-EVK: no string-name device binding is used for this
+ * board (see hal_wdt.c) - device_get_binding() by name doesn't apply
+ * cleanly to devicetree-only boards, so wdt_init() uses
+ * DEVICE_DT_GET(DT_ALIAS(watchdog0)) directly instead. WDT_DEVICE_NAME
+ * is kept only as a human-readable string for log messages.
+ */
+#define WDT_DEVICE_NAME "wwdt0"
 #else /* defined(CONFIG_WDT_ASPEED) */
 #endif /* defined(CONFIG_WDT_ASPEED) */
 

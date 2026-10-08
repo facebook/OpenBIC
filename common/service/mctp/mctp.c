@@ -15,13 +15,13 @@
  */
 
 #include "mctp.h"
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/printk.h>
-#include <zephyr.h>
+#include <zephyr/sys/printk.h>
+#include <zephyr/kernel.h>
 #include "libutil.h"
 
 LOG_MODULE_REGISTER(mctp);
@@ -172,6 +172,15 @@ static uint8_t mctp_pkt_assembling(mctp *mctp_inst, uint8_t *buf, uint16_t len)
 	mctp_hdr *hdr = (mctp_hdr *)buf;
 	uint8_t **buf_p = &mctp_inst->temp_msg_buf[hdr->msg_tag][hdr->to].buf;
 	uint16_t *offset_p = &mctp_inst->temp_msg_buf[hdr->msg_tag][hdr->to].offset;
+	uint8_t *expected_seq_p = &mctp_inst->temp_msg_buf[hdr->msg_tag][hdr->to].expected_pkt_seq;
+
+	/* DSP0236: pkt_seq starts at 0 on the first packet of a message
+	 * (SOM), regardless of whether it's also the last (single-packet
+	 * case, previously unchecked here). */
+	if (hdr->som && hdr->pkt_seq != 0) {
+		LOG_WRN("SOM packet with non-zero pkt_seq %d", hdr->pkt_seq);
+		return MCTP_ERROR;
+	}
 
 	/* one packet message, do nothing */
 	if (hdr->som && hdr->eom)
@@ -190,6 +199,20 @@ static uint8_t mctp_pkt_assembling(mctp *mctp_inst, uint8_t *buf, uint16_t len)
 			return MCTP_ERROR;
 		}
 		memset(*buf_p, 0, MSG_ASSEMBLY_BUF_SIZE);
+	} else {
+		/* Middle or final (EOM) packet of an in-progress message -
+		 * previously accepted blindly regardless of pkt_seq, so a
+		 * duplicate/out-of-order/corrupted-sequence packet would
+		 * silently get appended in arrival order instead of being
+		 * rejected. */
+		if (hdr->pkt_seq != *expected_seq_p) {
+			LOG_WRN("pkt_seq %d != expected %d, dropping message", hdr->pkt_seq,
+				*expected_seq_p);
+			free(*buf_p);
+			*buf_p = NULL;
+			*offset_p = 0;
+			return MCTP_ERROR;
+		}
 	}
 
 	if (!(*buf_p)) {
@@ -205,6 +228,16 @@ static uint8_t mctp_pkt_assembling(mctp *mctp_inst, uint8_t *buf, uint16_t len)
 	/* Appending other packet after the first packet */
 	memcpy(*buf_p + *offset_p, buf + sizeof(mctp_hdr), len - sizeof(mctp_hdr));
 	*offset_p = offset_new;
+	/* Derived from this packet's own (already-validated) pkt_seq rather
+	 * than incrementing the old *expected_seq_p - that old code
+	 * double-counted the SOM packet (which also assigned
+	 * *expected_seq_p = 1 above), so the packet right after SOM was
+	 * always rejected as "pkt_seq 1 != expected 2". This form gives the
+	 * same result as before for non-SOM packets (pkt_seq was just
+	 * checked equal to the old expected value) and is also correct for
+	 * SOM (pkt_seq is 0, validated earlier in this function). */
+	*expected_seq_p = (hdr->pkt_seq + 1) & MCTP_HDR_SEQ_MASK;
+	mctp_inst->temp_msg_buf[hdr->msg_tag][hdr->to].last_activity_ms = k_uptime_get();
 	return MCTP_SUCCESS;
 }
 
@@ -223,8 +256,35 @@ static void mctp_rx_task(void *arg, void *dummy0, void *dummy1)
 
 	LOG_INF("mctp_rx_task start %p", mctp_inst);
 
+	int64_t last_reassembly_sweep_ms = k_uptime_get();
+
 	while (1) {
 		k_msleep(MCTP_POLL_TIME_MS);
+
+		/* Reclaim any in-progress reassembly whose EOM never arrived -
+		 * see the temp_msg_buf struct comment in mctp.h for why this
+		 * exists (it used to leak forever). Rate-limited so this
+		 * O(MCTP_MAX_MSG_TAG_NUM * 2) scan doesn't run on every 1ms
+		 * poll iteration. */
+		int64_t now_ms = k_uptime_get();
+		if ((now_ms - last_reassembly_sweep_ms) >= MCTP_REASSEMBLY_SWEEP_INTERVAL_MS) {
+			for (uint8_t tag = 0; tag < MCTP_MAX_MSG_TAG_NUM; tag++) {
+				for (uint8_t to = 0; to < 2; to++) {
+					if (mctp_inst->temp_msg_buf[tag][to].buf &&
+					    (now_ms -
+					     mctp_inst->temp_msg_buf[tag][to].last_activity_ms) >=
+						    MCTP_REASSEMBLY_TIMEOUT_MS) {
+						LOG_WRN("reassembly for msg_tag %d/to %d timed out, freeing",
+							tag, to);
+						free(mctp_inst->temp_msg_buf[tag][to].buf);
+						mctp_inst->temp_msg_buf[tag][to].buf = NULL;
+						mctp_inst->temp_msg_buf[tag][to].offset = 0;
+					}
+				}
+			}
+			last_reassembly_sweep_ms = now_ms;
+		}
+
 		uint8_t read_buf[256] = { 0 };
 		mctp_ext_params ext_params;
 		uint8_t ret = MCTP_ERROR;
@@ -241,6 +301,8 @@ static void mctp_rx_task(void *arg, void *dummy0, void *dummy1)
 		mctp_hdr *hdr = (mctp_hdr *)read_buf;
 		LOG_DBG("dest_ep(0x%x), src_ep(0x%x), flags(0x%x)", hdr->dest_ep, hdr->src_ep,
 			hdr->flags_seq_to_tag);
+		LOG_DBG("rx_task: read_len=%d tag=%d to=%d som=%d eom=%d seq=%d dest=0x%x", read_len,
+			hdr->msg_tag, hdr->to, hdr->som, hdr->eom, hdr->pkt_seq, hdr->dest_ep);
 
 		/* Set the tranport layer extra parameters */
 		ext_params.msg_tag = hdr->msg_tag;
@@ -347,6 +409,17 @@ static void mctp_tx_task(void *arg, void *dummy0, void *dummy1)
 		if (mctp_msg.is_bridge_packet) {
 			ret = mctp_inst->write_data(mctp_inst, mctp_msg.buf, mctp_msg.len,
 						    mctp_msg.ext_params);
+
+			/* Same bounded retry as the non-bridge path below - see
+			 * the comment there for why this doesn't need a
+			 * re-queue. */
+			for (uint8_t retry = 0;
+			     ret != MCTP_SUCCESS && retry < MCTP_TX_MSG_RETRY_TIME; retry++) {
+				k_msleep(MCTP_TX_RETRY_DELAY_MS);
+				ret = mctp_inst->write_data(mctp_inst, mctp_msg.buf, mctp_msg.len,
+							    mctp_msg.ext_params);
+			}
+
 			free(mctp_msg.buf);
 			mctp_tx_task_response(mctp_msg.evt_msgq, ret);
 			if (pal_is_need_mctp_interval(mctp_inst)) {
@@ -404,8 +477,26 @@ static void mctp_tx_task(void *arg, void *dummy0, void *dummy1)
 						    cp_msg_size + MCTP_TRANSPORT_HEADER_SIZE,
 						    mctp_msg.ext_params);
 
+			/* write_data() (e.g. mctp_smbus_write()) already has its
+			 * own short internal retry, but a transient failure there
+			 * (e.g. bus contention from another in-flight message)
+			 * used to just drop this packet permanently. Retry the
+			 * same packet a bounded number of times before giving up -
+			 * mctp_pass_tx_task()'s caller is blocked on this exact
+			 * message's own evt_msgq the whole time regardless, so
+			 * there's nothing to re-queue - just don't give up early.
+			 */
+			for (uint8_t retry = 0;
+			     ret != MCTP_SUCCESS && retry < MCTP_TX_MSG_RETRY_TIME; retry++) {
+				k_msleep(MCTP_TX_RETRY_DELAY_MS);
+				ret = mctp_inst->write_data(mctp_inst, buf,
+							    cp_msg_size + MCTP_TRANSPORT_HEADER_SIZE,
+							    mctp_msg.ext_params);
+			}
+
 			if (ret != MCTP_SUCCESS) {
-				LOG_WRN("mctp write data failed");
+				LOG_WRN("mctp write data failed after %d retries",
+					MCTP_TX_MSG_RETRY_TIME);
 				break;
 			}
 		}

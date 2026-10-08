@@ -16,7 +16,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 #include "libutil.h"
 #include "sensor.h"
 #include "ads1015.h"
