@@ -3133,7 +3133,7 @@ SDR_Full_sensor efuse_sdr_table[] = {
 		0x00, // normal minimum
 		0x00, // sensor maximum reading
 		0x00, // sensor minimum reading
-		0x7D, // UNRT
+		0x00, // UNRT
 		0x69, // UCT
 		0x00, // UNCT
 		0x00, // LNRT
