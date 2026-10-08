@@ -50,11 +50,14 @@ LOG_MODULE_DECLARE(pldm);
 #define MIN_FW_UPDATE_BASELINE_TRANS_SIZE 32
 #define PLDM_NO_SUPPORT_PROGRESS_PERCENT 0x65
 #define PLDM_FW_UPDATE_MODE_TIMEOUT 60
+#ifndef UPDATE_REQUEST_DATA_MAX_RETRY_COUNT
 #define UPDATE_REQUEST_DATA_MAX_RETRY_COUNT 3
+#endif
+
 #define HEX_CHARS_PER_BYTE 2
 
 #define GET_EEPROM_SLAVE_MASK(offset) (((offset) >> 16) & 0xF)
-#define GET_EERPOM_OFFSET(offset) ((offset)&0xFFFF)
+#define GET_EERPOM_OFFSET(offset) ((offset) & 0xFFFF)
 
 #ifndef PLDM_UPDATE_DELAY_AFTER_POST_UPDATE
 #define PLDM_UPDATE_DELAY_AFTER_POST_UPDATE 3000
@@ -1138,7 +1141,10 @@ static uint8_t pass_component_table(void *mctp_inst, uint8_t *buf, uint16_t len,
 	uint8_t check_result = plat_pldm_pass_component_table_check(
 		req_p->comp_identifier, buf + sizeof(struct pldm_pass_component_table_req),
 		req_p->comp_ver_str_len);
-	if (check_result != PLDM_SUCCESS) {
+	switch (check_result) {
+	case PLDM_SUCCESS:
+		break;
+	default:
 		resp_p->completion_code = check_result;
 		goto exit;
 	}

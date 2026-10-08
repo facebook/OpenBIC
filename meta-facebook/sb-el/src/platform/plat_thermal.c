@@ -132,7 +132,7 @@ bool plat_clear_temp_status(uint8_t rail)
 		}
 		break;
 	case sensor_dev_tmp75: {
-		LOG_DBG("TMP75 temp_status cannot be cleared; its behavior depends on the temp_threshold settings.");
+		// TMP75 temp_status cannot be cleared; its behavior depends on the temp_threshold settings.
 	} break;
 	default:
 		LOG_ERR("Unsupport TEMP type(%x)", cfg->type);
@@ -257,7 +257,7 @@ void check_thermal_handler(void *arg1, void *arg2, void *arg3)
 		// check temp_alert_index_table all temperature status
 		// only for TPM432
 		for (int i = 0; i < ARRAY_SIZE(temp_alert_index_table); i++) {
-			sensor_cfg *temp_cfg =
+			const sensor_cfg *temp_cfg =
 				get_sensor_cfg_by_sensor_id(temp_alert_index_table[i].sensor_id);
 			if (temp_cfg == NULL) {
 				LOG_ERR("sensor id %d not found",
@@ -344,8 +344,8 @@ void check_thermal_handler(void *arg1, void *arg2, void *arg3)
 				}
 			}
 			// clear temperature status
-			LOG_DBG("end clear sensor_num 0x%x, bus 0x%x, address 0x%x ", temp_cfg->num,
-				temp_cfg->port, temp_cfg->target_addr);
+			// LOG_DBG("end clear sensor_num 0x%x, bus 0x%x, address 0x%x ", temp_cfg->num,
+			// 	temp_cfg->port, temp_cfg->target_addr);
 		}
 		k_sleep(K_MSEC(1000));
 	}

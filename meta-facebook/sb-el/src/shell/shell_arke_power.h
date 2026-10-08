@@ -109,4 +109,5 @@ typedef struct steps_on_struct {
 bool check_p3v3_p5v_pwrgd(void);
 void pwer_gd_get_status(const struct shell *shell);
 void clear_clock_status(const struct shell *shell, uint8_t clock_index);
+bool set_all_vout_command();
 #endif

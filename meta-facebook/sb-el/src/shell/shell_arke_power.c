@@ -11,6 +11,7 @@
 #include "plat_class.h"
 #include "shell_arke_power.h"
 #include "plat_gpio.h"
+#include "plat_hook.h"
 #include "plat_util.h"
 // arke power command
 
@@ -124,8 +125,8 @@ static steps_on_struct steps_on[] = {
 	{ 0, VR_AND_CLK_EN, 6, "FM_ELECTRA_CLK_100MHZ_EN_N",
 	  NO_DEFINED }, //FM_ELECTRA_CLK_100MHZ_EN_N
 	{ 1, VR_AND_CLK_EN, 7, "FM_ELECTRA_CLK_48MHZ_EN", NO_DEFINED }, //FM_ELECTRA_CLK_48MHZ_EN
-	{ 0, VR_AND_CLK_EN_PIN_CTRL, 0, "FM_ARKE_CLK_312MHZ_EN_N",
-	  NO_DEFINED }, //FM_ARKE_CLK_312MHZ_EN_N
+	{ 0, VR_AND_CLK_EN_PIN_CTRL, 0, "FM_ARKE_CLK_312_5_MHZ_EN_N",
+	  NO_DEFINED }, //FM_ARKE_CLK_312_5_MHZ_EN_N
 	{ 1, VR_2_EN, 5, "FM_VPP_HBM0_HBM2_HBM4_HBM6_EN",
 	  PWRGD_VPP_HBM0_HBM2_HBM4_HBM6_R }, //FM_VPP_HBM0_HBM2_HBM4_HBM6_EN
 	{ 1, VR_2_EN, 1, "FM_VPP_HBM1_HBM3_HBM5_HBM7_EN",
@@ -389,6 +390,22 @@ static bool arke_power_control(uint8_t onoff)
 {
 	uint8_t tmp = onoff ? 0x80 : 0x00;
 	return plat_write_cpld(CPLD_OFFSET_MMC_PWR_EN, &tmp);
+}
+
+bool set_all_vout_command()
+{
+	for (int i = 0; i < VR_RAIL_E_MAX; i++) {
+		if (vr_vout_user_settings.vout[i] != 0xffff) {
+			/* write vout */
+			uint16_t millivolt = vr_vout_user_settings.vout[i];
+			if (!plat_set_vout_command(i, &millivolt, false)) {
+				LOG_ERR("Set vout[%d]=%x by user settings failed", i, millivolt);
+				return false;
+			}
+			LOG_INF("set [%x]%s: %dmV", i, vr_rail_table[i].sensor_name, millivolt);
+		}
+	}
+	return true;
 }
 
 void cmd_arke_power_on(const struct shell *shell, size_t argc, char **argv)

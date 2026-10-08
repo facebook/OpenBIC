@@ -18,22 +18,23 @@
 #include <string.h>
 #include "libutil.h"
 #include <logging/log.h>
-#include "pldm_sensor.h"
-#include "plat_hook.h"
 #include "pmbus.h"
-#include "plat_gpio.h"
-#include "plat_pldm_sensor.h"
 #include "mp2971.h"
 #include "mp29816a.h"
 #include "raa228249.h"
+#include "tmp431.h"
+#include "emc1413.h"
+#include "plat_gpio.h"
+#include "pldm_sensor.h"
+#include "plat_hook.h"
+#include "plat_pldm_sensor.h"
 #include "plat_i2c_target.h"
 #include "plat_user_setting.h"
 #include "plat_kernel_obj.h"
 #include "plat_ioexp.h"
 #include "plat_fru.h"
 #include "plat_class.h"
-#include "tmp431.h"
-#include "emc1413.h"
+#include "plat_util.h"
 #include "shell_plat_average_power.h"
 
 LOG_MODULE_REGISTER(plat_hook);
@@ -74,65 +75,65 @@ mp2971_init_arg mp2971_init_args[] = {
 /* the order is following enum VR_RAIL_E */
 vr_mapping_sensor vr_rail_table[] = {
 	{ VR_RAIL_E_ASIC_P0V75_NUWA0_VDD, SENSOR_NUM_ASIC_P0V75_NUWA0_VDD_VOLT_V,
-	  "CB_ASIC_P0V75_NUWA0_VDD", 0xffffffff },
+	  "ASIC_P0V75_NUWA0_VDD", 0xffffffff },
 
 	{ VR_RAIL_E_ASIC_P0V75_NUWA1_VDD, SENSOR_NUM_ASIC_P0V75_NUWA1_VDD_VOLT_V,
-	  "CB_ASIC_P0V75_NUWA1_VDD", 0xffffffff },
+	  "ASIC_P0V75_NUWA1_VDD", 0xffffffff },
 
 	{ VR_RAIL_E_ASIC_P0V9_OWL_E_TRVDD, SENSOR_NUM_ASIC_P0V9_OWL_E_TRVDD_VOLT_V,
-	  "CB_ASIC_P0V9_OWL_E_TRVDD", 0xffffffff },
+	  "ASIC_P0V9_OWL_E_TRVDD", 0xffffffff },
 	{ VR_RAIL_E_ASIC_P0V75_OWL_E_TRVDD, SENSOR_NUM_ASIC_P0V75_OWL_E_TRVDD_VOLT_V,
-	  "CB_ASIC_P0V75_OWL_E_TRVDD", 0xffffffff },
+	  "ASIC_P0V75_OWL_E_TRVDD", 0xffffffff },
 
 	{ VR_RAIL_E_ASIC_P0V75_MAX_M_VDD, SENSOR_NUM_ASIC_P0V75_MAX_M_VDD_VOLT_V,
-	  "CB_ASIC_P0V75_MAX_M_VDD", 0xffffffff },
+	  "ASIC_P0V75_MAX_M_VDD", 0xffffffff },
 	{ VR_RAIL_E_ASIC_P0V75_VDDPHY_HBM1357, SENSOR_NUM_ASIC_P0V75_VDDPHY_HBM1357_VOLT_V,
-	  "CB_ASIC_P0V75_VDDPHY_HBM1357", 0xffffffff },
+	  "ASIC_P0V75_VDDPHY_HBM1357", 0xffffffff },
 
 	{ VR_RAIL_E_ASIC_P0V75_OWL_E_VDD, SENSOR_NUM_ASIC_P0V75_OWL_E_VDD_VOLT_V,
-	  "CB_ASIC_P0V75_OWL_E_VDD", 0xffffffff },
+	  "ASIC_P0V75_OWL_E_VDD", 0xffffffff },
 	{ VR_RAIL_E_ASIC_P0V4_VDDQL_HBM1357, SENSOR_NUM_ASIC_P0V4_VDDQL_HBM1357_VOLT_V,
-	  "CB_ASIC_P0V4_VDDQL_HBM1357", 0xffffffff },
+	  "ASIC_P0V4_VDDQL_HBM1357", 0xffffffff },
 
 	{ VR_RAIL_E_ASIC_P1V05_VDDC_HBM1357, SENSOR_NUM_ASIC_P1V05_VDDC_HBM1357_VOLT_V,
-	  "CB_ASIC_P1V05_VDDC_HBM1357", 0xffffffff },
+	  "ASIC_P1V05_VDDC_HBM1357", 0xffffffff },
 	{ VR_RAIL_E_ASIC_P1V8_VPP_HBM1357, SENSOR_NUM_ASIC_P1V8_VPP_HBM1357_VOLT_V,
-	  "CB_ASIC_P1V8_VPP_HBM1357", 0xffffffff },
+	  "ASIC_P1V8_VPP_HBM1357", 0xffffffff },
 
 	{ VR_RAIL_E_ASIC_P0V9_VDDQ_HBM1357, SENSOR_NUM_ASIC_P0V9_VDDQ_HBM1357_VOLT_V,
-	  "CB_ASIC_P0V9_VDDQ_HBM1357", 0xffffffff },
+	  "ASIC_P0V9_VDDQ_HBM1357", 0xffffffff },
 	{ VR_RAIL_E_ASIC_P0V85_HAMSA_VDD, SENSOR_NUM_ASIC_P0V85_HAMSA_VDD_VOLT_V,
-	  "CB_ASIC_P0V85_HAMSA_VDD", 0xffffffff },
+	  "ASIC_P0V85_HAMSA_VDD", 0xffffffff },
 
 	{ VR_RAIL_E_ASIC_P0V75_MAX_N_VDD, SENSOR_NUM_ASIC_P0V75_MAX_N_VDD_VOLT_V,
-	  "CB_ASIC_P0V75_MAX_N_VDD", 0xffffffff },
+	  "ASIC_P0V75_MAX_N_VDD", 0xffffffff },
 	{ VR_RAIL_E_ASIC_P0V8_HAMSA_AVDD_PCIE, SENSOR_NUM_ASIC_P0V8_HAMSA_AVDD_PCIE_VOLT_V,
-	  "CB_ASIC_P0V8_HAMSA_AVDD_PCIE", 0xffffffff },
+	  "ASIC_P0V8_HAMSA_AVDD_PCIE", 0xffffffff },
 
 	{ VR_RAIL_E_ASIC_P0V9_VDDQ_HBM0246, SENSOR_NUM_ASIC_P0V9_VDDQ_HBM0246_VOLT_V,
-	  "CB_ASIC_P0V9_VDDQ_HBM0246", 0xffffffff },
+	  "ASIC_P0V9_VDDQ_HBM0246", 0xffffffff },
 	{ VR_RAIL_E_ASIC_P1V2_HAMSA_VDDHRXTX_PCIE, SENSOR_NUM_ASIC_P1V2_HAMSA_VDDHRXTX_PCIE_VOLT_V,
-	  "CB_ASIC_P1V2_HAMSA_VDDHRXTX_PCIE", 0xffffffff },
+	  "ASIC_P1V2_HAMSA_VDDHRXTX_PCIE", 0xffffffff },
 
 	{ VR_RAIL_E_ASIC_P1V05_VDDC_HBM0246, SENSOR_NUM_ASIC_P1V05_VDDC_HBM0246_VOLT_V,
-	  "CB_ASIC_P1V05_VDDC_HBM0246", 0xffffffff },
+	  "ASIC_P1V05_VDDC_HBM0246", 0xffffffff },
 	{ VR_RAIL_E_ASIC_P1V8_VPP_HBM0246, SENSOR_NUM_ASIC_P1V8_VPP_HBM0246_VOLT_V,
-	  "CB_ASIC_P1V8_VPP_HBM0246", 0xffffffff },
+	  "ASIC_P1V8_VPP_HBM0246", 0xffffffff },
 
 	{ VR_RAIL_E_ASIC_P0V4_VDDQL_HBM0246, SENSOR_NUM_ASIC_P0V4_VDDQL_HBM0246_VOLT_V,
-	  "CB_ASIC_P0V4_VDDQL_HBM0246", 0xffffffff },
+	  "ASIC_P0V4_VDDQL_HBM0246", 0xffffffff },
 	{ VR_RAIL_E_ASIC_P0V75_VDDPHY_HBM0246, SENSOR_NUM_ASIC_P0V75_VDDPHY_HBM0246_VOLT_V,
-	  "CB_ASIC_P0V75_VDDPHY_HBM0246", 0xffffffff },
+	  "ASIC_P0V75_VDDPHY_HBM0246", 0xffffffff },
 
 	{ VR_RAIL_E_ASIC_P0V75_OWL_W_VDD, SENSOR_NUM_ASIC_P0V75_OWL_W_VDD_VOLT_V,
-	  "CB_ASIC_P0V75_OWL_W_VDD", 0xffffffff },
+	  "ASIC_P0V75_OWL_W_VDD", 0xffffffff },
 	{ VR_RAIL_E_ASIC_P0V75_MAX_S_VDD, SENSOR_NUM_ASIC_P0V75_MAX_S_VDD_VOLT_V,
-	  "CB_ASIC_P0V75_MAX_S_VDD", 0xffffffff },
+	  "ASIC_P0V75_MAX_S_VDD", 0xffffffff },
 
 	{ VR_RAIL_E_ASIC_P0V9_OWL_W_TRVDD, SENSOR_NUM_ASIC_P0V9_OWL_W_TRVDD_VOLT_V,
-	  "CB_ASIC_P0V9_OWL_W_TRVDD", 0xffffffff },
+	  "ASIC_P0V9_OWL_W_TRVDD", 0xffffffff },
 	{ VR_RAIL_E_ASIC_P0V75_OWL_W_TRVDD, SENSOR_NUM_ASIC_P0V75_OWL_W_TRVDD_VOLT_V,
-	  "CB_ASIC_P0V75_OWL_W_TRVDD", 0xffffffff },
+	  "ASIC_P0V75_OWL_W_TRVDD", 0xffffffff },
 
 	{ VR_RAIL_E_P3V3_OSFP_VOLT_V, SENSOR_NUM_P3V3_OSFP_VOLT_V, "P3V3_OSFP_VOLT_V", 0xffffffff },
 };
@@ -419,7 +420,6 @@ bool pre_vr_read(sensor_cfg *cfg, void *args)
 
 	/* mutex lock */
 	if (pre_proc_args->mutex) {
-		LOG_DBG("%x l %p", cfg->num, pre_proc_args->mutex);
 		if (k_mutex_lock(pre_proc_args->mutex, K_MSEC(VR_MUTEX_LOCK_TIMEOUT_MS))) {
 			LOG_ERR("0x%02x pre_vr_read, mutex lock fail", cfg->num);
 			return false;
@@ -471,7 +471,6 @@ bool post_vr_read(sensor_cfg *cfg, void *args, int *const reading)
 
 	/* mutex unlock */
 	if (pre_proc_args->mutex) {
-		LOG_DBG("%x u %p", cfg->num, pre_proc_args->mutex);
 		if (k_mutex_unlock(pre_proc_args->mutex)) {
 			LOG_ERR("0x%02x post_vr_read, mutex unlock fail", cfg->num);
 			return false;
@@ -487,10 +486,10 @@ bool post_vr_read(sensor_cfg *cfg, void *args, int *const reading)
 	int32_t sensor_value = tmp_reading.integer * 1000 + tmp_reading.fraction;
 
 	if (sensor_value < 0) {
-		LOG_DBG("Original sensor reading: integer = %d, fraction = %d (combined value * 1000: %d)",
-			tmp_reading.integer, tmp_reading.fraction, sensor_value);
+		// LOG_DBG("Original sensor reading: integer = %d, fraction = %d (combined value * 1000: %d)",
+		// 	tmp_reading.integer, tmp_reading.fraction, sensor_value);
 		*reading = 0;
-		LOG_DBG("Negative sensor reading detected. Set reading to 0x%x", *reading);
+		// LOG_DBG("Negative sensor reading detected. Set reading to 0x%x", *reading);
 	}
 
 	post_sensor_reading_hook_func(cfg->num);
@@ -516,9 +515,9 @@ bool post_vr_read(sensor_cfg *cfg, void *args, int *const reading)
 		if (tmp_reading_value < 0) {
 			tmp_reading_value = 0;
 			*reading = 0;
-			LOG_DBG("Original sensor reading: integer = %d, fraction = %f", integer,
-				fraction);
-			LOG_DBG("Negative sensor reading detected. Set reading to 0x%x", *reading);
+			// LOG_DBG("Original sensor reading: integer = %d, fraction = %f", integer,
+			// 	fraction);
+			// LOG_DBG("Negative sensor reading detected. Set reading to 0x%x", *reading);
 		}
 
 		int decoded_reading =
@@ -765,9 +764,9 @@ bool post_ubc_read(sensor_cfg *cfg, void *args, int *reading)
 		if (tmp_reading < 0) {
 			tmp_reading = 0;
 			*reading = 0;
-			LOG_DBG("Original sensor reading: integer = %d, fraction = %f", integer,
-				fraction);
-			LOG_DBG("Negative sensor reading detected. Set reading to 0x%x", *reading);
+			// LOG_DBG("Original sensor reading: integer = %d, fraction = %f", integer,
+			// 	fraction);
+			// LOG_DBG("Negative sensor reading detected. Set reading to 0x%x", *reading);
 		}
 
 		int decoded_reading =
@@ -834,9 +833,6 @@ bool get_average_power(uint8_t rail, uint32_t *milliwatt)
 
 	*milliwatt = ((uint16_t)fraction_part << 16) | (uint16_t)integer_part;
 
-	LOG_DBG("real_power = %f, integer_part = %d, fraction_part = %d, milliwatt = 0x%x",
-		real_power, integer_part, fraction_part, *milliwatt);
-
 	return true;
 }
 
@@ -853,7 +849,7 @@ void vr_mutex_init(void)
 {
 	for (uint8_t i = 0; i < ARRAY_SIZE(vr_mutex); i++) {
 		k_mutex_init(vr_mutex + i);
-		LOG_DBG("vr_mutex[%d] %p init", i, vr_mutex + i);
+		// LOG_DBG("vr_mutex[%d] %p init", i, vr_mutex + i);
 	}
 }
 
@@ -936,7 +932,6 @@ bool plat_get_vr_status(uint8_t rail, uint8_t vr_status_rail, uint16_t *vr_statu
 
 	if ((cfg->pre_sensor_read_hook)) {
 		if ((cfg->pre_sensor_read_hook)(cfg, cfg->pre_sensor_read_args) == false) {
-			LOG_DBG("%d read vr status pre hook fail!", sensor_id);
 			return false;
 		}
 	};
@@ -1043,11 +1038,6 @@ bool plat_get_vout_command(uint8_t rail, uint16_t *millivolt)
 {
 	CHECK_NULL_ARG_WITH_RETURN(millivolt, false);
 
-	if (rail >= VR_RAIL_E_MAX) {
-		LOG_ERR("invalid rail %u", rail);
-		return false;
-	}
-
 	bool ret = false;
 	uint8_t sensor_id = vr_rail_table[rail].sensor_id;
 	sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
@@ -1117,8 +1107,12 @@ bool post_common_sensor_read(sensor_cfg *cfg, void *args, int *const reading)
 	return true;
 }
 
-struct vr_vout_user_settings voltage_command_get = { 0 };
+vr_vout_user_settings_struct voltage_command_get = { 0 };
+struct vr_vout_offset vr_offset_init = { 0 };
+vr_vout_user_settings_struct vr_vout_user_settings = { 0 };
 vr_vout_range_user_settings_struct vout_range_user_settings = { 0 };
+vr_voffset_mmc_command_get_struct vr_voffset_mmc_command_get = { 0 };
+vr_voffset_mmc_user_settings_struct vr_voffset_mmc_user_settings = { 0 };
 
 bool plat_set_vout_command(uint8_t rail, uint16_t *millivolt, bool is_perm)
 {
@@ -1144,7 +1138,6 @@ bool plat_set_vout_command(uint8_t rail, uint16_t *millivolt, bool is_perm)
 		}
 	}
 
-	LOG_DBG("sensor num 0x%x,page 0x%x, vout 0x%x", sensor_id, page, setting_millivolt);
 	switch (cfg->type) {
 	case sensor_dev_mp2971:
 		if (!mp2971_set_vout_command(cfg, page, millivolt)) {
@@ -1181,6 +1174,514 @@ err:
 	return ret;
 }
 
+bool plat_get_get_vout_offset(uint8_t rail, uint16_t *vout_offset)
+{
+	CHECK_NULL_ARG_WITH_RETURN(vout_offset, false);
+
+	bool ret = false;
+	uint8_t sensor_id = vr_rail_table[rail].sensor_id;
+	sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
+	if (cfg == NULL) {
+		LOG_ERR("Failed to get sensor config for sensor 0x%x", sensor_id);
+		return false;
+	}
+
+	vr_pre_proc_arg *pre_proc_args = (vr_pre_proc_arg *)cfg->pre_sensor_read_args;
+
+	if (cfg->pre_sensor_read_hook) {
+		if (!cfg->pre_sensor_read_hook(cfg, cfg->pre_sensor_read_args)) {
+			LOG_ERR("sensor id: 0x%x pre-read fail", sensor_id);
+			goto err;
+		}
+	}
+
+	switch (cfg->type) {
+	case sensor_dev_mp29816a:
+		if (!mp29816a_get_vout_offset(cfg, vout_offset)) {
+			LOG_ERR("The VR MPS29816a vout setting failed");
+			goto err;
+		}
+		break;
+	case sensor_dev_mp2971:
+		if (!mp2971_get_vout_offset(cfg, pre_proc_args->vr_page, vout_offset)) {
+			LOG_ERR("The VR MPS2971 vout setting failed");
+			goto err;
+		}
+		break;
+	case sensor_dev_raa228249:
+		if (!raa228249_get_vout_offset(cfg, vout_offset)) {
+			LOG_ERR("The VR RAA228249 vout setting failed");
+			goto err;
+		}
+		break;
+	default:
+		LOG_ERR("Unsupport VR type(%x)", cfg->type);
+		goto err;
+	}
+
+	ret = true;
+err:
+	if (cfg->post_sensor_read_hook) {
+		if (cfg->post_sensor_read_hook(cfg, cfg->post_sensor_read_args, NULL) == false) {
+			LOG_ERR("sensor id: 0x%x post-read fail", sensor_id);
+		}
+	}
+	return ret;
+}
+
+bool voltage_offset_get(uint8_t rail, uint16_t *vout_offset)
+{
+	CHECK_NULL_ARG_WITH_RETURN(vout_offset, false);
+
+	if (rail >= VR_RAIL_E_P3V3_OSFP_VOLT_V) {
+		LOG_ERR("invalid rail %d", rail);
+		return false;
+	}
+
+	*vout_offset = vr_offset_init.vout_offset[rail];
+	return true;
+}
+
+bool vr_vout_offset_get_init(void)
+{
+	for (int i = 0; i < VR_RAIL_E_P3V3_OSFP_VOLT_V; i++) {
+		uint16_t vout_offset = 0;
+		if (!plat_get_get_vout_offset(i, &vout_offset)) {
+			LOG_ERR("Can't find vout default by rail index: %d", i);
+			vr_offset_init.vout_offset[i] = 0;
+			continue;
+		}
+		vr_offset_init.vout_offset[i] = vout_offset;
+		LOG_INF("init rail %d, vout_offset = 0x%04x", i, vout_offset);
+	}
+	return true;
+}
+
+// svs
+static uint8_t svs_flag = 1; // 1: enable, 0: disable
+
+uint8_t get_svs_flag()
+{
+	return svs_flag;
+}
+
+bool set_svs_flag(uint8_t flag, bool is_perm)
+{
+	svs_flag = flag;
+
+	if (is_perm) {
+		svs_flag_user_settings.svs_flag_user_setting_value = (svs_flag ? 0x01 : 0x00);
+
+		if (!set_user_settings_svs_flag_to_eeprom(&svs_flag_user_settings,
+							  sizeof(svs_flag_user_settings))) {
+			LOG_ERR("Failed to write svs_flag to eeprom error");
+			return false;
+		}
+	}
+	return true;
+}
+
+static uint8_t svs_asic_voltage_flag = 1; // 1: enable, 0: block
+
+uint8_t get_svs_asic_voltage_flag()
+{
+	return svs_asic_voltage_flag;
+}
+
+void set_svs_asic_voltage_flag(uint8_t flag)
+{
+	svs_asic_voltage_flag = flag;
+}
+
+bool vr_vout_default_settings_init(void)
+{
+	for (int i = 0; i < VR_RAIL_E_MAX; i++) {
+		if ((get_asic_board_id() == ASIC_BOARD_ID_EVB) &&
+		    (i == VR_RAIL_E_P3V3_OSFP_VOLT_V)) {
+			voltage_command_get.vout[i] = 0xffff;
+			continue; // skip osfp p3v3 on AEGIS BD
+		}
+		uint16_t vout = 0;
+		if (!plat_get_vout_command(i, &vout)) {
+			LOG_ERR("Can't find vout default by rail index: %d", i);
+			voltage_command_get.vout[i] = 0xffff;
+			continue;
+		}
+		voltage_command_get.vout[i] = vout;
+	}
+	return true;
+}
+
+//vr test mode
+
+bool plat_set_vr_reg(uint8_t rail, uint8_t reg, uint8_t *data, uint8_t len)
+{
+	CHECK_NULL_ARG_WITH_RETURN(data, false);
+
+	bool ret = false;
+	uint8_t sensor_id = vr_rail_table[rail].sensor_id;
+	sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+
+	if ((cfg->pre_sensor_read_hook)) {
+		if ((cfg->pre_sensor_read_hook)(cfg, cfg->pre_sensor_read_args) == false) {
+			return false;
+		}
+	};
+
+	if (!plat_i2c_write(cfg->port, cfg->target_addr, reg, data, len)) {
+		LOG_ERR("0x%02x write vr reg 0x%02x fail!", sensor_id, reg);
+		goto err;
+	}
+
+	ret = true;
+err:
+	if (cfg->post_sensor_read_hook) {
+		if (cfg->post_sensor_read_hook(cfg, cfg->post_sensor_read_args, NULL) == false) {
+			LOG_ERR("0x%02x read vr reg 0x%02x post hook fail!", sensor_id, reg);
+		}
+	}
+	return ret;
+}
+
+int get_vr_page(uint8_t rail)
+{
+	uint8_t sensor_id = vr_rail_table[rail].sensor_id;
+	sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
+	CHECK_NULL_ARG_WITH_RETURN(cfg, -1);
+
+	const vr_pre_proc_arg *pre_sensor_read_args = cfg->pre_sensor_read_args;
+	CHECK_NULL_ARG_WITH_RETURN(pre_sensor_read_args, -1);
+	return pre_sensor_read_args->vr_page;
+}
+
+int set_vr_mp29816a_reg(uint8_t rail, uint16_t *set_value, uint8_t set_reg)
+{
+	CHECK_NULL_ARG_WITH_RETURN(set_value, false);
+
+	int ret = -1;
+	uint8_t sensor_id = vr_rail_table[rail].sensor_id;
+	sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
+	if (cfg == NULL) {
+		LOG_ERR("Failed to get sensor config for sensor 0x%x", sensor_id);
+		return -1;
+	}
+
+	if (cfg->pre_sensor_read_hook) {
+		if (!cfg->pre_sensor_read_hook(cfg, cfg->pre_sensor_read_args)) {
+			LOG_ERR("sensor id: 0x%x pre-read fail", sensor_id);
+			goto err;
+		}
+	}
+
+	switch (set_reg) {
+	case UVP_THRESHOLD:
+		if (!mp29816a_set_uvp_threshold(cfg, set_value)) {
+			LOG_ERR("The VR mp29816a uvp threshold setting failed");
+			goto err;
+		}
+		break;
+	case TOTAL_OCP:
+		if (!mp29816a_set_total_ocp(cfg, set_value)) {
+			LOG_ERR("The VR mp29816a total ocp setting failed");
+			goto err;
+		}
+		break;
+	case OVP_2_ACTION:
+		if (!mp29816a_set_ovp_2_action(cfg, set_value)) {
+			LOG_ERR("The VR mp29816a ovp 2 action setting failed");
+			goto err;
+		}
+		break;
+	case OVP_1:
+		if (!mp29816a_set_ovp_1(cfg, set_value)) {
+			LOG_ERR("The VR mp29816a ovp 1 setting failed");
+			goto err;
+		}
+		break;
+	case VOUT_MAX:
+		if (!mp29816a_set_vout_max(cfg, rail, set_value)) {
+			LOG_ERR("The VR mp29816a vout max setting failed");
+			goto err;
+		}
+		break;
+	default:
+		LOG_ERR("Unsupport VR mp29816a setting reg (0x%x)", set_reg);
+		goto err;
+	}
+	ret = 0;
+err:
+	if (cfg->post_sensor_read_hook) {
+		if (cfg->post_sensor_read_hook(cfg, cfg->post_sensor_read_args, NULL) == false) {
+			LOG_ERR("sensor id: 0x%x post-read fail", sensor_id);
+		}
+	}
+	return ret;
+}
+
+int get_vr_mp29816a_reg(uint8_t rail, uint16_t *get_data, uint8_t get_reg)
+{
+	CHECK_NULL_ARG_WITH_RETURN(get_data, false);
+
+	int ret = -1;
+	uint8_t sensor_id = vr_rail_table[rail].sensor_id;
+	sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
+	if (cfg == NULL) {
+		LOG_ERR("Failed to get sensor config for sensor 0x%x", sensor_id);
+		return false;
+	}
+	if (cfg->pre_sensor_read_hook) {
+		if (!cfg->pre_sensor_read_hook(cfg, cfg->pre_sensor_read_args)) {
+			LOG_ERR("sensor id: 0x%x pre-read fail", sensor_id);
+			goto err;
+		}
+	}
+
+	switch (get_reg) {
+	case UVP:
+		if (!mp29816a_get_uvp(cfg, get_data)) {
+			LOG_ERR("The VR mp29816a uvp threshold setting failed");
+			goto err;
+		}
+		break;
+	case VOUT_MAX:
+		if (!mp29816a_get_vout_max(cfg, rail, get_data)) {
+			LOG_ERR("The VR mp29816a vout max setting failed");
+			goto err;
+		}
+		break;
+	case VOUT_COMMAND:
+		if (!mp29816a_get_vout_command(cfg, rail, get_data)) {
+			LOG_ERR("The VR mp29816a vout max setting failed");
+			goto err;
+		}
+		break;
+	case VOUT_OFFSET:
+		if (!mp29816a_get_vout_offset(cfg, get_data)) {
+			LOG_ERR("The VR mp29816a vout offset setting failed");
+			goto err;
+		}
+		break;
+	case TOTAL_OCP:
+		if (!mp29816a_get_total_ocp(cfg, get_data)) {
+			LOG_ERR("The VR mp29816a total ocp setting failed");
+			goto err;
+		}
+		break;
+	case OVP_1:
+		if (!mp29816a_get_ovp_1(cfg, get_data)) {
+			LOG_ERR("The VR mp29816a ovp 1 setting failed");
+			goto err;
+		}
+		break;
+	case OVP_2:
+		if (!mp29816a_get_ovp_2(cfg, get_data)) {
+			LOG_ERR("The VR mp29816a ovp 2 setting failed");
+			goto err;
+		}
+		break;
+	default:
+		LOG_ERR("Unsupport VR mp29816a getting reg (0x%x)", get_reg);
+		goto err;
+	}
+
+	ret = 0;
+err:
+	if (cfg->post_sensor_read_hook) {
+		if (cfg->post_sensor_read_hook(cfg, cfg->post_sensor_read_args, NULL) == false) {
+			LOG_ERR("sensor id: 0x%x post-read fail", sensor_id);
+		}
+	}
+	return ret;
+}
+
+int get_vr_mp2971_reg(uint8_t rail, uint16_t *get_data, uint8_t get_reg)
+{
+	CHECK_NULL_ARG_WITH_RETURN(get_data, false);
+
+	int ret = -1;
+	uint8_t sensor_id = vr_rail_table[rail].sensor_id;
+	sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
+	if (cfg == NULL) {
+		LOG_ERR("Failed to get sensor config for sensor 0x%x", sensor_id);
+		return false;
+	}
+	if (cfg->pre_sensor_read_hook) {
+		if (!cfg->pre_sensor_read_hook(cfg, cfg->pre_sensor_read_args)) {
+			LOG_ERR("sensor id: 0x%x pre-read fail", sensor_id);
+			goto err;
+		}
+	}
+
+	vr_pre_proc_arg *pre_proc_args = (vr_pre_proc_arg *)cfg->pre_sensor_read_args;
+
+	switch (get_reg) {
+	case UVP:
+		if (!mp2971_get_uvp(cfg, pre_proc_args->vr_page, get_data)) {
+			LOG_ERR("The VR mp2971 uvp threshold setting failed");
+			goto err;
+		}
+		break;
+	case VOUT_MAX:
+		if (!mp2971_get_vout_max(cfg, pre_proc_args->vr_page, get_data)) {
+			LOG_ERR("The VR mp2971 vout max setting failed");
+			goto err;
+		}
+		break;
+	case VOUT_COMMAND:
+		if (!mp2971_get_vout_command(cfg, pre_proc_args->vr_page, get_data)) {
+			LOG_ERR("The VR mp2971 vout max setting failed");
+			goto err;
+		}
+		break;
+	case VOUT_OFFSET:
+		if (!mp2971_get_vout_offset(cfg, pre_proc_args->vr_page, get_data)) {
+			LOG_ERR("The VR mp2971 vout offset setting failed");
+			goto err;
+		}
+		break;
+	case TOTAL_OCP:
+		if (!mp2971_get_total_ocp(cfg, pre_proc_args->vr_page, get_data)) {
+			LOG_ERR("The VR mp2971 total ocp setting failed");
+			goto err;
+		}
+		break;
+	case OVP_1:
+		if (!mp2971_get_ovp_1(cfg, pre_proc_args->vr_page, get_data)) {
+			LOG_ERR("The VR mp2971 ovp 1 setting failed");
+			goto err;
+		}
+		break;
+	case OVP_2:
+		if (!mp2971_get_ovp_2(cfg, pre_proc_args->vr_page, get_data)) {
+			LOG_ERR("The VR mp2971 ovp 1 setting failed");
+			goto err;
+		}
+		break;
+
+	case OVP_2_ACTION: {
+		uint8_t mode = OVP2_ACTION_UNKNOWN;
+
+		if (!mp2971_get_ovp2_action_mode(cfg, pre_proc_args->vr_page, &mode)) {
+			LOG_ERR("The VR mp2971 ovp2 action mode read failed");
+			goto err;
+		}
+
+		/* Return mode via get_data for shell/UI:
+		* 0: NO_ACTION, 1: LATCH_OFF, 0xFF: UNKNOWN
+		*/
+		*get_data = (uint16_t)mode;
+		break;
+	}
+	default:
+		LOG_ERR("Unsupport VR mp2971 setting reg (%x)", cfg->type);
+		goto err;
+	}
+
+	ret = 0;
+err:
+	if (cfg->post_sensor_read_hook) {
+		if (cfg->post_sensor_read_hook(cfg, cfg->post_sensor_read_args, NULL) == false) {
+			LOG_ERR("sensor id: 0x%x post-read fail", sensor_id);
+		}
+	}
+	return ret;
+}
+
+int set_vr_mp2971_reg(uint8_t rail, uint16_t *set_data, uint8_t set_reg)
+{
+	CHECK_NULL_ARG_WITH_RETURN(set_data, false);
+
+	int ret = -1;
+	uint8_t sensor_id = vr_rail_table[rail].sensor_id;
+	sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
+	if (cfg == NULL) {
+		LOG_ERR("Failed to set sensor config for sensor 0x%x", sensor_id);
+		return false;
+	}
+	if (cfg->pre_sensor_read_hook) {
+		if (!cfg->pre_sensor_read_hook(cfg, cfg->pre_sensor_read_args)) {
+			LOG_ERR("sensor id: 0x%x pre-read fail", sensor_id);
+			goto err;
+		}
+	}
+
+	vr_pre_proc_arg *pre_proc_args = (vr_pre_proc_arg *)cfg->pre_sensor_read_args;
+
+	switch (set_reg) {
+	case UVP_THRESHOLD:
+		if (!mp2971_set_uvp_threshold(cfg, pre_proc_args->vr_page, set_data)) {
+			LOG_ERR("The VR mp2971 uvp threshold setting failed");
+			goto err;
+		}
+		break;
+	case VOUT_MAX:
+		if (!mp2971_set_vout_max(cfg, pre_proc_args->vr_page, set_data)) {
+			LOG_ERR("The VR mp2971 vout max setting failed");
+			goto err;
+		}
+		break;
+	case VOUT_COMMAND:
+		if (!mp2971_set_vout_command(cfg, pre_proc_args->vr_page, set_data)) {
+			LOG_ERR("The VR mp2971 vout max setting failed");
+			goto err;
+		}
+		break;
+	case TOTAL_OCP:
+		if (!mp2971_set_total_ocp(cfg, pre_proc_args->vr_page, *set_data)) {
+			LOG_ERR("The VR mp2971 total ocp setting failed");
+			goto err;
+		}
+		break;
+	case OVP_2_ACTION: {
+		uint8_t mode;
+
+		/* interpret user input:
+		* 0 -> NO_ACTION
+		* 1 -> LATCH_OFF
+		*/
+		if (*set_data == 0) {
+			mode = OVP2_ACTION_NO_ACTION;
+		} else if (*set_data == 1) {
+			mode = OVP2_ACTION_LATCH_OFF;
+		} else {
+			LOG_ERR("Invalid OVP2 action mode=%u (expect 0 or 1)", *set_data);
+			goto err;
+		}
+
+		if (!mp2971_set_ovp2_action_mode(cfg, pre_proc_args->vr_page, &mode)) {
+			LOG_ERR("The VR mp2971 ovp2 action mode set failed");
+			goto err;
+		}
+		break;
+	}
+	case OVP_1:
+		if (!mp2971_set_ovp_1(cfg, pre_proc_args->vr_page, set_data)) {
+			LOG_ERR("The VR mp2971 ovp 1 setting failed");
+			goto err;
+		}
+		break;
+	case DIV_EN:
+		if (!mp2971_set_thres_div_en(cfg, pre_proc_args->vr_page, set_data)) {
+			LOG_ERR("The VR mp2971 gain setting failed");
+			goto err;
+		}
+		break;
+	default:
+		LOG_ERR("Unsupport VR mp2971 setting reg (%x)", set_reg);
+		goto err;
+	}
+
+	ret = 0;
+err:
+	if (cfg->post_sensor_read_hook) {
+		if (cfg->post_sensor_read_hook(cfg, cfg->post_sensor_read_args, NULL) == false) {
+			LOG_ERR("sensor id: 0x%x post-read fail", sensor_id);
+		}
+	}
+	return ret;
+}
+
 bool plat_get_vout_range(uint8_t rail, uint16_t *vout_max_millivolt, uint16_t *vout_min_millivolt)
 {
 	CHECK_NULL_ARG_WITH_RETURN(vout_max_millivolt, false);
@@ -1202,6 +1703,38 @@ bool plat_get_vout_range(uint8_t rail, uint16_t *vout_max_millivolt, uint16_t *v
 	*vout_min_millivolt = (uint16_t)(critical_low * 1000);
 
 	return true;
+}
+
+bool plat_set_voffset_mmc_command(uint8_t rail, int16_t *millivolt, bool is_perm)
+{
+	CHECK_NULL_ARG_WITH_RETURN(millivolt, false);
+
+	bool ret = false;
+	uint8_t sensor_id = vr_rail_table[rail].sensor_id;
+	const sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
+	if (cfg == NULL) {
+		LOG_ERR("Failed to get sensor config for sensor 0x%x", sensor_id);
+		return false;
+	}
+
+	int16_t setting_millivolt = *millivolt;
+
+	if (is_perm) {
+		vr_voffset_mmc_user_settings.voffset_mmc[rail].value = setting_millivolt;
+		vr_voffset_mmc_user_settings.voffset_mmc[rail].valid = 1;
+		if (!set_user_settings_vr_voffset_mmc_to_eeprom(
+			    &vr_voffset_mmc_user_settings, sizeof(vr_voffset_mmc_user_settings))) {
+			LOG_ERR("set user settings vr Voffset_mmc to eeprom failed");
+			goto err;
+		}
+	}
+
+	vr_voffset_mmc_command_get.voffset_mmc[rail] = setting_millivolt;
+
+	ret = true;
+err:
+
+	return ret;
 }
 
 bool vr_rail_voltage_peak_get(uint8_t *name, int *peak_value)
@@ -1516,7 +2049,6 @@ bool get_bootstrap_change_drive_level(int rail, int *drive_level)
 	}
 
 	*drive_level = bootstrap_item.change_setting_value;
-	LOG_DBG("rail %d, drive_level = %x", rail, *drive_level);
 	return true;
 }
 
@@ -1595,9 +2127,6 @@ bool set_bootstrap_table_and_user_settings(uint8_t rail, uint8_t *change_setting
 				}
 			}
 		}
-
-		LOG_DBG("set [%2d]%s: %02x", rail, bootstrap_table[i].strap_name,
-			*change_setting_value);
 
 		if (is_perm) {
 			int drive_level = -1;

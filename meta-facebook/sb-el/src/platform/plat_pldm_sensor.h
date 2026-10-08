@@ -335,6 +335,13 @@ typedef struct _power_capping_time_setting {
 enum TMP_ADDRESS_VIRSION { FAB1_1ND_TMP432 = 0, FAB1_2ND_EMC1413, MAX_TMP_ADDRESS_VIRSION };
 enum VR_ADDRESS_VIRSION { FAB1_1ND_MPS = 0, FAB1_2ND_RNS, MAX_VR_ADDRESS_VIRSION };
 
+//OT WARNING
+#define OT_WARNING_REG 0x7D
+#define OT_WARNING_BIT BIT(6)
+#define CPLD_OT_WARNING_BIT BIT(0)
+#define OT_WARNING_EVENT_DATA1_BASE 0x61
+#define QUICK_SENSOR_OT_WARNING_POLL_COUNT 34
+
 int plat_pldm_sensor_get_sensor_count(int thread_id);
 sensor_cfg *get_sensor_cfg_by_sensor_id(uint8_t sensor_id);
 void plat_pldm_sensor_get_pdr_numeric_sensor(int thread_id, int sensor_num,
@@ -342,15 +349,18 @@ void plat_pldm_sensor_get_pdr_numeric_sensor(int thread_id, int sensor_num,
 bool is_dc_access(uint8_t sensor_num);
 void set_plat_sensor_polling_enable_flag(bool value);
 void set_plat_sensor_ubc_polling_enable_flag(bool value);
+void set_plat_sensor_ina238_polling_enable_flag(bool value);
 void set_plat_sensor_temp_polling_enable_flag(bool value);
 void set_plat_sensor_vr_polling_enable_flag(bool value);
 void set_plat_sensor_one_step_enable_flag(uint8_t value);
 bool get_plat_sensor_polling_enable_flag();
 bool get_plat_sensor_ubc_polling_enable_flag();
+bool get_plat_sensor_ina238_polling_enable_flag();
 bool get_plat_sensor_temp_polling_enable_flag();
 bool get_plat_sensor_vr_polling_enable_flag();
 uint8_t get_plat_sensor_one_step_enable_flag();
 bool is_ubc_access(uint8_t sensor_num);
+bool is_ina238_access(uint8_t sensor_num);
 bool is_temp_access(uint8_t cfg_idx);
 bool is_vr_access(uint8_t sensor_num);
 size_t char16_strlen(const char16_t *str);
@@ -368,4 +378,12 @@ void quick_sensor_poll_init();
 PDR_numeric_sensor *get_pdr_numeric_sensor_by_sensor_id(uint8_t sensor_id);
 uint8_t get_pwr_capping_polling_rate_type();
 uint16_t get_quick_nuwa_polling_rate();
+void set_ina238_polling_rate_type(uint8_t type);
+uint8_t get_ina238_polling_rate_type();
+// vr hot
+bool is_any_ot_warning_active(void);
+
+// VR temperature monitor sensors lookup table
+extern const uint16_t vr_temp_monitor_sensors[];
+extern const uint8_t vr_temp_monitor_sensors_count;
 #endif

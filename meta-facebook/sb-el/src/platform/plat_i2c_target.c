@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -20,7 +20,7 @@
   DESCRIPTION: Provide i2c target EN/CFG table "I2C_TARGET_EN_TABLE[]/I2C_TARGET_CFG_TABLE[]" for init target config.
   AUTHOR: MouchenHung
   DATE/VERSION: 2021.11.26 - v1.1
-  Note: 
+  Note:
     (1) "plat_i2c_target.h" is included by "hal_i2c_target.h"
 */
 
@@ -50,7 +50,13 @@ LOG_MODULE_REGISTER(plat_i2c_target);
 #define DATA_TABLE_LENGTH_4 4
 #define DATA_TABLE_LENGTH_7 7
 #define DATA_TABLE_LENGTH_13 13
-#define DEVICE_TYPE 0x01
+/*
+ * Device type definitions:
+ *   Aegis  : 0x01
+ *   Rainbow: 0x02
+ *   Electra: 0x03
+ */
+#define DEVICE_TYPE 0x03
 #define REGISTER_LAYOUT_VERSION 0x01
 #define SENSOR_READING_PDR_INDEX_MAX 50
 #define SENSOR_INIT_PDR_INDEX_MAX 248
@@ -279,8 +285,8 @@ bool initialize_sensor_reading(telemetry_info *telemetry_info, uint8_t *buffer_s
 	sensor_data->register_layout_version = REGISTER_LAYOUT_VERSION;
 	sensor_data->sensor_base_index = table_index * SENSOR_READING_PDR_INDEX_MAX;
 	sensor_data->max_sbi_off = (num_idx > 0) ? num_idx - 1 : 0;
-	LOG_DBG("sensor_base_index: %d, max_sbi_off: %d", sensor_data->sensor_base_index,
-		sensor_data->max_sbi_off);
+	// LOG_DBG("sensor_base_index: %d, max_sbi_off: %d", sensor_data->sensor_base_index,
+	// 	sensor_data->max_sbi_off);
 	for (int i = 0; i < num_idx; i++) {
 		sensor_data->sensor_entries[i].sensor_index_offset =
 			i; // sensor_index_offset range: 0~49
@@ -492,6 +498,8 @@ voltage_rail_mapping_sensor voltage_rail_mapping_table[] = {
 	{ CONTROL_VOL_VR_ASIC_P1V8_VPP_HBM1357_REG, VR_RAIL_E_ASIC_P1V8_VPP_HBM1357 },
 	{ CONTROL_VOL_VR_ASIC_P0V75_NUWA0_VDD_REG, VR_RAIL_E_ASIC_P0V75_NUWA0_VDD },
 	{ CONTROL_VOL_VR_ASIC_P0V75_NUWA1_VDD_REG, VR_RAIL_E_ASIC_P0V75_NUWA1_VDD },
+	{ CONTROL_VOL_VR_ASIC_P0V9_VDDQ_HBM0246_REG, VR_RAIL_E_ASIC_P0V9_VDDQ_HBM0246 },
+	{ CONTROL_VOL_VR_ASIC_P0V9_VDDQ_HBM1357_REG, VR_RAIL_E_ASIC_P0V9_VDDQ_HBM1357 },
 };
 
 uint8_t get_vr_rail_by_control_vol_reg(uint8_t control_vol_reg)
@@ -552,7 +560,9 @@ void vr_power_reading(uint8_t *buffer, size_t buf_size)
 	[30:31] - P0V75_MAX_M_VDD (Unit: W)
 	[32:33] - P0V75_OWL_E_VDD (Unit: W)
 	[34:35] - P0V75_OWL_W_VDD (Unit: W)
-	[36:37] - PDB1_P52V_ASIC_SENSE_PWR (Unit: W) (Need BMC support)
+	[36:37] - PDB1_P52V_ASIC_SENSE_PWR (Unit: W)
+				EVT1A: Read from BMC through CPLD
+				EVT1B and later: Read from INA238 sensor cache
 	each data is 2 bytes
 	*/
 	float x = 0;
@@ -560,6 +570,7 @@ void vr_power_reading(uint8_t *buffer, size_t buf_size)
 	float chiplet1 = 0;
 	float nuwa0 = 0;
 	float nuwa1 = 0;
+	uint8_t board_rev_id = get_board_rev_id();
 
 	for (size_t i = 0; i < ARRAY_SIZE(vr_pwr_sensor_table); i++) {
 		if (get_asic_board_id() != ASIC_BOARD_ID_EVB &&
@@ -649,10 +660,19 @@ void vr_power_reading(uint8_t *buffer, size_t buf_size)
 			x += milivolt;
 		}
 	}
-	int reading;
-	get_cpld_polling_power_info(&reading);
-	uint16_t val = (uint16_t)reading;
-	memcpy(&buffer[36], &val, 2);
+
+	/* EVT1A PDB1 power comes from BMC through CPLD */
+	if (board_rev_id == REV_ID_EVT1A) {
+		int reading = 0;
+		get_cpld_polling_power_info(&reading);
+		uint16_t val = (uint16_t)reading;
+		memcpy(&buffer[36], &val, sizeof(val));
+	} else {
+		/* EVT1B and later PDB1 power comes from INA238 sensor cache */
+		int milivolt = get_cached_sensor_reading_by_sensor_number(SENSOR_NUM_INA238_PWR_W);
+		uint16_t val = (milivolt + 500) / 1000;
+		memcpy(&buffer[36], &val, sizeof(val));
+	}
 
 	chiplet0 = ((nuwa0 + 0.5 * x) + 500) / 1000;
 	chiplet1 = ((nuwa1 + 0.5 * x) + 500) / 1000;
@@ -772,7 +792,6 @@ void set_control_voltage_handler(struct k_work *work_item)
 		CONTAINER_OF(work_item, plat_control_voltage, work);
 	uint8_t rail = sensor_data->rail;
 	uint16_t millivolt = sensor_data->set_value;
-	LOG_DBG("Setting rail %x to %d mV", rail, millivolt);
 
 	plat_set_vout_command(rail, &millivolt, false);
 }
@@ -824,6 +843,8 @@ void plat_master_write_thread_handler()
 	while (1) {
 		uint8_t rdata[MAX_I2C_TARGET_BUFF] = { 0 };
 		uint16_t rlen = 0;
+		uint16_t vout_offset_value = 0;
+		uint8_t svs_flag = get_svs_flag();
 		for (int i = 0; i < ASIC_I2C_BUS_IDX_MAX; i++) {
 			rc = multi_bus_i2c_target_read(target_bus_list[i].i2c_bus, rdata,
 						       sizeof(rdata), &rlen, K_MSEC(5));
@@ -848,7 +869,6 @@ void plat_master_write_thread_handler()
 				if (rlen != 3) {
 					LOG_WRN("WRITE_STRAP_PIN_VALUE_REG Invalid length for offset(write): 0x%02x",
 						reg_offset);
-					LOG_DBG("Received data length: 0x%02x", rlen);
 					break;
 				}
 				bootstrap_pin = rdata[1];
@@ -886,7 +906,9 @@ void plat_master_write_thread_handler()
 			case CONTROL_VOL_VR_ASIC_P1V8_VPP_HBM0246_REG:
 			case CONTROL_VOL_VR_ASIC_P1V8_VPP_HBM1357_REG:
 			case CONTROL_VOL_VR_ASIC_P0V75_NUWA0_VDD_REG:
-			case CONTROL_VOL_VR_ASIC_P0V75_NUWA1_VDD_REG: {
+			case CONTROL_VOL_VR_ASIC_P0V75_NUWA1_VDD_REG:
+			case CONTROL_VOL_VR_ASIC_P0V9_VDDQ_HBM0246_REG:
+			case CONTROL_VOL_VR_ASIC_P0V9_VDDQ_HBM1357_REG: {
 				if (rlen != 3) {
 					LOG_ERR("Invalid length for offset(write): 0x%02x",
 						reg_offset);
@@ -899,8 +921,73 @@ void plat_master_write_thread_handler()
 					LOG_ERR("Memory allocation failed!");
 					break;
 				}
+				uint8_t rail = get_vr_rail_by_control_vol_reg(reg_offset);
+				if (reg_offset == CONTROL_VOL_VR_ASIC_P0V75_NUWA0_VDD_REG ||
+				    reg_offset == CONTROL_VOL_VR_ASIC_P0V75_NUWA1_VDD_REG) {
+					// check svs_asic_voltage_flag for medha0 and medha1
+					// if flag = 0, just block voltage set and end
+					uint8_t svs_asic_voltage_flag = get_svs_asic_voltage_flag();
+					if (svs_asic_voltage_flag == 0) {
+						LOG_ERR("SVS asic voltage is disabled, voltage not apply, reg_offset 0x%02x",
+							reg_offset);
+						free(sensor_data);
+						break;
+					}
+				}
+				if (svs_flag) {
+					if (reg_offset == CONTROL_VOL_VR_ASIC_P0V75_NUWA0_VDD_REG ||
+					    reg_offset == CONTROL_VOL_VR_ASIC_P0V75_NUWA1_VDD_REG) {
+						if (!voltage_offset_get(rail, &vout_offset_value)) {
+							LOG_ERR("Failed to get vout offset for reg_offset 0x%02x",
+								reg_offset);
+							free(sensor_data);
+							break;
+						}
+					}
+				}
+
 				sensor_data->rail = get_vr_rail_by_control_vol_reg(reg_offset);
 				sensor_data->set_value = rdata[1] | (rdata[2] << 8);
+				// check set_value in range 750mv~850mv, if out of range, print error and end
+				if (reg_offset == CONTROL_VOL_VR_ASIC_P0V75_NUWA0_VDD_REG ||
+				    reg_offset == CONTROL_VOL_VR_ASIC_P0V75_NUWA1_VDD_REG) {
+					if (sensor_data->set_value < 750 ||
+					    sensor_data->set_value > 850) {
+						LOG_ERR("Set voltage out of range: %d mV(750~850)",
+							sensor_data->set_value);
+						free(sensor_data);
+						break;
+					}
+				} else if (reg_offset ==
+						   CONTROL_VOL_VR_ASIC_P0V9_VDDQ_HBM0246_REG ||
+					   reg_offset ==
+						   CONTROL_VOL_VR_ASIC_P0V9_VDDQ_HBM1357_REG) {
+					if (sensor_data->set_value < 850 ||
+					    sensor_data->set_value > 950) {
+						LOG_ERR("Set voltage out of range: %d mV(850~950)",
+							sensor_data->set_value);
+						free(sensor_data);
+						break;
+					}
+				} else {
+					uint16_t vout_max_millivolt =
+						vout_range_user_settings.change_vout_max[rail];
+					uint16_t vout_min_millivolt =
+						vout_range_user_settings.change_vout_min[rail];
+					if (sensor_data->set_value < vout_min_millivolt ||
+					    sensor_data->set_value > vout_max_millivolt) {
+						LOG_ERR("Set voltage out of range: %d mV(%d~%d)",
+							sensor_data->set_value, vout_min_millivolt,
+							vout_max_millivolt);
+						free(sensor_data);
+						break;
+					}
+				}
+
+				// if svs flag = enable, add vout_offset
+				if (svs_flag) {
+					sensor_data->set_value += vout_offset_value;
+				}
 				k_work_init(&sensor_data->work, set_control_voltage_handler);
 				k_work_submit(&sensor_data->work);
 			} break;
@@ -995,8 +1082,22 @@ void plat_master_write_thread_handler()
 					break;
 				}
 			} break;
+			case INA238_POLLING_RATE_REG: {
+				if (rlen != 2) {
+					LOG_ERR("Invalid length for offset(write): 0x%02x",
+						reg_offset);
+					break;
+				}
+
+				if (rdata[1] > 2) {
+					LOG_ERR("INA238 polling rate type should be 0-2");
+					break;
+				}
+
+				set_ina238_polling_rate_type(rdata[1]);
+			} break;
 			case SET_SENSOR_POLLING_COMMAND_REG: {
-				if (rlen != 8) {
+				if (rlen != 10) {
 					LOG_ERR("Invalid length for offset: 0x%02x", reg_offset);
 					LOG_ERR("length: 0x%02x", rlen);
 					break;
@@ -1017,7 +1118,6 @@ void plat_master_write_thread_handler()
 					break;
 				}
 				sensor_data->set_value = rdata[9]; // need to check
-				LOG_DBG("set sensor_polling:%x", sensor_data->set_value);
 				// transfer rdata[9] type to bool
 				sensor_data->set_value = sensor_data->set_value ? true : false;
 				k_work_init(&sensor_data->work, set_sensor_polling_handler);
@@ -1067,6 +1167,8 @@ const bool I2C_TARGET_ENABLE_TABLE[MAX_TARGET_NUM] = {
 static bool command_reply_data_handle(void *arg)
 {
 	struct i2c_target_data *data = (struct i2c_target_data *)arg;
+	uint8_t svs_flag = get_svs_flag();
+	uint16_t vout_offset_value = 0;
 	if (data->wr_buffer_idx >= 1) {
 		if (data->wr_buffer_idx == 1) {
 			uint8_t reg_offset = data->target_wr_msg.msg[0];
@@ -1081,7 +1183,7 @@ static bool command_reply_data_handle(void *arg)
 			if (struct_size > sizeof(data->target_rd_msg.msg)) {
 				struct_size = sizeof(data->target_rd_msg.msg);
 			}
-			LOG_DBG("Received reg offset(write 1 data): 0x%02x", reg_offset);
+			// LOG_DBG("Received reg offset(write 1 data): 0x%02x", reg_offset);
 			switch (reg_offset) {
 			case SENSOR_INIT_DATA_0_REG:
 			case SENSOR_INIT_DATA_1_REG: {
@@ -1182,12 +1284,36 @@ static bool command_reply_data_handle(void *arg)
 			case CONTROL_VOL_VR_ASIC_P1V8_VPP_HBM0246_REG:
 			case CONTROL_VOL_VR_ASIC_P1V8_VPP_HBM1357_REG:
 			case CONTROL_VOL_VR_ASIC_P0V75_NUWA0_VDD_REG:
-			case CONTROL_VOL_VR_ASIC_P0V75_NUWA1_VDD_REG: {
+			case CONTROL_VOL_VR_ASIC_P0V75_NUWA1_VDD_REG:
+			case CONTROL_VOL_VR_ASIC_P0V9_VDDQ_HBM0246_REG:
+			case CONTROL_VOL_VR_ASIC_P0V9_VDDQ_HBM1357_REG: {
 				uint8_t rail = get_vr_rail_by_control_vol_reg(reg_offset);
 				uint16_t vout = 0xFFFF;
 				if (!voltage_command_setting_get(rail, &vout)) {
 					LOG_ERR("Can't voltage_command setting_get by rail: 0x%02x",
 						rail);
+				}
+				if (svs_flag) {
+					if (reg_offset == CONTROL_VOL_VR_ASIC_P0V75_NUWA0_VDD_REG ||
+					    reg_offset == CONTROL_VOL_VR_ASIC_P0V75_NUWA1_VDD_REG) {
+						if (!voltage_offset_get(rail, &vout_offset_value)) {
+							LOG_ERR("Failed to get vout offset for reg_offset 0x%02x",
+								reg_offset);
+							break;
+						}
+						// need to minus vout offset(read back from VR)
+						vout -= vout_offset_value;
+					}
+				}
+				if (reg_offset == CONTROL_VOL_VR_ASIC_P0V9_VDDQ_HBM0246_REG ||
+				    reg_offset == CONTROL_VOL_VR_ASIC_P0V9_VDDQ_HBM1357_REG) {
+					if (!voltage_offset_get(rail, &vout_offset_value)) {
+						LOG_ERR("Failed to get vout offset for reg_offset 0x%02x",
+							reg_offset);
+						break;
+					}
+					// need to minus vout offset(read back from VR)
+					vout -= vout_offset_value;
 				}
 				memcpy(data->target_rd_msg.msg, &vout, sizeof(vout));
 				data->target_rd_msg.msg_length = 2;
@@ -1285,9 +1411,15 @@ static bool command_reply_data_handle(void *arg)
 				data->target_rd_msg.msg[1] = tray;
 				data->target_rd_msg.msg_length = 2;
 
-				LOG_DBG("TRAY_INFO_REG: slot=0x%02x, tray=0x%02x", slot, tray);
-				LOG_HEXDUMP_DBG(data->target_rd_msg.msg,
-						data->target_rd_msg.msg_length, "tray info");
+				// LOG_DBG("TRAY_INFO_REG: slot=0x%02x, tray=0x%02x", slot, tray);
+				// LOG_HEXDUMP_DBG(data->target_rd_msg.msg,
+				// 		data->target_rd_msg.msg_length, "tray info");
+			} break;
+			case INA238_POLLING_RATE_REG: {
+				uint8_t type = get_ina238_polling_rate_type();
+				data->target_rd_msg.msg[0] = type;
+				data->target_rd_msg.msg_length = 1;
+				LOG_INF("INA238 polling rate read successfully: type=%u", type);
 			} break;
 			default:
 				LOG_ERR("Unknown reg offset: 0x%02x", reg_offset);
@@ -1296,8 +1428,8 @@ static bool command_reply_data_handle(void *arg)
 				break;
 			}
 		} else if (data->wr_buffer_idx == 2) {
-			LOG_DBG("Received reg offset(write 2 data): 0x%02x",
-				data->target_wr_msg.msg[0]);
+			// LOG_DBG("Received reg offset(write 2 data): 0x%02x",
+			// 	data->target_wr_msg.msg[0]);
 			uint8_t reg_offset = data->target_wr_msg.msg[0];
 			switch (reg_offset) {
 			case WRITE_STRAP_PIN_VALUE_REG: {
@@ -1326,7 +1458,7 @@ static bool command_reply_data_handle(void *arg)
 			data->target_rd_msg.msg[0] = 0xFF;
 		}
 	}
-	LOG_DBG("Reply data length: 0x%02x", data->target_rd_msg.msg_length);
+	// LOG_DBG("Reply data length: 0x%02x", data->target_rd_msg.msg_length);
 	return false;
 }
 

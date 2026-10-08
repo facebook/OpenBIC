@@ -35,6 +35,8 @@
 #include "plat_thermal.h"
 #include "pmbus.h"
 #include "plat_led.h"
+#include "plat_clock.h"
+#include "pldm_oem.h"
 
 LOG_MODULE_REGISTER(plat_log);
 
@@ -218,10 +220,6 @@ void plat_log_read(uint8_t *log_data, uint8_t cmd_size, uint16_t order)
 	uint16_t eeprom_address =
 		FRU_LOG_START + zero_base_log_position * sizeof(plat_err_log_mapping);
 
-	LOG_DBG("order: %d, log_position: %d, eeprom_address: 0x%X", order,
-		(zero_base_log_position + 1),
-		eeprom_address); //remove after all log function is ready
-
 	plat_err_log_mapping log_entry;
 
 	if (!plat_eeprom_read(eeprom_address, (uint8_t *)&log_entry,
@@ -377,10 +375,76 @@ bool get_multi_vr_status(uint8_t alrt_index, uint8_t *data)
 	return true;
 }
 
+static bool get_vr_ot_warning_sensor_num_by_index(uint8_t rail_index, uint8_t *sensor_num)
+{
+	CHECK_NULL_ARG_WITH_RETURN(sensor_num, false);
+
+	if (rail_index >= vr_temp_monitor_sensors_count)
+		return false;
+
+	const sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(vr_temp_monitor_sensors[rail_index]);
+	if (cfg == NULL)
+		return false;
+
+	*sensor_num = cfg->num;
+	return true;
+}
+
+bool check_is_extend_error_code(uint16_t error_code)
+{
+	if (error_code >= ERROR_TRIGGER_CAUSE_EXTEND_START &&
+	    error_code <= ERROR_TRIGGER_CAUSE_EXTEND_END) {
+		return true;
+	}
+	return false;
+}
+
+bool plat_get_extend_error_data(uint16_t error_code, uint8_t *data)
+{
+	CHECK_NULL_ARG_WITH_RETURN(data, false);
+
+	switch (error_code & 0xFF00) {
+	case CLOCK_APLL_UNLOCK_EVENT_CAUSE: {
+		if (!clock_get_error_data(CLOCK_APLL_UNLOCK_EVENT_CAUSE, data)) {
+			LOG_ERR("Failed to get clock APLL unlock error data");
+			return false;
+		}
+		return true;
+	}
+	case VR_OT_WARNING_EVENT_CAUSE: {
+		uint8_t rail_index = error_code & 0xFF;
+		uint8_t sensor_num = 0;
+		uint8_t reg_val = 0;
+
+		if (!get_vr_ot_warning_sensor_num_by_index(rail_index, &sensor_num)) {
+			LOG_ERR("Failed to map VR OT warning rail index: 0x%02x", rail_index);
+			return false;
+		}
+
+		if (!get_raw_data_from_sensor_id(sensor_num, OT_WARNING_REG, &reg_val, 1)) {
+			LOG_ERR("Failed to read OT warning register for sensor: 0x%02x",
+				sensor_num);
+			return false;
+		}
+
+		data[0] = reg_val;
+		data[1] = sensor_num;
+		return true;
+	}
+	default:
+		LOG_ERR("Unsupported extended error code: 0x%04x", error_code);
+		return false;
+	}
+}
+
 bool get_error_data(uint16_t error_code, uint8_t *data)
 {
 	CHECK_NULL_ARG_WITH_RETURN(data, false);
 
+	/* check if error code is in extended range */
+	if (check_is_extend_error_code(error_code)) {
+		return plat_get_extend_error_data(error_code, data);
+	}
 	uint8_t trigger_case = (error_code >> 13) & 0x07;
 
 	switch (trigger_case) {
@@ -458,7 +522,7 @@ bool get_error_data(uint16_t error_code, uint8_t *data)
 	// Extract CPLD offset and bit position from the error code
 	uint8_t cpld_offset = error_code & 0xFF;
 	uint8_t bit_position = (error_code >> 8) & 0x07;
-	LOG_DBG("cpld_offset: 0x%x, bit_position: 0x%x", cpld_offset, bit_position);
+	// LOG_DBG("cpld_offset: 0x%x, bit_position: 0x%x", cpld_offset, bit_position);
 
 	// Initialize sensor number
 	uint8_t sensor_num = 0x00;
@@ -489,7 +553,6 @@ bool get_error_data(uint16_t error_code, uint8_t *data)
 
 	// If no valid sensor number is found, skip further data retrieval
 	if (sensor_num == 0x00) {
-		LOG_DBG("No valid sensor_num for error_code: 0x%x", error_code);
 		return false;
 	}
 
@@ -612,7 +675,6 @@ void reset_error_log_event(uint8_t err_type)
 		uint16_t error_code = err_code_caches[i];
 		uint8_t code_type = error_code >> ERROR_CODE_TYPE_SHIFT;
 		if (code_type == err_type) {
-			LOG_DBG("DEASSERT");
 			error_log_event(error_code, LOG_DEASSERT);
 			err_code_caches[i] = 0;
 		}
@@ -681,4 +743,20 @@ void init_load_eeprom_log(void)
 
 	// Determine the next log position
 	find_last_log_position();
+}
+
+void packaged_bmc_log(uint8_t event_type, uint8_t event_data_1, uint8_t event_data_2,
+		      uint8_t event_data_3)
+{
+	struct pldm_addsel_data to_bmc_sel_msg = { 0 };
+	to_bmc_sel_msg.assert_type = LOG_ASSERT;
+	to_bmc_sel_msg.event_type = event_type;
+	to_bmc_sel_msg.event_data_1 = event_data_1;
+	to_bmc_sel_msg.event_data_2 = event_data_2;
+	to_bmc_sel_msg.event_data_3 = event_data_3;
+	if (send_event_log_to_bmc(to_bmc_sel_msg) != PLDM_SUCCESS) {
+		LOG_ERR("Failed to send msg to bmc, event_type: 0x%x, event data: 0x%x 0x%x 0x%x\n",
+			to_bmc_sel_msg.event_type, to_bmc_sel_msg.event_data_1,
+			to_bmc_sel_msg.event_data_2, to_bmc_sel_msg.event_data_3);
+	}
 }
