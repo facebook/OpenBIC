@@ -1,0 +1,6 @@
+<map id="set_mux_channel" name="set_mux_channel">
+<area shape="rect" id="node1" title=" " alt="" coords="5,35,128,61"/>
+<area shape="rect" id="node2" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="201,5,322,32"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#ae12ca95f786ad6cc2dfe16be7d73f862" title=" " alt="" coords="176,57,347,98"/>
+<area shape="rect" id="node3" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="395,35,537,61"/>
+</map>

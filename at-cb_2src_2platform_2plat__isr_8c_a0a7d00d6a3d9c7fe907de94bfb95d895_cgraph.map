@@ -1,0 +1,11 @@
+<map id="check_accl_card_pwr_good_work_handler" name="check_accl_card_pwr_good_work_handler">
+<area shape="rect" id="node1" title=" " alt="" coords="5,74,153,116"/>
+<area shape="rect" id="node2" href="$at-cb_2src_2platform_2plat__class_8c.html#a6a54497033563f8d0666943817d1e92a" title=" " alt="" coords="608,15,729,42"/>
+<area shape="rect" id="node5" href="$at-cb_2src_2platform_2plat__sensor__table_8c.html#a67290fa83ee3c7112a8009dd853d40f8" title=" " alt="" coords="207,41,350,82"/>
+<area shape="rect" id="node7" href="$at-cb_2src_2platform_2plat__pldm__monitor_8c.html#a399585dcfb9a11888c6e4726fa3f06f0" title=" " alt="" coords="201,106,356,148"/>
+<area shape="rect" id="node9" href="$at-cb_2src_2platform_2plat__pldm__monitor_8c.html#a5ce3652979198be87698a1c17dde29d0" title=" " alt="" coords="203,172,354,213"/>
+<area shape="rect" id="node3" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="777,15,896,42"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="944,15,1087,42"/>
+<area shape="rect" id="node6" href="$at-cb_2src_2platform_2plat__sensor__table_8c.html#a8d943b1193bd0a38e454302ae061defb" title=" " alt="" coords="404,44,560,71"/>
+<area shape="rect" id="node8" href="$pldm__monitor_8c.html#aee425d655113020d7d424cc5b86d756c" title=" " alt="" coords="413,138,551,180"/>
+</map>

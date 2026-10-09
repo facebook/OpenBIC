@@ -1,0 +1,7 @@
+<map id="cmd_set_pwrlevel" name="cmd_set_pwrlevel">
+<area shape="rect" id="node1" title=" " alt="" coords="5,46,132,73"/>
+<area shape="rect" id="node2" href="$minerva-ag_2src_2platform_2plat__hook_8c.html#af7f5e2f4276c3b1f87d6cad2e366bcc7" title=" " alt="" coords="180,5,344,47"/>
+<area shape="rect" id="node3" href="$minerva-ag_2src_2platform_2plat__hook_8c.html#ab7be0784286e4ca9998901ef4c9dd348" title=" " alt="" coords="183,71,341,112"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="392,78,513,105"/>
+<area shape="rect" id="node5" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="561,78,704,105"/>
+</map>

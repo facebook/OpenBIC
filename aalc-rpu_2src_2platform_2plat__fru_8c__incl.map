@@ -1,0 +1,23 @@
+<map id="meta&#45;facebook/aalc&#45;rpu/src/platform/plat_fru.c" name="meta&#45;facebook/aalc&#45;rpu/src/platform/plat_fru.c">
+<area shape="rect" id="node1" title=" " alt="" coords="479,5,654,47"/>
+<area shape="rect" id="node2" title=" " alt="" coords="5,95,69,121"/>
+<area shape="rect" id="node3" href="$aalc-rpu_2src_2platform_2plat__i2c_8h.html" title=" " alt="" coords="93,95,171,121"/>
+<area shape="rect" id="node7" href="$i2c-mux-pca954x_8h.html" title=" " alt="" coords="194,95,323,121"/>
+<area shape="rect" id="node8" href="$modbus__server_8h.html" title=" " alt="" coords="347,95,469,121"/>
+<area shape="rect" id="node9" href="$libutil_8h.html" title=" " alt="" coords="493,95,555,121"/>
+<area shape="rect" id="node14" title=" " alt="" coords="579,95,642,121"/>
+<area shape="rect" id="node15" title=" " alt="" coords="666,95,761,121"/>
+<area shape="rect" id="node16" href="$fru_8h.html" title=" " alt="" coords="837,95,883,121"/>
+<area shape="rect" id="node20" href="$aalc-rpu_2src_2platform_2plat__fru_8h.html" title=" " alt="" coords="724,169,799,196"/>
+<area shape="rect" id="node21" title=" " alt="" coords="907,95,965,121"/>
+<area shape="rect" id="node4" href="$hal__i2c_8h.html" title=" " alt="" coords="138,169,211,196"/>
+<area shape="rect" id="node5" title=" " alt="" coords="54,244,146,271"/>
+<area shape="rect" id="node6" title=" " alt="" coords="170,244,329,271"/>
+<area shape="rect" id="node10" title=" " alt="" coords="729,244,793,271"/>
+<area shape="rect" id="node11" href="$ipmb_8h.html" title=" " alt="" coords="494,169,554,196"/>
+<area shape="rect" id="node12" title=" " alt="" coords="437,244,529,271"/>
+<area shape="rect" id="node13" title=" " alt="" coords="553,244,613,271"/>
+<area shape="rect" id="node17" href="$eeprom_8h.html" title=" " alt="" coords="823,169,897,196"/>
+<area shape="rect" id="node18" title=" " alt="" coords="820,244,895,271"/>
+<area shape="rect" id="node19" title=" " alt="" coords="919,244,998,271"/>
+</map>

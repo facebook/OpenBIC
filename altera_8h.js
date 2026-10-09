@@ -1,0 +1,28 @@
+var altera_8h =
+[
+    [ "_altera_max10_attr", "struct__altera__max10__attr.html", "struct__altera__max10__attr" ],
+    [ "BUSY_ERASE", "altera_8h.html#ad7a5712c2bccd1ec86fd7a88c2d641af", null ],
+    [ "BUSY_IDLE", "altera_8h.html#a7b06208efa3117914049d26f0a2f7d6d", null ],
+    [ "BUSY_READ", "altera_8h.html#a0bde2b424225242a32855d18c164bfa5", null ],
+    [ "BUSY_WRITE", "altera_8h.html#a3b22c5e09fb3b9151c669f80c18f1420", null ],
+    [ "CPLD_UPDATE_SIZE", "altera_8h.html#a4b3bc06c0132a83eef15efbda9b2f58c", null ],
+    [ "DUAL_BOOT_IP_BASE", "altera_8h.html#ac83db92b262182a4de2325007b065cb1", null ],
+    [ "ERASE_SUCCESS", "altera_8h.html#ae4b7520fc72e157c3e0a416c08511fc6", null ],
+    [ "M04_CFM1_END_ADDR", "altera_8h.html#afacfc76540208836874bdac841be3b3a", null ],
+    [ "M04_CFM1_START_ADDR", "altera_8h.html#a325410dd8695d976755f6c073bee48ff", null ],
+    [ "ON_CHIP_FLASH_IP_CSR_STATUS_REG", "altera_8h.html#ab39921dde8a461f1d91e3430fd5f9573", null ],
+    [ "ON_CHIP_FLASH_IP_DATA_REG", "altera_8h.html#a10330000813ed67c1c8546f28c10ef71", null ],
+    [ "READ_SUCCESS", "altera_8h.html#a0f857eb0492092b5f818858b4264b961", null ],
+    [ "STATUS_BIT_MASK", "altera_8h.html#a0e6ea15b26caa700284c800a30eaed98", null ],
+    [ "WRITE_SUCCESS", "altera_8h.html#ae5de69e99206aeb151b9562e7ea0f48b", null ],
+    [ "altera_max10_attr", "altera_8h.html#a176d69055e50e28db70cb719f0cb4963", null ],
+    [ "change_word_to_byte", "altera_8h.html#a86530a7cfec39c6ba8a18aaec1e38bce", null ],
+    [ "cpld_altera_max10_fw_update", "altera_8h.html#a8c9eb76296f6137b2728a54d5511a470", null ],
+    [ "get_register_via_i2c", "altera_8h.html#acb9df5ef59a224c7c16903af7ea28471", null ],
+    [ "max10_reg_read", "altera_8h.html#a64bb583034a6597463239d4b8acc4e59", null ],
+    [ "max10_reg_write", "altera_8h.html#ab9ea3c3fa5c5e57ef03b22e35609b317", null ],
+    [ "max10_status_read", "altera_8h.html#acc0287659d338c99f239c7121d17c93e", null ],
+    [ "max10_write_flash_data", "altera_8h.html#aa2f31de649fb6ced537689896944fac9", null ],
+    [ "pal_load_altera_max10_attr", "altera_8h.html#a3cb13f48cd5ddd79b9e43c2e6a84ad00", null ],
+    [ "set_register_via_i2c", "altera_8h.html#afaf1fbda2bf56b91152fd84b151149bb", null ]
+];

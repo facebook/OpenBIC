@@ -1,0 +1,8 @@
+<map id="pmic_init" name="pmic_init">
+<area shape="rect" id="node1" title=" " alt="" coords="5,42,80,69"/>
+<area shape="rect" id="node2" href="$pmic_8c.html#aba4044d5f3285e6e9d5c8b5d6545efa9" title=" " alt="" coords="128,42,211,69"/>
+<area shape="rect" id="node3" href="$pmic_8c.html#afb5f7fa5b4a6befecac3b146ab945dc3" title=" " alt="" coords="259,5,421,47"/>
+<area shape="rect" id="node4" href="$pmic_8c.html#aebf00e7edf81720ad8d530b2f455e407" title=" " alt="" coords="272,71,408,98"/>
+<area shape="rect" id="node5" href="$libutil_8c.html#a1e13185e8d3fc0ee9926ab7cd21413b6" title=" " alt="" coords="469,46,636,73"/>
+<area shape="rect" id="node6" href="$ipmb_8h.html#a260c07ba372e6648a635b20dbb790fa9" title=" " alt="" coords="511,97,594,123"/>
+</map>

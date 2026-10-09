@@ -1,0 +1,13 @@
+<map id="rpu_internal_fan_failure_do" name="rpu_internal_fan_failure_do">
+<area shape="rect" id="node1" title=" " alt="" coords="5,96,183,123"/>
+<area shape="rect" id="node2" href="$plat__threshold_8c.html#a4fcfdad132d701547f2597000a2e65c1" title=" " alt="" coords="231,89,399,130"/>
+<area shape="rect" id="node3" href="$aalc-rpu_2src_2platform_2plat__class_8c.html#a9556923a75518229aa09ba0bbda92a48" title=" " alt="" coords="485,11,604,37"/>
+<area shape="rect" id="node5" href="$sensor_8c.html#a52fcbd96358bec7eff3e368a4da4a292" title=" " alt="" coords="447,67,643,93"/>
+<area shape="rect" id="node7" href="$nct7363_8c.html#a33d1b854149a2acac4ef2e214fa60bf5" title=" " alt="" coords="461,121,628,148"/>
+<area shape="rect" id="node10" href="$nct7363_8c.html#a7c0e5ebf512357e06f24c3b5f6aa2fde" title=" " alt="" coords="493,172,596,199"/>
+<area shape="rect" id="node4" href="$hal__gpio_8c.html#af700ee50de3d113e223c2b011c41f966" title=" " alt="" coords="724,5,795,32"/>
+<area shape="rect" id="node6" href="$sensor_8c.html#ae224ad26413eb100f2abef7a1907a547" title=" " alt="" coords="691,57,828,98"/>
+<area shape="rect" id="node8" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="700,123,819,149"/>
+<area shape="rect" id="node9" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="876,148,1019,175"/>
+<area shape="rect" id="node11" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="699,173,820,200"/>
+</map>

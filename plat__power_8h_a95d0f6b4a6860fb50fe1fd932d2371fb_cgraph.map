@@ -1,0 +1,6 @@
+<map id="get_updated_vpp_power_status" name="get_updated_vpp_power_status">
+<area shape="rect" id="node1" title=" " alt="" coords="5,5,168,47"/>
+<area shape="rect" id="node2" href="$plat__power_8c.html#a0169b9cfda8ff8bee8c0ebace2cc809b" title=" " alt="" coords="216,13,368,39"/>
+<area shape="rect" id="node3" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="416,13,535,39"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="583,13,725,39"/>
+</map>

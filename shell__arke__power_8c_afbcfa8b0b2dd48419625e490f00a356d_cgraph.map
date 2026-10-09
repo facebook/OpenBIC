@@ -1,0 +1,13 @@
+<map id="cmd_arke_steps_on" name="cmd_arke_steps_on">
+<area shape="rect" id="node1" title=" " alt="" coords="5,56,144,83"/>
+<area shape="rect" id="node2" href="$hal__gpio_8c.html#af700ee50de3d113e223c2b011c41f966" title=" " alt="" coords="234,5,305,32"/>
+<area shape="rect" id="node3" href="$sb-el_2src_2platform_2plat__cpld_8c.html#a9499cab43403852499e3199117bfc94e" title=" " alt="" coords="223,56,315,83"/>
+<area shape="rect" id="node11" href="$sb-el_2src_2platform_2plat__isr_8c.html#a584f775279ee228b885f704faf706f73" title=" " alt="" coords="192,107,347,133"/>
+<area shape="rect" id="node4" href="$sb-el_2src_2platform_2plat__cpld_8c.html#ae2158527dc59da6acbe7d119b1602f98" title=" " alt="" coords="396,31,503,57"/>
+<area shape="rect" id="node8" href="$sb-el_2src_2platform_2plat__cpld_8c.html#a5de87122b83dfeeda681f4f3d927038f" title=" " alt="" coords="395,81,504,108"/>
+<area shape="rect" id="node5" href="$minerva-ag_2src_2platform_2plat__isr_8c.html#ad8887b1d0c4bbc7a6f1c25870a6d9051" title=" " alt="" coords="554,31,653,57"/>
+<area shape="rect" id="node6" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="704,31,823,57"/>
+<area shape="rect" id="node7" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="872,56,1015,83"/>
+<area shape="rect" id="node9" href="$minerva-ag_2src_2platform_2plat__isr_8c.html#a99dfe1bff0c2df0fa9632a165a6fcd3f" title=" " alt="" coords="552,81,655,108"/>
+<area shape="rect" id="node10" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="703,81,824,108"/>
+</map>

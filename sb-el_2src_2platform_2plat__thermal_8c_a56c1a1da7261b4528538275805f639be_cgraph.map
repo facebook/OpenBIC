@@ -1,0 +1,17 @@
+<map id="check_thermal_handler" name="check_thermal_handler">
+<area shape="rect" id="node1" title=" " alt="" coords="5,122,161,149"/>
+<area shape="rect" id="node2" href="$minerva-ag_2src_2platform_2plat__pldm__sensor_8c.html#af612fa91659722bb5ba98e3752572ced" title=" " alt="" coords="228,5,387,47"/>
+<area shape="rect" id="node3" href="$sb-el_2src_2platform_2plat__pldm__sensor_8c.html#a46562a6841a76e40467323c3cff0e651" title=" " alt="" coords="209,122,405,149"/>
+<area shape="rect" id="node4" href="$minerva-ag_2src_2platform_2plat__pldm__sensor_8c.html#acbdf6ec80f10c919325e5e571427cf6c" title=" " alt="" coords="453,71,648,98"/>
+<area shape="rect" id="node9" href="$sb-el_2src_2platform_2plat__thermal_8c.html#af0f18ae16858d6cf7c2140647f6413af" title=" " alt="" coords="234,173,381,199"/>
+<area shape="rect" id="node13" href="$sb-el_2src_2platform_2plat__event_8c.html#a5ea7387a42328d117d0bf1c1f112ddcc" title=" " alt="" coords="239,317,375,359"/>
+<area shape="rect" id="node6" href="$minerva-ag_2src_2platform_2plat__isr_8c.html#ad8887b1d0c4bbc7a6f1c25870a6d9051" title=" " alt="" coords="501,122,600,149"/>
+<area shape="rect" id="node5" href="$minerva-ag_2src_2platform_2plat__pldm__sensor_8c.html#a18272dc8dce4f373b85555817c2cc6f3" title=" " alt="" coords="696,64,845,105"/>
+<area shape="rect" id="node7" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="711,198,830,225"/>
+<area shape="rect" id="node8" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="893,198,1036,225"/>
+<area shape="rect" id="node10" href="$emc1413_8c.html#afdec49346182fe17ed1cb231ab47f50f" title=" " alt="" coords="461,173,640,199"/>
+<area shape="rect" id="node11" href="$minerva-ag_2src_2platform_2plat__class_8c.html#ab8ed1e1192e4346f34a2396e50d9f1aa" title=" " alt="" coords="497,223,604,250"/>
+<area shape="rect" id="node12" href="$tmp431_8c.html#a00cc24b37c2521664aee015454bd26ef" title=" " alt="" coords="466,274,635,301"/>
+<area shape="rect" id="node14" href="$aalc-rpu_2src_2platform_2plat__log_8c.html#a103e33f69b37672107c44bcf36accc6b" title=" " alt="" coords="495,375,606,402"/>
+<area shape="rect" id="node15" href="$sb-el_2src_2platform_2plat__led_8c.html#a285fa22ff058631a40f9a4554c3c05f5" title=" " alt="" coords="505,325,596,351"/>
+</map>
