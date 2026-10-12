@@ -701,24 +701,23 @@ add_vr_sel_info vr_event_work_item[] = {
 
 const vr_fault_info vr_fault_table[] = {
 	// { vr_source_id, cpld_reg_data_idx, cpld_reg_bit, is_pmbus_vr, vr_i2c_bus, vr_addr, vr_page }
-	{ PVCCIN_CPU0, CPLD_REG_INFO_IDX_0, BIT(2), true, I2C_BUS5, PVCCIN_ADDR, 0 },
-	{ PVCCFA_EHV_FIVRA_CPU0, CPLD_REG_INFO_IDX_0, BIT(5), true, I2C_BUS5, PVCCFA_EHV_FIVRA_ADDR,
+	{ PVCCIN_CPU0, CPLD_REG_INFO_IDX_0, BIT(1), true, I2C_BUS5, PVCCIN_ADDR, 0 },
+	{ PVCCFA_EHV_FIVRA_CPU0, CPLD_REG_INFO_IDX_0, BIT(4), true, I2C_BUS5, PVCCFA_EHV_FIVRA_ADDR,
 	  1 },
-	{ PVCCINFAON_CPU0, CPLD_REG_INFO_IDX_0, BIT(4), true, I2C_BUS5, PVCCINFAON_ADDR, 0 },
-	{ PVCCFA_EHV_CPU0, CPLD_REG_INFO_IDX_0, BIT(6), true, I2C_BUS5, PVCCFA_EHV_ADDR, 1 },
-	{ PVCCD_HV_CPU, CPLD_REG_INFO_IDX_0, BIT(7), true, I2C_BUS5, PVCCD_HV_ADDR, 0 },
-	{ P1V05_PCH_STB, CPLD_REG_INFO_IDX_1, BIT(2), false, 0, 0, 0 },
-	{ P1V8_STBY, CPLD_REG_INFO_IDX_1, BIT(4), false, 0, 0, 0 },
-	{ P5V_STBY, CPLD_REG_INFO_IDX_1, BIT(3), false, 0, 0, 0 },
-	{ P3V3_STBY, CPLD_REG_INFO_IDX_1, BIT(5), false, 0, 0, 0 },
-	{ VR_P12V_E1S_0, CPLD_REG_INFO_IDX_1, BIT(6), false, 0, 0, 0 },
-	{ VR_P3V3_E1S_0, CPLD_REG_INFO_IDX_1, BIT(7), false, 0, 0, 0 },
+	{ PVCCINFAON_CPU0, CPLD_REG_INFO_IDX_0, BIT(3), true, I2C_BUS5, PVCCINFAON_ADDR, 0 },
+	{ PVCCFA_EHV_CPU0, CPLD_REG_INFO_IDX_0, BIT(5), true, I2C_BUS5, PVCCFA_EHV_ADDR, 1 },
+	{ PVCCD_HV_CPU, CPLD_REG_INFO_IDX_0, BIT(0), true, I2C_BUS5, PVCCD_HV_ADDR, 0 },
+	{ P1V05_PCH_STBY, CPLD_REG_INFO_IDX_1, BIT(3), false, 0, 0, 0 },
+	{ P1V8_STBY, CPLD_REG_INFO_IDX_1, BIT(1), false, 0, 0, 0 },
+	{ P5V_STBY, CPLD_REG_INFO_IDX_1, BIT(0), false, 0, 0, 0 },
+	{ VR_P12V_E1S_0, CPLD_REG_INFO_IDX_1, BIT(5), false, 0, 0, 0 },
+	{ VR_P3V3_E1S_0, CPLD_REG_INFO_IDX_1, BIT(4), false, 0, 0, 0 },
 };
 
 const cpld_reg_info cpld_reg_table[CPLD_REG_INFO_IDX_MAX] = {
 	// { cpld_reg_i2c_bus, cpld_reg_addr, cpld_reg_offset }
-	{ I2C_BUS1, CPLD_ADDR, 0x0A }, // CPLD_REG_INFO_IDX_0
-	{ I2C_BUS1, CPLD_ADDR, 0x03 }, // CPLD_REG_INFO_IDX_1
+	{ I2C_BUS1, CPLD_ADDR, 0x12 }, // CPLD_REG_INFO_IDX_0
+	{ I2C_BUS1, CPLD_ADDR, 0x11 }, // CPLD_REG_INFO_IDX_1
 };
 
 const uint8_t vr_reg_list[][9] = {
@@ -737,35 +736,6 @@ static const uint8_t vr_reg_list_len_tbl[] = {
 	8, /* RNS / INFINEON */
 	9, /* TI */
 };
-
-static bool is_cpld_reg_bit_set(uint8_t bus, uint8_t addr, uint8_t reg, uint8_t bit)
-{
-	uint8_t bit_mask;
-	uint8_t retry = 5;
-	I2C_MSG msg = { 0 };
-
-	if (bit >= 8) {
-		return false;
-	}
-
-	bit_mask = BIT(bit);
-
-	msg.bus = bus;
-	msg.target_addr = addr;
-	msg.tx_len = 1;
-	msg.rx_len = 1;
-	msg.data[0] = reg;
-
-	if (i2c_master_read(&msg, retry)) {
-		LOG_ERR("[%s] Failed to get cpld reg, bus: 0x%x, addr: 0x%x, reg: 0x%x", __func__,
-			msg.bus, msg.target_addr, reg);
-		return false;
-	}
-	LOG_INF("[%s] read value: 0x%02x from bus: 0x%x, addr: 0x%x, reg: 0x%x bit: 0x%x", __func__,
-		msg.data[0], msg.bus, msg.target_addr, reg, bit_mask);
-
-	return !!(msg.data[0] & bit_mask);
-}
 
 void plat_sensor_poll_state_changed(uint8_t sensor_num, bool enabled)
 {
@@ -824,7 +794,7 @@ void process_vr_power_fault_sel(struct k_work *work_item)
 			cpld_reg_data[i]);
 	}
 
-	uint8_t vr_dev = detect_vr_module_via_pmbus();
+	uint8_t vr_dev = get_vr_module();
 	// check VR power rail
 	for (int i = 0; i < sizeof(vr_fault_table) / sizeof(vr_fault_table[0]); i++) {
 		if (vr_fault_table[i].cpld_reg_data_idx >= CPLD_REG_INFO_IDX_MAX) {
@@ -835,22 +805,8 @@ void process_vr_power_fault_sel(struct k_work *work_item)
 
 		bool is_power_fault = (cpld_reg_data[vr_fault_table[i].cpld_reg_data_idx] &
 				       vr_fault_table[i].cpld_reg_bit) ?
-					      false :
-					      true;
-
-		if (vr_fault_table[i].vr_source_id == VR_P3V3_E1S_0) {
-			if (is_cpld_reg_bit_set(I2C_BUS1, CPLD_ADDR, CPLD_OFFSET_10,
-						CPLD_BIT_E1S_0_3V3_POWER_R_EN) == false) {
-				LOG_WRN("Ignore P3V3_E1S_0 fault due to DC off");
-				is_power_fault = false;
-			}
-		} else if (vr_fault_table[i].vr_source_id == VR_P12V_E1S_0) {
-			if (is_cpld_reg_bit_set(I2C_BUS1, CPLD_ADDR, CPLD_OFFSET_10,
-						CPLD_BIT_E1S_0_12V_POWER_R_EN) == false) {
-				LOG_WRN("Ignore P12V_E1S_0 fault due to DC off");
-				is_power_fault = false;
-			}
-		}
+					      true :
+					      false;
 
 		LOG_INF("[%s] Check VR fault, src: %d, data: 0x%x, bitmask: 0x%x, is_power_fault: %d",
 			__func__, vr_fault_table[i].vr_source_id,
@@ -915,7 +871,7 @@ void process_vr_power_fault_sel(struct k_work *work_item)
 
 			vr_reg_len = vr_reg_list_len_tbl[vr_reg_list_idx];
 
-			disable_sensor_poll();
+			set_vr_monitor_status(false);
 			// wait 10ms for vr monitor stop
 			k_msleep(10);
 
@@ -927,7 +883,7 @@ void process_vr_power_fault_sel(struct k_work *work_item)
 				LOG_ERR("[%s] Failed to set VR page, bus: %d, addr: 0x%x, page: 0x%x",
 					__func__, vr_fault_table[i].vr_i2c_bus,
 					vr_fault_table[i].vr_addr, vr_fault_table[i].vr_page);
-				enable_sensor_poll();
+				set_vr_monitor_status(true);
 				continue;
 			}
 
@@ -976,10 +932,10 @@ void process_vr_power_fault_sel(struct k_work *work_item)
 			}
 
 			if (report_sel == false) {
-				enable_sensor_poll();
+				set_vr_monitor_status(true);
 				continue;
 			}
-			enable_sensor_poll();
+			set_vr_monitor_status(true);
 
 			// Send SEL to BMC
 			for (int j = 0; j < sel_msg_idx; j++) {

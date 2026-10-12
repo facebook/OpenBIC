@@ -22,9 +22,6 @@
 #include "ipmi.h"
 
 #define DETECT_SMI_DELAY_90S 90
-#define CPLD_OFFSET_10 0x10
-#define CPLD_BIT_E1S_0_12V_POWER_R_EN 5
-#define CPLD_BIT_E1S_0_3V3_POWER_R_EN 6
 
 enum GET_SET_M2_OPTION {
 	DEVICE_SET_POWER_OFF = 0x00,
@@ -42,10 +39,9 @@ typedef enum {
 	PVCCINFAON_CPU0 = 2,
 	PVCCFA_EHV_CPU0 = 3,
 	PVCCD_HV_CPU = 4,
-	P1V05_PCH_STB = 5,
+	P1V05_PCH_STBY = 5,
 	P1V8_STBY = 6,
 	P5V_STBY = 7,
-	P3V3_STBY = 8,
 	VR_P12V_E1S_0 = 9,
 	VR_P3V3_E1S_0 = 10,
 } vr_source_id_t;
