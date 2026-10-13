@@ -1,0 +1,11 @@
+<map id="init_vr_event_work" name="init_vr_event_work">
+<area shape="rect" id="node1" title=" " alt="" coords="5,39,136,65"/>
+<area shape="rect" id="node2" href="$yv3-vf_2src_2platform_2plat__util_8c.html#abc94f67ed170b0ae5f7e4965130e2166" title=" " alt="" coords="439,5,542,32"/>
+<area shape="rect" id="node4" href="$gc2-es_2src_2platform_2plat__isr_8c.html#ad525e209595564639ec2d5b67e439b8d" title=" " alt="" coords="184,64,368,91"/>
+<area shape="rect" id="node3" href="$yv3-vf_2src_2platform_2plat__util_8c.html#a7200b2472d3ef5cb78c82b2a0e3fe39b" title=" " alt="" coords="651,5,718,32"/>
+<area shape="rect" id="node5" href="$ipmi_8c.html#a40681786f36bd1836cdb473b7050dda1" title=" " alt="" coords="416,57,565,98"/>
+<area shape="rect" id="node7" href="$at-cb_2src_2platform_2plat__class_8c.html#aad0cbd7758d1df323ed1cc0928dadb25" title=" " alt="" coords="437,123,544,149"/>
+<area shape="rect" id="node8" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="431,173,550,200"/>
+<area shape="rect" id="node6" href="$ipmb_8h.html#a260c07ba372e6648a635b20dbb790fa9" title=" " alt="" coords="643,64,726,91"/>
+<area shape="rect" id="node9" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="613,173,756,200"/>
+</map>

@@ -1,0 +1,21 @@
+<map id="execute_power_on_sequence" name="execute_power_on_sequence">
+<area shape="rect" id="node1" title=" " alt="" coords="5,240,199,267"/>
+<area shape="rect" id="node2" href="$yv3-vf_2src_2platform_2plat__util_8c.html#abc94f67ed170b0ae5f7e4965130e2166" title=" " alt="" coords="709,253,811,280"/>
+<area shape="rect" id="node4" href="$yv4-wf_2src_2platform_2plat__class_8c.html#a22edf82f83047cb9f073697a597ba8aa" title=" " alt="" coords="247,37,405,64"/>
+<area shape="rect" id="node5" href="$at-cb_2src_2platform_2plat__class_8c.html#a177b22525ca1657da5ced816317de219" title=" " alt="" coords="480,155,611,181"/>
+<area shape="rect" id="node6" href="$yv4-wf_2src_2platform_2plat__power__seq_8c.html#a17ec47af9405cce0acdfd8df3305677e" title=" " alt="" coords="265,139,387,165"/>
+<area shape="rect" id="node7" href="$hal__gpio_8c.html#af700ee50de3d113e223c2b011c41f966" title=" " alt="" coords="291,189,361,216"/>
+<area shape="rect" id="node8" href="$hal__gpio_8c.html#ab1b576cbfd9eddaaf57a5aa5fc383dd1" title=" " alt="" coords="291,240,361,267"/>
+<area shape="rect" id="node9" href="$gc2-es_2src_2platform_2plat__isr_8c.html#a5c95d0f43d0948187a06bd09fec0c0c4" title=" " alt="" coords="261,341,391,368"/>
+<area shape="rect" id="node16" href="$op2-op_2src_2platform_2plat__power__seq_8c.html#a897d49f8c6cf6581ed707992d4e6af30" title=" " alt="" coords="263,291,389,317"/>
+<area shape="rect" id="node17" href="$power__status_8c.html#a4482f69c1ee4e17e699b46c3ea5cf05e" title=" " alt="" coords="272,392,380,419"/>
+<area shape="rect" id="node18" href="$power__status_8c.html#a6d168539f3bc57902955388b4e060e4a" title=" " alt="" coords="250,443,402,485"/>
+<area shape="rect" id="node19" href="$power__status_8c.html#a4a854c545c7f9edd4323cf550ed13d39" title=" " alt="" coords="250,509,402,550"/>
+<area shape="rect" id="node3" href="$yv3-vf_2src_2platform_2plat__util_8c.html#a7200b2472d3ef5cb78c82b2a0e3fe39b" title=" " alt="" coords="921,253,987,280"/>
+<area shape="rect" id="node10" href="$gc2-es_2src_2platform_2plat__isr_8c.html#ad525e209595564639ec2d5b67e439b8d" title=" " alt="" coords="453,341,637,368"/>
+<area shape="rect" id="node11" href="$ipmi_8c.html#a40681786f36bd1836cdb473b7050dda1" title=" " alt="" coords="685,305,835,346"/>
+<area shape="rect" id="node13" href="$at-cb_2src_2platform_2plat__class_8c.html#aad0cbd7758d1df323ed1cc0928dadb25" title=" " alt="" coords="707,371,813,397"/>
+<area shape="rect" id="node14" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="701,421,819,448"/>
+<area shape="rect" id="node12" href="$ipmb_8h.html#a260c07ba372e6648a635b20dbb790fa9" title=" " alt="" coords="913,312,995,339"/>
+<area shape="rect" id="node15" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="883,421,1025,448"/>
+</map>

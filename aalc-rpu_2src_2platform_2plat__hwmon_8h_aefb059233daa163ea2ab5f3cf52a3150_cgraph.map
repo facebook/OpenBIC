@@ -1,0 +1,6 @@
+<map id="pump_setting_set_pump_redundant" name="pump_setting_set_pump_redundant">
+<area shape="rect" id="node1" title=" " alt="" coords="5,27,169,69"/>
+<area shape="rect" id="node2" href="$aalc-rpu_2src_2platform_2plat__hwmon_8c.html#a0b8fdbf748ee3baf337eb469854d1afb" title=" " alt="" coords="225,5,387,32"/>
+<area shape="rect" id="node4" href="$plat__pwm_8c.html#af72b7df461008f941a8eec25208d237e" title=" " alt="" coords="217,57,395,98"/>
+<area shape="rect" id="node3" href="$plat__status_8c.html#aa601af4f53236dc9df9b4db1735f94de" title=" " alt="" coords="443,5,553,32"/>
+</map>

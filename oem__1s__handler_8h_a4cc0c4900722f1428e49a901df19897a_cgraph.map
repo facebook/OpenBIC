@@ -1,0 +1,7 @@
+<map id="OEM_1S_PRE_POWER_OFF_CONTROL" name="OEM_1S_PRE_POWER_OFF_CONTROL">
+<area shape="rect" id="node1" title=" " alt="" coords="5,49,200,90"/>
+<area shape="rect" id="node2" href="$op2-op_2src_2platform_2plat__isr_8c.html#a6a5a06dccb2b2dcba5b5394a707b7b67" title=" " alt="" coords="253,5,389,32"/>
+<area shape="rect" id="node3" href="$hal__gpio_8c.html#af700ee50de3d113e223c2b011c41f966" title=" " alt="" coords="285,56,356,83"/>
+<area shape="rect" id="node4" href="$op2-op_2src_2platform_2plat__isr_8c.html#a2f1375d39ef3fd607886c5699718cdae" title=" " alt="" coords="248,107,393,133"/>
+<area shape="rect" id="node5" href="$op2-op_2src_2platform_2plat__power__seq_8c.html#a3365a4a6bd242d6ec1356f6f0f36e7cb" title=" " alt="" coords="441,107,628,133"/>
+</map>

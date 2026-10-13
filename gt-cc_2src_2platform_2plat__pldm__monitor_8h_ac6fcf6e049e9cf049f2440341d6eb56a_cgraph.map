@@ -1,0 +1,5 @@
+<map id="ssd_present_check" name="ssd_present_check">
+<area shape="rect" id="node1" title=" " alt="" coords="5,35,140,61"/>
+<area shape="rect" id="node2" href="$hal__gpio_8c.html#af700ee50de3d113e223c2b011c41f966" title=" " alt="" coords="222,5,293,32"/>
+<area shape="rect" id="node3" href="$pldm__monitor_8c.html#aee425d655113020d7d424cc5b86d756c" title=" " alt="" coords="188,57,327,98"/>
+</map>
