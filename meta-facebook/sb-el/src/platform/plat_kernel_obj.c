@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -15,10 +15,12 @@
  */
 
 #include "plat_kernel_obj.h"
+#include "plat_user_setting.h"
 #include "plat_gpio.h"
 #include "plat_log.h"
 #include "plat_hook.h"
 #include "plat_util.h"
+#include "plat_clock.h"
 // pending
 #include <shell_plat_power_sequence.h>
 #include <logging/log.h>
@@ -54,6 +56,49 @@ void plat_trigger_cpld_polling(void)
 	k_sem_give(&cpld_polling_sem);
 }
 
+/* work for checking CLK status */
+#define CLK_APLL_CHECK_INTERVAL K_SECONDS(10)
+static void clk_apll_check_work_handler(struct k_work *work);
+K_WORK_DELAYABLE_DEFINE(clk_apll_check_work, clk_apll_check_work_handler);
+
+static void start_clk_apll_check_work(void)
+{
+	k_work_reschedule(&clk_apll_check_work, CLK_APLL_CHECK_INTERVAL);
+}
+
+static void clk_apll_check_work_handler(struct k_work *work)
+{
+	ARG_UNUSED(work);
+
+	if (!is_mb_dc_on()) {
+		return;
+	}
+
+	if (clk_100mhz_get_lock_status_u86() == 0) {
+		LOG_ERR("100MHz clock(U86) APLL unlock");
+		uint16_t error_code = CLOCK_APLL_UNLOCK_EVENT_CAUSE | CLK_100MHZ_ERR_IDX;
+		error_log_event(error_code, LOG_ASSERT);
+	}
+	if (clk_312_5mhz_get_lock_status_u618() == 0) {
+		LOG_ERR("312.5MHz clock(U618) APLL unlock");
+		uint16_t error_code = CLOCK_APLL_UNLOCK_EVENT_CAUSE | CLK_312_5MHZ_ERR_IDX;
+		error_log_event(error_code, LOG_ASSERT);
+	}
+	check_clk_buf_loss_status();
+
+	start_clk_apll_check_work();
+}
+
+/* work for getting VR VOUT settings */
+void get_vr_vout_handler(struct k_work *work);
+K_WORK_DEFINE(vr_vout_work, get_vr_vout_handler);
+
+void get_vr_vout_handler(struct k_work *work)
+{
+	vr_vout_default_settings_init();
+	vr_vout_user_settings_init();
+}
+
 /* Timer for dc status checking
 We expect UBC ON will trigger DC ON. */
 bool ubc_status = false; // "ubc_enabled_delayed_status" in rainbow
@@ -68,6 +113,10 @@ void plat_check_ubc_delayed_timer_handler(struct k_timer *timer)
 	 */
 	bool is_ubc_enabled = (gpio_get(FM_PLD_UBC_EN_R) == GPIO_HIGH);
 	ubc_status = is_ubc_enabled;
+
+	if (is_ubc_enabled == true) {
+		k_work_submit(&vr_vout_work);
+	}
 }
 
 void plat_update_ubc_status(void)
@@ -120,6 +169,8 @@ void pwr_sequence_event(struct k_work *work)
 				sel_msg.event_data_1, sel_msg.event_data_2, sel_msg.event_data_3);
 		}
 	}
+	//check clock APLL lock status
+	start_clk_apll_check_work();
 }
 
 void plat_handle_pwr_sequence_event(void)

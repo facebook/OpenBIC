@@ -36,6 +36,8 @@
 #include "plat_event.h"
 #include "plat_hwmon.h"
 #include "plat_gpio.h"
+#include "plat_vr_test_mode.h"
+#include "shell_arke_power.h"
 
 LOG_MODULE_REGISTER(plat_init);
 
@@ -82,6 +84,15 @@ void pal_post_init()
 	plat_telemetry_table_init();
 	ioexp_init();
 	init_thermal_polling();
+
+	init_vr_test_mode_polling();
+
+	if (is_mb_dc_on() == true) {
+		vr_vout_offset_get_init();
+		//set perm vout command when DC on
+		if (!set_all_vout_command())
+			LOG_ERR("set all vout command fail!");
+	}
 
 	// check the thermtrip open-circuit
 	if (!gpio_get(FM_ASIC_0_THERMTRIP_R_N))

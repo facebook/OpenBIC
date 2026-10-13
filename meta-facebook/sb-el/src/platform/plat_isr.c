@@ -21,6 +21,7 @@
 
 #include "plat_gpio.h"
 #include "plat_cpld.h"
+#include "plat_hook.h"
 #include "shell_arke_power.h"
 #include "plat_kernel_obj.h"
 #include "plat_log.h"
@@ -124,6 +125,10 @@ void ISR_GPIO_RST_ARKE_PWR_ON_PLD_R1_N()
 		// when dc on clear cpld polling alert status
 		uint8_t err_type = CPLD_UNEXPECTED_VAL_TRIGGER_CAUSE;
 		reset_error_log_states(err_type);
+		vr_vout_offset_get_init();
+		//set perm vout command when DC on
+		if (!set_all_vout_command())
+			LOG_ERR("set all vout command fail!");
 	} else {
 		plat_switch_pin_a12(true); /* LOW -> A12 = GPIO73 output low */
 		// vr_test_mode_enable(false);

@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -28,20 +28,21 @@
 #define NUMERIC_PDR_SIZE 128
 #define MAX_AUX_SENSOR_NAME_LEN 50
 #define DISABLE_SENSOR_RESP_DURING_FW_UPDATE
-#define PLDM_MAX_DATA_SIZE 1450
+#define PLDM_MAX_DATA_SIZE 1500
 
 #define ENABLE_U50SU4P180PMDAFC
-#define ENABLE_BMR313
-#define ENABLE_MP2891
-#define ENABLE_RAA228238
 #define ENABLE_MPC12109
 #define ENABLE_MP29816A
 #define ENABLE_RAA228249
 #define ENABLE_EMC1413
+#define ENABLE_BMR316
 #define ENABLE_LX6301
 #define ENABLE_MCTP_I3C
 #define ENABLE_INA238
+#define ENABLE_RSM3514E
 
+#define DISABLE_TPS25990
+#define DISABLE_EMC1412
 #define DISABLE_AST_ADC
 #define DISABLE_NVME
 #define DISABLE_MP5990
@@ -87,10 +88,20 @@
 #define DISABLE_XDP710
 #define DISABLE_ADC128D818
 
-#define MCTP_I3C_PEC_ENABLE 1
+#define DISABLE_IPMI_APP_HANDLER
+#define DISABLE_IPMI_OEM_1S_HANDLER
+#define DISABLE_IPMI_NETFN_SENSOR_REQ
+#define DISABLE_IPMI_NETFN_STORAGE_REQ
+#define DISABLE_IPMI_NETFN_CHASSIS_REQ
+#define DISABLE_IPMI_NETFN_OEM_REQ
 
 #define MP29816C_MTP_MUTI_CONFIG_PROGRAM_ENABLE
+
 #define PLDM_MSG_TIMEOUT_MS 5000
 #define PLAT_MCTP_MSG_MAX_SIZE 64
+#define PLDM_FW_UPDATE_TIMEOUT_MS 5000
+#define UPDATE_REQUEST_DATA_MAX_RETRY_COUNT 5
+
+#define PLDM_UPDATE_NOT_SHOW_GET_STATUS_LOG
 
 #endif

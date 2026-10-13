@@ -727,6 +727,137 @@ static int delay_asic_rst_user_settings_init(void)
 	return 0;
 }
 
+// svs
+bool set_user_settings_svs_flag_to_eeprom(void *user_settings, uint8_t data_length)
+{
+	CHECK_NULL_ARG_WITH_RETURN(user_settings, false);
+
+	if (!plat_eeprom_write(SVS_FLAG_USER_SETTINGS_OFFSET, user_settings, data_length)) {
+		LOG_ERR("Failed to write svs_flag to eeprom");
+		return false;
+	}
+
+	k_msleep(EEPROM_MAX_WRITE_TIME);
+
+	return true;
+}
+
+bool get_user_settings_svs_flag_from_eeprom(void *svs_flag_user_settings, uint8_t data_length)
+{
+	CHECK_NULL_ARG_WITH_RETURN(svs_flag_user_settings, false);
+
+	if (!plat_eeprom_read(SVS_FLAG_USER_SETTINGS_OFFSET, svs_flag_user_settings, data_length)) {
+		LOG_ERR("Failed to write svs_flag to eeprom");
+		return false;
+	}
+
+	k_msleep(EEPROM_MAX_WRITE_TIME);
+
+	return true;
+}
+svs_flag_user_settings_struct svs_flag_user_settings = { 0xFF };
+
+static bool svs_flag_user_settings_init(void)
+{
+	uint8_t setting_data = 0xFF;
+	if (!get_user_settings_svs_flag_from_eeprom(&setting_data, sizeof(setting_data))) {
+		LOG_ERR("get svs_flag user settings fail");
+		return false;
+	}
+
+	if (setting_data != 0xFF) {
+		if (!set_svs_flag(setting_data, false)) {
+			LOG_ERR("Can't set svs_flag=%d by user settings", setting_data);
+			return false;
+		}
+	}
+
+	return true;
+}
+
+// vout
+bool get_user_settings_vr_vout_from_eeprom(void *user_settings, uint8_t data_length)
+{
+	CHECK_NULL_ARG_WITH_RETURN(user_settings, false);
+
+	if (!plat_eeprom_read(VR_VOUT_USER_SETTINGS_OFFSET, user_settings, data_length)) {
+		LOG_ERR("Failed to read vout from eeprom");
+		return false;
+	}
+	return true;
+}
+
+bool set_user_settings_vr_vout_to_eeprom(void *user_settings, uint8_t data_length)
+{
+	CHECK_NULL_ARG_WITH_RETURN(user_settings, false);
+
+	if (!plat_eeprom_write(VR_VOUT_USER_SETTINGS_OFFSET, user_settings, data_length)) {
+		LOG_ERR("vout Failed to write eeprom");
+		return false;
+	}
+	k_msleep(EEPROM_MAX_WRITE_TIME);
+
+	return true;
+}
+
+bool vr_vout_user_settings_init(void)
+{
+	if (get_user_settings_vr_vout_from_eeprom(&vr_vout_user_settings,
+						  sizeof(vr_vout_user_settings)) == false) {
+		LOG_ERR("get vr vout user settings failed");
+		return false;
+	}
+
+	return true;
+}
+
+// vr_voffset_mmc
+bool get_user_settings_vr_voffset_mmc_from_eeprom(void *user_settings, uint8_t data_length)
+{
+	CHECK_NULL_ARG_WITH_RETURN(user_settings, false);
+
+	if (!plat_eeprom_read(VR_VOFFSET_MMC_USER_SETTINGS_OFFSET, user_settings, data_length)) {
+		LOG_ERR("Failed to read Voffset_mmc from eeprom");
+		return false;
+	}
+	return true;
+}
+
+bool set_user_settings_vr_voffset_mmc_to_eeprom(void *user_settings, uint8_t data_length)
+{
+	CHECK_NULL_ARG_WITH_RETURN(user_settings, false);
+
+	if (!plat_eeprom_write(VR_VOFFSET_MMC_USER_SETTINGS_OFFSET, user_settings, data_length)) {
+		LOG_ERR("Voffset_mmc failed to write eeprom");
+		return false;
+	}
+	k_msleep(EEPROM_MAX_WRITE_TIME);
+
+	return true;
+}
+
+bool vr_voffset_mmc_user_settings_init(void)
+{
+	if (get_user_settings_vr_voffset_mmc_from_eeprom(
+		    &vr_voffset_mmc_user_settings, sizeof(vr_voffset_mmc_user_settings)) == false) {
+		LOG_ERR("get vr Voffset_mmc user settings failed");
+		return false;
+	}
+	for (int i = 0; i < VR_RAIL_E_MAX; i++) {
+		if (vr_voffset_mmc_user_settings.voffset_mmc[i].valid != 1) {
+			vr_voffset_mmc_command_get.voffset_mmc[i] = 0;
+			vr_voffset_mmc_user_settings.voffset_mmc[i].valid = 0;
+			vr_voffset_mmc_user_settings.voffset_mmc[i].value = 0;
+
+		} else {
+			vr_voffset_mmc_command_get.voffset_mmc[i] =
+				vr_voffset_mmc_user_settings.voffset_mmc[i].value;
+		}
+	}
+
+	return true;
+}
+
 // other
 bool perm_config_clear(void)
 {
@@ -763,6 +894,33 @@ bool perm_config_clear(void)
 		return false;
 	}
 
+	/* clear vr vout perm parameter */
+	memset(vr_vout_user_settings.vout, 0xFF, sizeof(vr_vout_user_settings.vout));
+	if (!set_user_settings_vr_vout_to_eeprom(&vr_vout_user_settings,
+						 sizeof(vr_vout_user_settings))) {
+		LOG_ERR("The perm_config clear failed");
+		return false;
+	}
+
+	/* clear svs_flag perm parameter */
+	uint8_t setting_value_for_svs_flag = 0xFF;
+	if (!set_user_settings_svs_flag_to_eeprom(&setting_value_for_svs_flag,
+						  sizeof(setting_value_for_svs_flag))) {
+		LOG_ERR("The perm_config clear failed");
+		return false;
+	}
+
+	/* clear vr Voffset_mmc perm parameter */
+	for (int i = 0; i < VR_RAIL_E_MAX; i++) {
+		vr_voffset_mmc_user_settings.voffset_mmc[i].valid = 0;
+		vr_voffset_mmc_user_settings.voffset_mmc[i].value = 0;
+	}
+	if (!set_user_settings_vr_voffset_mmc_to_eeprom(&vr_voffset_mmc_user_settings,
+							sizeof(vr_voffset_mmc_user_settings))) {
+		LOG_ERR("The perm_config clear failed");
+		return false;
+	}
+
 	/* clear all bootstrap perm parameters */
 	memset(bootstrap_user_settings.user_setting_value, 0xFF,
 	       sizeof(bootstrap_user_settings.user_setting_value));
@@ -777,6 +935,7 @@ bool perm_config_clear(void)
 void user_settings_init(void)
 {
 	vr_vout_range_user_settings_init();
+	vr_vout_default_settings_init();
 	bootstrap_default_settings_init();
 	bootstrap_user_settings_init();
 	alert_level_user_settings_init();
@@ -785,4 +944,7 @@ void user_settings_init(void)
 	delay_asic_rst_user_settings_init();
 	delay_module_pg_user_settings_init();
 	delay_pcie_perst_user_settings_init();
+	vr_vout_user_settings_init();
+	svs_flag_user_settings_init();
+	vr_voffset_mmc_user_settings_init();
 }

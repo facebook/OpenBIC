@@ -198,12 +198,16 @@ void init_vr_vendor_type(void)
 	vr_module = (vr_vendor_module & 0x01);
 	ubc_module = (vr_vendor_module >> 1) & 0x07;
 
-	if (vr_vendor_module == 0x08 && board_rev_id == REV_ID_EVT1A) {
+	bool is_evt1a_luxshare_quirk = (vr_vendor_module == 0x08 && board_rev_id == REV_ID_EVT1A);
+
+	if (is_evt1a_luxshare_quirk) {
 		vr_module = 0x01;
 		ubc_module = 0x03;
 	}
 
-	LOG_INF("vr_vendor_module=%s (ubc=%s, vr=%s)", vr_vendor_module_name[vr_vendor_module],
+	LOG_INF("vr_vendor_module=%s (ubc=%s, vr=%s)",
+		is_evt1a_luxshare_quirk ? "LUXSHARE_UBC_AND_RNS_VR" :
+					  vr_vendor_module_name[vr_vendor_module],
 		ubc_module_name[ubc_module], vr_module_name[vr_module]);
 }
 
@@ -299,7 +303,8 @@ void pal_show_board_types(const struct shell *shell)
 		    (vr_vendor_module == FLEX_UBC_AND_RNS_VR) ? "FLEX_UBC_AND_RNS_VR" :
 		    (vr_vendor_module == LUXSHURE_UBC_AND_MPS_VR) ? "LUXSHURE_UBC_AND_MPS_VR" :
 		    (vr_vendor_module == LUXSHURE_UBC_AND_RNS_VR) ? "LUXSHURE_UBC_AND_RNS_VR" :
-			(vr_vendor_module == CYNTEX_UBC_AND_MPS_VR) ? "CYNTEX_UBC_AND_MPS_VR" :
+			(vr_vendor_module == CYNTEX_UBC_AND_MPS_VR) ?
+			((board_rev_id    == REV_ID_EVT1A) ? "LUXSHARE_UBC_AND_RNS_VR" : "CYNTEX_UBC_AND_MPS_VR") :
 		    (vr_vendor_module == CYNTEX_UBC_AND_RNS_VR) ? "CYNTEX_UBC_AND_RNS_VR" :
 								    "not supported");
 	shell_print(shell, "* UBC_TYPE:      (0x%02X)%s", ubc_module,
