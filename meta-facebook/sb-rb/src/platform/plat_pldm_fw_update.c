@@ -485,7 +485,13 @@ void get_fw_version_boot0_from_asic()
 	i2c_msg.tx_len = 1;
 	i2c_msg.rx_len = 10;
 	i2c_msg.data[0] = ASIC_VERSION_BYTE;
-	i2c_master_read_without_error_log(&i2c_msg, I2C_MAX_RETRY);
+	if (i2c_master_read_without_error_log(&i2c_msg, I2C_MAX_RETRY) != 0) {
+		// fail so set version to all 0
+		version_boot0[BOOT0_HAMSA] = 0;
+		version_boot0[BOOT0_MEDHA0] = 0;
+		version_boot0[BOOT0_MEDHA1] = 0;
+		return;
+	}
 
 	uint32_t data_p = i2c_msg.data[8] << 16 | i2c_msg.data[7] << 8 | i2c_msg.data[6];
 	if (data_p) {
@@ -494,7 +500,13 @@ void get_fw_version_boot0_from_asic()
 	i2c_msg.tx_len = 1;
 	i2c_msg.rx_len = 5;
 	i2c_msg.data[0] = CIP_VERSION_BYTE;
-	i2c_master_read_without_error_log(&i2c_msg, I2C_MAX_RETRY);
+	if (i2c_master_read_without_error_log(&i2c_msg, I2C_MAX_RETRY) != 0) {
+		// fail so set version to all 0
+		version_boot0[BOOT0_HAMSA] = 0;
+		version_boot0[BOOT0_MEDHA0] = 0;
+		version_boot0[BOOT0_MEDHA1] = 0;
+		return;
+	}
 
 	uint32_t data_cip = i2c_msg.data[1] << 16 | i2c_msg.data[2] << 8 | i2c_msg.data[3];
 	if (data_cip) {
@@ -723,7 +735,7 @@ uint8_t plat_pldm_query_device_identifiers(const uint8_t *buf, uint16_t len, uin
 	// Set the device id for sd bic
 	uint8_t deviceId[PLDM_PCI_DEVICE_ID_LENGTH] = { 0x00, 0x00 };
 
-	uint8_t slotNumber = plat_get_eid() / 10;
+	uint8_t slotNumber = get_mmc_slot() + 1;
 	uint8_t slot[PLDM_ASCII_MODEL_NUMBER_SHORT_STRING_LENGTH] = { (char)(slotNumber + '0') };
 
 	uint8_t total_size_of_iana_descriptor =

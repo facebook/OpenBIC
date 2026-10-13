@@ -32,6 +32,7 @@
 #include "tmp431.h"
 #include "emc1413.h"
 #include "plat_util.h"
+#include "iris_smbus.h"
 
 LOG_MODULE_REGISTER(plat_hook);
 
@@ -219,6 +220,74 @@ bool post_tmp432_read(sensor_cfg *cfg, void *args, int *reading)
 	}
 
 	return post_common_sensor_read(cfg, args, reading);
+}
+
+uint8_t iris_temp_data[ASIC_MONITOR_TEMP_REG_LEN] = { 0 };
+uint8_t iris_hbm_temp_data[ASIC_MONITOR_HBM_TEMP_REG_LEN] = { 0 };
+
+bool post_iris_sensor_read(sensor_cfg *cfg, void *args, int *reading)
+{
+	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
+	ARG_UNUSED(args);
+
+	const iris_priv_data_t *priv = (iris_priv_data_t *)cfg->priv_data;
+
+	if (!priv) {
+		return false;
+	}
+
+	switch (cfg->num) {
+	case SENSOR_NUM_IRIS_HAMSA_REMOTE_TEMP_C:
+		memcpy(iris_temp_data, priv->temp, ASIC_MONITOR_TEMP_REG_LEN);
+		*reading = iris_temp_data[1];
+		break;
+	case SENSOR_NUM_IRIS_HEDHA0_REMOTE_TEMP_C:
+		*reading = iris_temp_data[2];
+		break;
+	case SENSOR_NUM_IRIS_HEDHA1_REMOTE_TEMP_C:
+		*reading = iris_temp_data[3];
+		break;
+	case SENSOR_NUM_IRIS_OWLE_REMOTE_TEMP_C:
+		*reading = iris_temp_data[4];
+		break;
+	case SENSOR_NUM_IRIS_OWLW_REMOTE_TEMP_C:
+		*reading = iris_temp_data[5];
+		break;
+	case SENSOR_NUM_IRIS_HEDHA0_HBM0_REMOTE_TEMP_C:
+		memcpy(iris_hbm_temp_data, priv->hbm_temp, ASIC_MONITOR_HBM_TEMP_REG_LEN);
+		*reading = iris_hbm_temp_data[1];
+		break;
+	case SENSOR_NUM_IRIS_HEDHA0_HBM1_REMOTE_TEMP_C:
+		*reading = iris_hbm_temp_data[2];
+		break;
+	case SENSOR_NUM_IRIS_HEDHA0_HBM2_REMOTE_TEMP_C:
+		*reading = iris_hbm_temp_data[3];
+		break;
+	case SENSOR_NUM_IRIS_HEDHA0_HBM3_REMOTE_TEMP_C:
+		*reading = iris_hbm_temp_data[4];
+		break;
+	case SENSOR_NUM_IRIS_HEDHA1_HBM0_REMOTE_TEMP_C:
+		*reading = iris_hbm_temp_data[5];
+		break;
+	case SENSOR_NUM_IRIS_HEDHA1_HBM1_REMOTE_TEMP_C:
+		*reading = iris_hbm_temp_data[6];
+		break;
+	case SENSOR_NUM_IRIS_HEDHA1_HBM2_REMOTE_TEMP_C:
+		*reading = iris_hbm_temp_data[7];
+		break;
+	case SENSOR_NUM_IRIS_HEDHA1_HBM3_REMOTE_TEMP_C:
+		*reading = iris_hbm_temp_data[8];
+		break;
+	default:
+		*reading = 0;
+		return false;
+	}
+
+	if (*reading < 0 || *reading > 150) {
+		cfg->cache_status = PLDM_SENSOR_UNAVAILABLE;
+		return false;
+	}
+	return true;
 }
 
 bool is_mb_dc_on()
@@ -1916,7 +1985,7 @@ uint8_t get_error_bootstrap_index_list(uint8_t index)
 	return error_bootstrap_setting_value_index[index];
 }
 
-static uint8_t svs_flag = 0;
+static uint8_t svs_flag = 1; // 1: enable, 0: disable
 uint8_t get_svs_flag()
 {
 	return svs_flag;
@@ -1925,6 +1994,16 @@ uint8_t get_svs_flag()
 void set_svs_flag(uint8_t flag)
 {
 	svs_flag = flag;
+}
+static uint8_t svs_asic_voltage_flag = 1; // 1: enable, 0: block
+uint8_t get_svs_asic_voltage_flag()
+{
+	return svs_asic_voltage_flag;
+}
+
+void set_svs_asic_voltage_flag(uint8_t flag)
+{
+	svs_asic_voltage_flag = flag;
 }
 bool vr_vout_default_settings_init(void)
 {
@@ -2013,5 +2092,74 @@ bool voltage_offset_get(uint8_t rail, uint16_t *vout_offset)
 	}
 
 	*vout_offset = vr_offset_init.vout_offset[rail];
+	return true;
+}
+bool plat_ubc_otw_otp_init(void)
+{
+	uint8_t rev = get_board_rev_id();
+	if (rev != REV_ID_EVT2) {
+		LOG_INF("ubc otw/otp init: skip (board_rev=%u, need=%u)", rev, REV_ID_EVT2);
+		return true;
+	}
+
+	uint8_t ubc_module = get_ubc_module();
+
+	switch (ubc_module) {
+	case UBC_MODULE_DELTA:
+	case UBC_MODULE_LUXSHARE: {
+		const uint8_t sensor_ids[2] = {
+			SENSOR_NUM_UBC1_P12V_TEMP_C,
+			SENSOR_NUM_UBC2_P12V_TEMP_C,
+		};
+
+		for (int i = 0; i < ARRAY_SIZE(sensor_ids); i++) {
+			uint8_t id = sensor_ids[i];
+			const sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(id);
+			if (!cfg) {
+				LOG_ERR("UBC otp init: sensor cfg not found (sensor_id=0x%02X)",
+					id);
+				continue;
+			}
+
+			uint8_t bus = cfg->port;
+			uint8_t addr = cfg->target_addr;
+
+			uint8_t write_data[2] = { 0 };
+
+			/* remove protection: reg 0x10 = 0x00 */
+			write_data[0] = 0x00;
+
+			if (!plat_i2c_write(bus, addr, 0x10, &write_data[0], 1)) {
+				LOG_ERR("UBC(id=0x%02X bus=%u addr=0x%02X): write 0x10 failed", id,
+					bus, addr);
+				continue;
+			}
+
+			/* set OWL/OTW: reg 0x51 = 0x76 0x00 */
+			write_data[0] = 0x76;
+			write_data[1] = 0x00;
+
+			if (!plat_i2c_write(bus, addr, 0x51, write_data, 2)) {
+				LOG_ERR("UBC(id=0x%02X bus=%u addr=0x%02X): write 0x51 failed", id,
+					bus, addr);
+				continue;
+			}
+
+			/* set OFL/OTP: reg 0x4F = 0x7D 0x00 */
+			write_data[0] = 0x7D;
+			write_data[1] = 0x00;
+
+			if (!plat_i2c_write(bus, addr, 0x4F, write_data, 2)) {
+				LOG_ERR("UBC(id=0x%02X bus=%u addr=0x%02X): write 0x4F failed", id,
+					bus, addr);
+				continue;
+			}
+		}
+		break;
+	}
+	default:
+		LOG_INF("ubc otw/otp init: skip (unsupported ubc_module=%u)", ubc_module);
+		return true;
+	}
 	return true;
 }
