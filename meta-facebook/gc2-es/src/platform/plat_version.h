@@ -21,7 +21,7 @@
 
 #define PLATFORM_NAME "Grand Canyon 2.0"
 #define PROJECT_NAME "Emerald Springs"
-#define PROJECT_STAGE PVT
+#define PROJECT_STAGE MP
 
 /*
  * 0x01 motherboard
@@ -41,7 +41,7 @@
 
 #define BIC_FW_YEAR_MSB 0x20
 #define BIC_FW_YEAR_LSB 0x26
-#define BIC_FW_WEEK 0x36
+#define BIC_FW_WEEK 0x42
 #define BIC_FW_VER 0x01
 #define BIC_FW_platform_0 0x65 // char: e
 #define BIC_FW_platform_1 0x73 // char: s
