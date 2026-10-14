@@ -512,18 +512,26 @@ void util_init_i3c(void)
 	}
 }
 
-static int get_bus_id(struct i3c_dev_desc *desc)
+static int get_bus_id(const struct i3c_dev_desc *desc)
 {
 	char i3c_dev_name[I3C_DEV_STR_LEN] = { 0 };
 	const char delim[2] = "_";
 	char *saveptr = NULL;
-	char *substr = NULL;
+	const char *substr = NULL;
 	int bus_id;
 
-	strncpy(i3c_dev_name, desc->bus->name, I3C_DEV_STR_LEN);
+	strncpy(i3c_dev_name, desc->bus->name, I3C_DEV_STR_LEN - 1);
 
-	substr = strtok_r(i3c_dev_name, delim, &saveptr);
+	if (strtok_r(i3c_dev_name, delim, &saveptr) == NULL) {
+		LOG_ERR("invalid i3c bus name");
+		return -1;
+	}
+
 	substr = strtok_r(NULL, delim, &saveptr);
+	if (substr == NULL) {
+		LOG_ERR("invalid i3c bus name");
+		return -1;
+	}
 
 	bus_id = atoi(substr);
 	if (bus_id > I3C_MAX_NUM) {
@@ -534,7 +542,7 @@ static int get_bus_id(struct i3c_dev_desc *desc)
 	return bus_id;
 }
 
-static int find_dev_i3c_idx(struct i3c_dev_desc *desc)
+static int find_dev_i3c_idx(const struct i3c_dev_desc *desc)
 {
 	int bus_id = get_bus_id(desc);
 	if (bus_id < 0) {
@@ -542,7 +550,7 @@ static int find_dev_i3c_idx(struct i3c_dev_desc *desc)
 	}
 
 	int i = 0;
-	struct i3c_dev_desc *desc_ptr = NULL;
+	const struct i3c_dev_desc *desc_ptr = NULL;
 	for (i = 0; i < i3c_desc_count; i++) {
 		desc_ptr = &i3c_desc_table[i];
 
