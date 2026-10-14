@@ -1,0 +1,60 @@
+From dd304d78d8f46c35e50d9cc7e3054f467eac0b3f Mon Sep 17 00:00:00 2001
+From: Joseph Liu <kwliu@nuvoton.com>
+Date: Thu, 16 Jul 2026 12:02:38 +0800
+Subject: [PATCH] drivers: i3c: npcm4: report HJ dynamic-address state and add
+ debug dumps
+
+Return -EALREADY from i3c_npcm4_slave_hj_req() when the slave already
+holds a dynamic address so the caller can distinguish an already-enrolled
+device from a freshly completed hot-join.
+
+Also add register dumps to aid debugging of the hot-join stress test:
+- dump STATUS/DYNADDR/DATACTRL/INTMASKED on the 'Bus is busy' timeout in
+  i3c_npcm4_slave_put_read_data()
+- log DYNADDR after 'HJ event sent'
+
+Signed-off-by: Joseph Liu <kwliu@nuvoton.com>
+Signed-off-by: Alan Yang <tyang1@nuvoton.com>
+---
+ drivers/i3c/i3c_npcm4.c | 11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/i3c/i3c_npcm4.c b/drivers/i3c/i3c_npcm4.c
+index c84a4bbce29..e802c6e3d40 100644
+--- a/drivers/i3c/i3c_npcm4.c
++++ b/drivers/i3c/i3c_npcm4.c
+@@ -790,7 +790,11 @@ int i3c_npcm4_slave_put_read_data(const struct device *dev, struct i3c_slave_pay
+ 	/* Wait for bus STOP */
+ 	if (readl_poll_timeout(config->regs + I3C_STATUS, val,
+ 			       !(val & I3C_STATUS_STNOTSTOP), 0, 100000) != 0) {
+-		LOG_ERR("%s: Bus is busy", __func__);
++		LOG_ERR("%s: Bus is busy (STATUS=0x%08x DYNADDR=0x%08x DATACTRL=0x%08x INTMASKED=0x%08x)",
++			__func__, readl(config->regs + I3C_STATUS),
++			readl(config->regs + I3C_DYNADDR),
++			readl(config->regs + I3C_DATACTRL),
++			readl(config->regs + I3C_INTMASKED));
+ 		return -EBUSY;
+ 	}
+ 
+@@ -936,7 +940,7 @@ int i3c_npcm4_slave_hj_req(const struct device *dev)
+ 	LOG_DBG("Send HJ req");
+ 	if (i3c_npcm4_slave_get_dynamic_addr(dev, &addr) == 0) {
+ 		LOG_WRN("Dynamic address present = 0x%x\n", addr);
+-		return 0;
++		return -EALREADY;
+ 	}
+ 
+ 	if (readl(config->regs + I3C_STATUS) & I3C_STATUS_HJDIS) {
+@@ -964,7 +968,8 @@ int i3c_npcm4_slave_hj_req(const struct device *dev)
+ 		LOG_INF("HJ event timeout");
+ 		ret = -ETIMEDOUT;
+ 	} else {
+-		LOG_INF("HJ event sent");
++		LOG_INF("HJ event sent, DYNADDR=0x%08x",
++			readl(config->regs + I3C_DYNADDR));
+ 	}
+ 
+ 	return ret;
+-- 
+2.43.0
+

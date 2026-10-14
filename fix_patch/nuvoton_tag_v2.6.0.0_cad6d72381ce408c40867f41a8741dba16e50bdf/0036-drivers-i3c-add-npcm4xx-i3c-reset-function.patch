@@ -1,0 +1,210 @@
+From 8943f82d5850de5f9c71332c9c4a30b0cc76fce8 Mon Sep 17 00:00:00 2001
+From: James Chiang <cpchiang1@nuvoton.com>
+Date: Mon, 9 Sep 2024 22:26:42 -0700
+Subject: [PATCH 1/5] drivers: i3c: add npcm4xx i3c reset function
+
+add npcm4xx i3c reset function.
+
+Signed-off-by: James Chiang <cpchiang1@nuvoton.com>
+---
+ drivers/i3c/i3c_npcm4xx.c            | 38 ++++++++++++++++++++++++++-
+ drivers/i3c/npcm4xx/i3c_drv.h        |  2 ++
+ dts/arm/nuvoton/npcm400f.dtsi        | 24 ++++++++++++-----
+ soc/arm/npcm4xx/common/reg/reg_def.h | 39 +++++++++++++++++++++-------
+ 4 files changed, 86 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/i3c/i3c_npcm4xx.c b/drivers/i3c/i3c_npcm4xx.c
+index 64acf79ad6..435162239a 100644
+--- a/drivers/i3c/i3c_npcm4xx.c
++++ b/drivers/i3c/i3c_npcm4xx.c
+@@ -1745,6 +1745,40 @@ I3C_ErrCode_Enum hal_I3C_Stop(I3C_PORT_Enum port)
+ 	return I3C_ERR_OK;
+ }
+ 
++static void i3c_npcm4xx_reset(I3C_PORT_Enum port)
++{
++	struct i3c_npcm4xx_obj *obj;
++	struct i3c_npcm4xx_config *config;
++	struct pmc_reg *pmc_base;
++	uint8_t sw_rst;
++
++	obj = gObj[port];
++	config = obj->config;
++
++	/* disable i3c interrupt */
++	irq_disable(config->irq);
++
++	pmc_base = (struct pmc_reg *)config->pmc_base;
++
++	/* save reset value */
++	sw_rst = pmc_base->SW_RST1;
++
++	/* trigger sw reset */
++	pmc_base->SW_RST1 = (sw_rst | BIT(port));
++
++	/* after reset done, partno become zero */
++	while(I3C_GET_REG_PARTNO(port));
++
++	/* restore reset value */
++	pmc_base->SW_RST1 = sw_rst;
++
++	/* re-init device configuration */
++	hal_I3C_Config_Device(api_I3C_Get_INODE(port));
++
++	/* enable irq interrupt */
++	irq_enable(config->irq);
++}
++
+ I3C_ErrCode_Enum hal_I3C_Start_IBI(I3C_TASK_INFO_t *pTaskInfo)
+ {
+ 	I3C_PORT_Enum port;
+@@ -4489,7 +4523,9 @@ static int i3c_npcm4xx_init(const struct device *dev)
+ 		.busno = DT_INST_PROP_OR(n, busno, I3C_BUS_COUNT_MAX),\
+ 		.i2c_scl_hz = DT_INST_PROP_OR(n, i2c_scl_hz, 0),\
+ 		.i3c_scl_hz = DT_INST_PROP_OR(n, i3c_scl_hz, 0),\
+-		.base = (struct i3c_reg *)DT_INST_REG_ADDR(n),\
++		.base = (struct i3c_reg *)DT_INST_REG_ADDR_BY_NAME(n, i3c),\
++		.pmc_base = DT_INST_REG_ADDR_BY_NAME(n, pmc),\
++		.irq = DT_INST_IRQN(n),\
+ 	};\
+ 	static struct i3c_npcm4xx_obj i3c_npcm4xx_obj##n;\
+ 	DEVICE_DT_INST_DEFINE(n, &i3c_npcm4xx_config_func_##n, NULL, &i3c_npcm4xx_obj##n,\
+diff --git a/drivers/i3c/npcm4xx/i3c_drv.h b/drivers/i3c/npcm4xx/i3c_drv.h
+index 263b58b43b..9d2464b735 100644
+--- a/drivers/i3c/npcm4xx/i3c_drv.h
++++ b/drivers/i3c/npcm4xx/i3c_drv.h
+@@ -94,6 +94,8 @@ struct i3c_npcm4xx_config {
+ 	int dma_tx_channel;
+ 	int dma_rx_channel;
+ 	struct i3c_reg *base;
++	uintptr_t pmc_base;
++	uint32_t irq;
+ 	bool slave;
+ 	bool secondary;
+ 	uint32_t i3c_scl_hz;
+diff --git a/dts/arm/nuvoton/npcm400f.dtsi b/dts/arm/nuvoton/npcm400f.dtsi
+index 5a43494ab5..15ca0451b0 100644
+--- a/dts/arm/nuvoton/npcm400f.dtsi
++++ b/dts/arm/nuvoton/npcm400f.dtsi
+@@ -173,7 +173,9 @@
+ 			compatible = "nuvoton,npcm4xx-i3c";
+ 			#address-cells = <1>;
+ 			#size-cells = <0>;
+-			reg = <0x40004000 0x200>;
++			reg = <0x40004000 0x200
++			       0x4000d000 0x20>;
++			reg-names = "i3c", "pmc";
+ 			interrupts = <64 3>;
+ 			instance-id = <0>;
+ 			status = "disabled";
+@@ -184,7 +186,9 @@
+ 			compatible = "nuvoton,npcm4xx-i3c";
+ 			#address-cells = <1>;
+ 			#size-cells = <0>;
+-			reg = <0x40004200 0x200>;
++			reg = <0x40004200 0x200
++			       0x4000d000 0x20>;
++			reg-names = "i3c", "pmc";
+ 			interrupts = <65 3>;
+ 			instance-id = <1>;
+ 			status = "disabled";
+@@ -195,7 +199,9 @@
+ 			compatible = "nuvoton,npcm4xx-i3c";
+ 			#address-cells = <1>;
+ 			#size-cells = <0>;
+-			reg = <0x40004400 0x200>;
++			reg = <0x40004400 0x200
++			       0x4000d000 0x20>;
++			reg-names = "i3c", "pmc";
+ 			interrupts = <66 3>;
+ 			instance-id = <2>;
+ 			status = "disabled";
+@@ -206,7 +212,9 @@
+ 			compatible = "nuvoton,npcm4xx-i3c";
+ 			#address-cells = <1>;
+ 			#size-cells = <0>;
+-			reg = <0x40004600 0x200>;
++			reg = <0x40004600 0x200
++			       0x4000d000 0x20>;
++			reg-names = "i3c", "pmc";
+ 			interrupts = <67 3>;
+ 			instance-id = <3>;
+ 			status = "disabled";
+@@ -217,7 +225,9 @@
+ 			compatible = "nuvoton,npcm4xx-i3c";
+ 			#address-cells = <1>;
+ 			#size-cells = <0>;
+-			reg = <0x40004800 0x200>;
++			reg = <0x40004800 0x200
++			       0x4000d000 0x20>;
++			reg-names = "i3c", "pmc";
+ 			interrupts = <68 3>;
+ 			instance-id = <4>;
+ 			status = "disabled";
+@@ -228,7 +238,9 @@
+ 			compatible = "nuvoton,npcm4xx-i3c";
+ 			#address-cells = <1>;
+ 			#size-cells = <0>;
+-			reg = <0x40004a00 0x200>;
++			reg = <0x40004a00 0x200
++			       0x4000d000 0x20>;
++			reg-names = "i3c", "pmc";
+ 			interrupts = <69 3>;
+ 			instance-id = <5>;
+ 			status = "disabled";
+diff --git a/soc/arm/npcm4xx/common/reg/reg_def.h b/soc/arm/npcm4xx/common/reg/reg_def.h
+index 8805d6a8ed..0d78df2cb8 100644
+--- a/soc/arm/npcm4xx/common/reg/reg_def.h
++++ b/soc/arm/npcm4xx/common/reg/reg_def.h
+@@ -116,19 +116,38 @@ struct pmc_reg {
+ 	volatile uint8_t DISIDL_CTL;
+ 	/* 0x005: Disable in Idle Control 1 */
+ 	volatile uint8_t DISIDL_CTL1;
+-	volatile uint8_t reserved2[2];
+-	/* 0x008 - 0D: Power-Down Control 1 - 6 */
+-	volatile uint8_t PWDWN_CTL1[6];
+-	volatile uint8_t reserved3[18];
+-	/* 0x020 - 21: Power-Down Control 1 - 2 */
+-	volatile uint8_t RAM_PD[2];
+-	volatile uint8_t reserved4[2];
+-	/* 0x024: Power-Down Control 7 */
+-	volatile uint8_t PWDWN_CTL7[1];
++	volatile uint8_t reserved2;
++	/* 0x007: Power-Down Control 0 */
++	volatile uint8_t PWDWN_CTL0;
++	/* 0x008: Power-Down Control 1 */
++	volatile uint8_t PWDWN_CTL1;
++	/* 0x009: Power-Down Control 2 */
++	volatile uint8_t PWDWN_CTL2;
++	/* 0x00A: Power-Down Control 3 */
++	volatile uint8_t PWDWN_CTL3;
++	/* 0x00B: Power-Down Control 4 */
++	volatile uint8_t PWDWN_CTL4;
++	/* 0x00C: Power-Down Control 5 */
++	volatile uint8_t PWDWN_CTL5;
++	/* 0x00D: Power-Down Control 6 */
++	volatile uint8_t PWDWN_CTL6;
++	volatile uint8_t reserved3[3];
++	/* 0x011: RAM Power-Down Control 1 */
++	volatile uint8_t RAM_PD1;
++	/* 0x012: RAM Power-Down Control 2 */
++	volatile uint8_t RAM_PD2;
++	/* 0x013: Software Reset 1 */
++	volatile uint8_t SW_RST1;
++	/* 0x014: RAM Power-Down Control 3  */
++	volatile uint8_t RAM_PD3;
++	/* 0x015: Power-Down Control 7 */
++	volatile uint8_t PWDWN_CTL7;
++	/* 0x016: Power-Down Control 8 */
++	volatile uint8_t PWDWN_CTL8;
+ };
+ 
+ /* PMC multi-registers */
+-#define NPCM4XX_PWDWN_CTL_OFFSET(n) (((n) < 7) ? (0x007 + n) : (0x024 + (n - 7)))
++#define NPCM4XX_PWDWN_CTL_OFFSET(n) (((n) < 7) ? (0x007 + n) : (0x015 + (n - 7)))
+ #define NPCM4XX_PWDWN_CTL(base, n) (*(volatile uint8_t *)(base + \
+ 						NPCM4XX_PWDWN_CTL_OFFSET(n)))
+ 
+-- 
+2.34.1
+
