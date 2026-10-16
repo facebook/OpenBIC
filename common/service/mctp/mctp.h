@@ -48,7 +48,18 @@ extern "C" {
 #ifdef PLAT_MCTP_MSG_MAX_SIZE
 #define MCTP_DEFAULT_MSG_MAX_SIZE PLAT_MCTP_MSG_MAX_SIZE
 #else
-#define MCTP_DEFAULT_MSG_MAX_SIZE 244
+/* DSP0236 sec 8.4: 64 bytes is the MCTP baseline transmission unit -
+ * the only per-packet payload size every conformant endpoint is
+ * guaranteed to accept without negotiation. This stack has no
+ * transmission-unit negotiation (Get MCTP Version Support just
+ * reports the versions accepted, it doesn't negotiate a larger MTU),
+ * so unilaterally sending bigger packets isn't something a peer is
+ * spec-obligated to accept. Confirmed in practice: a 244-byte packet
+ * silently truncated on a real I2C/SMBus bridge in the path (a
+ * 251-byte fragment arriving as a clean, complete 128-byte write),
+ * because that bridge - correctly, per spec - wasn't built to assume
+ * anything past the 64-byte baseline. */
+#define MCTP_DEFAULT_MSG_MAX_SIZE 64
 #endif
 #define MCTP_TRANSPORT_HEADER_SIZE 4
 #define MCTP_MEDIUM_META_SIZE_SMBUS 3
