@@ -20,7 +20,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 #include "libutil.h"
 #include "sensor.h"
 #include "pldm.h"

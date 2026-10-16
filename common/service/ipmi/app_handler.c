@@ -23,7 +23,7 @@
 #include "plat_ipmi.h"
 #include "plat_def.h"
 #include "util_sys.h"
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 #include <libutil.h>
 
 #ifdef ENABLE_EVENT_TO_BMC
@@ -309,7 +309,7 @@ void frb2_wdt_handler(void *countdownValue, void *arug1, void *arug2)
 void init_frb2_wdt_thread(int16_t initCountdownValue)
 {
 	// Avoid re-create thread by checking thread status and thread id
-	if (frb2_wdt_tid != NULL && strcmp(k_thread_state_str(frb2_wdt_tid), "dead") != 0) {
+	if (frb2_wdt_tid != NULL && ({ char _state_buf[16]; strcmp(k_thread_state_str(frb2_wdt_tid, _state_buf, sizeof(_state_buf)), "dead"); }) != 0) {
 		// Restart from the initial countdown value
 		presentCountdownValue = setCountdownValue;
 		return;
@@ -326,7 +326,7 @@ void init_frb2_wdt_thread(int16_t initCountdownValue)
 
 void abort_frb2_wdt_thread()
 {
-	if (frb2_wdt_tid != NULL && strcmp(k_thread_state_str(frb2_wdt_tid), "dead") != 0) {
+	if (frb2_wdt_tid != NULL && ({ char _state_buf[16]; strcmp(k_thread_state_str(frb2_wdt_tid, _state_buf, sizeof(_state_buf)), "dead"); }) != 0) {
 		k_thread_abort(frb2_wdt_tid);
 		frb2_wdt_tid = NULL;
 		setCountdownValue = 0;
@@ -373,7 +373,7 @@ __weak void APP_SET_WATCHDOG_TIMER(ipmi_msg *msg)
 	setCountdownValue =
 		(uint16_t)(initCountdownValueMsb) << 8 | (uint16_t)(initCountdownValueLsb);
 
-	if (frb2_wdt_tid != NULL && strcmp(k_thread_state_str(frb2_wdt_tid), "dead") != 0) {
+	if (frb2_wdt_tid != NULL && ({ char _state_buf[16]; strcmp(k_thread_state_str(frb2_wdt_tid, _state_buf, sizeof(_state_buf)), "dead"); }) != 0) {
 		abort_frb2_wdt_thread();
 		isWdtSet = false;
 	} else {
@@ -398,7 +398,7 @@ __weak void APP_GET_WATCHDOG_TIMER(ipmi_msg *msg)
 	}
 
 	/* Check FRB2 watchdog timer status */
-	if (frb2_wdt_tid != NULL && strcmp(k_thread_state_str(frb2_wdt_tid), "dead") != 0) {
+	if (frb2_wdt_tid != NULL && ({ char _state_buf[16]; strcmp(k_thread_state_str(frb2_wdt_tid, _state_buf, sizeof(_state_buf)), "dead"); }) != 0) {
 		msg->data[0] = timerUse | BIT(6);
 	} else {
 		msg->data[0] = timerUse;

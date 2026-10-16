@@ -15,7 +15,7 @@
  */
 
 #include <stdlib.h>
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 #include "pmbus.h"
 #include "sensor.h"
 #include "xdp710.h"

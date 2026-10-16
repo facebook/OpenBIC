@@ -19,7 +19,7 @@
 #include "sensor.h"
 #include "hal_i2c.h"
 #include "i2c-mux-tca9548.h"
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 
 LOG_MODULE_REGISTER(i2c_mux_tca9548);
 

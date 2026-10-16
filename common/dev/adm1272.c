@@ -16,12 +16,12 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 #include "sensor.h"
 #include "hal_i2c.h"
 #include "pmbus.h"
 #include "adm1272.h"
-#include <sys/util.h>
+#include <zephyr/sys/util.h>
 
 LOG_MODULE_REGISTER(dev_adm1272);
 

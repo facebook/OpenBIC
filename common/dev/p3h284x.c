@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 
 #include "p3h284x.h"
 #include "libutil.h"
@@ -33,7 +33,7 @@ static bool p3h284x_register_read_i3c(uint8_t bus, uint8_t offset, uint8_t *valu
 	i3c_msg.tx_len = 1;
 	i3c_msg.data[0] = offset;
 	i3c_msg.rx_len = 1;
-	ret = i3c_transfer(&i3c_msg);
+	ret = i3c_hal_transfer(&i3c_msg);
 	if (ret != 0) {
 		LOG_ERR("Failed to read p3h284x register via I3C 0x%x, bus-%d ret = %d", offset,
 			bus, ret);

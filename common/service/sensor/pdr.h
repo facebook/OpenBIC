@@ -19,7 +19,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include <sys/byteorder.h>
+#include <zephyr/sys/byteorder.h>
 #include "plat_def.h"
 #include "libutil.h"
 

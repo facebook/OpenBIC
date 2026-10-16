@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-#include <zephyr.h>
-#include <logging/log.h>
-#include <sys/reboot.h>
+#include <zephyr/kernel.h>
+#include <zephyr/logging/log.h>
+#include <zephyr/sys/reboot.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "cmsis_os.h"
@@ -30,7 +30,7 @@
 #include "soc_common.h"
 #endif
 
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 
 LOG_MODULE_REGISTER(util_sys);
 

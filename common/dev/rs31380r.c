@@ -23,7 +23,7 @@
 #include "hal_i2c.h"
 #include "libutil.h"
 #include "pmbus.h"
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 
 LOG_MODULE_REGISTER(rs31380r);
 

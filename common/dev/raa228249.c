@@ -21,7 +21,7 @@
 #include "hal_i2c.h"
 #include "pmbus.h"
 #include "raa228249.h"
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 
 LOG_MODULE_REGISTER(raa228249);
 

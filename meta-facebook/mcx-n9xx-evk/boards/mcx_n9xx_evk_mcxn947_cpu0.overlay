@@ -1,0 +1,92 @@
+/* flexcomm2_lpi2c2 (LCD-shield header I2C) shares its physical FlexComm2
+ * instance with flexcomm2_lpuart2, both of which the board's inherited
+ * common dtsi (mcx_nx4x_evk_cpu0.dtsi, written for NXP's reference board
+ * with an actual audio-codec header populated) enables simultaneously.
+ * A single LP_FLEXCOMM instance can only run one peripheral function at
+ * a time, and having both nodes "okay" left flexcomm2_lpi2c2's
+ * clock_control_get_rate() returning 0 - confirmed on real hardware via
+ * a temporary printk in LPI2C_GetCyclesForWidth (modules/hal/nxp/.../
+ * fsl_lpi2c.c) showing sourceClock_Hz=0, which then hit a genuine
+ * division by zero at fsl_lpi2c.c:166 during LPI2C_MasterInit (USAGE
+ * FAULT, "Division by zero", every boot). Disabling the unused UART
+ * node resolves the contention: flexcomm2_lpi2c2 now inits with a real
+ * 48MHz source clock and the board boots clean - see README.md.
+ */
+&flexcomm2_lpuart2 {
+	status = "disabled";
+};
+
+/* red_led (D2 red channel) is enabled by the board's own devicetree.
+ *
+ * user_button_2 (SW2, gpio1.3, active-low w/ pull-up) is disabled by
+ * default on this board - enabled here for the GPIO status-monitoring
+ * subsystem in src/plat_gpio.c, standing in for a real BIC's
+ * power-good/host-presence input until actual platform signals are
+ * wired up.
+ */
+&user_button_2 {
+	status = "okay";
+};
+
+/* PLDM for Platform Monitoring and Control (DSP0248, type 0x02 - see
+ * src/plat_pldm_monitor.c) needs at least one real sensor to be a
+ * meaningful responder. The MCXN947 has an on-die temperature sensor
+ * on LPADC channel 26A, but Zephyr's generic adc_read path doesn't
+ * drive the temp-sensor CMDL loop/scale setup that SoC needs, so the
+ * nxp,lpadc-temp40 reading came out unreliable and mis-scaled (see
+ * README.md). Instead the board's numeric sensor is a plain
+ * single-ended LPADC voltage read on ADC0_A1 (PIO4_15), one of the
+ * three analog pins this EVK's pinmux_lpadc0 routes to the J2 header,
+ * reported in millivolts. lpadc0 / vref are already status="okay" in
+ * the board's own dtsi.
+ */
+#include <zephyr/dt-bindings/adc/adc.h>
+#include <zephyr/dt-bindings/adc/mcux-lpadc.h>
+
+&lpadc0 {
+	#address-cells = <1>;
+	#size-cells = <0>;
+
+	channel@1 {
+		reg = <1>;
+		zephyr,gain = "ADC_GAIN_1";
+		/* MCUX LPADC driver only accepts ADC_REF_EXTERNAL0/1;
+		 * EXTERNAL0 = use the ADC's already-configured reference. */
+		zephyr,reference = "ADC_REF_EXTERNAL0";
+		zephyr,vref-mv = <1800>;
+		zephyr,acquisition-time = <ADC_ACQ_TIME_DEFAULT>;
+		zephyr,resolution = <12>;
+		zephyr,input-positive = <MCUX_LPADC_CH1A>;
+	};
+};
+
+/ {
+	zephyr,user {
+		io-channels = <&lpadc0 1>;
+	};
+};
+
+/* Inter-core mailbox endpoint for the dual-core subsystem
+ * (src/plat_mbox.c) - only exercised when built with sysbuild
+ * (west build --sysbuild), pairing with remote/boards/
+ * mcx_n9xx_evk_mcxn947_cpu1.overlay's swapped tx/rx channels.
+ */
+/ {
+	mbox-consumer {
+		compatible = "vnd,mbox-consumer";
+		mboxes = <&mbox 1>, <&mbox 0>;
+		mbox-names = "tx", "rx";
+	};
+
+	/* Marker node only - common/service/ipmb/ipmb.h gates DEV_IPMB_0
+	 * on DT_NODE_EXISTS(DT_NODELABEL(ipmb0)) to decide whether an IPMB
+	 * channel 0 is configured for this board at all. The actual
+	 * transport (which physical I2C bus/address) is real
+	 * i2c_target_register()-based code in hal_i2c.c, driven by
+	 * src/plat_ipmb.c's IPMB_0_BUS/IPMB_0_SELF_ADDR - this node isn't
+	 * bound to a Zephyr driver and carries no hardware meaning itself.
+	 */
+	ipmb0: ipmb0 {
+		compatible = "vnd,ipmb-marker";
+	};
+};

@@ -17,8 +17,8 @@
 #ifndef HAL_I3C_H
 #define HAL_I3C_H
 
-#include <zephyr.h>
-#include <drivers/i3c/i3c.h>
+#include <zephyr/kernel.h>
+#include <zephyr/drivers/i3c.h>
 
 #if DT_NODE_HAS_STATUS(DT_NODELABEL(i3c0), okay)
 #define DEV_I3C_0
@@ -126,7 +126,7 @@ int i3c_slave_mqueue_write(const struct device *dev, uint8_t *src, int size);
 
 int i3c_attach(I3C_MSG *msg);
 int i3c_detach(I3C_MSG *msg);
-int i3c_transfer(I3C_MSG *msg);
+int i3c_hal_transfer(I3C_MSG *msg);
 int i3c_brocast_ccc(I3C_MSG *msg, uint8_t ccc_id, uint8_t ccc_addr);
 int i3c_spd_reg_read(I3C_MSG *msg, bool is_nvm);
 int i3c_set_pid(I3C_MSG *msg, uint16_t slot_pid);

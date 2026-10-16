@@ -19,7 +19,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include <kernel.h>
+#include <zephyr/kernel.h>
 
 #include "plat_def.h"
 #include "sdr.h"

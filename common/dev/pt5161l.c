@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 #include <stdlib.h>
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 #include "util_spi.h"
 #include "pt5161l.h"
 #include "hal_i2c.h"

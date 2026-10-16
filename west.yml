@@ -1,29 +1,62 @@
 manifest:
   remotes:
-    - name: aspeed
-      url-base: https://github.com/AspeedTech-BMC
-    - name: nuvoton
-      url-base: https://github.com/Nuvoton-Israel
+    - name: zephyr
+      url-base: https://github.com/zephyrproject-rtos
+    - name: wrouwet
+      url-base: https://github.com/wrouwet
 
   # Please add items below based on alphabetical order.
   # These dependencies may need updating if new features are added to the firmware.
   projects:
+    # Override the zephyr revision: it carries a real controller/target
+    # I2C hang fix (LPI2C_MasterInit() never restored on target
+    # unregister, see meta-facebook/mcx-n9xx-evk/README.md) needed for
+    # this board's IPMB channel to ever send a response on the same
+    # bus it listens on. Not yet submitted upstream - once it is (and
+    # a release picks it up), this override (and the fork branch it
+    # points at) can be dropped in favor of upstream's own pinned
+    # v4.4.0 tag.
     - name: zephyr
-      remote: aspeed
-      path: zephyr
-      revision: 641ac3b4d956f2d237c109526c017fdee4715bfb
-      import: 
+      remote: wrouwet
+      repo-path: zephyr
+      revision: fix/lpi2c-controller-target-hang
+      import:
         name-allowlist:
           - cmsis
-          - mcuboot
-          - mbedtls
-
-    - name: zephyr_nuvoton
-      remote: nuvoton
-      repo-path: zephyr
-      path: zephyr_nuvoton
-      revision: openbic-v2.6.0.0
+          - cmsis_6
+          - hal_nxp
+          # NB: the SPDM responder's crypto backend is libspdm's own
+          # bundled mbedTLS (built from source in
+          # meta-facebook/mcx-n9xx-evk/libspdm/zephyr/CMakeLists.txt),
+          # NOT Zephyr's mbedtls module - so it is deliberately absent
+          # from this allowlist.
+    # Override the hal_nxp revision imported above: it carries a real
+    # divide-by-zero fix (LPI2C_GetCyclesForWidth, see
+    # meta-facebook/mcx-n9xx-evk/README.md) needed for this board's
+    # flexcomm2_lpi2c2 to boot at all. Submitted upstream as
+    # https://github.com/zephyrproject-rtos/hal_nxp/pull/799; once
+    # that merges and a release picks it up, this override (and the
+    # fork branch it points at) can be dropped in favor of the
+    # zephyr west.yml's own pinned revision.
+    - name: hal_nxp
+      remote: wrouwet
+      repo-path: hal_nxp
+      revision: fix/lpi2c-divzero-guard
+      path: modules/hal/nxp
+    # DMTF libspdm - the SPDM (DSP0274) protocol library backing the
+    # attestation responder on meta-facebook/mcx-n9xx-evk. Not a Zephyr
+    # module upstream; a small glue module at
+    # meta-facebook/mcx-n9xx-evk/libspdm/ compiles the needed protocol
+    # libs + libspdm's bundled mbedTLS into one zephyr_library.
+    # Only the mbedTLS submodule is pulled (pinned to 107ea89 by
+    # libspdm 3.8.2); libspdm's openssl / cmocka submodules are large
+    # and unused here.
+    - name: libspdm
+      url: https://github.com/DMTF/libspdm
+      revision: "3.8.2"
+      path: modules/lib/libspdm
+      submodules:
+        - path: os_stub/mbedtlslib/mbedtls
 
   self:
     path: openbic
-

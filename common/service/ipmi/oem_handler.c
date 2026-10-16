@@ -19,7 +19,7 @@
 #include "sensor.h"
 #include "plat_sensor_table.h"
 #include "guid.h"
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 #include "libutil.h"
 #ifdef ENABLE_FAN
 #include "plat_fan.h"

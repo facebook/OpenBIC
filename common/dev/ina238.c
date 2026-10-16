@@ -19,7 +19,7 @@
 #include "ina238.h"
 #include "sensor.h"
 #include "hal_i2c.h"
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 
 #define I2C_RETRY 5
 #define MSB_MASK BIT(15)

@@ -17,7 +17,7 @@
 #ifdef ENABLE_DS160PT801
 
 #include <stdlib.h>
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 #include "ds160pt801.h"
 #include "util_spi.h"
 #include "hal_i2c.h"

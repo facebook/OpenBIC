@@ -22,8 +22,9 @@ extern "C" {
 #endif
 
 #include "mctp.h"
+#include <stdbool.h>
 #include <stdint.h>
-#include <zephyr.h>
+#include <zephyr/kernel.h>
 
 typedef uint8_t (*mctp_ctrl_cmd_fn)(void *, uint8_t *, uint16_t, uint8_t *, uint16_t *, void *);
 
@@ -36,8 +37,12 @@ typedef struct _mctp_ctrl_cmd_handler {
 
 #define MCTP_CTRL_CMD_SET_ENDPOINT_ID 0x01
 #define MCTP_CTRL_CMD_GET_ENDPOINT_ID 0x02
+#define MCTP_CTRL_CMD_GET_ENDPOINT_UUID 0x03
 
+#define MCTP_CTRL_CMD_GET_VERSION_SUPPORT 0x04
 #define MCTP_CTRL_CMD_GET_MESSAGE_TYPE_SUPPORT 0x05
+#define MCTP_CTRL_CMD_GET_VENDOR_MESSAGE_SUPPORT 0x06
+#define MCTP_CTRL_CMD_RESOLVE_ENDPOINT_ID 0x07
 
 #define MCTP_CTRL_CMD_GET_ENDPOINT_ID_REQ_LEN 0x00
 
@@ -55,6 +60,22 @@ typedef struct _mctp_ctrl_cmd_handler {
 #define MCTP_CTRL_CC_ERROR_INVALID_LENGTH 0x03
 #define MCTP_CTRL_CC_ERROR_NOT_READY 0x04
 #define MCTP_CTRL_CC_ERROR_UNSUPPORTED_CMD 0x05
+/* DSP0236 Table 18 - Get MCTP Version Support response, not the generic
+ * completion code table above (this one's command-specific). */
+#define MCTP_CTRL_CC_ERROR_MSG_TYPE_NOT_SUPPORTED 0x80
+
+/* DSP0236 Table 18's "Message Type Number" request selector - distinct
+ * from (though numerically overlapping) the runtime `enum message_type`
+ * above. 0xFF/0x00/0x01 are the ones this board can honestly answer for:
+ * the MCTP base spec itself, the MCTP control protocol, and DSP0241
+ * (PLDM over MCTP Binding Specification) respectively - see
+ * mctp_ctrl_cmd_get_version_support(). Everything else this command
+ * defines (0x7E/0x7F vendor-defined, 0x02/0x03 DSP0261) isn't
+ * implemented on this board.
+ */
+#define MCTP_VERSION_SUPPORT_SEL_BASE_SPEC 0xFF
+#define MCTP_VERSION_SUPPORT_SEL_CONTROL_PROTOCOL 0x00
+#define MCTP_VERSION_SUPPORT_SEL_PLDM_BINDING 0x01
 
 #define SET_EID_REQ_OP_SET_EID 0x00
 #define SET_EID_REQ_OP_FORCE_EID 0x01
@@ -90,10 +111,92 @@ enum message_type {
 	TYPE_MAX_SIZE,
 };
 
+/* Scratch buffer size for mctp_ctrl_cmd_get_message_type_support()'s
+ * load_mctp_support_types() call - a board hook can report any real
+ * DSP0239 message type (not just the two named above; e.g. this
+ * board's Vendor Defined - PCI test type), so this isn't sized off
+ * `enum message_type`. Generous headroom over what any real board
+ * hook here reports (2-3 types). */
+#define MCTP_SUPPORTED_MSG_TYPE_MAX 8
+
 struct _get_message_type_resp {
 	uint8_t completion_code;
 	uint8_t type_count;
 	uint8_t type_number[0];
+} __attribute__((packed));
+
+/* DSP0236 12.10 Get Vendor Defined Message Support */
+#define MCTP_VENDOR_ID_FORMAT_PCI 0x00
+#define MCTP_VENDOR_ID_FORMAT_IANA 0x01
+#define MCTP_VENDOR_ID_SELECTOR_NONE 0xFF
+
+struct _get_vendor_message_support_req {
+	uint8_t vendor_id_selector;
+} __attribute__((packed));
+
+/* PCI-format entry (the only format this codebase emits). */
+struct _get_vendor_message_support_resp {
+	uint8_t completion_code;
+	uint8_t next_vendor_id_selector; /* 0xFF = no more entries */
+	uint8_t vendor_id_format; /* MCTP_VENDOR_ID_FORMAT_PCI */
+	uint16_t pci_vendor_id; /* big-endian on the wire */
+	uint16_t cmd_set_version; /* vendor-defined; 0 if unused */
+} __attribute__((packed));
+
+/* Board hook: fill one vendor-defined-message-support entry for the
+ * given zero-based selector. Return 0 and set *next (0xFF if this was
+ * the last), or negative if the selector is out of range / the board
+ * has no vendor-defined messages. */
+int plat_mctp_get_vdm_support(uint8_t selector, uint8_t *vendor_id_format, uint16_t *pci_vendor_id,
+			     uint16_t *cmd_set_version, uint8_t *next_selector);
+
+/* DSP0236 Table 18: each 4-byte version entry is
+ * [major][minor][update][alpha] in that wire order (matches the
+ * spec's worked examples, e.g. version "1.1.0" = 0xF1 0xF1 0xF0 0x00) -
+ * written as explicit bytes here rather than a packed uint32_t so the
+ * wire order can't get silently flipped by this target's endianness.
+ * Single-digit BCD fields are padded with an 0xF nibble (e.g. major=1
+ * is encoded 0xF1, not 0x01 - see the spec examples); update=0xFF
+ * conventionally means "any/unspecified update version". */
+#define MCTP_VERSION_ENTRY_LEN 4
+
+struct _get_version_support_resp {
+	uint8_t completion_code;
+	uint8_t version_number_entry_count;
+	uint8_t version_number_entry[0];
+} __attribute__((packed));
+
+#define MCTP_UUID_LEN 16
+
+struct _get_uuid_resp {
+	uint8_t completion_code;
+	uint8_t uuid[MCTP_UUID_LEN];
+} __attribute__((packed));
+
+/* Board-level hook (mirrors plat_get_eid()'s pattern): supplies this
+ * device's real, unique-per-device UUID/GUID (RFC4122 byte order, MSB
+ * first). Default returns false ("not really available") rather than
+ * fabricating one - see mcx-n9xx-evk's plat_mctp.c for a real
+ * implementation backed by an actual per-chip hardware ID. */
+bool plat_get_endpoint_uuid(uint8_t *uuid_buf);
+
+/* DSP0236 Table 22 - Resolve Endpoint ID. This stack has no routing
+ * table (see mctp_ctrl_cmd_resolve_endpoint_id()'s doc comment), so
+ * the only EID this can ever honestly resolve is this endpoint's own
+ * - there's nothing behind us to bridge to. */
+struct _resolve_endpoint_id_req {
+	uint8_t target_eid;
+} __attribute__((packed));
+
+struct _resolve_endpoint_id_resp {
+	uint8_t completion_code;
+	/* Matches target_eid when (as here) no bridging is required to
+	 * reach it - DSP0236 12.10. */
+	uint8_t bridge_eid;
+	/* Medium-specific physical address (DSP0236: format defined by
+	 * the physical transport binding) - one byte for this board's
+	 * SMBus/I2C binding. */
+	uint8_t phys_addr;
 } __attribute__((packed));
 
 struct _get_eid_resp {

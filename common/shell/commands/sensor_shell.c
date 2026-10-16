@@ -20,7 +20,7 @@
 #include "sensor_shell.h"
 #include <stdlib.h>
 #include <string.h>
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 
 #ifdef ENABLE_PLDM_SENSOR
 #include "plat_pldm_sensor.h"

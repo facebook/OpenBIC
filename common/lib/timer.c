@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "cmsis_os2.h"
+#include <zephyr/portability/cmsis_os2.h>
 #include <stdio.h>
 
 static uint32_t sys_tick_freq;

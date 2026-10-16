@@ -17,7 +17,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <drivers/peci.h>
+#include <zephyr/drivers/peci.h>
 #include "sensor.h"
 #include "hal_peci.h"
 #include "libutil.h"
@@ -25,7 +25,7 @@
 #include "ipmi.h"
 #include "util_sys.h"
 #include "intel_dimm.h"
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 #include "time.h"
 
 LOG_MODULE_REGISTER(dev_intel_peci);

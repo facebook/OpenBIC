@@ -17,7 +17,7 @@
 #include "power_status.h"
 
 #include <stdio.h>
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 
 #include "hal_gpio.h"
 #include "snoop.h"

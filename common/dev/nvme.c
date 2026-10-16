@@ -20,8 +20,8 @@
 #include "hal_i2c.h"
 #include "nvme.h"
 
-#include <logging/log.h>
-#include <sys/crc.h>
+#include <zephyr/logging/log.h>
+#include <zephyr/sys/crc.h>
 
 #define NVMe_NOT_AVAILABLE 0x80
 #define NVMe_TMP_SENSOR_FAILURE 0x81

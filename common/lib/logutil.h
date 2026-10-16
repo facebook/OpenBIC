@@ -18,8 +18,8 @@
 #define LOGUTIL_H
 
 #include <stdbool.h>
-#include <logging/log.h>
-#include <logging/log_ctrl.h>
+#include <zephyr/logging/log.h>
+#include <zephyr/logging/log_ctrl.h>
 
 bool set_all_log_level(uint16_t data);
 bool set_single_log_level(char *log_device_name, uint16_t data);

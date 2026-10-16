@@ -17,8 +17,14 @@
 #ifndef HAL_I2C_H
 #define HAL_I2C_H
 
-#include <drivers/i2c.h>
-#include <drivers/i2c/slave/ipmb.h>
+#include <zephyr/kernel.h>
+#include <zephyr/drivers/i2c.h>
+/* Note: <drivers/i2c/slave/ipmb.h> (Aspeed-only I2C-slave-as-IPMB
+ * convenience header) is intentionally not carried over - nothing in
+ * this file actually used its types, and no mainline Zephyr driver on
+ * this board implements I2C target/slave mode anyway (see
+ * meta-facebook/mcx-n9xx-evk/README.md).
+ */
 
 #if defined(CONFIG_I2C_ASPEED)
 #if DT_NODE_HAS_STATUS(DT_NODELABEL(i2c0), okay)
@@ -146,6 +152,19 @@
 #define DEV_I2C_11
 #endif
 
+#elif defined(CONFIG_I2C_MCUX_LPI2C)
+/* NXP MCX-N9XX-EVK: real I2C buses on this board are flexcomm2_lpi2c2
+ * (LCD-shield header) and flexcomm3_lpi2c3 (Arduino header) - see
+ * plat_i2c.h for the DT_NODELABEL() mapping used in util_init_I2C().
+ */
+#if DT_NODE_HAS_STATUS(DT_NODELABEL(flexcomm2_lpi2c2), okay)
+#define DEV_I2C_2
+#endif
+
+#if DT_NODE_HAS_STATUS(DT_NODELABEL(flexcomm3_lpi2c3), okay)
+#define DEV_I2C_3
+#endif
+
 #else /* defined(CONFIG_GPIO_ASPEED) */
 #endif /* defined(CONFIG_GPIO_ASPEED) */
 
@@ -180,4 +199,34 @@ void i2c_scan(uint8_t bus, uint8_t *target_addr, uint8_t *target_addr_len);
 void util_init_I2C(void);
 int check_i2c_bus_valid(uint8_t bus);
 int i2c_master_read_without_error_log(I2C_MSG *msg, uint8_t retry);
+
+#if defined(CONFIG_I2C_MCUX_LPI2C) && defined(CONFIG_I2C_TARGET)
+/* IPMB-over-I2C target-mode glue: real i2c_target_register()-based
+ * replacement for the Aspeed-fork's i2c_slave_driver_register()/
+ * ipmb_slave_read(), used by common/service/ipmb/ipmb.c. See
+ * meta-facebook/mcx-n9xx-evk/README.md for the "I2C target mode"
+ * writeup this builds on.
+ */
+int ipmb_target_register(uint8_t bus, uint8_t addr);
+int ipmb_target_read(uint8_t bus, uint8_t *buf, uint8_t *len, k_timeout_t timeout);
+
+/* MCTP-over-SMBus equivalent - see common/hal/hal_i2c.c for why this
+ * can't reuse the IPMB target above (one registered target address per
+ * bus on this driver, and no shared framing convention). Drop-in
+ * replacement for the old hal_i2c_target.c i2c_target_read() that
+ * common/service/mctp/mctp_smbus.c calls.
+ *
+ * Neither this nor the IPMB target above needs an explicit pause/resume
+ * around controller-mode transfers on the same bus - the LPI2C hardware
+ * can only be in controller or target mode at once, but the driver
+ * itself (zephyr/drivers/i2c/i2c_mcux_lpi2c.c, see the mcx-n9xx-evk
+ * fork override in west.yml) now handles the teardown/restore
+ * transparently inside mcux_lpi2c_transfer(), so every caller is
+ * protected automatically - including ones outside this codebase, like
+ * the I2C shell's `i2c write`/`scan` commands.
+ */
+int mctp_i2c_target_register(uint8_t bus, uint8_t addr);
+uint8_t mctp_i2c_target_read(uint8_t bus, uint8_t *buf, uint16_t max_len, uint16_t *out_len);
+#endif
+
 #endif

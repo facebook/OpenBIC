@@ -20,7 +20,7 @@
 #include "ina230.h"
 #include "sensor.h"
 #include "hal_i2c.h"
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 
 #define I2C_RETRY 5
 
