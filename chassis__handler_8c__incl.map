@@ -1,0 +1,18 @@
+<map id="common/service/ipmi/chassis_handler.c" name="common/service/ipmi/chassis_handler.c">
+<area shape="rect" id="node1" title=" " alt="" coords="201,5,347,47"/>
+<area shape="rect" id="node2" href="$chassis__handler_8h.html" title=" " alt="" coords="5,95,132,121"/>
+<area shape="rect" id="node9" href="$power__status_8h.html" title=" " alt="" coords="156,95,267,121"/>
+<area shape="rect" id="node12" title=" " alt="" coords="291,95,385,121"/>
+<area shape="rect" id="node13" href="$libutil_8h.html" title=" " alt="" coords="409,95,472,121"/>
+<area shape="rect" id="node3" href="$ipmi_8h.html" title=" " alt="" coords="67,169,123,196"/>
+<area shape="rect" id="node4" title=" " alt="" coords="10,244,74,271"/>
+<area shape="rect" id="node5" href="$ipmb_8h.html" title=" " alt="" coords="259,244,319,271"/>
+<area shape="rect" id="node8" title=" " alt="" coords="99,244,201,271"/>
+<area shape="rect" id="node6" title=" " alt="" coords="192,319,284,345"/>
+<area shape="rect" id="node7" title=" " alt="" coords="308,319,368,345"/>
+<area shape="rect" id="node10" title=" " alt="" coords="170,169,245,196"/>
+<area shape="rect" id="node11" title=" " alt="" coords="269,169,333,196"/>
+<area shape="rect" id="node14" href="$hal__i2c_8h.html" title=" " alt="" coords="408,169,481,196"/>
+<area shape="rect" id="node15" title=" " alt="" coords="359,244,451,271"/>
+<area shape="rect" id="node16" title=" " alt="" coords="475,244,633,271"/>
+</map>

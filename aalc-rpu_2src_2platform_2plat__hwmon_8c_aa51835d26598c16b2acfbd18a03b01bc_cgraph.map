@@ -1,0 +1,6 @@
+<map id="pump_setting_set_auto_tune_flag" name="pump_setting_set_auto_tune_flag">
+<area shape="rect" id="node1" title=" " alt="" coords="5,49,163,90"/>
+<area shape="rect" id="node2" href="$plat__pwm_8c.html#acc46f82f94e178a950bbb5b0afa4ae09" title=" " alt="" coords="211,5,361,32"/>
+<area shape="rect" id="node3" href="$plat__status_8c.html#aa601af4f53236dc9df9b4db1735f94de" title=" " alt="" coords="231,56,341,83"/>
+<area shape="rect" id="node4" href="$plat__status_8c.html#a6a5e5d3582c3221f9a1b3d94cff8cf6f" title=" " alt="" coords="231,107,341,133"/>
+</map>

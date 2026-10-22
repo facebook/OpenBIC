@@ -1,0 +1,7 @@
+<map id="check_read_312_5MHz_clock_status" name="check_read_312_5MHz_clock_status">
+<area shape="rect" id="node1" title=" " alt="" coords="5,35,164,76"/>
+<area shape="rect" id="node2" href="$sb-rb_2src_2platform_2plat__log_8c.html#a1230b74be0742821f0035f2cb3247b90" title=" " alt="" coords="212,5,373,47"/>
+<area shape="rect" id="node5" href="$aalc-rpu_2src_2platform_2plat__log_8c.html#a103e33f69b37672107c44bcf36accc6b" title=" " alt="" coords="237,71,348,98"/>
+<area shape="rect" id="node3" href="$hal__i2c_8c.html#a129beb22fde8deaaaed57af95c31eb16" title=" " alt="" coords="421,5,588,47"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="636,13,779,39"/>
+</map>

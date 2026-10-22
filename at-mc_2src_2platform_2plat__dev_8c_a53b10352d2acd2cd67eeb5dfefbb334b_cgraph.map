@@ -1,0 +1,16 @@
+<map id="pal_pm8702_command_handler" name="pal_pm8702_command_handler">
+<area shape="rect" id="node1" title=" " alt="" coords="5,74,161,115"/>
+<area shape="rect" id="node2" href="$mctp_8c.html#a05f81c72bec1cc54f3bd224dee05b039" title=" " alt="" coords="209,5,357,32"/>
+<area shape="rect" id="node4" href="$at-mc_2src_2platform_2plat__sensor__table_8c.html#a56ef6f4024b49b425d9965ae1c08d4a7" title=" " alt="" coords="231,56,335,83"/>
+<area shape="rect" id="node5" href="$at-mc_2src_2platform_2plat__hook_8c.html#aa7588a653e55f9bbb1c43b84aade226b" title=" " alt="" coords="210,107,357,133"/>
+<area shape="rect" id="node7" href="$at-mc_2src_2platform_2plat__hook_8c.html#a7519390f4791319b5e0359ef703c4fcc" title=" " alt="" coords="214,157,353,184"/>
+<area shape="rect" id="node3" href="$mctp_8c.html#a7ebba2970b56d4df4c0ff1eabed7d9a3" title=" " alt="" coords="441,5,545,32"/>
+<area shape="rect" id="node6" href="$aalc-rpu_2src_2platform_2plat__hook_8c.html#a030290ba9bdfb95ddad14883664cf46a" title=" " alt="" coords="424,107,561,133"/>
+<area shape="rect" id="node8" href="$at-mc_2src_2platform_2plat__sensor__table_8c.html#a85f3ff7de0988e2c5b37ad18da833c82" title=" " alt="" coords="405,157,580,184"/>
+<area shape="rect" id="node11" href="$common__i2c__mux_8c.html#a06ee477158d07a45f98e42dc563641aa" title=" " alt="" coords="431,208,554,235"/>
+<area shape="rect" id="node9" href="$sensor_8c.html#ae224ad26413eb100f2abef7a1907a547" title=" " alt="" coords="645,91,782,133"/>
+<area shape="rect" id="node10" href="$at-mc_2src_2platform_2plat__sensor__table_8c.html#abca79192d53ada449e39ef0de50a52f4" title=" " alt="" coords="632,157,795,184"/>
+<area shape="rect" id="node12" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="653,208,774,235"/>
+<area shape="rect" id="node14" href="$hal__i2c_8c.html#ae12ca95f786ad6cc2dfe16be7d73f862" title=" " alt="" coords="628,259,799,301"/>
+<area shape="rect" id="node13" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="847,237,989,264"/>
+</map>

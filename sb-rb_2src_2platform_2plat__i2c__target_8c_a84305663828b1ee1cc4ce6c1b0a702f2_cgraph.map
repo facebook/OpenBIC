@@ -1,0 +1,9 @@
+<map id="vr_power_reading" name="vr_power_reading">
+<area shape="rect" id="node1" title=" " alt="" coords="5,130,129,157"/>
+<area shape="rect" id="node2" href="$sb-rb_2src_2platform_2plat__adc_8c.html#aadf25066927f78f5a0f88c77fe4a29e9" title=" " alt="" coords="199,5,341,47"/>
+<area shape="rect" id="node4" href="$sb-el_2src_2platform_2plat__class_8c.html#a9d3145ec260256885f5ad7ae0fee1381" title=" " alt="" coords="207,71,333,98"/>
+<area shape="rect" id="node5" href="$sb-el_2src_2platform_2plat__i2c__target_8c.html#a8a0bd46e9c77ddec35234c98f6df04d9" title=" " alt="" coords="178,123,362,164"/>
+<area shape="rect" id="node6" href="$sb-el_2src_2platform_2plat__cpld_8c.html#a5fa92a28b8fdee738d07d69b6cce29bc" title=" " alt="" coords="177,189,363,215"/>
+<area shape="rect" id="node7" href="$sb-el_2src_2platform_2plat__power__capping_8c.html#a383bf1cec4321c6e15aa03cf25bd377c" title=" " alt="" coords="180,239,360,266"/>
+<area shape="rect" id="node3" href="$sb-el_2src_2platform_2plat__adc_8c.html#a5c09e0ed533278d070bbb94831d94e6d" title=" " alt="" coords="411,13,509,39"/>
+</map>

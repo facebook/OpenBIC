@@ -1,0 +1,10 @@
+<map id="process_vr_power_fault_sel" name="process_vr_power_fault_sel">
+<area shape="rect" id="node1" title=" " alt="" coords="5,93,189,120"/>
+<area shape="rect" id="node2" href="$yv3-vf_2src_2platform_2plat__util_8c.html#abc94f67ed170b0ae5f7e4965130e2166" title=" " alt="" coords="261,5,363,32"/>
+<area shape="rect" id="node4" href="$ipmi_8c.html#a40681786f36bd1836cdb473b7050dda1" title=" " alt="" coords="237,57,387,98"/>
+<area shape="rect" id="node6" href="$at-cb_2src_2platform_2plat__class_8c.html#aad0cbd7758d1df323ed1cc0928dadb25" title=" " alt="" coords="259,123,365,149"/>
+<area shape="rect" id="node7" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="253,173,371,200"/>
+<area shape="rect" id="node3" href="$yv3-vf_2src_2platform_2plat__util_8c.html#a7200b2472d3ef5cb78c82b2a0e3fe39b" title=" " alt="" coords="473,5,539,32"/>
+<area shape="rect" id="node5" href="$ipmb_8h.html#a260c07ba372e6648a635b20dbb790fa9" title=" " alt="" coords="465,64,547,91"/>
+<area shape="rect" id="node8" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="435,173,577,200"/>
+</map>
