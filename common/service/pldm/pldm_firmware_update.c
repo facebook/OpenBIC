@@ -230,7 +230,10 @@ static uint8_t pldm_vr_update_streaming(pldm_fw_update_param_t *p, bool *handled
 	*handled = false;
 
 #ifdef ENABLE_MP29526
-	if (!strncmp(p->comp_version_str, KEYWORD_VR_MP29526, ARRAY_SIZE(KEYWORD_VR_MP29526) - 1)) {
+	/* MP29426 / MP29529 share the MP29526 register map and update flow */
+	if (!strncmp(p->comp_version_str, KEYWORD_VR_MP29526, ARRAY_SIZE(KEYWORD_VR_MP29526) - 1) ||
+	    !strncmp(p->comp_version_str, KEYWORD_VR_MP29426, ARRAY_SIZE(KEYWORD_VR_MP29426) - 1) ||
+	    !strncmp(p->comp_version_str, KEYWORD_VR_MP29529, ARRAY_SIZE(KEYWORD_VR_MP29529) - 1)) {
 		*handled = true;
 		return mp29526_pldm_update(p);
 	}
