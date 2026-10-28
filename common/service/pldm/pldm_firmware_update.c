@@ -54,7 +54,7 @@ LOG_MODULE_DECLARE(pldm);
 #define HEX_CHARS_PER_BYTE 2
 
 #define GET_EEPROM_SLAVE_MASK(offset) (((offset) >> 16) & 0xF)
-#define GET_EERPOM_OFFSET(offset) ((offset)&0xFFFF)
+#define GET_EERPOM_OFFSET(offset) ((offset) & 0xFFFF)
 
 #ifndef PLDM_UPDATE_DELAY_AFTER_POST_UPDATE
 #define PLDM_UPDATE_DELAY_AFTER_POST_UPDATE 3000
@@ -1069,6 +1069,12 @@ static uint8_t request_update(void *mctp_inst, uint8_t *buf, uint16_t len, uint8
 	if (current_state != STATE_IDLE) {
 		LOG_ERR("Firmware update failed because current state %d is not %d", current_state,
 			STATE_IDLE);
+		resp_p->completion_code = PLDM_FW_UPDATE_CC_ALREADY_IN_UPDATE_MODE;
+		goto exit;
+	}
+
+	if (fw_update_tid != NULL) {
+		LOG_ERR("Previous firmware update is still stopping");
 		resp_p->completion_code = PLDM_FW_UPDATE_CC_ALREADY_IN_UPDATE_MODE;
 		goto exit;
 	}
