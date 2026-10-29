@@ -1,0 +1,25 @@
+var sb_el_2src_2platform_2plat__class_8c =
+[
+    [ "BOARD_TYPE_MASK", "sb-el_2src_2platform_2plat__class_8c.html#a5101a28fffc9c1f74455a16533b1c94f", null ],
+    [ "I2C_BUS_TMP", "sb-el_2src_2platform_2plat__class_8c.html#a5313b46659eb9bd769cabb30a797d673", null ],
+    [ "REV_ID_MASK", "sb-el_2src_2platform_2plat__class_8c.html#af1b54ef6b4b14634525e55ad5cacfe01", null ],
+    [ "get_asic_board_id", "sb-el_2src_2platform_2plat__class_8c.html#a9d3145ec260256885f5ad7ae0fee1381", null ],
+    [ "get_board_rev_id", "sb-el_2src_2platform_2plat__class_8c.html#ac75907698060d09869954dde878eb3cd", null ],
+    [ "get_mmc_slot", "sb-el_2src_2platform_2plat__class_8c.html#a04be412c46398af815e2250158ff4f8f", null ],
+    [ "get_tmp_module", "sb-el_2src_2platform_2plat__class_8c.html#aa01e1f843f87d058168da3682172e481", null ],
+    [ "get_tray_location", "sb-el_2src_2platform_2plat__class_8c.html#ac2727ca94ca0fe7de83a275962e730f4", null ],
+    [ "get_ubc_module", "sb-el_2src_2platform_2plat__class_8c.html#a8516e25120a53e98f28e297e85995b87", null ],
+    [ "get_vr_module", "sb-el_2src_2platform_2plat__class_8c.html#aad0cbd7758d1df323ed1cc0928dadb25", null ],
+    [ "init_board_stage", "sb-el_2src_2platform_2plat__class_8c.html#af97399bd8d33c7f26c0d4d079f8fc6bc", null ],
+    [ "init_board_type", "sb-el_2src_2platform_2plat__class_8c.html#a1ec455ef466cbf73ad850fd639c7667b", null ],
+    [ "init_plat_config", "sb-el_2src_2platform_2plat__class_8c.html#aecdd6402720f77139625e22f7f4e59dd", null ],
+    [ "init_tmp_vendor_type", "sb-el_2src_2platform_2plat__class_8c.html#a04253288b1d5311740be555ea958d4ec", null ],
+    [ "init_vr_vendor_type", "sb-el_2src_2platform_2plat__class_8c.html#a415791a856bc2f360c48796be04288a8", null ],
+    [ "LOG_MODULE_REGISTER", "sb-el_2src_2platform_2plat__class_8c.html#abbc0d974c994ebb73bed1020fb33e8ac", null ],
+    [ "pal_show_board_types", "sb-el_2src_2platform_2plat__class_8c.html#a5947e0e6c9f21aa4425c3e05c59614d0", null ],
+    [ "pal_show_extra_info", "sb-el_2src_2platform_2plat__class_8c.html#a69048bbc020e4276c8e5840f615e8023", null ],
+    [ "plat_cpld_eerprom_read", "sb-el_2src_2platform_2plat__class_8c.html#a73d863737f90a26fb5407e78c7af3e45", null ],
+    [ "ubc_module_name", "sb-el_2src_2platform_2plat__class_8c.html#a91978309cb7d0f97415e9b4ea8e4417e", null ],
+    [ "vr_module_name", "sb-el_2src_2platform_2plat__class_8c.html#ae3b40e653f6a14e4bcc4302fb6f6b5af", null ],
+    [ "vr_vendor_module_name", "sb-el_2src_2platform_2plat__class_8c.html#a05815f73ccc8bd9757ca826d55cbd8c6", null ]
+];

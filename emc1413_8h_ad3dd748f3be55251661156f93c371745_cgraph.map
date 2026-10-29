@@ -1,0 +1,7 @@
+<map id="emc1413_get_temp_threshold" name="emc1413_get_temp_threshold">
+<area shape="rect" id="node1" title=" " alt="" coords="5,46,201,73"/>
+<area shape="rect" id="node2" href="$emc1413_8c.html#a4ef7ead1232dfe440e26e33421daf65f" title=" " alt="" coords="249,5,408,47"/>
+<area shape="rect" id="node5" href="$emc1413_8c.html#a98c6810e376ea8879e6f39050e597d80" title=" " alt="" coords="249,71,408,112"/>
+<area shape="rect" id="node3" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="456,46,575,73"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="623,46,765,73"/>
+</map>

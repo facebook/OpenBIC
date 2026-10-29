@@ -1,0 +1,8 @@
+<map id="pre_intel_peci_dimm_read" name="pre_intel_peci_dimm_read">
+<area shape="rect" id="node1" title=" " alt="" coords="5,81,179,108"/>
+<area shape="rect" id="node2" href="$intel__peci_8c.html#ad106677cfcdf2ce6fa2698249c5c65bc" title=" " alt="" coords="229,31,375,57"/>
+<area shape="rect" id="node5" href="$sensor_8c.html#a4be7dade1eb55cdd2be583473145009b" title=" " alt="" coords="227,81,377,108"/>
+<area shape="rect" id="node6" href="$power__status_8c.html#abeff55e3cd2e8563760154b81f37f286" title=" " alt="" coords="245,132,359,159"/>
+<area shape="rect" id="node3" href="$libutil_8c.html#a1e13185e8d3fc0ee9926ab7cd21413b6" title=" " alt="" coords="425,5,592,32"/>
+<area shape="rect" id="node4" href="$ipmb_8h.html#a260c07ba372e6648a635b20dbb790fa9" title=" " alt="" coords="467,56,550,83"/>
+</map>

@@ -1,0 +1,8 @@
+<map id="isl69260_set_vout_command" name="isl69260_set_vout_command">
+<area shape="rect" id="node1" title=" " alt="" coords="5,31,196,57"/>
+<area shape="rect" id="node2" href="$isl69259_8c.html#a9fa6dc28d7246c8b330e0e57c55b82a2" title=" " alt="" coords="245,5,372,32"/>
+<area shape="rect" id="node5" href="$isl69259_8c.html#a318b59032ece7de29fb6f5418baabf40" title=" " alt="" coords="244,56,373,83"/>
+<area shape="rect" id="node3" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="423,5,541,32"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="591,31,733,57"/>
+<area shape="rect" id="node6" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="421,56,543,83"/>
+</map>

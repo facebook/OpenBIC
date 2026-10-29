@@ -1,0 +1,10 @@
+<map id="pldm_get_sensor_reading" name="pldm_get_sensor_reading">
+<area shape="rect" id="node1" title=" " alt="" coords="5,89,176,116"/>
+<area shape="rect" id="node2" href="$pdr_8c.html#a68ebb1959f36e910de522d31f023c7c4" title=" " alt="" coords="230,9,389,36"/>
+<area shape="rect" id="node4" href="$sensor_8c.html#acac7def53ddb6b158196583bb8f36bb1" title=" " alt="" coords="242,64,377,91"/>
+<area shape="rect" id="node7" href="$pldm__firmware__update_8c.html#a224e51b685ca4b971208055323f23f07" title=" " alt="" coords="239,115,380,141"/>
+<area shape="rect" id="node8" href="$pldm__sensor_8h.html#a17597d30b940a33d2608a54ccadd949f" title=" " alt="" coords="224,166,395,207"/>
+<area shape="rect" id="node3" href="$pdr_8c.html#ac8f9c0927877dcf9df6ec1534d005077" title=" " alt="" coords="450,5,573,32"/>
+<area shape="rect" id="node5" href="$sensor_8c.html#a5cd747a23585d471e06a129bb055b75c" title=" " alt="" coords="445,57,578,98"/>
+<area shape="rect" id="node6" href="$sensor_8c.html#ae224ad26413eb100f2abef7a1907a547" title=" " alt="" coords="443,122,580,163"/>
+</map>

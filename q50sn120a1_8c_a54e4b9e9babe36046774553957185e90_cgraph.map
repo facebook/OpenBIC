@@ -1,0 +1,10 @@
+<map id="q50sn120a1_init" name="q50sn120a1_init">
+<area shape="rect" id="node1" title=" " alt="" coords="5,56,121,83"/>
+<area shape="rect" id="node2" href="$q50sn120a1_8c.html#ae694dd1c7443e57d5023a152a17fff02" title=" " alt="" coords="169,56,293,83"/>
+<area shape="rect" id="node3" href="$util__pmbus_8c.html#a5d5a3d8b0c9d712b51c1680397a7f042" title=" " alt="" coords="545,56,748,83"/>
+<area shape="rect" id="node6" href="$util__pmbus_8c.html#a31a6cab55c9aa2f88ed96bc201e483dd" title=" " alt="" coords="568,6,725,32"/>
+<area shape="rect" id="node7" href="$q50sn120a1_8c.html#aed3c040324f8e37c41a1f58166bb052c" title=" " alt="" coords="341,31,497,58"/>
+<area shape="rect" id="node8" href="$util__pmbus_8c.html#a7c60131c7ed95a5b56650f7ece49104d" title=" " alt="" coords="585,119,708,146"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="796,31,915,58"/>
+<area shape="rect" id="node5" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="963,31,1105,58"/>
+</map>

@@ -1,0 +1,8 @@
+<map id="pal_record_vr_power_fault" name="pal_record_vr_power_fault">
+<area shape="rect" id="node1" title=" " alt="" coords="5,49,148,90"/>
+<area shape="rect" id="node2" href="$gt-cc_2src_2platform_2plat__mctp_8c.html#a998a1c1d667b48c6de3aef50f5dc86aa" title=" " alt="" coords="196,56,348,83"/>
+<area shape="rect" id="node3" href="$at-cb_2src_2platform_2plat__mctp_8c.html#aa91b2fdee8959aa54116d3b9b3b6c031" title=" " alt="" coords="396,5,540,32"/>
+<area shape="rect" id="node4" href="$pldm_8c.html#a90114495fe7507fbfbdcd388f02911aa" title=" " alt="" coords="409,56,527,83"/>
+<area shape="rect" id="node6" href="$pldm__oem_8c.html#acdcd72cd46e1f10b7be19781bb1b9866" title=" " alt="" coords="433,107,503,133"/>
+<area shape="rect" id="node5" href="$pldm_8c.html#a41d615349cd666a0f5372f4f4f0c9507" title=" " alt="" coords="588,56,751,83"/>
+</map>

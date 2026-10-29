@@ -1,0 +1,8 @@
+<map id="check_bpb_hsc_status" name="check_bpb_hsc_status">
+<area shape="rect" id="node1" title=" " alt="" coords="5,107,161,133"/>
+<area shape="rect" id="node2" href="$aalc-rpu_2src_2platform_2plat__log_8c.html#a103e33f69b37672107c44bcf36accc6b" title=" " alt="" coords="223,5,333,32"/>
+<area shape="rect" id="node3" href="$plat__threshold_8c.html#afebd7dd6be8431341a5a280857ef2fd0" title=" " alt="" coords="209,56,347,83"/>
+<area shape="rect" id="node4" href="$hal__gpio_8c.html#af700ee50de3d113e223c2b011c41f966" title=" " alt="" coords="243,107,313,133"/>
+<area shape="rect" id="node5" href="$plat__threshold_8c.html#a793c7169b5bcc12ec3b61f9bd7202e02" title=" " alt="" coords="209,157,347,184"/>
+<area shape="rect" id="node6" href="$plat__status_8c.html#a6a5e5d3582c3221f9a1b3d94cff8cf6f" title=" " alt="" coords="223,208,333,235"/>
+</map>

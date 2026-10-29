@@ -1,0 +1,8 @@
+<map id="access_vr_remain_cnt" name="access_vr_remain_cnt">
+<area shape="rect" id="node1" title=" " alt="" coords="5,31,159,57"/>
+<area shape="rect" id="node2" href="$eeprom_8c.html#af84d506534770494cca55b2db24730ba" title=" " alt="" coords="208,5,305,32"/>
+<area shape="rect" id="node6" href="$eeprom_8c.html#ab838e3d27c232117306d8611e48be202" title=" " alt="" coords="207,56,307,83"/>
+<area shape="rect" id="node3" href="$eeprom_8c.html#ac470cc411f066d8f6bc2c1d7a74c8a5a" title=" " alt="" coords="355,31,493,57"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="541,31,663,57"/>
+<area shape="rect" id="node5" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="711,31,853,57"/>
+</map>

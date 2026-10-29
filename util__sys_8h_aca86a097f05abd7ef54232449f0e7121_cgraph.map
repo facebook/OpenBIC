@@ -1,0 +1,5 @@
+<map id="set_sys_ready_pin" name="set_sys_ready_pin">
+<area shape="rect" id="node1" title=" " alt="" coords="5,31,135,57"/>
+<area shape="rect" id="node2" href="$sensor_8c.html#aa833d5d8408e30693b88d6b16beacbcf" title=" " alt="" coords="183,5,341,32"/>
+<area shape="rect" id="node3" href="$hal__gpio_8c.html#ab1b576cbfd9eddaaf57a5aa5fc383dd1" title=" " alt="" coords="227,56,297,83"/>
+</map>

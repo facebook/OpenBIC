@@ -1,0 +1,13 @@
+<map id="OEM_1S_FW_UPDATE" name="OEM_1S_FW_UPDATE">
+<area shape="rect" id="node1" title=" " alt="" coords="5,81,167,108"/>
+<area shape="rect" id="node2" href="$util__spi_8c.html#a42cdb23aad6b4c12e78b0a30ac3d9f5c" title=" " alt="" coords="252,5,335,32"/>
+<area shape="rect" id="node3" href="$hal__gpio_8c.html#ab1b576cbfd9eddaaf57a5aa5fc383dd1" title=" " alt="" coords="258,56,329,83"/>
+<area shape="rect" id="node4" href="$at-cb_2src_2platform_2plat__sensor__table_8c.html#aaf82437533e435e54792ca3c84cdc83a" title=" " alt="" coords="225,107,362,133"/>
+<area shape="rect" id="node11" href="$util__spi_8c.html#aaffd1b8dea43265280cd76ae120d71f9" title=" " alt="" coords="215,157,372,184"/>
+<area shape="rect" id="node5" href="$at-cb_2src_2platform_2plat__class_8c.html#ab792e5ab34dd1dbfd3988dbe68b3716e" title=" " alt="" coords="420,56,592,83"/>
+<area shape="rect" id="node6" href="$at-cb_2src_2platform_2plat__class_8c.html#a2f2cd33d9b8735a424a77494156450d4" title=" " alt="" coords="429,107,583,133"/>
+<area shape="rect" id="node10" href="$at-cb_2src_2platform_2plat__class_8c.html#a177b22525ca1657da5ced816317de219" title=" " alt="" coords="441,157,571,184"/>
+<area shape="rect" id="node7" href="$at-cb_2src_2platform_2plat__class_8c.html#a6a54497033563f8d0666943817d1e92a" title=" " alt="" coords="640,107,761,133"/>
+<area shape="rect" id="node8" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="809,107,928,133"/>
+<area shape="rect" id="node9" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="976,107,1119,133"/>
+</map>

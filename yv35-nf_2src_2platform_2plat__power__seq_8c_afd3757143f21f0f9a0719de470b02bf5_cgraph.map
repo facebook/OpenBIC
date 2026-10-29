@@ -1,0 +1,11 @@
+<map id="power_off_handler" name="power_off_handler">
+<area shape="rect" id="node1" title=" " alt="" coords="5,97,132,123"/>
+<area shape="rect" id="node2" href="$yv35-nf_2src_2platform_2plat__power__seq_8c.html#af13c528bc0acab15e5c04368bf544e44" title=" " alt="" coords="180,71,327,98"/>
+<area shape="rect" id="node8" href="$yv35-nf_2src_2platform_2plat__power__seq_8c.html#ad9fc4a55a3f5cd93d02c0192c80fca78" title=" " alt="" coords="201,122,306,149"/>
+<area shape="rect" id="node3" href="$yv35-nf_2src_2platform_2plat__power__seq_8c.html#a3035a6f1f86da65f709be784198de756" title=" " alt="" coords="375,71,517,98"/>
+<area shape="rect" id="node4" href="$ipmi_8c.html#a40681786f36bd1836cdb473b7050dda1" title=" " alt="" coords="565,5,715,47"/>
+<area shape="rect" id="node6" href="$expansion__board_8c.html#a9efbe21551a2add295f83e75747cd334" title=" " alt="" coords="592,71,688,98"/>
+<area shape="rect" id="node7" href="$hal__gpio_8c.html#af700ee50de3d113e223c2b011c41f966" title=" " alt="" coords="605,122,675,149"/>
+<area shape="rect" id="node5" href="$ipmb_8h.html#a260c07ba372e6648a635b20dbb790fa9" title=" " alt="" coords="763,13,845,39"/>
+<area shape="rect" id="node9" href="$hal__gpio_8c.html#ab1b576cbfd9eddaaf57a5aa5fc383dd1" title=" " alt="" coords="411,122,481,149"/>
+</map>
